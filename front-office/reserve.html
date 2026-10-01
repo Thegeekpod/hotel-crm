@@ -62,7 +62,7 @@
   <div class="pms-sub-ribbon">
     <div class="ribbon-left-section">
       <div class="ribbon-action-buttons">
-        <a href="index.html" class="ribbon-btn active-btn">
+        <a href="index.html" class="ribbon-btn">
           <span class="ico-box"><i class="fa-solid fa-table-cells-large" style="color: #10b981;"></i></span>
           <span class="lbl-box">F Desk</span>
         </a>
@@ -78,7 +78,7 @@
           <span class="ico-box"><i class="fa-solid fa-address-card" style="color: #f59e0b;"></i></span>
           <span class="lbl-box">Guest</span>
         </a>
-        <a href="reserve.html" class="ribbon-btn">
+        <a href="reserve.html" class="ribbon-btn active-btn">
           <span class="ico-box"><i class="fa-solid fa-calendar-check" style="color: #a78bfa;"></i></span>
           <span class="lbl-box">Reserve</span>
         </a>
@@ -488,7 +488,8 @@
   <div id="print-area" style="display: none;"></div>
 
   <script>
-    let currentStatusFilter = 'ALL';
+    let currentStatusFilter = 'blocked';
+    window.onload = applyFilters;
 
     function applyFilters() {
       const type = document.getElementById('filter-type').value;

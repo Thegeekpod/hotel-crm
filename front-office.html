@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Front Office - Hotel Sagar Sonnet CRM / PMS</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+  <!-- Top System Header Bar -->
+  <header class="pms-app-header">
+    <div class="pms-header-brand">
+      <i class="fa-solid fa-hotel gold-star"></i>
+      <span>HOTEL SAGAR SONNET</span>
+      <span style="background: #fbc531; color: #1e293b; font-size: 9px; padding: 2px 5px; border-radius: 3px; font-weight: 800;">PMS 2026</span>
+    </div>
+    <div class="pms-header-center">
+      <span><i class="fa-regular fa-calendar-days"></i> Wednesday, 24 Sep 2026</span>
+      <span><i class="fa-solid fa-sun" style="color: #fbc531;"></i> Morning Shift (07:00 - 15:00)</span>
+      <span><i class="fa-solid fa-location-dot" style="color: #22d3ee;"></i> Main Luxury Wing</span>
+    </div>
+    <div class="pms-header-right">
+      <div class="pms-user-tag">
+        <i class="fa-solid fa-user-tie"></i>
+        <span>Debashis Roy (Front Desk)</span>
+      </div>
+      <a href="login.html" class="btn-pms-logout"><i class="fa-solid fa-power-off"></i> Logout</a>
+    </div>
+  </header>
+
+  <!-- Top Module Navigation Tabs -->
+  <nav class="pms-tabs-ribbon">
+    <a href="front-office.html" class="pms-tab-link active">
+      <i class="fa-solid fa-desktop tab-ico" style="color: #6366f1;"></i> Front Office
+    </a>
+    <a href="room-management.html" class="pms-tab-link">
+      <i class="fa-solid fa-door-open tab-ico" style="color: #ec4899;"></i> Room Management
+    </a>
+    <a href="pos-sales.html" class="pms-tab-link">
+      <i class="fa-solid fa-utensils tab-ico" style="color: #10b981;"></i> POS Sales
+    </a>
+    <a href="house-keeping.html" class="pms-tab-link">
+      <i class="fa-solid fa-broom tab-ico" style="color: #f59e0b;"></i> House Keeping
+    </a>
+    <a href="stores.html" class="pms-tab-link">
+      <i class="fa-solid fa-boxes-stacked tab-ico" style="color: #22d3ee;"></i> Stores
+    </a>
+    <a href="accounts.html" class="pms-tab-link">
+      <i class="fa-solid fa-file-invoice-dollar tab-ico" style="color: #a78bfa;"></i> Accounts
+    </a>
+    <a href="banquet.html" class="pms-tab-link">
+      <i class="fa-solid fa-champagne-glasses tab-ico" style="color: #fbbf24;"></i> Banquet & Services
+    </a>
+    <a href="administrator.html" class="pms-tab-link">
+      <i class="fa-solid fa-user-gear tab-ico" style="color: #94a3b8;"></i> Administrator
+    </a>
+  </nav>
+
+  <!-- Action Sub-Ribbon -->
+  <div class="pms-sub-ribbon">
+    <div class="ribbon-left-section">
+      <div class="ribbon-nav-links">
+        <span class="ribbon-nav-item" style="color: #6366f1;" onclick="openReservationModal()"><i class="fa-solid fa-plus-circle"></i> Entries</span>
+        <a href="room-management.html" class="ribbon-nav-item"><i class="fa-solid fa-door-open"></i> Rooms</a>
+        <a href="house-keeping.html" class="ribbon-nav-item"><i class="fa-solid fa-wrench"></i> Maintain</a>
+        <a href="accounts.html" class="ribbon-nav-item"><i class="fa-solid fa-chart-pie"></i> Report</a>
+      </div>
+      <div class="ribbon-action-buttons">
+        <a href="room-management.html" class="ribbon-btn">
+          <span class="ico-box"><i class="fa-solid fa-door-open" style="color: #ec4899;"></i></span>
+          <span class="lbl-box">Rooms</span>
+        </a>
+        <a href="inhouse.html" class="ribbon-btn">
+          <span class="ico-box"><i class="fa-solid fa-users" style="color: #94a3b8;"></i></span>
+          <span class="lbl-box">Inhouse</span>
+        </a>
+        <a href="front-office.html" class="ribbon-btn active-btn">
+          <span class="ico-box"><i class="fa-solid fa-table-cells-large" style="color: #10b981;"></i></span>
+          <span class="lbl-box">F Desk</span>
+        </a>
+        <a href="arrivals.html" class="ribbon-btn">
+          <span class="ico-box"><i class="fa-solid fa-plane-arrival" style="color: #f43f5e;"></i></span>
+          <span class="lbl-box">Arrivals</span>
+        </a>
+        <a href="guest-crm.html" class="ribbon-btn">
+          <span class="ico-box"><i class="fa-solid fa-address-card" style="color: #f59e0b;"></i></span>
+          <span class="lbl-box">Guest</span>
+        </a>
+        <button class="ribbon-btn" onclick="openReservationModal()">
+          <span class="ico-box"><i class="fa-solid fa-calendar-check" style="color: #a78bfa;"></i></span>
+          <span class="lbl-box">Reserve</span>
+        </button>
+        <button class="ribbon-btn" onclick="openReservationModal()">
+          <span class="ico-box"><i class="fa-solid fa-key" style="color: #6366f1;"></i></span>
+          <span class="lbl-box">Check In</span>
+        </button>
+        <a href="inhouse.html" class="ribbon-btn">
+          <span class="ico-box"><i class="fa-solid fa-right-from-bracket" style="color: #f43f5e;"></i></span>
+          <span class="lbl-box">Check Out</span>
+        </a>
+        <a href="pos-sales.html" class="ribbon-btn">
+          <span class="ico-box"><i class="fa-solid fa-receipt" style="color: #22d3ee;"></i></span>
+          <span class="lbl-box">Misc.</span>
+        </a>
+        <a href="accounts.html" class="ribbon-btn">
+          <span class="ico-box"><i class="fa-solid fa-moon" style="color: #94a3b8;"></i></span>
+          <span class="lbl-box">Night Audit</span>
+        </a>
+      </div>
+    </div>
+    <div style="font-size: 11px; font-weight: 700; color: var(--accent-emerald); display: flex; align-items: center; gap: 6px;">
+      <span style="width: 6px; height: 6px; background: var(--accent-emerald); border-radius: 50%; display: inline-block; box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);"></span>
+      Hotel Sagar Sonnet Live PMS
+    </div>
+  </div>
+
+  <!-- Main Viewport: Room Rack Grid & Right Sidebar -->
+  <main class="pms-main-viewport">
+    
+    <!-- Left: All Rooms Rack Panel -->
+    <div class="pms-rack-panel">
+      <div class="rack-title-bar">
+        <h2><i class="fa-solid fa-th-large" style="color: var(--accent-primary);"></i> All Rooms</h2>
+        <span style="font-size: 11px; color: var(--text-muted); font-weight: 600;">Hotel Sagar Sonnet • 48 Total Rooms</span>
+      </div>
+
+      <div class="rack-grid-viewport">
+        <div class="rack-rooms-container" id="rooms-grid">
+          
+          <!-- 101: Cleaned -->
+          <div class="rack-card c-cleaned" onclick="openRoomDetails('101', 'SUPER DELUXE', 'Cleaned', 'Available', 5200, null)" data-room="101" data-floor="1" data-type="SUPER DELUXE" data-status="available">
+            <div class="rack-card-top">
+              <div class="rack-room-num">101</div>
+              <div class="rack-room-type">SUPER DELUXE</div>
+            </div>
+            <div class="rack-card-mid"></div>
+            <div class="rack-card-bot"><div class="rack-badge">Cleaned</div></div>
+          </div>
+
+          <!-- 102: Occupied -->
+          <div class="rack-card c-occupied" onclick="openRoomDetails('102', 'DELUXE', 'Cleaned', 'Occupied', 3500, {name: 'Sanjeev Kumar Singh', state: 'Arrived', folio: 'FOL-102-882', balance: 10400})" data-room="102" data-floor="1" data-type="DELUXE" data-status="occupied">
+            <div class="rack-card-top">
+              <div class="rack-room-num">102</div>
+              <div class="rack-room-type">DELUXE</div>
+            </div>
+            <div class="rack-card-mid"><div class="rack-guest-name">Sanjeev Kumar Singh</div></div>
+            <div class="rack-card-bot"><div class="rack-badge">Arrived</div></div>
+          </div>
+
+          <!-- 103: Dirty -->
+          <div class="rack-card c-dirty" onclick="openRoomDetails('103', 'SUPER DELUXE', 'Dirty', 'Vacant Dirty', 5200, null)" data-room="103" data-floor="1" data-type="SUPER DELUXE" data-status="dirty">
+            <div class="rack-card-top">
+              <div class="rack-room-num">103</div>
+              <div class="rack-room-type">SUPER DELUXE</div>
+            </div>
+            <div class="rack-card-mid"></div>
+            <div class="rack-card-bot"><div class="rack-badge">Dirty</div></div>
+          </div>
+
+          <!-- 104: Blocked -->
+          <div class="rack-card c-blocked" onclick="openRoomDetails('104', 'SUPER DELUXE', 'Blocked', 'Out of Order', 5200, null)" data-room="104" data-floor="1" data-type="SUPER DELUXE" data-status="blocked">
+            <div class="rack-card-top">
+              <div class="rack-room-num">104</div>
+              <div class="rack-room-type">SUPER DELUXE</div>
+            </div>
+            <div class="rack-card-mid"><div class="rack-guest-name">Blocked</div></div>
+            <div class="rack-card-bot"><div class="rack-badge">Blocked</div></div>
+          </div>
+
+          <!-- 201: Dirty -->
+          <div class="rack-card c-dirty" onclick="openRoomDetails('201', 'SUITE', 'Dirty', 'Vacant Dirty', 8500, null)" data-room="201" data-floor="2" data-type="SUITE" data-status="dirty">
+            <div class="rack-card-top"><div class="rack-room-num">201</div><div class="rack-room-type">SUITE</div></div>
+            <div class="rack-card-mid"></div>
+            <div class="rack-card-bot"><div class="rack-badge">Dirty</div></div>
+          </div>
+
+          <!-- 202: Occupied -->
+          <div class="rack-card c-occupied" onclick="openRoomDetails('202', 'DELUXE', 'Cleaned', 'Occupied', 3500, {name: 'AJEET BHENGRA', state: 'Stay Over', folio: 'FOL-202-710', balance: 7800})" data-room="202" data-floor="2" data-type="DELUXE" data-status="occupied">
+            <div class="rack-card-top"><div class="rack-room-num">202</div><div class="rack-room-type">DELUXE</div></div>
+            <div class="rack-card-mid"><div class="rack-guest-name">AJEET BHENGRA</div></div>
+            <div class="rack-card-bot"><div class="rack-badge">Stay Over</div></div>
+          </div>
+
+          <!-- 203: Dirty -->
+          <div class="rack-card c-dirty" onclick="openRoomDetails('203', 'SUPER DELUXE', 'Dirty', 'Vacant Dirty', 5200, null)" data-room="203" data-floor="2" data-type="SUPER DELUXE" data-status="dirty">
+            <div class="rack-card-top"><div class="rack-room-num">203</div><div class="rack-room-type">SUPER DELUXE</div></div>
+            <div class="rack-card-mid"></div>
+            <div class="rack-card-bot"><div class="rack-badge">Dirty</div></div>
+          </div>
+
+          <!-- 204: Dirty -->
+          <div class="rack-card c-dirty" onclick="openRoomDetails('204', 'SUPER DELUXE', 'Dirty', 'Vacant Dirty', 5200, null)" data-room="204" data-floor="2" data-type="SUPER DELUXE" data-status="dirty">
+            <div class="rack-card-top"><div class="rack-room-num">204</div><div class="rack-room-type">SUPER DELUXE</div></div>
+            <div class="rack-card-mid"></div>
+            <div class="rack-card-bot"><div class="rack-badge">Dirty</div></div>
+          </div>
+
+          <!-- 205: Occupied -->
+          <div class="rack-card c-occupied" onclick="openRoomDetails('205', 'SUPER DELUXE', 'Cleaned', 'Occupied', 5200, {name: 'KHAGESWAR ROUT', state: 'Stay Over', folio: 'FOL-205-551', balance: 14200})" data-room="205" data-floor="2" data-type="SUPER DELUXE" data-status="occupied">
+            <div class="rack-card-top"><div class="rack-room-num">205</div><div class="rack-room-type">SUPER DELUXE</div></div>
+            <div class="rack-card-mid"><div class="rack-guest-name">KHAGESWAR ROUT</div></div>
+            <div class="rack-card-bot"><div class="rack-badge">Stay Over</div></div>
+          </div>
+
+          <!-- 206: Occupied -->
+          <div class="rack-card c-occupied" onclick="openRoomDetails('206', 'DELUXE', 'Cleaned', 'Occupied', 3500, {name: 'Raj kumar Bhunia', state: 'Arrived', folio: 'FOL-206-339', balance: 3920})" data-room="206" data-floor="2" data-type="DELUXE" data-status="occupied">
+            <div class="rack-card-top"><div class="rack-room-num">206</div><div class="rack-room-type">DELUXE</div></div>
+            <div class="rack-card-mid"><div class="rack-guest-name">Raj kumar Bhunia</div></div>
+            <div class="rack-card-bot"><div class="rack-badge">Arrived</div></div>
+          </div>
+
+          <!-- 207: Dirty -->
+          <div class="rack-card c-dirty" onclick="openRoomDetails('207', 'SUPER DELUXE', 'Dirty', 'Vacant Dirty', 5200, null)" data-room="207" data-floor="2" data-type="SUPER DELUXE" data-status="dirty">
+            <div class="rack-card-top"><div class="rack-room-num">207</div><div class="rack-room-type">SUPER DELUXE</div></div>
+            <div class="rack-card-mid"></div>
+            <div class="rack-card-bot"><div class="rack-badge">Dirty</div></div>
+          </div>
+
+          <!-- 208: Cleaned -->
+          <div class="rack-card c-cleaned" onclick="openRoomDetails('208', 'SUPER DELUXE', 'Cleaned', 'Available', 5200, null)" data-room="208" data-floor="2" data-type="SUPER DELUXE" data-status="available">
+            <div class="rack-card-top"><div class="rack-room-num">208</div><div class="rack-room-type">SUPER DELUXE</div></div>
+            <div class="rack-card-mid"></div>
+            <div class="rack-card-bot"><div class="rack-badge">Cleaned</div></div>
+          </div>
+
+          <!-- 209: Cleaned -->
+          <div class="rack-card c-cleaned" onclick="openRoomDetails('209', 'SUPER DELUXE', 'Cleaned', 'Available', 5200, null)" data-room="209" data-floor="2" data-type="SUPER DELUXE" data-status="available">
+            <div class="rack-card-top"><div class="rack-room-num">209</div><div class="rack-room-type">SUPER DELUXE</div></div>
+            <div class="rack-card-mid"></div>
+            <div class="rack-card-bot"><div class="rack-badge">Cleaned</div></div>
+          </div>
+
+          <!-- 210: Cleaned -->
+          <div class="rack-card c-cleaned" onclick="openRoomDetails('210', 'SUITE', 'Cleaned', 'Available', 8500, null)" data-room="210" data-floor="2" data-type="SUITE" data-status="available">
+            <div class="rack-card-top"><div class="rack-room-num">210</div><div class="rack-room-type">SUITE</div></div>
+            <div class="rack-card-mid"></div>
+            <div class="rack-card-bot"><div class="rack-badge">Cleaned</div></div>
+          </div>
+
+          <!-- 301: Dirty -->
+          <div class="rack-card c-dirty" onclick="openRoomDetails('301', 'SUITE', 'Dirty', 'Vacant Dirty', 8500, null)" data-room="301" data-floor="3" data-type="SUITE" data-status="dirty">
+            <div class="rack-card-top"><div class="rack-room-num">301</div><div class="rack-room-type">SUITE</div></div>
+            <div class="rack-card-mid"></div>
+            <div class="rack-card-bot"><div class="rack-badge">Dirty</div></div>
+          </div>
+
+          <!-- 302: Occupied -->
+          <div class="rack-card c-occupied" onclick="openRoomDetails('302', 'DELUXE', 'Cleaned', 'Occupied', 3500, {name: 'SANGADA RAJUBHAI NAL', state: 'Stay Over', folio: 'FOL-302-991', balance: 8100})" data-room="302" data-floor="3" data-type="DELUXE" data-status="occupied">
+            <div class="rack-card-top"><div class="rack-room-num">302</div><div class="rack-room-type">DELUXE</div></div>
+            <div class="rack-card-mid"><div class="rack-guest-name">SANGADA RAJUBHAI NAL</div></div>
+            <div class="rack-card-bot"><div class="rack-badge">Stay Over</div></div>
+          </div>
+
+          <!-- 303: Cleaned -->
+          <div class="rack-card c-cleaned" onclick="openRoomDetails('303', 'SUPER DELUXE', 'Cleaned', 'Available', 5200, null)" data-room="303" data-floor="3" data-type="SUPER DELUXE" data-status="available">
+            <div class="rack-card-top"><div class="rack-room-num">303</div><div class="rack-room-type">SUPER DELUXE</div></div>
+            <div class="rack-card-mid"></div>
+            <div class="rack-card-bot"><div class="rack-badge">Cleaned</div></div>
+          </div>
+
+          <!-- 304: Occupied -->
+          <div class="rack-card c-occupied" onclick="openRoomDetails('304', 'SUPER DELUXE', 'Cleaned', 'Occupied', 5200, {name: 'HITENDRA NINAWE', state: 'Stay Over', folio: 'FOL-304-102', balance: 11900})" data-room="304" data-floor="3" data-type="SUPER DELUXE" data-status="occupied">
+            <div class="rack-card-top"><div class="rack-room-num">304</div><div class="rack-room-type">SUPER DELUXE</div></div>
+            <div class="rack-card-mid"><div class="rack-guest-name">HITENDRA NINAWE</div></div>
+            <div class="rack-card-bot"><div class="rack-badge">Stay Over</div></div>
+          </div>
+
+          <!-- 305: Occupied -->
+          <div class="rack-card c-occupied" onclick="openRoomDetails('305', 'SUPER DELUXE', 'Cleaned', 'Occupied', 5200, {name: 'ADVAIT CHAVAN', state: 'Stay Over', folio: 'FOL-305-673', balance: 12400})" data-room="305" data-floor="3" data-type="SUPER DELUXE" data-status="occupied">
+            <div class="rack-card-top"><div class="rack-room-num">305</div><div class="rack-room-type">SUPER DELUXE</div></div>
+            <div class="rack-card-mid"><div class="rack-guest-name">ADVAIT CHAVAN</div></div>
+            <div class="rack-card-bot"><div class="rack-badge">Stay Over</div></div>
+          </div>
+
+          <!-- 306: Cleaned -->
+          <div class="rack-card c-cleaned" onclick="openRoomDetails('306', 'DELUXE', 'Cleaned', 'Available', 3500, null)" data-room="306" data-floor="3" data-type="DELUXE" data-status="available">
+            <div class="rack-card-top"><div class="rack-room-num">306</div><div class="rack-room-type">DELUXE</div></div>
+            <div class="rack-card-mid"></div>
+            <div class="rack-card-bot"><div class="rack-badge">Cleaned</div></div>
+          </div>
+
+          <!-- 307: Occupied -->
+          <div class="rack-card c-occupied" onclick="openRoomDetails('307', 'SUPER DELUXE', 'Cleaned', 'Occupied', 5200, {name: 'BIKRAM KR SAHOO', state: 'Stay Over', folio: 'FOL-307-889', balance: 16500})" data-room="307" data-floor="3" data-type="SUPER DELUXE" data-status="occupied">
+            <div class="rack-card-top"><div class="rack-room-num">307</div><div class="rack-room-type">SUPER DELUXE</div></div>
+            <div class="rack-card-mid"><div class="rack-guest-name">BIKRAM KR SAHOO</div></div>
+            <div class="rack-card-bot"><div class="rack-badge">Stay Over</div></div>
+          </div>
+
+          <!-- 308: Cleaned -->
+          <div class="rack-card c-cleaned" onclick="openRoomDetails('308', 'SUPER DELUXE', 'Cleaned', 'Available', 5200, null)" data-room="308" data-floor="3" data-type="SUPER DELUXE" data-status="available">
+            <div class="rack-card-top"><div class="rack-room-num">308</div><div class="rack-room-type">SUPER DELUXE</div></div>
+            <div class="rack-card-mid"></div>
+            <div class="rack-card-bot"><div class="rack-badge">Cleaned</div></div>
+          </div>
+
+          <!-- 309: Dirty -->
+          <div class="rack-card c-dirty" onclick="openRoomDetails('309', 'DELUXE', 'Dirty', 'Vacant Dirty', 3500, null)" data-room="309" data-floor="3" data-type="DELUXE" data-status="dirty">
+            <div class="rack-card-top"><div class="rack-room-num">309</div><div class="rack-room-type">DELUXE</div></div>
+            <div class="rack-card-mid"></div>
+            <div class="rack-card-bot"><div class="rack-badge">Dirty</div></div>
+          </div>
+
+          <!-- 310: Cleaned -->
+          <div class="rack-card c-cleaned" onclick="openRoomDetails('310', 'SUITE', 'Cleaned', 'Available', 8500, null)" data-room="310" data-floor="3" data-type="SUITE" data-status="available">
+            <div class="rack-card-top"><div class="rack-room-num">310</div><div class="rack-room-type">SUITE</div></div>
+            <div class="rack-card-mid"></div>
+            <div class="rack-card-bot"><div class="rack-badge">Cleaned</div></div>
+          </div>
+
+          <!-- Floor 4 -->
+          <div class="rack-card c-occupied" onclick="openRoomDetails('401', 'EXECUTIVE', 'Cleaned', 'Occupied', 11000, {name: 'Vikramaditya Roy', state: 'Arrived', folio: 'FOL-401-440', balance: 14500})" data-room="401" data-floor="4" data-type="EXECUTIVE" data-status="occupied">
+            <div class="rack-card-top"><div class="rack-room-num">401</div><div class="rack-room-type">EXECUTIVE</div></div>
+            <div class="rack-card-mid"><div class="rack-guest-name">Vikramaditya Roy</div></div>
+            <div class="rack-card-bot"><div class="rack-badge">Arrived</div></div>
+          </div>
+
+          <div class="rack-card c-cleaned" onclick="openRoomDetails('402', 'EXECUTIVE', 'Cleaned', 'Available', 11000, null)" data-room="402" data-floor="4" data-type="EXECUTIVE" data-status="available">
+            <div class="rack-card-top"><div class="rack-room-num">402</div><div class="rack-room-type">EXECUTIVE</div></div>
+            <div class="rack-card-mid"></div>
+            <div class="rack-card-bot"><div class="rack-badge">Cleaned</div></div>
+          </div>
+
+          <div class="rack-card c-occupied" onclick="openRoomDetails('403', 'SUPER DELUXE', 'Cleaned', 'Occupied', 5200, {name: 'Priyanka Mukherjee', state: 'Stay Over', folio: 'FOL-403-109', balance: 6200})" data-room="403" data-floor="4" data-type="SUPER DELUXE" data-status="occupied">
+            <div class="rack-card-top"><div class="rack-room-num">403</div><div class="rack-room-type">SUPER DELUXE</div></div>
+            <div class="rack-card-mid"><div class="rack-guest-name">Priyanka Mukherjee</div></div>
+            <div class="rack-card-bot"><div class="rack-badge">Stay Over</div></div>
+          </div>
+
+          <div class="rack-card c-blocked" onclick="openRoomDetails('404', 'SUPER DELUXE', 'Blocked', 'Out of Order', 5200, null)" data-room="404" data-floor="4" data-type="SUPER DELUXE" data-status="blocked">
+            <div class="rack-card-top"><div class="rack-room-num">404</div><div class="rack-room-type">SUPER DELUXE</div></div>
+            <div class="rack-card-mid"><div class="rack-guest-name">Blocked</div></div>
+            <div class="rack-card-bot"><div class="rack-badge">Blocked</div></div>
+          </div>
+
+          <div class="rack-card c-occupied" onclick="openRoomDetails('405', 'DELUXE', 'Cleaned', 'Occupied', 3500, {name: 'Rahul Verma', state: 'Arrived', folio: 'FOL-405-772', balance: 4100})" data-room="405" data-floor="4" data-type="DELUXE" data-status="occupied">
+            <div class="rack-card-top"><div class="rack-room-num">405</div><div class="rack-room-type">DELUXE</div></div>
+            <div class="rack-card-mid"><div class="rack-guest-name">Rahul Verma</div></div>
+            <div class="rack-card-bot"><div class="rack-badge">Arrived</div></div>
+          </div>
+
+          <div class="rack-card c-cleaned" onclick="openRoomDetails('406', 'DELUXE', 'Cleaned', 'Available', 3500, null)" data-room="406" data-floor="4" data-type="DELUXE" data-status="available">
+            <div class="rack-card-top"><div class="rack-room-num">406</div><div class="rack-room-type">DELUXE</div></div>
+            <div class="rack-card-mid"></div>
+            <div class="rack-card-bot"><div class="rack-badge">Cleaned</div></div>
+          </div>
+
+          <div class="rack-card c-dirty" onclick="openRoomDetails('407', 'SUPER DELUXE', 'Dirty', 'Vacant Dirty', 5200, null)" data-room="407" data-floor="4" data-type="SUPER DELUXE" data-status="dirty">
+            <div class="rack-card-top"><div class="rack-room-num">407</div><div class="rack-room-type">SUPER DELUXE</div></div>
+            <div class="rack-card-mid"></div>
+            <div class="rack-card-bot"><div class="rack-badge">Dirty</div></div>
+          </div>
+
+          <div class="rack-card c-occupied" onclick="openRoomDetails('408', 'SUITE', 'Cleaned', 'Occupied', 8500, {name: 'Dr. Ananya Sen', state: 'Stay Over', folio: 'FOL-408-204', balance: 19500})" data-room="408" data-floor="4" data-type="SUITE" data-status="occupied">
+            <div class="rack-card-top"><div class="rack-room-num">408</div><div class="rack-room-type">SUITE</div></div>
+            <div class="rack-card-mid"><div class="rack-guest-name">Dr. Ananya Sen</div></div>
+            <div class="rack-card-bot"><div class="rack-badge">Stay Over</div></div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Sidebar: Statistics & Occupancy Pie Chart -->
+    <aside class="pms-stats-sidebar">
+      <div class="stats-gold-top">
+        <i class="fa-solid fa-crown" style="margin-right: 6px;"></i> SAGAR SONNET
+      </div>
+
+      <div class="stats-rows-list">
+        <div class="stat-strip"><span class="lbl"><i class="fa-solid fa-bed" style="color: var(--room-occupied); margin-right: 6px;"></i>Occupied Rooms</span><span class="val">16</span></div>
+        <div class="stat-strip"><span class="lbl"><i class="fa-solid fa-plane-arrival" style="color: var(--accent-cyan); margin-right: 6px;"></i>Expected Arrival</span><span class="val">1</span></div>
+        <div class="stat-strip"><span class="lbl"><i class="fa-solid fa-plane-departure" style="color: var(--accent-amber); margin-right: 6px;"></i>Expected Departure</span><span class="val">5</span></div>
+        <div class="stat-strip"><span class="lbl"><i class="fa-solid fa-tags" style="color: var(--room-available); margin-right: 6px;"></i>Rooms to Sale</span><span class="val">36</span></div>
+        <div class="stat-strip"><span class="lbl"><i class="fa-solid fa-arrow-right-to-bracket" style="color: #10b981; margin-right: 6px;"></i>Today's Checked In</span><span class="val">3</span></div>
+        <div class="stat-strip"><span class="lbl"><i class="fa-solid fa-arrow-right-from-bracket" style="color: #f43f5e; margin-right: 6px;"></i>Today's Checked Out</span><span class="val">6</span></div>
+        <div class="stat-strip"><span class="lbl"><i class="fa-solid fa-user-group" style="color: var(--accent-primary); margin-right: 6px;"></i>Total Pax</span><span class="val">18</span></div>
+        <div class="stat-strip"><span class="lbl"><i class="fa-solid fa-broom" style="color: var(--accent-amber); margin-right: 6px;"></i>Cleaned</span><span class="val">2/9</span></div>
+      </div>
+
+      <!-- Pie Chart Section -->
+      <div class="stats-pie-section">
+        <div class="pie-svg-box">
+          <svg viewBox="0 0 36 36" class="pie-svg">
+            <circle cx="18" cy="18" r="15.91549430918954" fill="transparent" stroke="#10b981" stroke-width="14" stroke-dasharray="43.75 56.25" stroke-dashoffset="0"></circle>
+            <circle cx="18" cy="18" r="15.91549430918954" fill="transparent" stroke="#f43f5e" stroke-width="14" stroke-dasharray="33.33 66.67" stroke-dashoffset="-43.75"></circle>
+            <circle cx="18" cy="18" r="15.91549430918954" fill="transparent" stroke="#f59e0b" stroke-width="14" stroke-dasharray="18.75 81.25" stroke-dashoffset="-77.08"></circle>
+            <circle cx="18" cy="18" r="15.91549430918954" fill="transparent" stroke="#6366f1" stroke-width="14" stroke-dasharray="4.17 95.83" stroke-dashoffset="-95.83"></circle>
+          </svg>
+        </div>
+        <div class="pie-legend-bar">
+          <div class="p-red">33.33%</div>
+          <div class="p-green">43.75%</div>
+          <div class="p-navy">4.17%</div>
+          <div class="p-yellow">18.75%</div>
+        </div>
+      </div>
+    </aside>
+
+  </main>
+
+  <!-- Bottom Toolbar -->
+  <footer class="pms-bottom-bar">
+    <div class="legend-chips">
+      <div class="legend-chip chip-occ"><div class="chip-lbl">Occupied</div><div class="chip-cnt">16</div></div>
+      <div class="legend-chip chip-blk"><div class="chip-lbl">Blocked</div><div class="chip-cnt">2</div></div>
+      <div class="legend-chip chip-vac"><div class="chip-lbl">Vacant</div><div class="chip-cnt">30</div></div>
+      <div class="legend-chip chip-drt"><div class="chip-lbl">Dirty</div><div class="chip-cnt">9</div></div>
+      <div class="legend-chip chip-avl"><div class="chip-lbl">Available</div><div class="chip-cnt">21</div></div>
+      <div class="legend-chip chip-all"><div class="chip-lbl">All</div><div class="chip-cnt">48</div></div>
+    </div>
+
+    <div class="bottom-actions">
+      <button class="pms-btn-action" onclick="alert('Notification sent to floor supervisors!')">
+        <i class="fa-solid fa-bell" style="color: var(--accent-primary);"></i> Notify
+      </button>
+      <button class="pms-btn-action" onclick="resetFilters()">
+        <i class="fa-solid fa-rotate" style="color: var(--accent-cyan);"></i> Refresh
+      </button>
+      
+      <select class="pms-select" id="filter-type" onchange="applyFilters()">
+        <option value="ALL">All Types</option>
+        <option value="DELUXE">Deluxe</option>
+        <option value="SUPER DELUXE">Super Deluxe</option>
+        <option value="SUITE">Suite</option>
+        <option value="EXECUTIVE">Executive</option>
+      </select>
+
+      <select class="pms-select" id="filter-floor" onchange="applyFilters()">
+        <option value="ALL">All Floor</option>
+        <option value="1">Floor 1</option>
+        <option value="2">Floor 2</option>
+        <option value="3">Floor 3</option>
+        <option value="4">Floor 4</option>
+      </select>
+
+      <div style="display: flex; align-items: center; gap: 6px; font-weight: 700; font-size: 11px; color: var(--text-secondary);">
+        <span><i class="fa-solid fa-search" style="color: var(--accent-primary);"></i></span>
+        <input type="text" class="pms-input" id="filter-search" placeholder="Room No." onkeyup="applyFilters()">
+      </div>
+    </div>
+  </footer>
+
+  <!-- ROOM ACTION MODAL -->
+  <div class="modal-backdrop" id="room-modal">
+    <div class="modal-window large">
+      <div class="modal-top">
+        <h3 id="m-title"><i class="fa-solid fa-door-open"></i> Room Details</h3>
+        <button class="modal-close" onclick="closeModal('room-modal')">&times;</button>
+      </div>
+      <div class="modal-content-area" id="m-body"></div>
+      <div class="modal-bot" id="m-footer">
+        <button class="btn-ui-secondary" onclick="closeModal('room-modal')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- NEW RESERVATION MODAL -->
+  <div class="modal-backdrop" id="reserve-modal">
+    <div class="modal-window">
+      <div class="modal-top">
+        <h3><i class="fa-solid fa-calendar-plus"></i> New Reservation • Hotel Sagar Sonnet</h3>
+        <button class="modal-close" onclick="closeModal('reserve-modal')">&times;</button>
+      </div>
+      <div class="modal-content-area">
+        <form onsubmit="handleReserve(event)">
+          <div style="margin-bottom: 14px;">
+            <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">GUEST FULL NAME</label>
+            <input type="text" style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: var(--bg-surface); color: var(--text-primary); font-family: var(--font-main);" required placeholder="e.g. Suman Sen">
+          </div>
+          <div style="display: flex; gap: 12px; margin-bottom: 14px;">
+            <div style="flex:1;">
+              <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">PHONE</label>
+              <input type="text" style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: var(--bg-surface); color: var(--text-primary); font-family: var(--font-main);" required placeholder="+91 98000 00000">
+            </div>
+            <div style="flex:1;">
+              <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">ROOM TYPE</label>
+              <select style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: var(--bg-surface); color: var(--text-primary); font-family: var(--font-main);">
+                <option>DELUXE (₹ 3,500/night)</option>
+                <option selected>SUPER DELUXE (₹ 5,200/night)</option>
+                <option>SUITE (₹ 8,500/night)</option>
+                <option>EXECUTIVE (₹ 11,000/night)</option>
+              </select>
+            </div>
+          </div>
+          <div style="display: flex; gap: 12px; margin-bottom: 14px;">
+            <div style="flex:1;">
+              <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">CHECK-IN DATE</label>
+              <input type="date" value="2026-09-24" style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: var(--bg-surface); color: var(--text-primary); font-family: var(--font-main);">
+            </div>
+            <div style="flex:1;">
+              <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">CHECK-OUT DATE</label>
+              <input type="date" value="2026-09-26" style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: var(--bg-surface); color: var(--text-primary); font-family: var(--font-main);">
+            </div>
+          </div>
+          <button type="submit" class="btn-ui-primary" style="width: 100%; height: 42px; justify-content: center;">
+            <i class="fa-solid fa-check"></i> Confirm Reservation
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div id="print-area" style="display: none;"></div>
+
+  <script>
+    function applyFilters() {
+      const type = document.getElementById('filter-type').value;
+      const floor = document.getElementById('filter-floor').value;
+      const search = document.getElementById('filter-search').value.trim().toLowerCase();
+
+      document.querySelectorAll('.rack-card').forEach(card => {
+        const cType = card.getAttribute('data-type');
+        const cFloor = card.getAttribute('data-floor');
+        const cRoom = card.getAttribute('data-room').toLowerCase();
+        const gNameElem = card.querySelector('.rack-guest-name');
+        const gName = gNameElem ? gNameElem.textContent.toLowerCase() : '';
+
+        const mType = (type === 'ALL' || cType === type);
+        const mFloor = (floor === 'ALL' || cFloor === floor);
+        const mSearch = (!search || cRoom.includes(search) || gName.includes(search));
+
+        card.style.display = (mType && mFloor && mSearch) ? 'flex' : 'none';
+      });
+    }
+
+    function resetFilters() {
+      document.getElementById('filter-type').value = 'ALL';
+      document.getElementById('filter-floor').value = 'ALL';
+      document.getElementById('filter-search').value = '';
+      applyFilters();
+    }
+
+    function openModal(id) { document.getElementById(id).classList.add('open'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+    function openReservationModal() { openModal('reserve-modal'); }
+
+    function openRoomDetails(roomNo, category, cleaningStatus, pmsStatus, rate, guestObj) {
+      document.getElementById('m-title').innerHTML = `<i class="fa-solid fa-door-open"></i> Room ${roomNo} - ${category} (₹ ${rate.toLocaleString()}/night)`;
+      const body = document.getElementById('m-body');
+      const footer = document.getElementById('m-footer');
+
+      if (guestObj) {
+        body.innerHTML = `
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+            <div style="background: var(--bg-surface); padding: 16px; border: 1px solid var(--border-subtle); border-radius: var(--radius-md);">
+              <h4 style="font-size: 11px; color: var(--accent-primary); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px;"><i class="fa-solid fa-user"></i> Guest Info</h4>
+              <div style="font-size: 15px; font-weight: 800; color: var(--text-primary);">${guestObj.name}</div>
+              <div style="font-size: 11px; color: var(--text-secondary); margin-top: 6px;">Status: <span class="badge-tag green">${guestObj.state}</span></div>
+              <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Folio: <strong style="color: var(--accent-cyan); font-family: var(--font-mono);">${guestObj.folio}</strong></div>
+            </div>
+            <div style="background: var(--bg-surface); padding: 16px; border: 1px solid var(--border-subtle); border-radius: var(--radius-md);">
+              <h4 style="font-size: 11px; color: var(--accent-primary); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px;"><i class="fa-solid fa-wallet"></i> Folio Outstanding</h4>
+              <div style="font-size: 24px; font-weight: 900; color: var(--accent-rose); font-family: var(--font-mono);">₹ ${guestObj.balance.toLocaleString()}</div>
+              <div style="font-size: 11px; color: var(--accent-emerald); margin-top: 6px;"><i class="fa-solid fa-check"></i> Advance: ₹ 5,000</div>
+            </div>
+          </div>
+          <div class="pms-table-box">
+            <div style="background: var(--bg-surface); padding: 10px 16px; font-weight: 800; font-size: 11px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px;"><i class="fa-solid fa-receipt" style="margin-right: 6px;"></i>Charges Breakdown</div>
+            <table class="pms-table">
+              <thead><tr><th>Date</th><th>Description</th><th>Amount</th></tr></thead>
+              <tbody>
+                <tr><td>22 Sep 2026</td><td>Room Charge (${category})</td><td style="font-family: var(--font-mono); font-weight: 700;">₹ ${rate.toLocaleString()}</td></tr>
+                <tr><td>22 Sep 2026</td><td>Restaurant Room Service</td><td style="font-family: var(--font-mono); font-weight: 700;">₹ 1,450</td></tr>
+                <tr><td>23 Sep 2026</td><td>Room Charge (${category})</td><td style="font-family: var(--font-mono); font-weight: 700;">₹ ${rate.toLocaleString()}</td></tr>
+                <tr><td>23 Sep 2026</td><td>Laundry Express</td><td style="font-family: var(--font-mono); font-weight: 700;">₹ 450</td></tr>
+                <tr><td>23 Sep 2026</td><td>GST (12%)</td><td style="font-family: var(--font-mono); font-weight: 700;">₹ 1,500</td></tr>
+              </tbody>
+            </table>
+          </div>
+        `;
+        footer.innerHTML = `
+          <button class="btn-ui-secondary" onclick="printInvoice('${roomNo}', '${guestObj.name}', '${guestObj.folio}', ${guestObj.balance})"><i class="fa-solid fa-print"></i> Print Invoice</button>
+          <a href="pos-sales.html" class="btn-ui-primary"><i class="fa-solid fa-utensils"></i> Add POS Charge</a>
+          <button class="btn-ui-danger" onclick="checkoutGuest('${roomNo}', '${guestObj.name}')"><i class="fa-solid fa-right-from-bracket"></i> Check Out</button>
+          <button class="btn-ui-secondary" onclick="closeModal('room-modal')">Close</button>
+        `;
+      } else {
+        const isDirty = (cleaningStatus === 'Dirty');
+        body.innerHTML = `
+          <div style="background: var(--bg-surface); padding: 18px; border: 1px solid var(--border-subtle); border-radius: var(--radius-md); margin-bottom: 14px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <div>
+                <div style="font-size: 16px; font-weight: 800; color: var(--text-primary);">Room ${roomNo} Status: ${pmsStatus}</div>
+                <div style="font-size: 12px; color: var(--text-secondary); margin-top: 6px;">Housekeeping: <strong>${cleaningStatus}</strong></div>
+              </div>
+              <span class="badge-tag ${isDirty ? 'yellow' : 'green'}" style="font-size: 12px; padding: 6px 14px;">${cleaningStatus}</span>
+            </div>
+          </div>
+          <div style="font-size: 12px; font-weight: 600; color: var(--text-secondary);">
+            <i class="fa-solid fa-sparkles" style="color: var(--accent-gold);"></i> Room Features: King Bed, Free Wi-Fi, Climate Control AC, Smart 55" TV, Ocean/Garden View.
+          </div>
+        `;
+        footer.innerHTML = `
+          <button class="btn-ui-success" onclick="openReservationModal()"><i class="fa-solid fa-key"></i> New Check-In</button>
+          ${isDirty ? `<button class="btn-ui-primary" onclick="markRoomCleaned('${roomNo}')"><i class="fa-solid fa-broom"></i> Mark Cleaned</button>` : ''}
+          <button class="btn-ui-secondary" onclick="closeModal('room-modal')">Close</button>
+        `;
+      }
+      openModal('room-modal');
+    }
+
+    function checkoutGuest(roomNo, guestName) {
+      if (confirm(`Check out ${guestName} from Room ${roomNo}?`)) {
+        alert(`Room ${roomNo} checked out successfully. Marked as Dirty for cleaning.`);
+        closeModal('room-modal');
+        const card = document.querySelector(`.rack-card[data-room="${roomNo}"]`);
+        if (card) {
+          card.className = 'rack-card c-dirty';
+          card.setAttribute('data-status', 'dirty');
+          card.querySelector('.rack-card-mid').innerHTML = '';
+          card.querySelector('.rack-badge').textContent = 'Dirty';
+        }
+      }
+    }
+
+    function markRoomCleaned(roomNo) {
+      const card = document.querySelector(`.rack-card[data-room="${roomNo}"]`);
+      if (card) {
+        card.className = 'rack-card c-cleaned';
+        card.setAttribute('data-status', 'available');
+        card.querySelector('.rack-badge').textContent = 'Cleaned';
+      }
+      closeModal('room-modal');
+      alert(`Room ${roomNo} marked as Cleaned!`);
+    }
+
+    function handleReserve(e) {
+      e.preventDefault();
+      alert('Reservation confirmed successfully for Hotel Sagar Sonnet!');
+      closeModal('reserve-modal');
+    }
+
+    function printInvoice(roomNo, guestName, folio, balance) {
+      const printArea = document.getElementById('print-area');
+      printArea.innerHTML = `
+        <div style="padding: 40px; font-family: 'Plus Jakarta Sans', sans-serif; color: #1e293b;">
+          <div style="border-bottom: 2px solid #6366f1; padding-bottom: 16px; margin-bottom: 24px; display: flex; justify-content: space-between;">
+            <div>
+              <h1 style="color: #6366f1; margin: 0; font-size: 24px; font-weight: 900; letter-spacing: 1px;">HOTEL SAGAR SONNET</h1>
+              <p style="margin: 6px 0 0 0; font-size: 12px; color: #64748b;">Luxury Sea Beach Resort & Suites | Phone: +91 98765 43210</p>
+            </div>
+            <div style="text-align: right;">
+              <h2 style="margin: 0; font-size: 16px; color: #1e293b;">TAX INVOICE / FOLIO</h2>
+              <p style="margin: 4px 0 0 0; font-size: 12px;"><strong>Folio:</strong> ${folio}</p>
+              <p style="margin: 2px 0 0 0; font-size: 12px;"><strong>Date:</strong> 24 Sep 2026</p>
+            </div>
+          </div>
+          <div style="margin-bottom: 24px; background: #f8fafc; padding: 14px; border: 1px solid #cbd5e1; border-radius: 8px;">
+            <p style="margin: 0 0 4px 0;"><strong>Guest Name:</strong> ${guestName}</p>
+            <p style="margin: 0 0 4px 0;"><strong>Room:</strong> ${roomNo}</p>
+            <p style="margin: 0;"><strong>GSTIN:</strong> 19AAGCS7712K1Z9</p>
+          </div>
+          <table style="width: 100%; border-collapse: collapse; margin-bottom: 24px; font-size: 12px;">
+            <thead><tr style="background: #6366f1; color: #fff;"><th style="padding: 10px; text-align:left;">Description</th><th style="padding: 10px; text-align:right;">Amount (₹)</th></tr></thead>
+            <tbody>
+              <tr style="border-bottom: 1px solid #cbd5e1;"><td style="padding: 10px;">Room Stay & Dining Charges</td><td style="padding: 10px; text-align:right;">${(balance + 5000).toLocaleString()}.00</td></tr>
+              <tr style="border-bottom: 1px solid #cbd5e1;"><td style="padding: 10px; color: #10b981;">Less: Advance Deposit Paid</td><td style="padding: 10px; text-align:right; color: #10b981;">- 5,000.00</td></tr>
+            </tbody>
+            <tfoot>
+              <tr style="font-size: 14px; font-weight: bold; background: #f1f5f9;"><td style="padding: 10px;">Net Balance Payable:</td><td style="padding: 10px; text-align:right; color: #dc2626;">₹ ${balance.toLocaleString()}.00</td></tr>
+            </tfoot>
+          </table>
+          <div style="margin-top: 40px; display: flex; justify-content: space-between; font-size: 12px;">
+            <div>Guest Signature: __________________</div>
+            <div>Cashier Signature: __________________</div>
+          </div>
+        </div>
+      `;
+      window.print();
+    }
+  </script>
+</body>
+</html>

@@ -1,114 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Guest CRM - Hotel Sagar Sonnet</title>
-  <link rel="stylesheet" href="css/style.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <meta http-equiv="refresh" content="0; url=front-office/guest-crm.html">
+  <title>Redirecting...</title>
+  <script>window.location.href = "front-office/guest-crm.html";</script>
 </head>
 <body>
-  <header class="pms-app-header">
-    <div class="pms-header-brand"><i class="fa-solid fa-hotel gold-star"></i><span>HOTEL SAGAR SONNET</span><span style="background: #fbc531; color: #1e293b; font-size: 9px; padding: 2px 5px; border-radius: 3px; font-weight: 800;">PMS 2026</span></div>
-    <div class="pms-header-center"><span><i class="fa-regular fa-calendar-days"></i> Wednesday, 24 Sep 2026</span><span><i class="fa-solid fa-sun" style="color: #fbc531;"></i> Morning Shift</span><span><i class="fa-solid fa-location-dot" style="color: #22d3ee;"></i> Main Luxury Wing</span></div>
-    <div class="pms-header-right"><div class="pms-user-tag"><i class="fa-solid fa-user-tie"></i> Debashis Roy (Front Desk)</div><a href="login.html" class="btn-pms-logout"><i class="fa-solid fa-power-off"></i> Logout</a></div>
-  </header>
-  <nav class="pms-tabs-ribbon">
-    <a href="front-office.html" class="pms-tab-link active"><i class="fa-solid fa-desktop tab-ico" style="color: #6366f1;"></i> Front Office</a>
-    <a href="room-management.html" class="pms-tab-link"><i class="fa-solid fa-door-open tab-ico" style="color: #ec4899;"></i> Room Management</a>
-    <a href="pos-sales.html" class="pms-tab-link"><i class="fa-solid fa-utensils tab-ico" style="color: #10b981;"></i> POS Sales</a>
-    <a href="house-keeping.html" class="pms-tab-link"><i class="fa-solid fa-broom tab-ico" style="color: #f59e0b;"></i> House Keeping</a>
-    <a href="stores.html" class="pms-tab-link"><i class="fa-solid fa-boxes-stacked tab-ico" style="color: #22d3ee;"></i> Stores</a>
-    <a href="accounts.html" class="pms-tab-link"><i class="fa-solid fa-file-invoice-dollar tab-ico" style="color: #a78bfa;"></i> Accounts</a>
-    <a href="banquet.html" class="pms-tab-link"><i class="fa-solid fa-champagne-glasses tab-ico" style="color: #fbbf24;"></i> Banquet & Services</a>
-    <a href="administrator.html" class="pms-tab-link"><i class="fa-solid fa-user-gear tab-ico" style="color: #94a3b8;"></i> Administrator</a>
-  </nav>
-  <div class="pms-sub-ribbon">
-    <div class="ribbon-left-section">
-      <div class="ribbon-nav-links">
-        <a href="front-office.html" class="ribbon-nav-item"><i class="fa-solid fa-table-cells-large"></i> Room Rack</a>
-        <a href="room-management.html" class="ribbon-nav-item"><i class="fa-solid fa-door-open"></i> Rooms</a>
-        <a href="house-keeping.html" class="ribbon-nav-item"><i class="fa-solid fa-wrench"></i> Maintain</a>
-        <a href="accounts.html" class="ribbon-nav-item"><i class="fa-solid fa-chart-pie"></i> Report</a>
-      </div>
-      <div class="ribbon-action-buttons">
-        <a href="room-management.html" class="ribbon-btn"><span class="ico-box"><i class="fa-solid fa-door-open" style="color: #ec4899;"></i></span><span class="lbl-box">Rooms</span></a>
-        <a href="inhouse.html" class="ribbon-btn"><span class="ico-box"><i class="fa-solid fa-users" style="color: #94a3b8;"></i></span><span class="lbl-box">Inhouse</span></a>
-        <a href="front-office.html" class="ribbon-btn"><span class="ico-box"><i class="fa-solid fa-table-cells-large" style="color: #10b981;"></i></span><span class="lbl-box">F Desk</span></a>
-        <a href="arrivals.html" class="ribbon-btn"><span class="ico-box"><i class="fa-solid fa-plane-arrival" style="color: #f43f5e;"></i></span><span class="lbl-box">Arrivals</span></a>
-        <a href="guest-crm.html" class="ribbon-btn active-btn"><span class="ico-box"><i class="fa-solid fa-address-card" style="color: #f59e0b;"></i></span><span class="lbl-box">Guest</span></a>
-      </div>
-    </div>
-    <div style="font-weight: 700; color: var(--accent-gold); font-size: 12px;"><i class="fa-solid fa-address-book" style="margin-right: 4px;"></i> Guest Master Database</div>
-  </div>
-  <main class="pms-main-viewport">
-    <div class="pms-page-container">
-      <div class="pms-page-header">
-        <h2><i class="fa-solid fa-address-card" style="color: #f59e0b;"></i> Guest Master & CRM Database</h2>
-        <div style="display: flex; gap: 8px; align-items: center;">
-          <input type="text" class="pms-input" style="width: 200px; border-radius: var(--radius-md);" placeholder="Search guest name or ID...">
-          <button class="btn-ui-primary"><i class="fa-solid fa-search"></i> Search</button>
-        </div>
-      </div>
-      <div class="pms-page-content">
-        <div class="pms-table-box">
-          <table class="pms-table">
-            <thead>
-              <tr><th>Guest ID</th><th>Full Name</th><th>Phone</th><th>Email</th><th>ID / Passport</th><th>Total Stays</th><th>Loyalty Tier</th><th>Last Visit</th><th>Action</th></tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td style="font-family: var(--font-mono); color: var(--accent-cyan);">GST-001</td>
-                <td><strong>Sanjeev Kumar Singh</strong></td>
-                <td style="font-family: var(--font-mono); font-size: 11px;">+91 98112 34567</td>
-                <td style="font-size: 11px;">sanjeev.ksingh@gmail.com</td>
-                <td style="font-family: var(--font-mono); font-size: 11px;">AADHAR 9812 4567 8901</td>
-                <td style="font-family: var(--font-mono); font-weight: 700;">7</td>
-                <td><span class="badge-tag" style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(217, 119, 6, 0.08)); color: #b45309; border: 1px solid rgba(245, 158, 11, 0.3); font-weight: 700;"><i class="fa-solid fa-crown" style="margin-right: 4px;"></i>Gold</span></td>
-                <td>22 Sep 2026</td>
-                <td><button class="btn-ui-secondary"><i class="fa-solid fa-file-lines"></i> Profile</button></td>
-              </tr>
-              <tr>
-                <td style="font-family: var(--font-mono); color: var(--accent-cyan);">GST-002</td>
-                <td><strong>AJEET BHENGRA</strong></td>
-                <td style="font-family: var(--font-mono); font-size: 11px;">+91 97712 90123</td>
-                <td style="font-size: 11px;">ajeet.b@outlook.com</td>
-                <td style="font-family: var(--font-mono); font-size: 11px;">PAN AAEPB8765K</td>
-                <td style="font-family: var(--font-mono); font-weight: 700;">3</td>
-                <td><span class="badge-tag" style="background: rgba(148, 163, 184, 0.15); color: #475569; border: 1px solid rgba(148, 163, 184, 0.3); font-weight: 700;"><i class="fa-solid fa-medal" style="margin-right: 4px;"></i>Silver</span></td>
-                <td>21 Sep 2026</td>
-                <td><button class="btn-ui-secondary"><i class="fa-solid fa-file-lines"></i> Profile</button></td>
-              </tr>
-              <tr>
-                <td style="font-family: var(--font-mono); color: var(--accent-cyan);">GST-003</td>
-                <td><strong>Vikramaditya Roy</strong></td>
-                <td style="font-family: var(--font-mono); font-size: 11px;">+91 98300 77123</td>
-                <td style="font-size: 11px;">vikramaditya.roy@corp.in</td>
-                <td style="font-family: var(--font-mono); font-size: 11px;">PASSPORT Z9812345</td>
-                <td style="font-family: var(--font-mono); font-weight: 700;">15</td>
-                <td><span class="badge-tag" style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(139, 92, 246, 0.08)); color: #4f46e5; border: 1px solid rgba(99, 102, 241, 0.3); font-weight: 700;"><i class="fa-solid fa-gem" style="margin-right: 4px;"></i>Platinum</span></td>
-                <td>23 Sep 2026</td>
-                <td><button class="btn-ui-secondary"><i class="fa-solid fa-file-lines"></i> Profile</button></td>
-              </tr>
-              <tr>
-                <td style="font-family: var(--font-mono); color: var(--accent-cyan);">GST-004</td>
-                <td><strong>Dr. Ananya Sen</strong></td>
-                <td style="font-family: var(--font-mono); font-size: 11px;">+91 98450 11982</td>
-                <td style="font-size: 11px;">dr.ananya.sen@hospital.org</td>
-                <td style="font-family: var(--font-mono); font-size: 11px;">AADHAR 7654 3210 9876</td>
-                <td style="font-family: var(--font-mono); font-weight: 700;">12</td>
-                <td><span class="badge-tag" style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(217, 119, 6, 0.08)); color: #b45309; border: 1px solid rgba(245, 158, 11, 0.3); font-weight: 700;"><i class="fa-solid fa-crown" style="margin-right: 4px;"></i>Gold</span></td>
-                <td>21 Sep 2026</td>
-                <td><button class="btn-ui-secondary"><i class="fa-solid fa-file-lines"></i> Profile</button></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </main>
-  <footer class="pms-bottom-bar">
-    <div style="font-size: 11px; font-weight: 700; color: var(--text-secondary);"><i class="fa-solid fa-database" style="color: var(--accent-primary);"></i> Guest Database: 1,247 Total Registered Guests • Loyalty Program Active</div>
-  </footer>
+  <p>Redirecting to <a href="front-office/guest-crm.html">front-office/guest-crm.html</a>...</p>
 </body>
 </html>

@@ -442,7 +442,8 @@ a {
   border: none;
 }
 
-.ribbon-nav-item:hover {
+.ribbon-nav-item:hover,
+.ribbon-nav-item.active-nav {
   background: var(--accent-primary-bg);
   color: var(--accent-primary);
 }

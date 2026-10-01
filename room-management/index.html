@@ -1,0 +1,1056 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Room Management - Hotel Sagar Sonnet CRM / PMS</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    /* Specific styles for Room Management view */
+    .room-stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+    
+    .room-kpi-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 18px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+      transition: all 0.3s ease;
+      backdrop-filter: var(--glass-blur);
+    }
+
+    .room-kpi-card:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-md);
+      border-color: var(--border-active);
+    }
+
+    .room-kpi-bar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+    }
+
+    .control-toolbar {
+      background: rgba(255, 255, 255, 0.75);
+      backdrop-filter: var(--glass-blur);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-md);
+      padding: 12px 16px;
+      margin-bottom: 16px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      box-shadow: var(--shadow-xs);
+    }
+
+    .filter-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .pill-filter {
+      padding: 5px 14px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      border: 1px solid var(--border-subtle);
+      background: rgba(255, 255, 255, 0.8);
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.25s ease;
+    }
+
+    .pill-filter:hover {
+      border-color: var(--accent-primary);
+      color: var(--accent-primary);
+    }
+
+    .pill-filter.active {
+      background: var(--accent-primary);
+      color: #ffffff;
+      border-color: var(--accent-primary);
+      box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+    }
+
+    .view-toggle-btn {
+      background: rgba(241, 245, 249, 0.8);
+      border: 1px solid var(--border-medium);
+      color: var(--text-secondary);
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+
+    .view-toggle-btn.active {
+      background: var(--glass-white-solid);
+      color: var(--accent-primary);
+      border-color: var(--accent-primary);
+      box-shadow: var(--shadow-xs);
+    }
+
+    /* Grid cards layout for rooms */
+    .room-inventory-grid {
+      display: none;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 14px;
+    }
+
+    .room-inv-card {
+      background: var(--glass-white);
+      backdrop-filter: var(--glass-blur);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 12px;
+      transition: all 0.25s ease;
+      box-shadow: var(--shadow-xs);
+      position: relative;
+    }
+
+    .room-inv-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-md);
+      border-color: var(--border-active);
+    }
+
+    .room-inv-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .room-inv-number {
+      font-family: var(--font-mono);
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--text-primary);
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+    }
+
+    .room-inv-floor {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .room-amenity-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin: 8px 0;
+    }
+
+    .amenity-chip {
+      background: rgba(241, 245, 249, 0.7);
+      border: 1px solid var(--border-subtle);
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      padding: 2px 8px;
+      border-radius: 12px;
+    }
+
+    .room-inv-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 10px;
+      border-top: 1px solid var(--border-subtle);
+    }
+
+    .room-inv-rate {
+      font-family: var(--font-mono);
+      font-weight: 800;
+      font-size: 15px;
+      color: var(--accent-primary);
+    }
+
+    .toast-popup {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #0f172a;
+      color: #ffffff;
+      padding: 12px 20px;
+      border-radius: var(--radius-md);
+      font-size: 12px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+      z-index: 99999;
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .toast-popup.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top System Header Bar -->
+  <header class="pms-app-header">
+    <div class="pms-header-brand">
+      <i class="fa-solid fa-hotel gold-star"></i>
+      <span>HOTEL SAGAR SONNET</span>
+      <span style="background: #fbc531; color: #1e293b; font-size: 9px; padding: 2px 5px; border-radius: 3px; font-weight: 800;">PMS 2026</span>
+    </div>
+    <div class="pms-header-center">
+      <span><i class="fa-regular fa-calendar-days"></i> Wednesday, 24 Sep 2026</span>
+      <span><i class="fa-solid fa-door-open" style="color: #ec4899;"></i> Room Inventory & Asset Operations</span>
+      <span><i class="fa-solid fa-location-dot" style="color: #22d3ee;"></i> 48 Rooms Active</span>
+    </div>
+    <div class="pms-header-right">
+      <div class="pms-user-tag">
+        <i class="fa-solid fa-user-tie"></i>
+        <span>Rohan Mukherjee (Room Operations)</span>
+      </div>
+      <a href="../login.html" class="btn-pms-logout"><i class="fa-solid fa-power-off"></i> Logout</a>
+    </div>
+  </header>
+
+  <!-- Top Module Navigation Tabs -->
+  <nav class="pms-tabs-ribbon">
+    <a href="../front-office/index.html" class="pms-tab-link">
+      <i class="fa-solid fa-desktop tab-ico" style="color: #6366f1;"></i> Front Office
+    </a>
+    <a href="../room-management/index.html" class="pms-tab-link active">
+      <i class="fa-solid fa-door-open tab-ico" style="color: #ec4899;"></i> Room Management
+    </a>
+    <a href="../pos-sales/index.html" class="pms-tab-link">
+      <i class="fa-solid fa-utensils tab-ico" style="color: #10b981;"></i> POS Sales
+    </a>
+    <a href="../house-keeping/index.html" class="pms-tab-link">
+      <i class="fa-solid fa-broom tab-ico" style="color: #f59e0b;"></i> House Keeping
+    </a>
+    <a href="../stores/index.html" class="pms-tab-link">
+      <i class="fa-solid fa-boxes-stacked tab-ico" style="color: #22d3ee;"></i> Stores
+    </a>
+    <a href="../accounts/index.html" class="pms-tab-link">
+      <i class="fa-solid fa-file-invoice-dollar tab-ico" style="color: #a78bfa;"></i> Accounts
+    </a>
+    <a href="../banquet/index.html" class="pms-tab-link">
+      <i class="fa-solid fa-champagne-glasses tab-ico" style="color: #fbbf24;"></i> Banquet & Services
+    </a>
+    <a href="../administrator/index.html" class="pms-tab-link">
+      <i class="fa-solid fa-user-gear tab-ico" style="color: #94a3b8;"></i> Administrator
+    </a>
+  </nav>
+
+  <!-- Action Sub-Ribbon -->
+  <div class="pms-sub-ribbon">
+    <div class="ribbon-left-section">
+      <div class="ribbon-nav-links">
+        <span class="ribbon-nav-item active" style="color: #ec4899;"><i class="fa-solid fa-list-check"></i> Room Master</span>
+        <span class="ribbon-nav-item" onclick="openMaintenanceModal()"><i class="fa-solid fa-wrench"></i> Log Maintenance</span>
+        <span class="ribbon-nav-item" onclick="openTariffOverrideModal()"><i class="fa-solid fa-tags"></i> Tariff Master</span>
+      </div>
+      <div class="ribbon-action-buttons">
+        <a href="../front-office/index.html" class="ribbon-btn">
+          <span class="ico-box"><i class="fa-solid fa-table-cells-large" style="color: #10b981;"></i></span>
+          <span class="lbl-box">Rack</span>
+        </a>
+        <a href="../front-office/inhouse.html" class="ribbon-btn">
+          <span class="ico-box"><i class="fa-solid fa-users" style="color: #94a3b8;"></i></span>
+          <span class="lbl-box">Inhouse</span>
+        </a>
+        <a href="../front-office/arrivals.html" class="ribbon-btn">
+          <span class="ico-box"><i class="fa-solid fa-plane-arrival" style="color: #f43f5e;"></i></span>
+          <span class="lbl-box">Arrivals</span>
+        </a>
+        <a href="../front-office/guest-crm.html" class="ribbon-btn">
+          <span class="ico-box"><i class="fa-solid fa-address-card" style="color: #f59e0b;"></i></span>
+          <span class="lbl-box">Guests</span>
+        </a>
+      </div>
+    </div>
+    <div style="font-weight: 700; color: var(--accent-primary); font-size: 12px; display: flex; align-items: center; gap: 6px;">
+      <span style="width: 8px; height: 8px; background: var(--accent-emerald); border-radius: 50%; box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);"></span>
+      Room Inventory Status: 48 Registered • 45 Operational
+    </div>
+  </div>
+
+  <!-- Main Viewport -->
+  <main class="pms-main-viewport">
+    <div class="pms-page-container">
+      
+      <!-- Page Title & Top Actions -->
+      <div class="pms-page-header">
+        <h2>
+          <i class="fa-solid fa-door-open" style="color: #ec4899;"></i>
+          Room Management & Inventory Directory
+        </h2>
+        <div style="display: flex; gap: 10px; align-items: center;">
+          <button class="btn-ui-secondary" onclick="exportCSV()"><i class="fa-solid fa-file-export"></i> Export CSV</button>
+          <button class="btn-ui-primary" onclick="openAddRoomModal()"><i class="fa-solid fa-plus-circle"></i> Add New Room</button>
+        </div>
+      </div>
+
+      <div class="pms-page-content">
+
+        <!-- 4 KPI Summary Cards -->
+        <div class="room-stats-grid">
+          <div class="room-kpi-card">
+            <div class="room-kpi-bar" style="background: linear-gradient(90deg, #6366f1, #818cf8);"></div>
+            <div style="font-size: 10px; color: var(--text-muted); font-weight: 800; text-transform: uppercase; letter-spacing: 1px;">TOTAL ROOM ASSETS</div>
+            <div style="font-size: 24px; font-weight: 900; color: var(--accent-primary); margin-top: 6px; font-family: var(--font-mono);" id="kpi-total">48</div>
+            <div style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;">4 Floors • 12 Rooms per Floor</div>
+          </div>
+
+          <div class="room-kpi-card">
+            <div class="room-kpi-bar" style="background: linear-gradient(90deg, #059669, #10b981);"></div>
+            <div style="font-size: 10px; color: var(--text-muted); font-weight: 800; text-transform: uppercase; letter-spacing: 1px;">ACTIVE IN SERVICE</div>
+            <div style="font-size: 24px; font-weight: 900; color: var(--accent-emerald); margin-top: 6px; font-family: var(--font-mono);" id="kpi-active">45</div>
+            <div style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;">93.8% Operational Availability</div>
+          </div>
+
+          <div class="room-kpi-card">
+            <div class="room-kpi-bar" style="background: linear-gradient(90deg, #d97706, #f59e0b);"></div>
+            <div style="font-size: 10px; color: var(--text-muted); font-weight: 800; text-transform: uppercase; letter-spacing: 1px;">UNDER MAINTENANCE</div>
+            <div style="font-size: 24px; font-weight: 900; color: var(--accent-gold); margin-top: 6px; font-family: var(--font-mono);" id="kpi-maint">2</div>
+            <div style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;">Scheduled HVAC & Plumbing</div>
+          </div>
+
+          <div class="room-kpi-card">
+            <div class="room-kpi-bar" style="background: linear-gradient(90deg, #e11d48, #f43f5e);"></div>
+            <div style="font-size: 10px; color: var(--text-muted); font-weight: 800; text-transform: uppercase; letter-spacing: 1px;">OUT OF ORDER / BLOCKED</div>
+            <div style="font-size: 24px; font-weight: 900; color: var(--accent-rose); margin-top: 6px; font-family: var(--font-mono);" id="kpi-blocked">1</div>
+            <div style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;">Room 104 (Major Renovation)</div>
+          </div>
+        </div>
+
+        <!-- Filter & Search Toolbar -->
+        <div class="control-toolbar">
+          <div class="filter-group">
+            <div style="position: relative; width: 220px;">
+              <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 10px; top: 10px; color: var(--text-muted); font-size: 12px;"></i>
+              <input type="text" id="room-search" class="pms-input" placeholder="Search room # or type..." style="padding-left: 30px; height: 34px; width: 100%; border-radius: 20px;" onkeyup="filterRooms()">
+            </div>
+
+            <div style="display: flex; gap: 6px; align-items: center;">
+              <span style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Floor:</span>
+              <button class="pill-filter active" data-floor="all" onclick="setFloorFilter(this, 'all')">All</button>
+              <button class="pill-filter" data-floor="1" onclick="setFloorFilter(this, '1')">1st Flr</button>
+              <button class="pill-filter" data-floor="2" onclick="setFloorFilter(this, '2')">2nd Flr</button>
+              <button class="pill-filter" data-floor="3" onclick="setFloorFilter(this, '3')">3rd Flr</button>
+              <button class="pill-filter" data-floor="4" onclick="setFloorFilter(this, '4')">4th Flr</button>
+            </div>
+
+            <div style="display: flex; gap: 6px; align-items: center; margin-left: 6px;">
+              <span style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Category:</span>
+              <select class="pms-select" id="cat-filter" style="height: 32px; border-radius: var(--radius-sm);" onchange="filterRooms()">
+                <option value="all">All Categories</option>
+                <option value="DELUXE">Deluxe (₹ 3,500)</option>
+                <option value="SUPER DELUXE">Super Deluxe (₹ 5,200)</option>
+                <option value="SUITE">Suite Luxury (₹ 8,500)</option>
+                <option value="EXECUTIVE">Executive Penthouse (₹ 11,000)</option>
+              </select>
+            </div>
+
+            <div style="display: flex; gap: 6px; align-items: center;">
+              <span style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Status:</span>
+              <select class="pms-select" id="status-filter" style="height: 32px; border-radius: var(--radius-sm);" onchange="filterRooms()">
+                <option value="all">All Statuses</option>
+                <option value="Active">Active In-Service</option>
+                <option value="Maintenance">Maintenance</option>
+                <option value="Blocked">Blocked</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 4px;">
+            <button class="view-toggle-btn active" id="btn-view-table" onclick="switchView('table')"><i class="fa-solid fa-table-list"></i> Table</button>
+            <button class="view-toggle-btn" id="btn-view-grid" onclick="switchView('grid')"><i class="fa-solid fa-border-all"></i> Cards</button>
+          </div>
+        </div>
+
+        <!-- Table View Container -->
+        <div class="pms-table-box" id="rooms-table-container">
+          <table class="pms-table" id="rooms-table">
+            <thead>
+              <tr>
+                <th style="width: 70px;">Room #</th>
+                <th>Floor</th>
+                <th>Category</th>
+                <th>Bedding Config</th>
+                <th>Capacity</th>
+                <th>Amenities & Features</th>
+                <th>Base Tariff</th>
+                <th>Operational Status</th>
+                <th>Housekeeping</th>
+                <th style="text-align: right; width: 140px;">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="rooms-tbody">
+              <!-- Dynamically rendered rows -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Visual Grid Cards Container (Alternative View) -->
+        <div class="room-inventory-grid" id="rooms-grid-container">
+          <!-- Dynamically rendered cards -->
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- Bottom System Status Bar -->
+  <footer class="pms-bottom-bar">
+    <div style="font-size: 11px; font-weight: 700; color: var(--text-secondary); display: flex; align-items: center; gap: 8px;">
+      <i class="fa-solid fa-server" style="color: var(--accent-primary);"></i>
+      Hotel Sagar Sonnet Property System: Room Inventory Database Synchronized
+    </div>
+    <div class="legend-chips">
+      <div class="legend-chip chip-avl"><span class="chip-lbl">Active</span><span class="chip-cnt" id="bar-cnt-active">45</span></div>
+      <div class="legend-chip chip-drt"><span class="chip-lbl">Maint.</span><span class="chip-cnt" id="bar-cnt-maint">2</span></div>
+      <div class="legend-chip chip-occ"><span class="chip-lbl">Blocked</span><span class="chip-cnt" id="bar-cnt-blocked">1</span></div>
+      <div class="legend-chip chip-all"><span class="chip-lbl">Total</span><span class="chip-cnt">48</span></div>
+    </div>
+  </footer>
+
+  <!-- MODAL 1: Add New Room -->
+  <div class="modal-backdrop" id="add-room-modal">
+    <div class="modal-window">
+      <div class="modal-top">
+        <h3><i class="fa-solid fa-plus-circle"></i> Add New Room Asset</h3>
+        <button class="modal-close" onclick="closeModal('add-room-modal')">&times;</button>
+      </div>
+      <form id="add-room-form" onsubmit="handleAddRoom(event)">
+        <div class="modal-content-area">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
+            <div>
+              <label style="display:block; font-size:10px; font-weight:800; margin-bottom:6px; color: var(--text-secondary); text-transform: uppercase;">Room Number</label>
+              <input type="text" id="new-room-no" class="pms-input" placeholder="e.g. 501" required style="width: 100%; height: 38px; font-family: var(--font-mono); font-weight: 800;">
+            </div>
+            <div>
+              <label style="display:block; font-size:10px; font-weight:800; margin-bottom:6px; color: var(--text-secondary); text-transform: uppercase;">Floor</label>
+              <select id="new-room-floor" class="pms-select" style="width: 100%; height: 38px;" required>
+                <option value="Floor 1">Floor 1 (Ground / Wing A)</option>
+                <option value="Floor 2">Floor 2 (Sea Wing)</option>
+                <option value="Floor 3">Floor 3 (Club Wing)</option>
+                <option value="Floor 4">Floor 4 (Royal Penthouse)</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
+            <div>
+              <label style="display:block; font-size:10px; font-weight:800; margin-bottom:6px; color: var(--text-secondary); text-transform: uppercase;">Room Category</label>
+              <select id="new-room-cat" class="pms-select" style="width: 100%; height: 38px;" onchange="updateDefaultTariff(this.value)" required>
+                <option value="DELUXE">Deluxe Room</option>
+                <option value="SUPER DELUXE">Super Deluxe</option>
+                <option value="SUITE">Suite Luxury</option>
+                <option value="EXECUTIVE">Executive Penthouse</option>
+              </select>
+            </div>
+            <div>
+              <label style="display:block; font-size:10px; font-weight:800; margin-bottom:6px; color: var(--text-secondary); text-transform: uppercase;">Base Tariff (₹ / Night)</label>
+              <input type="number" id="new-room-rate" class="pms-input" value="3500" required style="width: 100%; height: 38px; font-family: var(--font-mono); font-weight: 800;">
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
+            <div>
+              <label style="display:block; font-size:10px; font-weight:800; margin-bottom:6px; color: var(--text-secondary); text-transform: uppercase;">Bedding Setup</label>
+              <select id="new-room-bed" class="pms-select" style="width: 100%; height: 38px;">
+                <option value="King Size (72x78)">King Size Master (72x78)</option>
+                <option value="Twin Double Bed">Twin Double Beds</option>
+                <option value="Queen Deluxe">Queen Deluxe</option>
+                <option value="Imperial Royal Bed">Imperial Royal Bed</option>
+              </select>
+            </div>
+            <div>
+              <label style="display:block; font-size:10px; font-weight:800; margin-bottom:6px; color: var(--text-secondary); text-transform: uppercase;">Max Pax Capacity</label>
+              <select id="new-room-pax" class="pms-select" style="width: 100%; height: 38px;">
+                <option value="2 Adults">2 Adults</option>
+                <option value="2 Adults + 1 Child">2 Adults + 1 Child</option>
+                <option value="3 Adults">3 Adults</option>
+                <option value="4 Adults (Family Suite)">4 Adults (Family)</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="margin-bottom: 14px;">
+            <label style="display:block; font-size:10px; font-weight:800; margin-bottom:6px; color: var(--text-secondary); text-transform: uppercase;">Key Amenities</label>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; font-size: 11px; font-weight: 600; color: var(--text-primary);">
+              <label style="display:flex; align-items:center; gap:6px;"><input type="checkbox" name="amenity" value="Ocean View" checked> Ocean View</label>
+              <label style="display:flex; align-items:center; gap:6px;"><input type="checkbox" name="amenity" value="Balcony" checked> Balcony</label>
+              <label style="display:flex; align-items:center; gap:6px;"><input type="checkbox" name="amenity" value="Smart 55 TV" checked> Smart 55" TV</label>
+              <label style="display:flex; align-items:center; gap:6px;"><input type="checkbox" name="amenity" value="Jacuzzi"> Jacuzzi Bath</label>
+              <label style="display:flex; align-items:center; gap:6px;"><input type="checkbox" name="amenity" value="Mini-Bar" checked> Mini-Bar</label>
+              <label style="display:flex; align-items:center; gap:6px;"><input type="checkbox" name="amenity" value="Free Wi-Fi" checked> Free Wi-Fi</label>
+            </div>
+          </div>
+
+          <div>
+            <label style="display:block; font-size:10px; font-weight:800; margin-bottom:6px; color: var(--text-secondary); text-transform: uppercase;">Initial Operational State</label>
+            <select id="new-room-status" class="pms-select" style="width: 100%; height: 38px;">
+              <option value="Active">Active In-Service</option>
+              <option value="Maintenance">Under Maintenance</option>
+              <option value="Blocked">Blocked / Out of Order</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="modal-bot">
+          <button type="button" class="btn-ui-secondary" onclick="closeModal('add-room-modal')">Cancel</button>
+          <button type="submit" class="btn-ui-primary"><i class="fa-solid fa-check"></i> Register Room Asset</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL 2: Edit Room Details -->
+  <div class="modal-backdrop" id="edit-room-modal">
+    <div class="modal-window">
+      <div class="modal-top">
+        <h3><i class="fa-solid fa-pen-to-square"></i> Edit Room Asset: <span id="edit-modal-room-num"></span></h3>
+        <button class="modal-close" onclick="closeModal('edit-room-modal')">&times;</button>
+      </div>
+      <form id="edit-room-form" onsubmit="handleSaveEditRoom(event)">
+        <input type="hidden" id="edit-room-id">
+        <div class="modal-content-area">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
+            <div>
+              <label style="display:block; font-size:10px; font-weight:800; margin-bottom:6px; color: var(--text-secondary); text-transform: uppercase;">Room Category</label>
+              <select id="edit-room-cat" class="pms-select" style="width: 100%; height: 38px;">
+                <option value="DELUXE">Deluxe Room</option>
+                <option value="SUPER DELUXE">Super Deluxe</option>
+                <option value="SUITE">Suite Luxury</option>
+                <option value="EXECUTIVE">Executive Penthouse</option>
+              </select>
+            </div>
+            <div>
+              <label style="display:block; font-size:10px; font-weight:800; margin-bottom:6px; color: var(--text-secondary); text-transform: uppercase;">Base Tariff (₹ / Night)</label>
+              <input type="number" id="edit-room-rate" class="pms-input" required style="width: 100%; height: 38px; font-family: var(--font-mono); font-weight: 800;">
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
+            <div>
+              <label style="display:block; font-size:10px; font-weight:800; margin-bottom:6px; color: var(--text-secondary); text-transform: uppercase;">Bedding Setup</label>
+              <input type="text" id="edit-room-bed" class="pms-input" style="width: 100%; height: 38px;">
+            </div>
+            <div>
+              <label style="display:block; font-size:10px; font-weight:800; margin-bottom:6px; color: var(--text-secondary); text-transform: uppercase;">Max Pax Capacity</label>
+              <input type="text" id="edit-room-pax" class="pms-input" style="width: 100%; height: 38px;">
+            </div>
+          </div>
+
+          <div style="margin-bottom: 14px;">
+            <label style="display:block; font-size:10px; font-weight:800; margin-bottom:6px; color: var(--text-secondary); text-transform: uppercase;">Operational Status</label>
+            <select id="edit-room-status" class="pms-select" style="width: 100%; height: 38px;">
+              <option value="Active">Active In-Service</option>
+              <option value="Maintenance">Under Maintenance</option>
+              <option value="Blocked">Blocked / Out of Order</option>
+            </select>
+          </div>
+
+          <div>
+            <label style="display:block; font-size:10px; font-weight:800; margin-bottom:6px; color: var(--text-secondary); text-transform: uppercase;">Housekeeping State</label>
+            <select id="edit-room-hk" class="pms-select" style="width: 100%; height: 38px;">
+              <option value="Cleaned">Cleaned & Inspected</option>
+              <option value="Dirty">Dirty (Needs Housekeeping)</option>
+              <option value="Inspecting">Inspecting in Progress</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="modal-bot">
+          <button type="button" class="btn-ui-secondary" onclick="closeModal('edit-room-modal')">Cancel</button>
+          <button type="submit" class="btn-ui-primary"><i class="fa-solid fa-floppy-disk"></i> Save Modifications</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL 3: Maintenance / Block Modal -->
+  <div class="modal-backdrop" id="maint-modal">
+    <div class="modal-window">
+      <div class="modal-top">
+        <h3><i class="fa-solid fa-wrench"></i> Room Maintenance Work Order</h3>
+        <button class="modal-close" onclick="closeModal('maint-modal')">&times;</button>
+      </div>
+      <div class="modal-content-area">
+        <div style="margin-bottom: 14px;">
+          <label style="display:block; font-size:10px; font-weight:800; margin-bottom:6px; color: var(--text-secondary); text-transform: uppercase;">Target Room</label>
+          <select id="maint-room-select" class="pms-select" style="width: 100%; height: 38px; font-family: var(--font-mono); font-weight: 800;">
+            <!-- Populated via JS -->
+          </select>
+        </div>
+
+        <div style="margin-bottom: 14px;">
+          <label style="display:block; font-size:10px; font-weight:800; margin-bottom:6px; color: var(--text-secondary); text-transform: uppercase;">Maintenance Reason</label>
+          <select id="maint-reason" class="pms-select" style="width: 100%; height: 38px;">
+            <option value="HVAC / Air Conditioning Repair">HVAC / Air Conditioning Repair</option>
+            <option value="Bathroom Plumbing & Fixtures">Bathroom Plumbing & Fixtures</option>
+            <option value="Deep Steam Cleaning & Sanitization">Deep Steam Cleaning & Sanitization</option>
+            <option value="Interior Painting & Touch-up">Interior Painting & Touch-up</option>
+            <option value="Electrical & Smart TV Wiring">Electrical & Smart TV Wiring</option>
+            <option value="Lock & Access Card Reader Service">Lock & Access Card Reader Service</option>
+          </select>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
+          <div>
+            <label style="display:block; font-size:10px; font-weight:800; margin-bottom:6px; color: var(--text-secondary); text-transform: uppercase;">Assigned Engineer</label>
+            <input type="text" class="pms-input" value="Ramesh Kumar (Engineering Lead)" style="width: 100%; height: 38px;">
+          </div>
+          <div>
+            <label style="display:block; font-size:10px; font-weight:800; margin-bottom:6px; color: var(--text-secondary); text-transform: uppercase;">Expected Completion</label>
+            <input type="date" class="pms-input" value="2026-09-25" style="width: 100%; height: 38px;">
+          </div>
+        </div>
+
+        <div style="background: rgba(217, 119, 6, 0.08); border: 1px solid rgba(217, 119, 6, 0.2); border-radius: var(--radius-sm); padding: 12px; font-size: 11px; color: var(--accent-gold); font-weight: 600;">
+          <i class="fa-solid fa-triangle-exclamation" style="margin-right: 6px;"></i> Setting this room into Maintenance will automatically prevent new guest check-ins from the Front Desk rack.
+        </div>
+      </div>
+      <div class="modal-bot">
+        <button class="btn-ui-secondary" onclick="closeModal('maint-modal')">Cancel</button>
+        <button class="btn-ui-primary" onclick="confirmMaintenance()"><i class="fa-solid fa-lock"></i> Put in Maintenance</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 4: Tariff Master Modal -->
+  <div class="modal-backdrop" id="tariff-modal">
+    <div class="modal-window">
+      <div class="modal-top">
+        <h3><i class="fa-solid fa-tags"></i> Hotel Sagar Sonnet • Category Tariff Scheme</h3>
+        <button class="modal-close" onclick="closeModal('tariff-modal')">&times;</button>
+      </div>
+      <div class="modal-content-area">
+        <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 16px;">Update standard base tariffs for all room categories. This updates future reservations across all rooms.</p>
+        <table class="pms-table" style="margin-bottom: 16px;">
+          <thead>
+            <tr><th>Category</th><th>Current Tariff</th><th>Weekend Tariff (+15%)</th><th>Peak Festive Rate</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>DELUXE</strong></td><td style="font-family: var(--font-mono); font-weight: 700;">₹ 3,500</td><td style="font-family: var(--font-mono);">₹ 4,025</td><td style="font-family: var(--font-mono);">₹ 4,500</td></tr>
+            <tr><td><strong>SUPER DELUXE</strong></td><td style="font-family: var(--font-mono); font-weight: 700;">₹ 5,200</td><td style="font-family: var(--font-mono);">₹ 5,980</td><td style="font-family: var(--font-mono);">₹ 6,500</td></tr>
+            <tr><td><strong>SUITE LUXURY</strong></td><td style="font-family: var(--font-mono); font-weight: 700;">₹ 8,500</td><td style="font-family: var(--font-mono);">₹ 9,775</td><td style="font-family: var(--font-mono);">₹ 11,000</td></tr>
+            <tr><td><strong>EXECUTIVE PENTHOUSE</strong></td><td style="font-family: var(--font-mono); font-weight: 700;">₹ 11,000</td><td style="font-family: var(--font-mono);">₹ 12,650</td><td style="font-family: var(--font-mono);">₹ 14,000</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="modal-bot">
+        <button class="btn-ui-secondary" onclick="closeModal('tariff-modal')">Close</button>
+        <button class="btn-ui-primary" onclick="alert('Tariff schemes updated across PMS!'); closeModal('tariff-modal');"><i class="fa-solid fa-check"></i> Apply Tariff Updates</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Feedback -->
+  <div class="toast-popup" id="app-toast">
+    <i class="fa-solid fa-circle-check" style="color: var(--accent-emerald); font-size: 16px;"></i>
+    <span id="toast-msg">Action completed successfully!</span>
+  </div>
+
+  <script>
+    // Initial Rooms Data Representation (Covering all 4 floors and categories)
+    let roomsData = [
+      { id: '101', no: '101', floor: '1', cat: 'DELUXE', bed: 'King Size (72x78)', pax: '2 Adults', rate: 3500, amenities: ['Ocean View', 'Balcony', 'Free Wi-Fi'], status: 'Active', hk: 'Cleaned' },
+      { id: '102', no: '102', floor: '1', cat: 'DELUXE', bed: 'Twin Double Beds', pax: '2 Adults', rate: 3500, amenities: ['Ocean View', 'Smart 55 TV'], status: 'Active', hk: 'Cleaned' },
+      { id: '103', no: '103', floor: '1', cat: 'SUPER DELUXE', bed: 'King Size (72x78)', pax: '2 Adults + 1 Child', rate: 5200, amenities: ['Ocean View', 'Balcony', 'Mini-Bar'], status: 'Active', hk: 'Dirty' },
+      { id: '104', no: '104', floor: '1', cat: 'SUPER DELUXE', bed: 'King Size (72x78)', pax: '2 Adults + 1 Child', rate: 5200, amenities: ['Balcony', 'Smart 55 TV'], status: 'Blocked', hk: 'Dirty' },
+      { id: '105', no: '105', floor: '1', cat: 'DELUXE', bed: 'Queen Deluxe', pax: '2 Adults', rate: 3500, amenities: ['Garden View', 'Free Wi-Fi'], status: 'Active', hk: 'Cleaned' },
+      { id: '106', no: '106', floor: '1', cat: 'DELUXE', bed: 'King Size (72x78)', pax: '2 Adults', rate: 3500, amenities: ['Ocean View', 'Balcony'], status: 'Active', hk: 'Cleaned' },
+      
+      { id: '201', no: '201', floor: '2', cat: 'SUITE', bed: 'Imperial Royal Bed', pax: '3 Adults', rate: 8500, amenities: ['Ocean View', 'Balcony', 'Jacuzzi', 'Mini-Bar'], status: 'Active', hk: 'Dirty' },
+      { id: '202', no: '202', floor: '2', cat: 'DELUXE', bed: 'King Size (72x78)', pax: '2 Adults', rate: 3500, amenities: ['Ocean View', 'Free Wi-Fi'], status: 'Active', hk: 'Cleaned' },
+      { id: '203', no: '203', floor: '2', cat: 'SUPER DELUXE', bed: 'Twin Double Beds', pax: '2 Adults + 1 Child', rate: 5200, amenities: ['Sea Breeze', 'Smart 55 TV'], status: 'Active', hk: 'Dirty' },
+      { id: '204', no: '204', floor: '2', cat: 'SUPER DELUXE', bed: 'King Size (72x78)', pax: '2 Adults + 1 Child', rate: 5200, amenities: ['Ocean View', 'Balcony'], status: 'Active', hk: 'Dirty' },
+      { id: '205', no: '205', floor: '2', cat: 'SUPER DELUXE', bed: 'King Size (72x78)', pax: '2 Adults', rate: 5200, amenities: ['Ocean View', 'Mini-Bar'], status: 'Active', hk: 'Cleaned' },
+      { id: '206', no: '206', floor: '2', cat: 'DELUXE', bed: 'King Size (72x78)', pax: '2 Adults', rate: 3500, amenities: ['Garden View', 'Free Wi-Fi'], status: 'Active', hk: 'Cleaned' },
+
+      { id: '301', no: '301', floor: '3', cat: 'SUITE', bed: 'Imperial Royal Bed', pax: '3 Adults', rate: 8500, amenities: ['Panoramic Sea View', 'Jacuzzi', 'Mini-Bar', 'Balcony'], status: 'Active', hk: 'Dirty' },
+      { id: '302', no: '302', floor: '3', cat: 'DELUXE', bed: 'King Size (72x78)', pax: '2 Adults', rate: 3500, amenities: ['Ocean View', 'Free Wi-Fi'], status: 'Active', hk: 'Cleaned' },
+      { id: '304', no: '304', floor: '3', cat: 'SUPER DELUXE', bed: 'King Size (72x78)', pax: '2 Adults + 1 Child', rate: 5200, amenities: ['Balcony', 'Mini-Bar', 'Smart TV'], status: 'Active', hk: 'Cleaned' },
+      { id: '305', no: '305', floor: '3', cat: 'SUPER DELUXE', bed: 'Twin Double Beds', pax: '2 Adults + 1 Child', rate: 5200, amenities: ['Ocean View', 'Balcony'], status: 'Active', hk: 'Cleaned' },
+      { id: '307', no: '307', floor: '3', cat: 'SUPER DELUXE', bed: 'King Size (72x78)', pax: '2 Adults + 1 Child', rate: 5200, amenities: ['Ocean View', 'Mini-Bar'], status: 'Active', hk: 'Cleaned' },
+      { id: '308', no: '308', floor: '3', cat: 'DELUXE', bed: 'King Size (72x78)', pax: '2 Adults', rate: 3500, amenities: ['Free Wi-Fi', 'Smart TV'], status: 'Maintenance', hk: 'Inspecting' },
+
+      { id: '401', no: '401', floor: '4', cat: 'EXECUTIVE', bed: 'Emperor Royal 84"', pax: '4 Adults (Family Suite)', rate: 11000, amenities: ['Ocean Terrace', 'Private Jacuzzi', 'Butler Service', 'Mini-Bar'], status: 'Active', hk: 'Cleaned' },
+      { id: '402', no: '402', floor: '4', cat: 'EXECUTIVE', bed: 'Emperor Royal 84"', pax: '4 Adults (Family Suite)', rate: 11000, amenities: ['Ocean Terrace', 'Jacuzzi', 'Smart Automation'], status: 'Active', hk: 'Cleaned' },
+      { id: '407', no: '407', floor: '4', cat: 'SUITE', bed: 'Imperial Royal Bed', pax: '3 Adults', rate: 8500, amenities: ['Sea Breeze Balcony', 'Mini-Bar'], status: 'Active', hk: 'Dirty' },
+      { id: '408', no: '408', floor: '4', cat: 'SUITE', bed: 'Imperial Royal Bed', pax: '3 Adults', rate: 8500, amenities: ['Panoramic Sea View', 'Jacuzzi', 'Balcony'], status: 'Active', hk: 'Cleaned' },
+      { id: '412', no: '412', floor: '4', cat: 'EXECUTIVE', bed: 'Emperor Royal 84"', pax: '4 Adults', rate: 11000, amenities: ['Private Terrace', 'Jacuzzi', 'VIP Bar'], status: 'Maintenance', hk: 'Inspecting' }
+    ];
+
+    let currentFloorFilter = 'all';
+
+    function init() {
+      renderRooms();
+      populateMaintenanceSelect();
+      updateKPICounters();
+    }
+
+    function renderRooms() {
+      const search = document.getElementById('room-search').value.toLowerCase().trim();
+      const cat = document.getElementById('cat-filter').value;
+      const stat = document.getElementById('status-filter').value;
+
+      const filtered = roomsData.filter(r => {
+        const matchesFloor = (currentFloorFilter === 'all' || r.floor === currentFloorFilter);
+        const matchesCat = (cat === 'all' || r.cat === cat);
+        const matchesStat = (stat === 'all' || r.status === stat);
+        const matchesSearch = (!search || r.no.toLowerCase().includes(search) || r.cat.toLowerCase().includes(search) || r.amenities.some(a => a.toLowerCase().includes(search)));
+        return matchesFloor && matchesCat && matchesStat && matchesSearch;
+      });
+
+      // Render Table
+      const tbody = document.getElementById('rooms-tbody');
+      tbody.innerHTML = '';
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="10" style="text-align:center; padding: 40px; color: var(--text-muted); font-size: 13px;"><i class="fa-solid fa-door-closed" style="font-size: 32px; display:block; margin-bottom: 10px;"></i>No rooms found matching your filter criteria.</td></tr>`;
+      } else {
+        filtered.forEach(r => {
+          let catBadgeClass = '';
+          if (r.cat === 'DELUXE') catBadgeClass = 'blue';
+          else if (r.cat === 'SUPER DELUXE') catBadgeClass = 'yellow';
+          else if (r.cat === 'SUITE') catBadgeClass = 'green';
+          else catBadgeClass = 'red';
+
+          let statusBadgeClass = 'green';
+          if (r.status === 'Maintenance') statusBadgeClass = 'yellow';
+          else if (r.status === 'Blocked') statusBadgeClass = 'red';
+
+          let hkBadgeClass = (r.hk === 'Cleaned') ? 'green' : (r.hk === 'Dirty' ? 'yellow' : 'blue');
+
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td><strong style="font-family: var(--font-mono); font-size: 14px; color: var(--text-primary);">${r.no}</strong></td>
+            <td><span class="badge-tag" style="background: rgba(148, 163, 184, 0.15); color: var(--text-secondary); font-size: 10px;">Floor ${r.floor}</span></td>
+            <td><span class="badge-tag ${catBadgeClass}">${r.cat}</span></td>
+            <td style="font-size: 11px;">${r.bed}</td>
+            <td style="font-size: 11px; font-weight: 600;"><i class="fa-solid fa-user-group" style="color: var(--text-muted); margin-right: 4px;"></i>${r.pax}</td>
+            <td>
+              <div style="display:flex; flex-wrap:wrap; gap:4px;">
+                ${r.amenities.map(a => `<span class="amenity-chip">${a}</span>`).join('')}
+              </div>
+            </td>
+            <td style="font-family: var(--font-mono); font-weight: 800; color: var(--accent-primary); font-size: 13px;">₹ ${r.rate.toLocaleString()}</td>
+            <td><span class="badge-tag ${statusBadgeClass}"><i class="fa-solid fa-circle" style="font-size: 6px; margin-right: 5px;"></i>${r.status}</span></td>
+            <td><span class="badge-tag ${hkBadgeClass}">${r.hk}</span></td>
+            <td style="text-align: right;">
+              <button class="btn-ui-secondary" style="padding: 4px 8px; font-size: 11px;" onclick="openEditRoomModal('${r.id}')" title="Edit Details"><i class="fa-solid fa-pen"></i></button>
+              <button class="btn-ui-secondary" style="padding: 4px 8px; font-size: 11px;" onclick="toggleRoomMaintenance('${r.id}')" title="Toggle Maintenance"><i class="fa-solid fa-wrench"></i></button>
+              <button class="btn-ui-danger" style="padding: 4px 8px; font-size: 11px;" onclick="deleteRoom('${r.id}')" title="Archive Room"><i class="fa-solid fa-trash-can"></i></button>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+
+      // Render Cards Grid
+      const grid = document.getElementById('rooms-grid-container');
+      grid.innerHTML = '';
+      filtered.forEach(r => {
+        let statusBadgeClass = 'green';
+        if (r.status === 'Maintenance') statusBadgeClass = 'yellow';
+        else if (r.status === 'Blocked') statusBadgeClass = 'red';
+
+        const card = document.createElement('div');
+        card.className = 'room-inv-card';
+        card.innerHTML = `
+          <div class="room-inv-header">
+            <div>
+              <div class="room-inv-number">${r.no} <span class="room-inv-floor">Flr ${r.floor}</span></div>
+              <div style="font-size: 11px; font-weight: 700; color: var(--accent-primary); margin-top: 2px;">${r.cat}</div>
+            </div>
+            <span class="badge-tag ${statusBadgeClass}">${r.status}</span>
+          </div>
+          <div>
+            <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 4px;"><i class="fa-solid fa-bed" style="margin-right: 4px;"></i>${r.bed} • ${r.pax}</div>
+            <div class="room-amenity-tags">
+              ${r.amenities.map(a => `<span class="amenity-chip">${a}</span>`).join('')}
+            </div>
+          </div>
+          <div class="room-inv-footer">
+            <div>
+              <div style="font-size: 9px; text-transform: uppercase; font-weight: 800; color: var(--text-muted);">Base Tariff</div>
+              <div class="room-inv-rate">₹ ${r.rate.toLocaleString()}</div>
+            </div>
+            <div style="display: flex; gap: 6px;">
+              <button class="btn-ui-secondary" style="padding: 4px 8px; font-size: 11px;" onclick="openEditRoomModal('${r.id}')"><i class="fa-solid fa-pen"></i></button>
+              <button class="btn-ui-secondary" style="padding: 4px 8px; font-size: 11px;" onclick="toggleRoomMaintenance('${r.id}')"><i class="fa-solid fa-wrench"></i></button>
+            </div>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function setFloorFilter(btn, floor) {
+      document.querySelectorAll('.pill-filter').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentFloorFilter = floor;
+      renderRooms();
+    }
+
+    function filterRooms() {
+      renderRooms();
+    }
+
+    function switchView(view) {
+      const tableCont = document.getElementById('rooms-table-container');
+      const gridCont = document.getElementById('rooms-grid-container');
+      const btnTable = document.getElementById('btn-view-table');
+      const btnGrid = document.getElementById('btn-view-grid');
+
+      if (view === 'grid') {
+        tableCont.style.display = 'none';
+        gridCont.style.display = 'grid';
+        btnGrid.classList.add('active');
+        btnTable.classList.remove('active');
+      } else {
+        tableCont.style.display = 'block';
+        gridCont.style.display = 'none';
+        btnTable.classList.add('active');
+        btnGrid.classList.remove('active');
+      }
+    }
+
+    function updateKPICounters() {
+      const total = roomsData.length;
+      const active = roomsData.filter(r => r.status === 'Active').length;
+      const maint = roomsData.filter(r => r.status === 'Maintenance').length;
+      const blocked = roomsData.filter(r => r.status === 'Blocked').length;
+
+      document.getElementById('kpi-total').textContent = total;
+      document.getElementById('kpi-active').textContent = active;
+      document.getElementById('kpi-maint').textContent = maint;
+      document.getElementById('kpi-blocked').textContent = blocked;
+
+      document.getElementById('bar-cnt-active').textContent = active;
+      document.getElementById('bar-cnt-maint').textContent = maint;
+      document.getElementById('bar-cnt-blocked').textContent = blocked;
+    }
+
+    function openModal(id) {
+      const m = document.getElementById(id);
+      if (m) m.classList.add('open');
+    }
+
+    function closeModal(id) {
+      const m = document.getElementById(id);
+      if (m) m.classList.remove('open');
+    }
+
+    function openAddRoomModal() {
+      openModal('add-room-modal');
+    }
+
+    function updateDefaultTariff(cat) {
+      const rateInput = document.getElementById('new-room-rate');
+      if (cat === 'DELUXE') rateInput.value = 3500;
+      else if (cat === 'SUPER DELUXE') rateInput.value = 5200;
+      else if (cat === 'SUITE') rateInput.value = 8500;
+      else if (cat === 'EXECUTIVE') rateInput.value = 11000;
+    }
+
+    function handleAddRoom(e) {
+      e.preventDefault();
+      const no = document.getElementById('new-room-no').value.trim();
+      const floorRaw = document.getElementById('new-room-floor').value;
+      const floor = floorRaw.replace('Floor ', '').trim();
+      const cat = document.getElementById('new-room-cat').value;
+      const rate = parseInt(document.getElementById('new-room-rate').value, 10);
+      const bed = document.getElementById('new-room-bed').value;
+      const pax = document.getElementById('new-room-pax').value;
+      const status = document.getElementById('new-room-status').value;
+
+      const checkedAmenities = [];
+      document.querySelectorAll('#add-room-form input[name="amenity"]:checked').forEach(c => checkedAmenities.push(c.value));
+
+      // Check if room no already exists
+      if (roomsData.some(r => r.no === no)) {
+        alert(`Room Number ${no} is already registered in the system!`);
+        return;
+      }
+
+      roomsData.unshift({
+        id: no,
+        no: no,
+        floor: floor,
+        cat: cat,
+        bed: bed,
+        pax: pax,
+        rate: rate,
+        amenities: checkedAmenities.length ? checkedAmenities : ['Standard Amenities'],
+        status: status,
+        hk: 'Cleaned'
+      });
+
+      closeModal('add-room-modal');
+      document.getElementById('add-room-form').reset();
+      renderRooms();
+      updateKPICounters();
+      populateMaintenanceSelect();
+      showToast(`Room ${no} successfully registered into inventory!`);
+    }
+
+    function openEditRoomModal(id) {
+      const room = roomsData.find(r => r.id === id);
+      if (!room) return;
+
+      document.getElementById('edit-room-id').value = room.id;
+      document.getElementById('edit-modal-room-num').textContent = room.no;
+      document.getElementById('edit-room-cat').value = room.cat;
+      document.getElementById('edit-room-rate').value = room.rate;
+      document.getElementById('edit-room-bed').value = room.bed;
+      document.getElementById('edit-room-pax').value = room.pax;
+      document.getElementById('edit-room-status').value = room.status;
+      document.getElementById('edit-room-hk').value = room.hk;
+
+      openModal('edit-room-modal');
+    }
+
+    function handleSaveEditRoom(e) {
+      e.preventDefault();
+      const id = document.getElementById('edit-room-id').value;
+      const room = roomsData.find(r => r.id === id);
+      if (!room) return;
+
+      room.cat = document.getElementById('edit-room-cat').value;
+      room.rate = parseInt(document.getElementById('edit-room-rate').value, 10);
+      room.bed = document.getElementById('edit-room-bed').value;
+      room.pax = document.getElementById('edit-room-pax').value;
+      room.status = document.getElementById('edit-room-status').value;
+      room.hk = document.getElementById('edit-room-hk').value;
+
+      closeModal('edit-room-modal');
+      renderRooms();
+      updateKPICounters();
+      showToast(`Room ${room.no} configurations updated!`);
+    }
+
+    function toggleRoomMaintenance(id) {
+      const room = roomsData.find(r => r.id === id);
+      if (!room) return;
+
+      if (room.status === 'Maintenance') {
+        room.status = 'Active';
+        room.hk = 'Cleaned';
+        showToast(`Room ${room.no} released from maintenance to Active Service!`);
+      } else {
+        room.status = 'Maintenance';
+        room.hk = 'Inspecting';
+        showToast(`Room ${room.no} placed under Maintenance Work Order.`);
+      }
+      renderRooms();
+      updateKPICounters();
+    }
+
+    function deleteRoom(id) {
+      const room = roomsData.find(r => r.id === id);
+      if (!room) return;
+
+      if (confirm(`Are you sure you want to archive Room ${room.no} from active inventory?`)) {
+        roomsData = roomsData.filter(r => r.id !== id);
+        renderRooms();
+        updateKPICounters();
+        populateMaintenanceSelect();
+        showToast(`Room ${room.no} removed from active inventory.`);
+      }
+    }
+
+    function populateMaintenanceSelect() {
+      const sel = document.getElementById('maint-room-select');
+      sel.innerHTML = '';
+      roomsData.forEach(r => {
+        const opt = document.createElement('option');
+        opt.value = r.id;
+        opt.textContent = `Room ${r.no} (${r.cat} - Flr ${r.floor}) [${r.status}]`;
+        sel.appendChild(opt);
+      });
+    }
+
+    function openMaintenanceModal() {
+      openModal('maint-modal');
+    }
+
+    function confirmMaintenance() {
+      const roomId = document.getElementById('maint-room-select').value;
+      const reason = document.getElementById('maint-reason').value;
+      const room = roomsData.find(r => r.id === roomId);
+      if (room) {
+        room.status = 'Maintenance';
+        room.hk = 'Inspecting';
+        closeModal('maint-modal');
+        renderRooms();
+        updateKPICounters();
+        showToast(`Work order generated for Room ${room.no}: ${reason}`);
+      }
+    }
+
+    function openTariffOverrideModal() {
+      openModal('tariff-modal');
+    }
+
+    function exportCSV() {
+      let csv = "Room No,Floor,Category,Bedding,Capacity,Base Rate,Status,Housekeeping\n";
+      roomsData.forEach(r => {
+        csv += `"${r.no}","Floor ${r.floor}","${r.cat}","${r.bed}","${r.pax}","${r.rate}","${r.status}","${r.hk}"\n`;
+      });
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.setAttribute('href', url);
+      a.setAttribute('download', 'Hotel_Sagar_Sonnet_Rooms_Master.csv');
+      a.click();
+      showToast('Room inventory master exported as CSV!');
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('app-toast');
+      document.getElementById('toast-msg').textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3500);
+    }
+
+    // Initialize on page load
+    window.addEventListener('DOMContentLoaded', init);
+  </script>
+
+</body>
+</html>

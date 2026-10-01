@@ -1,117 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Accounts & Billing - Hotel Sagar Sonnet</title>
-  <link rel="stylesheet" href="css/style.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <meta http-equiv="refresh" content="0; url=accounts/index.html">
+  <title>Redirecting...</title>
+  <script>window.location.href = "accounts/index.html";</script>
 </head>
 <body>
-
-  <header class="pms-app-header">
-    <div class="pms-header-brand"><i class="fa-solid fa-hotel gold-star"></i><span>HOTEL SAGAR SONNET</span><span style="background: #fbc531; color: #1e293b; font-size: 9px; padding: 2px 5px; border-radius: 3px; font-weight: 800;">PMS 2026</span></div>
-    <div class="pms-header-center"><span><i class="fa-regular fa-calendar-days"></i> Wednesday, 24 Sep 2026</span><span><i class="fa-solid fa-file-invoice-dollar" style="color: #a78bfa;"></i> Financial Accounts & Night Audit</span></div>
-    <div class="pms-header-right"><div class="pms-user-tag"><i class="fa-solid fa-user-tie"></i> Chief Accountant</div><a href="login.html" class="btn-pms-logout"><i class="fa-solid fa-power-off"></i> Logout</a></div>
-  </header>
-
-  <nav class="pms-tabs-ribbon">
-    <a href="front-office.html" class="pms-tab-link"><i class="fa-solid fa-desktop tab-ico" style="color: #6366f1;"></i> Front Office</a>
-    <a href="room-management.html" class="pms-tab-link"><i class="fa-solid fa-door-open tab-ico" style="color: #ec4899;"></i> Room Management</a>
-    <a href="pos-sales.html" class="pms-tab-link"><i class="fa-solid fa-utensils tab-ico" style="color: #10b981;"></i> POS Sales</a>
-    <a href="house-keeping.html" class="pms-tab-link"><i class="fa-solid fa-broom tab-ico" style="color: #f59e0b;"></i> House Keeping</a>
-    <a href="stores.html" class="pms-tab-link"><i class="fa-solid fa-boxes-stacked tab-ico" style="color: #22d3ee;"></i> Stores</a>
-    <a href="accounts.html" class="pms-tab-link active"><i class="fa-solid fa-file-invoice-dollar tab-ico" style="color: #a78bfa;"></i> Accounts</a>
-    <a href="banquet.html" class="pms-tab-link"><i class="fa-solid fa-champagne-glasses tab-ico" style="color: #fbbf24;"></i> Banquet & Services</a>
-    <a href="administrator.html" class="pms-tab-link"><i class="fa-solid fa-user-gear tab-ico" style="color: #94a3b8;"></i> Administrator</a>
-  </nav>
-
-  <main class="pms-main-viewport">
-    <div class="pms-page-container">
-      <div class="pms-page-header">
-        <h2><i class="fa-solid fa-file-invoice-dollar" style="color: #a78bfa;"></i> Daily Ledger & Cashiering</h2>
-        <div style="display: flex; gap: 10px;">
-          <button class="btn-ui-secondary" onclick="window.print()"><i class="fa-solid fa-print"></i> Print Day Sheet</button>
-          <button class="btn-ui-primary" onclick="openAuditModal()"><i class="fa-solid fa-moon"></i> Execute Night Audit</button>
-        </div>
-      </div>
-
-      <div class="pms-page-content">
-        <!-- KPI Cards -->
-        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px;">
-          <div style="background: var(--bg-card); border:1px solid var(--border-subtle); border-radius: var(--radius-md); padding:18px; position: relative; overflow: hidden; box-shadow: var(--shadow-sm);">
-            <div style="position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, #059669, #10b981);"></div>
-            <div style="font-size:10px; color: var(--text-muted); font-weight:800; text-transform: uppercase; letter-spacing: 1px;">TODAY'S TOTAL REVENUE</div>
-            <div style="font-size:24px; font-weight:900; color: var(--accent-emerald); margin-top:8px; font-family: var(--font-mono);">₹ 1,84,500</div>
-          </div>
-          <div style="background: var(--bg-card); border:1px solid var(--border-subtle); border-radius: var(--radius-md); padding:18px; position: relative; overflow: hidden; box-shadow: var(--shadow-sm);">
-            <div style="position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, #e11d48, #f43f5e);"></div>
-            <div style="font-size:10px; color: var(--text-muted); font-weight:800; text-transform: uppercase; letter-spacing: 1px;">OUTSTANDING FOLIOS</div>
-            <div style="font-size:24px; font-weight:900; color: var(--accent-rose); margin-top:8px; font-family: var(--font-mono);">₹ 87,420</div>
-          </div>
-          <div style="background: var(--bg-card); border:1px solid var(--border-subtle); border-radius: var(--radius-md); padding:18px; position: relative; overflow: hidden; box-shadow: var(--shadow-sm);">
-            <div style="position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, #6366f1, #818cf8);"></div>
-            <div style="font-size:10px; color: var(--text-muted); font-weight:800; text-transform: uppercase; letter-spacing: 1px;">GST COLLECTED (12%)</div>
-            <div style="font-size:24px; font-weight:900; color: var(--accent-primary); margin-top:8px; font-family: var(--font-mono);">₹ 22,140</div>
-          </div>
-          <div style="background: var(--bg-card); border:1px solid var(--border-subtle); border-radius: var(--radius-md); padding:18px; position: relative; overflow: hidden; box-shadow: var(--shadow-sm);">
-            <div style="position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, #d97706, #f59e0b);"></div>
-            <div style="font-size:10px; color: var(--text-muted); font-weight:800; text-transform: uppercase; letter-spacing: 1px;">ADR (AVG DAILY RATE)</div>
-            <div style="font-size:24px; font-weight:900; color: var(--accent-gold); margin-top:8px; font-family: var(--font-mono);">₹ 5,765</div>
-          </div>
-        </div>
-
-        <div class="pms-table-box">
-          <div style="background: var(--bg-surface); padding: 10px 16px; font-weight: 800; font-size: 11px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px;"><i class="fa-solid fa-receipt" style="color: var(--accent-primary); margin-right: 6px;"></i> Recent Cashier Transactions & Settlements</div>
-          <table class="pms-table">
-            <thead>
-              <tr><th>Txn ID</th><th>Time</th><th>Type</th><th>Room/Entity</th><th>Guest Name</th><th>Mode</th><th>Amount</th><th>Status</th></tr>
-            </thead>
-            <tbody>
-              <tr><td style="font-family: var(--font-mono); color: var(--accent-cyan);">TXN-1001</td><td>09:15 AM</td><td>Advance Check-In</td><td>Room 102</td><td>Sanjeev Kumar Singh</td><td>Credit Card</td><td><strong style="font-family: var(--font-mono);">₹ 5,000</strong></td><td><span class="badge-tag green">Success</span></td></tr>
-              <tr><td style="font-family: var(--font-mono); color: var(--accent-cyan);">TXN-1002</td><td>10:30 AM</td><td>POS Dining</td><td>Room 202</td><td>AJEET BHENGRA</td><td>Room Folio</td><td><strong style="font-family: var(--font-mono);">₹ 650</strong></td><td><span class="badge-tag green">Posted</span></td></tr>
-              <tr><td style="font-family: var(--font-mono); color: var(--accent-cyan);">TXN-1003</td><td>11:45 AM</td><td>Check-In Advance</td><td>Room 206</td><td>Raj kumar Bhunia</td><td>UPI / GPay</td><td><strong style="font-family: var(--font-mono);">₹ 2,000</strong></td><td><span class="badge-tag green">Success</span></td></tr>
-              <tr><td style="font-family: var(--font-mono); color: var(--accent-cyan);">TXN-1004</td><td>01:20 PM</td><td>Banquet Deposit</td><td>Sonnet Ballroom</td><td>Nexus Technologies</td><td>NEFT Bank</td><td><strong style="font-family: var(--font-mono);">₹ 50,000</strong></td><td><span class="badge-tag green">Success</span></td></tr>
-              <tr><td style="font-family: var(--font-mono); color: var(--accent-cyan);">TXN-1005</td><td>02:10 PM</td><td>Spa Service</td><td>Room 304</td><td>HITENDRA NINAWE</td><td>Room Folio</td><td><strong style="font-family: var(--font-mono);">₹ 2,500</strong></td><td><span class="badge-tag green">Posted</span></td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </main>
-
-  <!-- Night Audit Modal -->
-  <div class="modal-backdrop" id="audit-modal">
-    <div class="modal-window">
-      <div class="modal-top">
-        <h3><i class="fa-solid fa-moon"></i> Hotel Sagar Sonnet • Night Audit Wizard</h3>
-        <button class="modal-close" onclick="closeModal('audit-modal')">&times;</button>
-      </div>
-      <div class="modal-content-area">
-        <p style="font-size: 13px; margin-bottom: 16px; color: var(--text-secondary);">This will post nightly room tariffs and close the active business day.</p>
-        <ul style="padding-left: 20px; font-size: 12px; line-height: 2; color: var(--text-primary);">
-          <li><i class="fa-solid fa-check" style="color: var(--accent-emerald); margin-right: 6px;"></i> Post Room Tariffs for 16 occupied rooms</li>
-          <li><i class="fa-solid fa-check" style="color: var(--accent-emerald); margin-right: 6px;"></i> Reconcile POS kitchen bills</li>
-          <li><i class="fa-solid fa-check" style="color: var(--accent-emerald); margin-right: 6px;"></i> Advance Business Date to 25 Sep 2026</li>
-        </ul>
-      </div>
-      <div class="modal-bot">
-        <button class="btn-ui-secondary" onclick="closeModal('audit-modal')">Cancel</button>
-        <button class="btn-ui-primary" onclick="alert('Night Audit executed successfully!'); closeModal('audit-modal');"><i class="fa-solid fa-play"></i> Confirm & Run</button>
-      </div>
-    </div>
-  </div>
-
-  <footer class="pms-bottom-bar">
-    <div style="font-size: 11px; font-weight: 700; color: var(--text-secondary);">
-      <i class="fa-solid fa-shield-halved" style="color: var(--accent-primary);"></i> Cashier Drawer Balanced • GSTIN: 19AAGCS7712K1Z9
-    </div>
-  </footer>
-
-  <script>
-    function openAuditModal() { document.getElementById('audit-modal').classList.add('open'); }
-    function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-  </script>
-
+  <p>Redirecting to <a href="accounts/index.html">accounts/index.html</a>...</p>
 </body>
 </html>

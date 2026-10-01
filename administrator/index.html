@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Administrator - Hotel Sagar Sonnet</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <header class="pms-app-header">
+    <div class="pms-header-brand"><i class="fa-solid fa-hotel gold-star"></i><span>HOTEL SAGAR SONNET</span><span style="background: #fbc531; color: #1e293b; font-size: 9px; padding: 2px 5px; border-radius: 3px; font-weight: 800;">PMS 2026</span></div>
+    <div class="pms-header-center"><span><i class="fa-regular fa-calendar-days"></i> Wednesday, 24 Sep 2026</span><span><i class="fa-solid fa-user-gear" style="color: #94a3b8;"></i> System Administrator</span></div>
+    <div class="pms-header-right"><div class="pms-user-tag"><i class="fa-solid fa-user-tie"></i> Super Admin</div><a href="../login.html" class="btn-pms-logout"><i class="fa-solid fa-power-off"></i> Logout</a></div>
+  </header>
+  <nav class="pms-tabs-ribbon">
+    <a href="../front-office/index.html" class="pms-tab-link"><i class="fa-solid fa-desktop tab-ico" style="color: #6366f1;"></i> Front Office</a>
+    <a href="../room-management/index.html" class="pms-tab-link"><i class="fa-solid fa-door-open tab-ico" style="color: #ec4899;"></i> Room Management</a>
+    <a href="../pos-sales/index.html" class="pms-tab-link"><i class="fa-solid fa-utensils tab-ico" style="color: #10b981;"></i> POS Sales</a>
+    <a href="../house-keeping/index.html" class="pms-tab-link"><i class="fa-solid fa-broom tab-ico" style="color: #f59e0b;"></i> House Keeping</a>
+    <a href="../stores/index.html" class="pms-tab-link"><i class="fa-solid fa-boxes-stacked tab-ico" style="color: #22d3ee;"></i> Stores</a>
+    <a href="../accounts/index.html" class="pms-tab-link"><i class="fa-solid fa-file-invoice-dollar tab-ico" style="color: #a78bfa;"></i> Accounts</a>
+    <a href="../banquet/index.html" class="pms-tab-link"><i class="fa-solid fa-champagne-glasses tab-ico" style="color: #fbbf24;"></i> Banquet & Services</a>
+    <a href="../administrator/index.html" class="pms-tab-link active"><i class="fa-solid fa-user-gear tab-ico" style="color: #94a3b8;"></i> Administrator</a>
+  </nav>
+  <main class="pms-main-viewport">
+    <div class="pms-page-container">
+      <div class="pms-page-header">
+        <h2><i class="fa-solid fa-user-gear" style="color: #94a3b8;"></i> Hotel Master & Configuration</h2>
+        <button class="btn-ui-success" onclick="alert('Hotel settings saved!')"><i class="fa-solid fa-floppy-disk"></i> Save Changes</button>
+      </div>
+      <div class="pms-page-content">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+          <div style="background: var(--bg-card); border:1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 20px;">
+            <h3 style="font-size: 13px; margin-bottom: 16px; color: var(--accent-primary); display: flex; align-items: center; gap: 8px; text-transform: uppercase; letter-spacing: 1px;"><i class="fa-solid fa-hotel"></i> Hotel Profile</h3>
+            <div style="margin-bottom: 14px;">
+              <label style="display:block; font-size:10px; font-weight:800; margin-bottom:6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">HOTEL NAME</label>
+              <input type="text" class="pms-input" style="width:100%; height:38px; border-radius: var(--radius-md);" value="Hotel Sagar Sonnet - Luxury Resort & Suites">
+            </div>
+            <div style="margin-bottom: 14px;">
+              <label style="display:block; font-size:10px; font-weight:800; margin-bottom:6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">GSTIN / TAX REGISTRATION</label>
+              <input type="text" class="pms-input" style="width:100%; height:38px; border-radius: var(--radius-md); font-family: var(--font-mono);" value="19AAGCS7712K1Z9">
+            </div>
+            <div style="display:flex; gap:12px;">
+              <div style="flex:1;">
+                <label style="display:block; font-size:10px; font-weight:800; margin-bottom:6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">GST TAX (%)</label>
+                <input type="number" class="pms-input" style="width:100%; height:38px; border-radius: var(--radius-md); font-family: var(--font-mono);" value="12">
+              </div>
+              <div style="flex:1;">
+                <label style="display:block; font-size:10px; font-weight:800; margin-bottom:6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">CHECK-OUT TIME</label>
+                <input type="text" class="pms-input" style="width:100%; height:38px; border-radius: var(--radius-md);" value="11:00 AM">
+              </div>
+            </div>
+          </div>
+
+          <div style="background: var(--bg-card); border:1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 20px;">
+            <h3 style="font-size: 13px; margin-bottom: 16px; color: var(--accent-gold); display: flex; align-items: center; gap: 8px; text-transform: uppercase; letter-spacing: 1px;"><i class="fa-solid fa-tags"></i> Base Room Tariffs</h3>
+            <div style="margin-bottom: 12px;">
+              <label style="display:block; font-size:10px; font-weight:800; margin-bottom:6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">DELUXE ROOM (₹)</label>
+              <input type="number" class="pms-input" style="width:100%; height:38px; border-radius: var(--radius-md); font-family: var(--font-mono);" value="3500">
+            </div>
+            <div style="margin-bottom: 12px;">
+              <label style="display:block; font-size:10px; font-weight:800; margin-bottom:6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">SUPER DELUXE (₹)</label>
+              <input type="number" class="pms-input" style="width:100%; height:38px; border-radius: var(--radius-md); font-family: var(--font-mono);" value="5200">
+            </div>
+            <div style="margin-bottom: 12px;">
+              <label style="display:block; font-size:10px; font-weight:800; margin-bottom:6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">SUITE LUXURY (₹)</label>
+              <input type="number" class="pms-input" style="width:100%; height:38px; border-radius: var(--radius-md); font-family: var(--font-mono);" value="8500">
+            </div>
+            <div>
+              <label style="display:block; font-size:10px; font-weight:800; margin-bottom:6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">EXECUTIVE PENTHOUSE (₹)</label>
+              <input type="number" class="pms-input" style="width:100%; height:38px; border-radius: var(--radius-md); font-family: var(--font-mono);" value="11000">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+  <footer class="pms-bottom-bar">
+    <div style="font-size: 11px; font-weight: 700; color: var(--text-secondary);"><i class="fa-solid fa-code-branch" style="color: var(--accent-primary);"></i> System Version: Hotel Sagar Sonnet PMS v2026.1</div>
+  </footer>
+</body>
+</html>

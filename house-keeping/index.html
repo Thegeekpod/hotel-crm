@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Housekeeping - Hotel Sagar Sonnet</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+  <header class="pms-app-header">
+    <div class="pms-header-brand"><i class="fa-solid fa-hotel gold-star"></i><span>HOTEL SAGAR SONNET</span><span style="background: #fbc531; color: #1e293b; font-size: 9px; padding: 2px 5px; border-radius: 3px; font-weight: 800;">PMS 2026</span></div>
+    <div class="pms-header-center"><span><i class="fa-regular fa-calendar-days"></i> Wednesday, 24 Sep 2026</span><span><i class="fa-solid fa-broom" style="color: #f59e0b;"></i> Housekeeping Management Board</span></div>
+    <div class="pms-header-right"><div class="pms-user-tag"><i class="fa-solid fa-user-tie"></i> Housekeeping Lead</div><a href="../login.html" class="btn-pms-logout"><i class="fa-solid fa-power-off"></i> Logout</a></div>
+  </header>
+
+  <nav class="pms-tabs-ribbon">
+    <a href="../front-office/index.html" class="pms-tab-link"><i class="fa-solid fa-desktop tab-ico" style="color: #6366f1;"></i> Front Office</a>
+    <a href="../room-management/index.html" class="pms-tab-link"><i class="fa-solid fa-door-open tab-ico" style="color: #ec4899;"></i> Room Management</a>
+    <a href="../pos-sales/index.html" class="pms-tab-link"><i class="fa-solid fa-utensils tab-ico" style="color: #10b981;"></i> POS Sales</a>
+    <a href="../house-keeping/index.html" class="pms-tab-link active"><i class="fa-solid fa-broom tab-ico" style="color: #f59e0b;"></i> House Keeping</a>
+    <a href="../stores/index.html" class="pms-tab-link"><i class="fa-solid fa-boxes-stacked tab-ico" style="color: #22d3ee;"></i> Stores</a>
+    <a href="../accounts/index.html" class="pms-tab-link"><i class="fa-solid fa-file-invoice-dollar tab-ico" style="color: #a78bfa;"></i> Accounts</a>
+    <a href="../banquet/index.html" class="pms-tab-link"><i class="fa-solid fa-champagne-glasses tab-ico" style="color: #fbbf24;"></i> Banquet & Services</a>
+    <a href="../administrator/index.html" class="pms-tab-link"><i class="fa-solid fa-user-gear tab-ico" style="color: #94a3b8;"></i> Administrator</a>
+  </nav>
+
+  <main class="pms-main-viewport">
+    <div class="pms-page-container">
+      <div class="pms-page-header">
+        <h2><i class="fa-solid fa-broom" style="color: #f59e0b;"></i> Floor Attendants & Cleaning Control Board</h2>
+        <button class="btn-ui-success" onclick="alert('All dirty rooms marked as Cleaned!')"><i class="fa-solid fa-check-double"></i> Mark All Cleaned</button>
+      </div>
+      <div class="pms-page-content">
+        <div class="pms-table-box" style="margin-bottom: 20px;">
+          <div style="background: var(--bg-surface); padding: 10px 16px; font-weight: 800; font-size: 11px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px;"><i class="fa-solid fa-user-check" style="color: var(--accent-emerald); margin-right: 6px;"></i> Floor Supervisors on Duty</div>
+          <table class="pms-table">
+            <thead>
+              <tr><th>Floor</th><th>Attendant In-Charge</th><th>Assigned Range</th><th>Dirty Pending</th><th>Status</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><strong>Floor 1</strong></td><td>Ramesh Kumar</td><td style="font-family: var(--font-mono);">101 - 112</td><td><span class="badge-tag yellow">Room 103</span></td><td><span class="badge-tag green">On Duty</span></td></tr>
+              <tr><td><strong>Floor 2</strong></td><td>Sunita Devi</td><td style="font-family: var(--font-mono);">201 - 212</td><td><span class="badge-tag yellow">Rooms 201, 203, 204, 207</span></td><td><span class="badge-tag green">On Duty</span></td></tr>
+              <tr><td><strong>Floor 3</strong></td><td>Bablu Mondal</td><td style="font-family: var(--font-mono);">301 - 312</td><td><span class="badge-tag yellow">Rooms 301, 309</span></td><td><span class="badge-tag green">On Duty</span></td></tr>
+              <tr><td><strong>Floor 4</strong></td><td>Prakash Yadav</td><td style="font-family: var(--font-mono);">401 - 412</td><td><span class="badge-tag yellow">Room 407</span></td><td><span class="badge-tag green">On Duty</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="pms-table-box">
+          <div style="background: var(--bg-surface); padding: 10px 16px; font-weight: 800; font-size: 11px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px;"><i class="fa-solid fa-list-check" style="color: var(--accent-amber); margin-right: 6px;"></i> Current Dirty & Maintenance Rooms</div>
+          <table class="pms-table">
+            <thead>
+              <tr><th>Room</th><th>Floor</th><th>Category</th><th>Cleaning State</th><th>Last Log</th><th>Action</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><strong style="font-family: var(--font-mono);">103</strong></td><td>Floor 1</td><td>SUPER DELUXE</td><td><span class="badge-tag yellow">Dirty</span></td><td>24 Sep 11:30 AM</td><td><button class="btn-ui-success" onclick="alert('Room 103 marked Cleaned!')"><i class="fa-solid fa-check"></i> Mark Cleaned</button></td></tr>
+              <tr><td><strong style="font-family: var(--font-mono);">201</strong></td><td>Floor 2</td><td>SUITE</td><td><span class="badge-tag yellow">Dirty</span></td><td>24 Sep 12:00 PM</td><td><button class="btn-ui-success" onclick="alert('Room 201 marked Cleaned!')"><i class="fa-solid fa-check"></i> Mark Cleaned</button></td></tr>
+              <tr><td><strong style="font-family: var(--font-mono);">203</strong></td><td>Floor 2</td><td>SUPER DELUXE</td><td><span class="badge-tag yellow">Dirty</span></td><td>24 Sep 10:15 AM</td><td><button class="btn-ui-success" onclick="alert('Room 203 marked Cleaned!')"><i class="fa-solid fa-check"></i> Mark Cleaned</button></td></tr>
+              <tr><td><strong style="font-family: var(--font-mono);">301</strong></td><td>Floor 3</td><td>SUITE</td><td><span class="badge-tag yellow">Dirty</span></td><td>24 Sep 09:40 AM</td><td><button class="btn-ui-success" onclick="alert('Room 301 marked Cleaned!')"><i class="fa-solid fa-check"></i> Mark Cleaned</button></td></tr>
+              <tr><td><strong style="font-family: var(--font-mono);">104</strong></td><td>Floor 1</td><td>SUPER DELUXE</td><td><span class="badge-tag red">Blocked (AC Maintenance)</span></td><td>23 Sep 16:00 PM</td><td><button class="btn-ui-secondary" onclick="alert('Engineering work log open.')"><i class="fa-solid fa-wrench"></i> Engineering Log</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="pms-bottom-bar">
+    <div style="font-size: 11px; font-weight: 700; color: var(--text-secondary); display: flex; align-items: center; gap: 6px;">
+      <i class="fa-solid fa-broom" style="color: var(--accent-amber);"></i> Cleaned vs Dirty Ratio: 2/9 Rooms Cleaned
+    </div>
+  </footer>
+
+</body>
+</html>

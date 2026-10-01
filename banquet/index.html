@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Banquet & Services - Hotel Sagar Sonnet</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <header class="pms-app-header">
+    <div class="pms-header-brand"><i class="fa-solid fa-hotel gold-star"></i><span>HOTEL SAGAR SONNET</span><span style="background: #fbc531; color: #1e293b; font-size: 9px; padding: 2px 5px; border-radius: 3px; font-weight: 800;">PMS 2026</span></div>
+    <div class="pms-header-center"><span><i class="fa-regular fa-calendar-days"></i> Wednesday, 24 Sep 2026</span><span><i class="fa-solid fa-champagne-glasses" style="color: #fbbf24;"></i> Banquet & Event Services</span></div>
+    <div class="pms-header-right"><div class="pms-user-tag"><i class="fa-solid fa-user-tie"></i> Event Manager</div><a href="../login.html" class="btn-pms-logout"><i class="fa-solid fa-power-off"></i> Logout</a></div>
+  </header>
+  <nav class="pms-tabs-ribbon">
+    <a href="../front-office/index.html" class="pms-tab-link"><i class="fa-solid fa-desktop tab-ico" style="color: #6366f1;"></i> Front Office</a>
+    <a href="../room-management/index.html" class="pms-tab-link"><i class="fa-solid fa-door-open tab-ico" style="color: #ec4899;"></i> Room Management</a>
+    <a href="../pos-sales/index.html" class="pms-tab-link"><i class="fa-solid fa-utensils tab-ico" style="color: #10b981;"></i> POS Sales</a>
+    <a href="../house-keeping/index.html" class="pms-tab-link"><i class="fa-solid fa-broom tab-ico" style="color: #f59e0b;"></i> House Keeping</a>
+    <a href="../stores/index.html" class="pms-tab-link"><i class="fa-solid fa-boxes-stacked tab-ico" style="color: #22d3ee;"></i> Stores</a>
+    <a href="../accounts/index.html" class="pms-tab-link"><i class="fa-solid fa-file-invoice-dollar tab-ico" style="color: #a78bfa;"></i> Accounts</a>
+    <a href="../banquet/index.html" class="pms-tab-link active"><i class="fa-solid fa-champagne-glasses tab-ico" style="color: #fbbf24;"></i> Banquet & Services</a>
+    <a href="../administrator/index.html" class="pms-tab-link"><i class="fa-solid fa-user-gear tab-ico" style="color: #94a3b8;"></i> Administrator</a>
+  </nav>
+  <main class="pms-main-viewport">
+    <div class="pms-page-container">
+      <div class="pms-page-header">
+        <h2><i class="fa-solid fa-champagne-glasses" style="color: #fbbf24;"></i> Banquet Halls & Lawn Bookings</h2>
+        <button class="btn-ui-primary" onclick="alert('Opening Hall Reservation form')"><i class="fa-solid fa-calendar-plus"></i> Book Event Hall</button>
+      </div>
+      <div class="pms-page-content">
+        <div class="pms-table-box">
+          <table class="pms-table">
+            <thead>
+              <tr><th>Hall Name</th><th>Capacity</th><th>Event Date</th><th>Status</th><th>Client Name</th><th>Tariff</th><th>Action</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><strong>Sagar Sonnet Grand Crystal Ballroom</strong></td><td style="font-family: var(--font-mono);">350 Pax</td><td>24 Sep 2026</td><td><span class="badge-tag red">Booked (Annual Gala)</span></td><td>Nexus Technologies</td><td style="font-family: var(--font-mono); font-weight: 700; color: var(--accent-gold);">₹ 1,50,000</td><td><button class="btn-ui-secondary"><i class="fa-solid fa-file-lines"></i> Function Sheet</button></td></tr>
+              <tr><td><strong>Sonnet Executive Boardroom</strong></td><td style="font-family: var(--font-mono);">25 Pax</td><td>24 Sep 2026</td><td><span class="badge-tag green">Available</span></td><td>-</td><td style="font-family: var(--font-mono); font-weight: 700; color: var(--accent-gold);">₹ 25,000</td><td><button class="btn-ui-primary" onclick="alert('Boardroom quick reserved!')"><i class="fa-solid fa-bolt"></i> Quick Reserve</button></td></tr>
+              <tr><td><strong>Royal Sagar Palm Terrace Lawn</strong></td><td style="font-family: var(--font-mono);">500 Pax</td><td>26 Sep 2026</td><td><span class="badge-tag red">Booked (Wedding)</span></td><td>Singhania Family</td><td style="font-family: var(--font-mono); font-weight: 700; color: var(--accent-gold);">₹ 2,20,000</td><td><button class="btn-ui-secondary"><i class="fa-solid fa-file-lines"></i> Function Sheet</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+  <footer class="pms-bottom-bar">
+    <div style="font-size: 11px; font-weight: 700; color: var(--text-secondary);"><i class="fa-solid fa-crown" style="color: var(--accent-gold);"></i> Halls Capacity: Up to 500 Pax Luxury Gatherings</div>
+  </footer>
+</body>
+</html>

@@ -441,49 +441,272 @@
 
   <!-- NEW RESERVATION MODAL -->
   <div class="modal-backdrop" id="reserve-modal">
-    <div class="modal-window">
-      <div class="modal-top">
-        <h3><i class="fa-solid fa-calendar-plus"></i> New Reservation • Hotel Sagar Sonnet</h3>
+    <div class="modal-window large" style="width: 960px; max-width: 95vw;">
+      <div class="modal-top" style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <h3 style="margin: 0;"><i class="fa-solid fa-calendar-plus"></i> New Reservation • Hotel Sagar Sonnet</h3>
+        </div>
         <button class="modal-close" onclick="closeModal('reserve-modal')">&times;</button>
       </div>
-      <div class="modal-content-area">
+      <div class="modal-content-area" style="max-height: 75vh; overflow-y: auto; padding: 24px; background: #f8fafc;">
         <form onsubmit="handleReserve(event)">
-          <div style="margin-bottom: 14px;">
-            <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">GUEST FULL NAME</label>
-            <input type="text" style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: var(--bg-surface); color: var(--text-primary); font-family: var(--font-main);" required placeholder="e.g. Suman Sen">
+          <!-- Radio Buttons -->
+          <div style="display: flex; gap: 24px; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid var(--border-medium);">
+            <label style="display: flex; align-items: center; gap: 8px; font-weight: 800; cursor: pointer; font-size: 13px; color: var(--accent-primary);">
+              <input type="radio" name="res_type" value="new" checked onchange="toggleResType()" style="accent-color: var(--accent-primary); transform: scale(1.2);"> New
+            </label>
+            <label style="display: flex; align-items: center; gap: 8px; font-weight: 800; cursor: pointer; font-size: 13px; color: var(--text-secondary);">
+              <input type="radio" name="res_type" value="regular" onchange="toggleResType()" style="accent-color: var(--accent-primary); transform: scale(1.2);"> Regular
+            </label>
+            <label style="display: flex; align-items: center; gap: 8px; font-weight: 800; cursor: pointer; font-size: 13px; color: var(--text-secondary);">
+              <input type="radio" name="res_type" value="company" onchange="toggleResType()" style="accent-color: var(--accent-primary); transform: scale(1.2);"> Company
+            </label>
+            <label style="display: flex; align-items: center; gap: 8px; font-weight: 800; cursor: pointer; font-size: 13px; color: var(--text-secondary);">
+              <input type="radio" name="res_type" value="privilege" onchange="toggleResType()" style="accent-color: var(--accent-primary); transform: scale(1.2);"> Privilege
+            </label>
           </div>
-          <div style="display: flex; gap: 12px; margin-bottom: 14px;">
-            <div style="flex:1;">
-              <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">PHONE</label>
-              <input type="text" style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: var(--bg-surface); color: var(--text-primary); font-family: var(--font-main);" required placeholder="+91 98000 00000">
+
+          <div style="display: grid; grid-template-columns: 1fr 280px; gap: 28px;">
+            <!-- Left Column: Form Fields -->
+            <div>
+              <!-- Reservation Meta Fields -->
+              <div id="section-reservation-details" style="display: flex; flex-direction: column; background: #fff; padding: 24px; border: 1px solid var(--border-medium); border-radius: var(--radius-md); box-shadow: 0 4px 12px rgba(0,0,0,0.02); margin-bottom: 24px;">
+                
+                <div style="display: flex; gap: 16px; margin-bottom: 20px; order: -2;">
+                  <div style="flex: 1;">
+                    <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Reserve ID</label>
+                    <input type="text" class="pms-input-field" style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #f1f5f9; color: var(--text-primary); font-weight: 700; opacity: 0.8;" value="829\2026-2027" disabled>
+                  </div>
+                  <div style="flex: 1;">
+                    <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Reserve Date</label>
+                    <input type="date" id="reserve-date-input" class="pms-input-field" style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff; color: var(--text-primary);">
+                  </div>
+                  <div style="flex: 1;">
+                    <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Reserve Time</label>
+                    <input type="time" id="reserve-time-input" class="pms-input-field" style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff; color: var(--text-primary);">
+                  </div>
+                </div>
+                <div style="margin-bottom: 20px;">
+                  <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Mode of Reserve</label>
+                  <select class="pms-input-field" style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff; color: var(--text-primary);">
+                    <option>Phone</option>
+                    <option>Physical</option>
+                    <option>Website</option>
+                    <option>Enquiry</option>
+                  </select>
+                </div>
+
+                <!-- Company Specific Fields -->
+                <div id="section-company-fields" style="display: none; padding: 20px; background: rgba(16, 185, 129, 0.05); border: 1px dashed var(--accent-emerald); border-radius: var(--radius-md); margin-bottom: 20px;">
+                  <div style="margin-bottom: 16px;">
+                    <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--accent-emerald); text-transform: uppercase; letter-spacing: 1px;"><i class="fa-solid fa-building"></i> Company Name</label>
+                    <select style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--accent-emerald); border-radius: var(--radius-md); background: #fff; color: var(--text-primary); font-weight: 700;" onchange="toggleNewCompany(this)">
+                      <option value="">-- Select Corporate Account --</option>
+                      <option value="infosys">Infosys Technologies Ltd.</option>
+                      <option value="tcs">Tata Consultancy Services</option>
+                      <option value="wipro">Wipro Limited</option>
+                      <option value="new" style="color: var(--accent-primary); font-weight: 900;">+ Register New Company</option>
+                    </select>
+                  </div>
+                  <div id="new-company-details" style="display: none; border-top: 1px solid rgba(16, 185, 129, 0.2); padding-top: 16px;">
+                    <div style="margin-bottom: 16px;">
+                      <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">New Company Name</label>
+                      <input type="text" style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff;" placeholder="Full Corporate Entity Name">
+                    </div>
+                    <div style="margin-bottom: 16px;">
+                      <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Company Address</label>
+                      <input type="text" style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff;" placeholder="Billing Address">
+                    </div>
+                    <div style="display: flex; gap: 16px;">
+                      <div style="flex: 1;">
+                        <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">GSTIN</label>
+                        <input type="text" style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff; font-family: monospace;" placeholder="29ABCDE1234F1Z5">
+                      </div>
+                      <div style="flex: 1;">
+                        <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Corporate Phone</label>
+                        <input type="text" style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff;" placeholder="Office / Mobile">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div id="guests-container">
+                <div class="guest-block" style="margin-bottom: 24px;">
+                  <!-- Regular Search Section -->
+                  <div class="section-regular-search" style="display: none; margin-bottom: 24px; padding: 18px; background: #fff; border: 1px solid var(--border-medium); border-radius: var(--radius-md); box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
+                    <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 8px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Search Regular Guest</label>
+                    <div style="display: flex; gap: 12px;">
+                      <input type="text" style="flex: 1; height:42px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff; color: var(--text-primary); font-family: var(--font-main);" placeholder="Enter Mobile Number">
+                      <button type="button" class="btn-ui-primary" style="height: 42px; padding: 0 24px;" onclick="alert('Searching database...')"><i class="fa-solid fa-magnifying-glass"></i> Search</button>
+                      <button type="button" class="btn-ui-secondary" style="height: 42px; padding: 0 20px;"><i class="fa-solid fa-pen"></i> Edit</button>
+                    </div>
+                  </div>
+
+                  <!-- General Fields Container -->
+                  <div class="section-guest-details" style="display: flex; flex-direction: column; background: #fff; padding: 24px; border: 1px solid var(--border-medium); border-radius: var(--radius-md); box-shadow: 0 4px 12px rgba(0,0,0,0.02);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-medium); padding-bottom: 12px; margin-bottom: 20px;">
+                      <h4 class="guest-heading" style="margin: 0; font-size: 14px; color: var(--accent-primary); font-weight: 800;">Guest #1</h4>
+                    </div>
+
+                    <div style="display: flex; gap: 16px; margin-bottom: 16px;">
+                      <div style="width: 100px;">
+                    <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Title</label>
+                    <select style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff; color: var(--text-primary);">
+                      <option>Mr.</option>
+                      <option>Mrs.</option>
+                      <option>Ms.</option>
+                      <option>Dr.</option>
+                      <option>Prof.</option>
+                    </select>
+                  </div>
+                  <div style="flex: 1;">
+                    <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Guest Name</label>
+                    <input type="text" style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff;" placeholder="First and Last Name" required>
+                  </div>
+                </div>
+
+                <div style="margin-bottom: 16px;">
+                  <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Guest Address</label>
+                  <input type="text" style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff;" placeholder="House No, Street, Landmark">
+                </div>
+
+                <div style="display: flex; gap: 16px; margin-bottom: 16px;">
+                  <div style="flex: 1;">
+                    <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Nationality</label>
+                    <select style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff;">
+                      <option>Indian</option>
+                      <option>Foreign National</option>
+                      <option>NRI</option>
+                    </select>
+                  </div>
+                  <div style="flex: 1;">
+                    <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">City</label>
+                    <select style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff;">
+                      <option>Kolkata</option>
+                      <option>Delhi</option>
+                      <option>Mumbai</option>
+                      <option>Chennai</option>
+                      <option>Bengaluru</option>
+                      <option>Other</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div style="display: flex; gap: 16px; margin-bottom: 16px;">
+                  <div style="flex: 1;">
+                    <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Telephone / Mobile</label>
+                    <input type="text" style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff;" placeholder="+91" required>
+                  </div>
+                  <div style="flex: 1;">
+                    <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Email ID</label>
+                    <input type="email" style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff;" placeholder="guest@email.com">
+                  </div>
+                </div>
+
+                <div style="display: flex; gap: 16px; margin-bottom: 16px;">
+                  <div style="flex: 1;">
+                    <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Date of Birth</label>
+                    <input type="date" style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff;">
+                  </div>
+                  <div style="flex: 1;">
+                    <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Anniversary</label>
+                    <input type="date" style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff;">
+                  </div>
+                  <div style="flex: 1;">
+                    <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Status</label>
+                    <select style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff; font-weight: 700; color: var(--accent-emerald);">
+                      <option>Confirmed</option>
+                      <option>Tentative</option>
+                      <option>Waitlisted</option>
+                    </select>
+                  </div>
+                </div>
+                
+
+
+                <div style="border-top: 1px dashed var(--border-medium); margin: 24px 0;"></div>
+
+                <div class="privilege-checkbox-container" style="display: flex; flex-direction: column; align-items: flex-start; gap: 8px; margin-bottom: 24px; padding: 12px 16px; background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: var(--radius-md); order: 0;">
+                  <div style="width: 100%;">
+                    <label style="display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 13px; cursor: pointer; color: #059669;">
+                      <input type="checkbox" class="chk-privilege" onchange="togglePrivilegeInput(this)" style="width: 16px; height: 16px; cursor: pointer; accent-color: #059669;"> Has Privilege Card
+                    </label>
+                  </div>
+                  <div class="privilege-input-container" style="display: none; width: 100%;">
+                    <input type="text" style="width:100%; max-width: 250px; height:36px; padding:6px 12px; font-size:13px; border:1px solid #059669; border-radius: var(--radius-sm); background: #fff; color: var(--text-primary); font-weight: 600;" placeholder="Privilege Card No.">
+                  </div>
+                </div>
+
+                <h4 style="font-size: 12px; color: var(--accent-primary); margin-bottom: 16px; text-transform: uppercase; font-weight: 900; letter-spacing: 1px;"><i class="fa-solid fa-id-card"></i> Identity Details</h4>
+                <div style="display: flex; gap: 16px; margin-bottom: 16px;">
+                  <div style="flex: 1;">
+                    <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Identity Card Type</label>
+                    <select style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff;">
+                      <option>Aadhar Card</option>
+                      <option>PAN Card</option>
+                      <option>Driving License</option>
+                      <option>Passport</option>
+                      <option>Voter ID</option>
+                    </select>
+                  </div>
+                  <div style="flex: 1;">
+                    <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Card Number</label>
+                    <input type="text" style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff; font-family: monospace;" placeholder="ID Number">
+                  </div>
+                </div>
+
+
+                  </div>
+                </div>
+              </div>
+
+              <button type="button" class="btn-ui-secondary" onclick="addAnotherGuest()" style="width: 100%; height: 48px; border: 1px dashed var(--accent-primary); color: var(--accent-primary); background: rgba(99,102,241,0.05); justify-content: center; margin-bottom: 24px; box-shadow: none;">
+                <i class="fa-solid fa-user-plus"></i> Add Another Guest
+              </button>
+
             </div>
-            <div style="flex:1;">
-              <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">ROOM TYPE</label>
-              <select style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: var(--bg-surface); color: var(--text-primary); font-family: var(--font-main);">
-                <option>DELUXE (₹ 3,500/night)</option>
-                <option selected>SUPER DELUXE (₹ 5,200/night)</option>
-                <option>SUITE (₹ 8,500/night)</option>
-                <option>EXECUTIVE (₹ 11,000/night)</option>
-              </select>
+
+            <!-- Right Column: Media / Action / QR Code -->
+            <div style="display: flex; flex-direction: column; align-items: center; background: #fff; padding: 24px; border-radius: var(--radius-md); border: 1px solid var(--border-medium); box-shadow: 0 4px 12px rgba(0,0,0,0.02);">
+              <div style="width: 180px; height: 180px; background: #f8fafc; border: 2px dashed var(--border-medium); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--text-muted); text-align: center; font-size: 12px; margin-bottom: 24px; transition: all 0.3s ease; cursor: pointer;" onmouseover="this.style.borderColor='var(--accent-primary)'; this.style.background='rgba(99,102,241,0.05)';" onmouseout="this.style.borderColor='var(--border-medium)'; this.style.background='#f8fafc';">
+                <div>
+                  <i class="fa-solid fa-camera" style="font-size: 32px; margin-bottom: 12px; color: var(--accent-primary);"></i><br>
+                  <strong style="color: var(--text-primary);">Capture Guest Photo</strong><br>
+                  <span style="font-size: 10px;">or browse image</span>
+                </div>
+              </div>
+              
+              <div style="width: 140px; height: 140px; background: #fff; border: 1px solid var(--border-medium); border-radius: 12px; padding: 12px; display: flex; align-items: center; justify-content: center; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);">
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=116x116&data=Reservation829" alt="QR Code" style="max-width: 100%; opacity: 0.8;">
+              </div>
+              <div style="text-align: center; font-size: 10px; color: var(--text-secondary); font-weight: 800; margin-top: 12px; text-transform: uppercase; letter-spacing: 1px;"><i class="fa-solid fa-qrcode"></i> Scan for Check-In</div>
+              
+              <div style="margin-top: auto; width: 100%; padding-top: 32px;">
+                <button type="submit" class="btn-ui-success" style="width: 100%; height: 48px; justify-content: center; margin-bottom: 12px; font-size: 14px; box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3);">
+                  <i class="fa-solid fa-floppy-disk"></i> Save Reservation
+                </button>
+                <button type="button" class="btn-ui-secondary" style="width: 100%; height: 44px; justify-content: center;" onclick="closeModal('reserve-modal')">
+                  Cancel
+                </button>
+              </div>
             </div>
+
           </div>
-          <div style="display: flex; gap: 12px; margin-bottom: 14px;">
-            <div style="flex:1;">
-              <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">CHECK-IN DATE</label>
-              <input type="date" value="2026-09-24" style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: var(--bg-surface); color: var(--text-primary); font-family: var(--font-main);">
-            </div>
-            <div style="flex:1;">
-              <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">CHECK-OUT DATE</label>
-              <input type="date" value="2026-09-26" style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: var(--bg-surface); color: var(--text-primary); font-family: var(--font-main);">
-            </div>
-          </div>
-          <button type="submit" class="btn-ui-primary" style="width: 100%; height: 42px; justify-content: center;">
-            <i class="fa-solid fa-check"></i> Confirm Reservation
-          </button>
         </form>
       </div>
     </div>
   </div>
+  
+  <style>
+    .modal-window input:not([type="radio"]):not([type="checkbox"]):focus, 
+    .modal-window select:focus {
+      outline: none !important;
+      border-color: var(--accent-primary) !important;
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15) !important;
+    }
+  </style>
+
 
   <div id="print-area" style="display: none;"></div>
 
@@ -539,7 +762,7 @@
     function openReservationModal() { openModal('reserve-modal'); }
 
     function openRoomDetails(roomNo, category, cleaningStatus, pmsStatus, rate, guestObj) {
-      document.getElementById('m-title').innerHTML = `<i class="fa-solid fa-door-open"></i> Room ${roomNo} - ${category} (₹ ${rate.toLocaleString()}/night)`;
+      document.getElementById('m-title').innerHTML = `<i class="fa-solid fa-door-open"></i> Room ${roomNo} - ${category} (Γé╣ ${rate.toLocaleString()}/night)`;
       const body = document.getElementById('m-body');
       const footer = document.getElementById('m-footer');
 
@@ -554,8 +777,8 @@
             </div>
             <div style="background: var(--bg-surface); padding: 16px; border: 1px solid var(--border-subtle); border-radius: var(--radius-md);">
               <h4 style="font-size: 11px; color: var(--accent-primary); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px;"><i class="fa-solid fa-wallet"></i> Folio Outstanding</h4>
-              <div style="font-size: 24px; font-weight: 900; color: var(--accent-rose); font-family: var(--font-mono);">₹ ${guestObj.balance.toLocaleString()}</div>
-              <div style="font-size: 11px; color: var(--accent-emerald); margin-top: 6px;"><i class="fa-solid fa-check"></i> Advance: ₹ 5,000</div>
+              <div style="font-size: 24px; font-weight: 900; color: var(--accent-rose); font-family: var(--font-mono);">Γé╣ ${guestObj.balance.toLocaleString()}</div>
+              <div style="font-size: 11px; color: var(--accent-emerald); margin-top: 6px;"><i class="fa-solid fa-check"></i> Advance: Γé╣ 5,000</div>
             </div>
           </div>
           <div class="pms-table-box">
@@ -563,11 +786,11 @@
             <table class="pms-table">
               <thead><tr><th>Date</th><th>Description</th><th>Amount</th></tr></thead>
               <tbody>
-                <tr><td>22 Sep 2026</td><td>Room Charge (${category})</td><td style="font-family: var(--font-mono); font-weight: 700;">₹ ${rate.toLocaleString()}</td></tr>
-                <tr><td>22 Sep 2026</td><td>Restaurant Room Service</td><td style="font-family: var(--font-mono); font-weight: 700;">₹ 1,450</td></tr>
-                <tr><td>23 Sep 2026</td><td>Room Charge (${category})</td><td style="font-family: var(--font-mono); font-weight: 700;">₹ ${rate.toLocaleString()}</td></tr>
-                <tr><td>23 Sep 2026</td><td>Laundry Express</td><td style="font-family: var(--font-mono); font-weight: 700;">₹ 450</td></tr>
-                <tr><td>23 Sep 2026</td><td>GST (12%)</td><td style="font-family: var(--font-mono); font-weight: 700;">₹ 1,500</td></tr>
+                <tr><td>22 Sep 2026</td><td>Room Charge (${category})</td><td style="font-family: var(--font-mono); font-weight: 700;">Γé╣ ${rate.toLocaleString()}</td></tr>
+                <tr><td>22 Sep 2026</td><td>Restaurant Room Service</td><td style="font-family: var(--font-mono); font-weight: 700;">Γé╣ 1,450</td></tr>
+                <tr><td>23 Sep 2026</td><td>Room Charge (${category})</td><td style="font-family: var(--font-mono); font-weight: 700;">Γé╣ ${rate.toLocaleString()}</td></tr>
+                <tr><td>23 Sep 2026</td><td>Laundry Express</td><td style="font-family: var(--font-mono); font-weight: 700;">Γé╣ 450</td></tr>
+                <tr><td>23 Sep 2026</td><td>GST (12%)</td><td style="font-family: var(--font-mono); font-weight: 700;">Γé╣ 1,500</td></tr>
               </tbody>
             </table>
           </div>
@@ -655,13 +878,13 @@
             <p style="margin: 0;"><strong>GSTIN:</strong> 19AAGCS7712K1Z9</p>
           </div>
           <table style="width: 100%; border-collapse: collapse; margin-bottom: 24px; font-size: 12px;">
-            <thead><tr style="background: #6366f1; color: #fff;"><th style="padding: 10px; text-align:left;">Description</th><th style="padding: 10px; text-align:right;">Amount (₹)</th></tr></thead>
+            <thead><tr style="background: #6366f1; color: #fff;"><th style="padding: 10px; text-align:left;">Description</th><th style="padding: 10px; text-align:right;">Amount (Γé╣)</th></tr></thead>
             <tbody>
               <tr style="border-bottom: 1px solid #cbd5e1;"><td style="padding: 10px;">Room Stay & Dining Charges</td><td style="padding: 10px; text-align:right;">${(balance + 5000).toLocaleString()}.00</td></tr>
               <tr style="border-bottom: 1px solid #cbd5e1;"><td style="padding: 10px; color: #10b981;">Less: Advance Deposit Paid</td><td style="padding: 10px; text-align:right; color: #10b981;">- 5,000.00</td></tr>
             </tbody>
             <tfoot>
-              <tr style="font-size: 14px; font-weight: bold; background: #f1f5f9;"><td style="padding: 10px;">Net Balance Payable:</td><td style="padding: 10px; text-align:right; color: #dc2626;">₹ ${balance.toLocaleString()}.00</td></tr>
+              <tr style="font-size: 14px; font-weight: bold; background: #f1f5f9;"><td style="padding: 10px;">Net Balance Payable:</td><td style="padding: 10px; text-align:right; color: #dc2626;">Γé╣ ${balance.toLocaleString()}.00</td></tr>
             </tfoot>
           </table>
           <div style="margin-top: 40px; display: flex; justify-content: space-between; font-size: 12px;">
@@ -672,6 +895,154 @@
       `;
       window.print();
     }
-  </script>
+  
+    // -- RESERVATION FORM LOGIC --
+    function toggleResType() {
+      const type = document.querySelector('input[name="res_type"]:checked').value;
+      const compFields = document.getElementById('section-company-fields');
+      const labels = document.querySelectorAll('input[name="res_type"]');
+      
+      // Update label colors
+      labels.forEach(radio => {
+        radio.parentElement.style.color = radio.checked ? 'var(--accent-primary)' : 'var(--text-secondary)';
+      });
+
+      // Handle Reservation details visibility
+      if (type === 'company') {
+        compFields.style.display = 'block';
+      } else {
+        compFields.style.display = 'none';
+      }
+
+      // Handle all guest blocks
+      const guestBlocks = document.querySelectorAll('.guest-block');
+      guestBlocks.forEach(block => {
+        const regSearch = block.querySelector('.section-regular-search');
+        const privContainer = block.querySelector('.privilege-checkbox-container');
+        const privInput = block.querySelector('.privilege-input-container');
+        const chkPriv = block.querySelector('.chk-privilege');
+        
+        regSearch.style.display = 'none';
+        privContainer.style.display = 'flex';
+        privContainer.style.order = '0';
+        
+        if (type === 'regular') {
+          regSearch.style.display = 'block';
+        } else if (type === 'company') {
+          privContainer.style.display = 'none';
+          privInput.style.display = 'none';
+          chkPriv.checked = false;
+        } else if (type === 'privilege') {
+          chkPriv.checked = true;
+          privContainer.style.display = 'flex'; 
+          privContainer.style.order = '-1';
+          privInput.style.display = 'block';
+        }
+        
+        // Inline toggle privilege input logic
+        if (type === 'company') {
+          privInput.style.display = 'none';
+        } else if (type === 'privilege') {
+          privInput.style.display = 'block';
+        } else {
+          privInput.style.display = chkPriv.checked ? 'block' : 'none';
+        }
+      });
+    }
+
+    function togglePrivilegeInput(checkboxElem) {
+      const type = document.querySelector('input[name="res_type"]:checked').value;
+      const block = checkboxElem.closest('.guest-block');
+      const privInput = block.querySelector('.privilege-input-container');
+      
+      if (type === 'company') {
+        privInput.style.display = 'none';
+      } else if (type === 'privilege') {
+        privInput.style.display = 'block';
+      } else {
+        privInput.style.display = checkboxElem.checked ? 'block' : 'none';
+      }
+    }
+
+    function addAnotherGuest() {
+      const container = document.getElementById('guests-container');
+      const blocks = container.querySelectorAll('.guest-block');
+      const newBlock = blocks[0].cloneNode(true);
+      
+      // Update heading
+      const guestNum = blocks.length + 1;
+      const heading = newBlock.querySelector('h4.guest-heading');
+      if (heading) heading.innerText = 'Guest #' + guestNum;
+      
+      // Clear inputs (except radio/checkbox)
+      newBlock.querySelectorAll('input:not([type="radio"]):not([type="checkbox"])').forEach(inp => inp.value = '');
+      
+      // Add a small remove button for the extra guests
+      const headerDiv = newBlock.querySelector('.guest-heading').parentElement;
+      let removeBtn = document.createElement('button');
+      removeBtn.type = 'button';
+      removeBtn.innerHTML = '<i class="fa-solid fa-trash"></i> Remove';
+      removeBtn.style = 'color: #ef4444; background: none; border: none; font-size: 12px; font-weight: 800; cursor: pointer; text-transform: uppercase; letter-spacing: 1px;';
+      removeBtn.onclick = function() { newBlock.remove(); updateGuestHeadings(); };
+      headerDiv.appendChild(removeBtn);
+      
+      // Reset Privilege logic based on current reservation type
+      const chkPriv = newBlock.querySelector('.chk-privilege');
+      const type = document.querySelector('input[name="res_type"]:checked').value;
+      if (type === 'privilege') {
+        chkPriv.checked = true;
+      } else if (type === 'company') {
+        chkPriv.checked = false;
+      } else {
+        chkPriv.checked = false; // By default new guest doesn't have it checked
+      }
+      
+      container.appendChild(newBlock);
+      
+      // Re-trigger styles
+      toggleResType();
+    }
+    
+    function updateGuestHeadings() {
+      const blocks = document.querySelectorAll('.guest-block');
+      blocks.forEach((block, index) => {
+        const heading = block.querySelector('h4.guest-heading');
+        if (heading) heading.innerText = 'Guest #' + (index + 1);
+      });
+    }
+
+    function toggleNewCompany(selectElem) {
+      const newCompDetails = document.getElementById('new-company-details');
+      if (selectElem.value === 'new') {
+        newCompDetails.style.display = 'block';
+      } else {
+        newCompDetails.style.display = 'none';
+      }
+    }
+
+    function setInitialDateTime() {
+      const now = new Date();
+      const dateInput = document.getElementById('reserve-date-input');
+      const timeInput = document.getElementById('reserve-time-input');
+      
+      if (dateInput && timeInput) {
+        // Format YYYY-MM-DD
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        dateInput.value = `${year}-${month}-${day}`;
+        
+        // Format HH:MM
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        timeInput.value = `${hours}:${minutes}`;
+      }
+    }
+    
+    // Call once to set the time when script loads
+    setInitialDateTime();
+
+
+</script>
 </body>
 </html>

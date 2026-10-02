@@ -402,9 +402,9 @@
               <i class="fa-solid fa-chevron-down" style="font-size: 10px;"></i>
             </div>
             <ul class="admin-sub-list">
-              <li class="admin-sub-item active" onclick="switchSection('fo_channels', 'Booking Sources & Channels', this)"><i class="fa-solid fa-clipboard-check"></i> Booking Sources</li>
-              <li class="admin-sub-item" onclick="switchSection('fo_id_types', 'Identity Card Types', this)"><i class="fa-solid fa-id-card"></i> Identity Card Types</li>
-              <li class="admin-sub-item" onclick="switchSection('fo_payments', 'Payment Modes & Gateways', this)"><i class="fa-solid fa-cash-register"></i> Payment Modes</li>
+              <li class="admin-sub-item active" onclick="switchSection('fo_channels', 'Mode of Reserve', this)"><i class="fa-solid fa-clipboard-check"></i> Mode of Reserve</li>
+              <li class="admin-sub-item" onclick="switchSection('fo_id_types', 'ID Card Type', this)"><i class="fa-solid fa-id-card"></i> ID Card Type</li>
+              <li class="admin-sub-item" onclick="switchSection('fo_payments', 'Payment Modes', this)"><i class="fa-solid fa-cash-register"></i> Payment Modes</li>
             </ul>
           </div>
 
@@ -415,10 +415,10 @@
               <i class="fa-solid fa-chevron-down" style="font-size: 10px;"></i>
             </div>
             <ul class="admin-sub-list">
-              <li class="admin-sub-item" onclick="switchSection('rm_categories', 'Room Categories & Tariffs', this)"><i class="fa-solid fa-tags"></i> Room Categories</li>
-              <li class="admin-sub-item" onclick="switchSection('rm_floors', 'Floors & Block Master', this)"><i class="fa-solid fa-layer-group"></i> Floors & Wings</li>
-              <li class="admin-sub-item" onclick="switchSection('rm_amenities', 'Room Amenities Directory', this)"><i class="fa-solid fa-wifi"></i> Amenities Master</li>
-              <li class="admin-sub-item" onclick="switchSection('rm_maintenance_types', 'Maintenance Task Reasons', this)"><i class="fa-solid fa-wrench"></i> Maintenance Reasons</li>
+              <li class="admin-sub-item" onclick="switchSection('rm_categories', 'Room Categories', this)"><i class="fa-solid fa-tags"></i> Room Categories</li>
+              <li class="admin-sub-item" onclick="switchSection('rm_floors', 'Floors & Wings', this)"><i class="fa-solid fa-layer-group"></i> Floors & Wings</li>
+              <li class="admin-sub-item" onclick="switchSection('rm_amenities', 'Amenities & Facilities', this)"><i class="fa-solid fa-wifi"></i> Amenities Master</li>
+              <li class="admin-sub-item" onclick="switchSection('rm_maintenance_types', 'Maintenance Reasons', this)"><i class="fa-solid fa-wrench"></i> Maintenance Reasons</li>
             </ul>
           </div>
 
@@ -458,11 +458,11 @@
             <div class="crud-header-card">
               <div>
                 <div style="font-size: 16px; font-weight: 900; color: var(--text-primary); display: flex; align-items: center; gap: 8px;">
-                  <span id="view-title">Booking Sources & Channels</span>
-                  <span class="badge-tag blue" id="view-count" style="font-size: 11px;">6 Records</span>
+                  <span id="view-title">Mode of Reserve</span>
+                  <span class="badge-tag blue" id="view-count" style="font-size: 11px;">4 Records</span>
                 </div>
                 <div style="font-size: 12px; color: var(--text-secondary); margin-top: 3px;" id="view-desc">
-                  Configure direct booking channels, OTAs, and corporate travel sources.
+                  Manage reservation booking modes (Phone Call, Physical, Website, Online).
                 </div>
               </div>
               <button class="btn-ui-primary" onclick="openCurrentAddModal()"><i class="fa-solid fa-plus"></i> <span id="btn-add-label">Add Entry</span></button>
@@ -550,33 +550,34 @@
     const adminDB = {
       // 1. FRONT OFFICE
       fo_channels: [
-        { id: '1', name: 'Direct Front Desk / Walk-in', type: 'Direct', comm: '0%', status: 'Active' },
-        { id: '2', name: 'Official Website Booking Engine', type: 'Direct Web', comm: '0%', status: 'Active' },
-        { id: '3', name: 'MakeMyTrip / Goibibo', type: 'OTA', comm: '15%', status: 'Active' },
-        { id: '4', name: 'Booking.com Global', type: 'OTA', comm: '18%', status: 'Active' },
-        { id: '5', name: 'Agoda Travel Network', type: 'OTA', comm: '14%', status: 'Active' },
-        { id: '6', name: 'TCS Corporate Travel Desk', type: 'Corporate', comm: '5%', status: 'Active' }
+        { id: '1', name: 'Phone Call', status: 'Active' },
+        { id: '2', name: 'Physical', status: 'Active' },
+        { id: '3', name: 'Website', status: 'Active' },
+        { id: '4', name: 'Online', status: 'Active' }
       ],
       fo_id_types: [
-        { id: '1', name: 'Aadhaar Card (UIDAI)', code: 'AADHAAR', country: 'India', mandatory: 'Yes', status: 'Active' },
-        { id: '2', name: 'Passport (International)', code: 'PASSPORT', country: 'All Nations', mandatory: 'Yes (NRI/Foreign)', status: 'Active' },
-        { id: '3', name: 'Driving License', code: 'DL', country: 'India', mandatory: 'No', status: 'Active' },
-        { id: '4', name: 'Voter ID Card', code: 'VOTER', country: 'India', mandatory: 'No', status: 'Active' },
-        { id: '5', name: 'PAN Card (Income Tax)', code: 'PAN', country: 'India', mandatory: 'No', status: 'Active' }
+        { id: '1', name: 'Aadhaar Card (UIDAI)', code: 'AADHAAR', status: 'Active' },
+        { id: '2', name: 'Passport (International)', code: 'PASSPORT', status: 'Active' },
+        { id: '3', name: 'Driving License', code: 'DL', status: 'Active' },
+        { id: '4', name: 'Voter ID Card', code: 'VOTER', status: 'Active' },
+        { id: '5', name: 'PAN Card (Income Tax)', code: 'PAN', status: 'Active' }
       ],
       fo_payments: [
-        { id: '1', name: 'UPI Dynamic QR (PhonePe/GPay)', gateway: 'UPI Direct', surcharge: '0%', status: 'Active' },
-        { id: '2', name: 'Cash Desk Settlement', gateway: 'Cash Drawer Ledger', surcharge: '0%', status: 'Active' },
-        { id: '3', name: 'Credit/Debit Card POS (HDFC)', gateway: 'PineLabs EDC', surcharge: '1.2%', status: 'Active' },
-        { id: '4', name: 'NEFT / RTGS Bank Transfer', gateway: 'ICICI Current A/C', surcharge: '0%', status: 'Active' }
+        { id: '1', name: 'QR Scanner', status: 'Active' },
+        { id: '2', name: 'Cash', status: 'Active' },
+        { id: '3', name: 'Phone pay', status: 'Active' },
+        { id: '4', name: 'G pay', status: 'Active' },
+        { id: '5', name: 'Paytm', status: 'Active' },
+        { id: '6', name: 'Bank Transfer', status: 'Active' },
+        { id: '7', name: 'Check Payment', status: 'Active' }
       ],
 
       // 2. ROOM MANAGEMENT
       rm_categories: [
-        { id: '1', name: 'Deluxe Room', code: 'DELUXE', baseRate: '3500', pax: '2 Adults', bedding: 'King / Twin' },
-        { id: '2', name: 'Super Deluxe', code: 'SUPER DELUXE', baseRate: '5200', pax: '2 Adults + 1 Child', bedding: 'King Size (72x78)' },
-        { id: '3', name: 'Suite Luxury', code: 'SUITE', baseRate: '8500', pax: '3 Adults', bedding: 'Imperial Royal Bed' },
-        { id: '4', name: 'Executive Penthouse', code: 'EXECUTIVE', baseRate: '11000', pax: '4 Adults', bedding: 'Emperor Royal 84"' }
+        { id: '1', name: 'Deluxe Room', code: 'DELUXE', status: 'Active' },
+        { id: '2', name: 'Super Deluxe', code: 'SUPER DELUXE', status: 'Active' },
+        { id: '3', name: 'Suite Luxury', code: 'SUITE', status: 'Active' },
+        { id: '4', name: 'Executive Penthouse', code: 'EXECUTIVE', status: 'Active' }
       ],
       rm_floors: [
         { id: '1', floor: '1', name: 'First Floor Sea Deck', rooms: '12 Rooms (101 - 112)', status: 'Active' },
@@ -585,11 +586,18 @@
         { id: '4', floor: '4', name: 'Fourth Floor Royal Penthouse', rooms: '12 Rooms (401 - 412)', status: 'Active' }
       ],
       rm_amenities: [
-        { id: '1', name: 'Panoramic Ocean View', icon: 'fa-water', category: 'View', chargeable: 'No' },
-        { id: '2', name: 'Private Sea Breeze Balcony', icon: 'fa-door-open', category: 'Room Feature', chargeable: 'No' },
-        { id: '3', name: 'Luxury Jacuzzi & Hot Tub', icon: 'fa-bath', category: 'Bathroom', chargeable: 'Included in Suite' },
-        { id: '4', name: 'Mini-Bar & Refrigerator', icon: 'fa-wine-bottle', category: 'Dining', chargeable: 'Usage Basis' },
-        { id: '5', name: 'High-Speed Wi-Fi 6', icon: 'fa-wifi', category: 'Technology', chargeable: 'Complimentary' }
+        { id: '1', icon: 'fa-wifi', name: 'Free Wi-Fi', status: 'Active' },
+        { id: '2', icon: 'fa-door-open', name: 'Balcony', status: 'Active' },
+        { id: '3', icon: 'fa-bath', name: 'Jacuzzi', status: 'Active' },
+        { id: '4', icon: 'fa-faucet-drip', name: 'Hot Water & Cold Water', status: 'Active' },
+        { id: '5', icon: 'fa-snowflake', name: 'AC', status: 'Active' },
+        { id: '6', icon: 'fa-fan', name: 'Non AC', status: 'Active' },
+        { id: '7', icon: 'fa-wine-bottle', name: 'Mini Bar', status: 'Active' },
+        { id: '8', icon: 'fa-temperature-arrow-down', name: 'Refrigerator', status: 'Active' },
+        { id: '9', icon: 'fa-tv', name: 'Smart TV', status: 'Active' },
+        { id: '10', icon: 'fa-phone', name: 'Room Telephone', status: 'Active' },
+        { id: '11', icon: 'fa-vault', name: 'Safe Locker', status: 'Active' },
+        { id: '12', icon: 'fa-mug-hot', name: 'Coffee / Tea Maker', status: 'Active' }
       ],
       rm_maintenance_types: [
         { id: '1', name: 'HVAC Air Conditioning & Compressor Service', dept: 'Engineering', priority: 'High', sla: '4 Hours' },
@@ -601,45 +609,37 @@
     };
 
     const entityDescriptions = {
-      fo_channels: 'Configure direct booking channels, OTAs, and corporate travel sources.',
-      fo_id_types: 'Manage acceptable guest identity verification documents & KYC compliance.',
-      fo_payments: 'Configure payment modes, gateways, settlement ledgers, and surcharge fees.',
-      rm_categories: 'Manage room categories, base tariffs, occupant capacities, and bedding configurations.',
+      fo_channels: 'Manage reservation booking modes (Phone Call, Physical, Website, Online).',
+      fo_id_types: 'Manage acceptable guest ID Card types and KYC documents.',
+      fo_payments: 'Configure accepted payment modes and transaction methods.',
+      rm_categories: 'Manage room categories and categorization codes.',
       rm_floors: 'Configure floor distributions, room wings, and building blocks.',
-      rm_amenities: 'Manage hotel room amenities, feature tags, and room inclusion rules.',
+      rm_amenities: 'Manage room facilities and amenities directory with visual icons.',
       rm_maintenance_types: 'Configure maintenance task reasons, department routing, and SLA turnaround.'
     };
 
     let currentEntity = 'fo_channels';
-    let currentEntityTitle = 'Booking Sources & Channels';
+    let currentEntityTitle = 'Mode of Reserve';
     let searchQuery = '';
 
     const entitySchemas = {
       fo_channels: [
-        { key: 'name', label: 'Channel / Source Name', type: 'text', placeholder: 'e.g. Agoda Travel' },
-        { key: 'type', label: 'Channel Type', type: 'select', options: ['Direct', 'Direct Web', 'OTA', 'Corporate', 'Travel Agent'] },
-        { key: 'comm', label: 'Commission Rate', type: 'text', placeholder: 'e.g. 15%' },
-        { key: 'status', label: 'Operational Status', type: 'select', options: ['Active', 'Inactive'] }
+        { key: 'name', label: 'Mode of Reserve', type: 'text', placeholder: 'e.g. Phone Call' },
+        { key: 'status', label: 'Status', type: 'select', options: ['Active', 'Inactive'] }
       ],
       fo_id_types: [
-        { key: 'name', label: 'ID Type Name', type: 'text', placeholder: 'e.g. Voter ID' },
-        { key: 'code', label: 'Code', type: 'text', placeholder: 'e.g. VOTER' },
-        { key: 'country', label: 'Country Eligibility', type: 'text', placeholder: 'India / All Nations' },
-        { key: 'mandatory', label: 'Mandatory Rule', type: 'select', options: ['Yes', 'No', 'Yes (NRI/Foreign)'] },
+        { key: 'name', label: 'ID Card Type', type: 'text', placeholder: 'e.g. Aadhaar Card' },
+        { key: 'code', label: 'Code', type: 'text', placeholder: 'e.g. AADHAAR' },
         { key: 'status', label: 'Status', type: 'select', options: ['Active', 'Inactive'] }
       ],
       fo_payments: [
-        { key: 'name', label: 'Payment Mode Name', type: 'text', placeholder: 'e.g. UPI QR' },
-        { key: 'gateway', label: 'Gateway / Ledger', type: 'text', placeholder: 'e.g. PhonePe Direct' },
-        { key: 'surcharge', label: 'Surcharge %', type: 'text', placeholder: 'e.g. 0%' },
+        { key: 'name', label: 'Payment Mode Name', type: 'text', placeholder: 'e.g. QR Scanner' },
         { key: 'status', label: 'Status', type: 'select', options: ['Active', 'Inactive'] }
       ],
       rm_categories: [
-        { key: 'name', label: 'Category Name', type: 'text', placeholder: 'e.g. Royal Suite' },
-        { key: 'code', label: 'Category Code', type: 'text', placeholder: 'e.g. SUITE' },
-        { key: 'baseRate', label: 'Base Tariff (₹)', type: 'number', placeholder: '8500' },
-        { key: 'pax', label: 'Pax Capacity', type: 'text', placeholder: '3 Adults' },
-        { key: 'bedding', label: 'Bedding Configuration', type: 'text', placeholder: 'King Size Bed' }
+        { key: 'name', label: 'Category Name', type: 'text', placeholder: 'e.g. Deluxe Room' },
+        { key: 'code', label: 'Category Code', type: 'text', placeholder: 'e.g. DELUXE' },
+        { key: 'status', label: 'Status', type: 'select', options: ['Active', 'Inactive'] }
       ],
       rm_floors: [
         { key: 'floor', label: 'Floor Number', type: 'text', placeholder: '1' },
@@ -648,10 +648,9 @@
         { key: 'status', label: 'Status', type: 'select', options: ['Active', 'Maintenance'] }
       ],
       rm_amenities: [
-        { key: 'name', label: 'Amenity Name', type: 'text', placeholder: 'e.g. Free Wi-Fi' },
-        { key: 'icon', label: 'FontAwesome Icon Class', type: 'text', placeholder: 'fa-wifi' },
-        { key: 'category', label: 'Category', type: 'select', options: ['View', 'Room Feature', 'Bathroom', 'Dining', 'Technology'] },
-        { key: 'chargeable', label: 'Chargeable Policy', type: 'text', placeholder: 'Complimentary / Paid' }
+        { key: 'icon', label: 'Icon', type: 'text', placeholder: 'fa-wifi' },
+        { key: 'name', label: 'Facility / Amenity Name', type: 'text', placeholder: 'e.g. Free Wi-Fi' },
+        { key: 'status', label: 'Status', type: 'select', options: ['Active', 'Inactive'] }
       ],
       rm_maintenance_types: [
         { key: 'name', label: 'Maintenance Issue Type', type: 'text', placeholder: 'e.g. AC Repair' },
@@ -732,7 +731,8 @@
       let thead = '<thead><tr>';
       thead += '<th style="width: 50px;">#</th>';
       schema.forEach(col => {
-        thead += `<th>${col.label}</th>`;
+        let thStyle = col.key === 'icon' ? 'style="width: 70px;"' : '';
+        thead += `<th ${thStyle}>${col.label}</th>`;
       });
       thead += '<th style="text-align: right; width: 120px;">Actions</th>';
       thead += '</tr></thead>';
@@ -750,16 +750,11 @@
             if (col.key === 'status') {
               let badgeClass = (val === 'Active' || val === 'Online' || val === 'Available') ? 'green' : 'yellow';
               formattedVal = `<span class="badge-tag ${badgeClass}"><i class="fa-solid fa-circle-check" style="font-size: 6px; margin-right: 4px;"></i>${val}</span>`;
-            } else if (col.key === 'mandatory') {
-              let badgeClass = (val.startsWith('Yes')) ? 'blue' : 'gray';
-              formattedVal = `<span class="badge-tag ${badgeClass}">${val}</span>`;
             } else if (col.key === 'priority') {
               let badgeClass = (val === 'Immediate' || val === 'High') ? 'red' : 'blue';
               formattedVal = `<span class="badge-tag ${badgeClass}">${val}</span>`;
-            } else if (col.key === 'baseRate' || col.key === 'price') {
-              formattedVal = `<span style="font-family: var(--font-mono); font-weight: 800; color: var(--accent-primary);">${val.startsWith('₹') ? val : '₹ ' + Number(val).toLocaleString()}</span>`;
             } else if (col.key === 'icon') {
-              formattedVal = `<i class="fa-solid ${val}" style="font-size: 14px; color: var(--accent-primary);"></i> <span style="font-size: 11px; font-family: var(--font-mono); color: var(--text-muted);">${val}</span>`;
+              formattedVal = `<div style="width: 34px; height: 34px; border-radius: 8px; background: rgba(99, 102, 241, 0.08); display: flex; align-items: center; justify-content: center;"><i class="fa-solid ${val}" style="font-size: 15px; color: var(--accent-primary);"></i></div>`;
             }
             tbody += `<td>${formattedVal}</td>`;
           });

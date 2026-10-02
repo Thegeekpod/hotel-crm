@@ -724,13 +724,37 @@
             <i class="fa-solid fa-door-closed"></i> Work Order Specifications
           </h4>
 
-          <div style="margin-bottom: 16px;">
-            <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Target Room</label>
-            <select id="maint-room-select" class="pms-input-field" style="width: 100%; height: 40px; padding: 8px 14px; font-size: 13px; border: 1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff; color: var(--text-primary); font-family: var(--font-mono); font-weight: 800;">
-              <!-- Populated via JS -->
-            </select>
+          <!-- Row 1: Room Category, Floor, Room Number (3 Columns) -->
+          <div style="display: flex; gap: 16px; margin-bottom: 16px;">
+            <div style="flex: 1;">
+              <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Room Category</label>
+              <select id="maint-cat-select" onchange="updateMaintRooms()" class="pms-input-field" style="width: 100%; height: 40px; padding: 8px 14px; font-size: 13px; border: 1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff; color: var(--text-primary);">
+                <option value="">All Categories</option>
+                <option value="DELUXE">Deluxe</option>
+                <option value="SUPER DELUXE">Super Deluxe</option>
+                <option value="SUITE">Suite</option>
+                <option value="EXECUTIVE">Executive</option>
+              </select>
+            </div>
+            <div style="flex: 1;">
+              <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Floor</label>
+              <select id="maint-floor-select" onchange="updateMaintRooms()" class="pms-input-field" style="width: 100%; height: 40px; padding: 8px 14px; font-size: 13px; border: 1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff; color: var(--text-primary);">
+                <option value="">All Floors</option>
+                <option value="1">Floor 1</option>
+                <option value="2">Floor 2</option>
+                <option value="3">Floor 3</option>
+                <option value="4">Floor 4</option>
+              </select>
+            </div>
+            <div style="flex: 1;">
+              <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Room Number</label>
+              <select id="maint-room-select" class="pms-input-field" style="width: 100%; height: 40px; padding: 8px 14px; font-size: 13px; border: 1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff; color: var(--text-primary); font-family: var(--font-mono); font-weight: 800;">
+                <!-- Populated via JS -->
+              </select>
+            </div>
           </div>
 
+          <!-- Row 2: Maintenance Reason -->
           <div style="margin-bottom: 16px;">
             <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Maintenance Reason</label>
             <select id="maint-reason" class="pms-input-field" style="width: 100%; height: 40px; padding: 8px 14px; font-size: 13px; border: 1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff; color: var(--text-primary);">
@@ -743,14 +767,15 @@
             </select>
           </div>
 
+          <!-- Row 3: Assigned Engineer & Expected Completion -->
           <div style="display: flex; gap: 16px; margin-bottom: 16px;">
             <div style="flex: 1;">
               <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Assigned Engineer</label>
-              <input type="text" class="pms-input-field" value="Ramesh Kumar (Engineering Lead)" style="width: 100%; height: 40px; padding: 8px 14px; font-size: 13px; border: 1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff; color: var(--text-primary);">
+              <input type="text" id="maint-engineer" class="pms-input-field" value="Ramesh Kumar (Engineering Lead)" style="width: 100%; height: 40px; padding: 8px 14px; font-size: 13px; border: 1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff; color: var(--text-primary);">
             </div>
             <div style="flex: 1;">
               <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Expected Completion</label>
-              <input type="date" class="pms-input-field" value="2026-09-25" style="width: 100%; height: 40px; padding: 8px 14px; font-size: 13px; border: 1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff; color: var(--text-primary);">
+              <input type="date" id="maint-completion" class="pms-input-field" value="2026-09-25" style="width: 100%; height: 40px; padding: 8px 14px; font-size: 13px; border: 1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff; color: var(--text-primary);">
             </div>
           </div>
 
@@ -1165,10 +1190,26 @@
       }
     }
 
-    function populateMaintenanceSelect() {
+    function updateMaintRooms() {
+      const cat = document.getElementById('maint-cat-select') ? document.getElementById('maint-cat-select').value : '';
+      const floor = document.getElementById('maint-floor-select') ? document.getElementById('maint-floor-select').value : '';
       const sel = document.getElementById('maint-room-select');
+      if (!sel) return;
       sel.innerHTML = '';
-      roomsData.forEach(r => {
+
+      let filtered = roomsData;
+      if (cat) filtered = filtered.filter(r => r.cat === cat);
+      if (floor) filtered = filtered.filter(r => r.floor === floor);
+
+      if (filtered.length === 0) {
+        const opt = document.createElement('option');
+        opt.value = '';
+        opt.textContent = '-- No matching rooms --';
+        sel.appendChild(opt);
+        return;
+      }
+
+      filtered.forEach(r => {
         const opt = document.createElement('option');
         opt.value = r.id;
         opt.textContent = `Room ${r.no} (${r.cat} - Flr ${r.floor}) [${r.status}]`;
@@ -1176,13 +1217,25 @@
       });
     }
 
+    function populateMaintenanceSelect() {
+      updateMaintRooms();
+    }
+
     function openMaintenanceModal() {
+      if (document.getElementById('maint-cat-select')) document.getElementById('maint-cat-select').value = '';
+      if (document.getElementById('maint-floor-select')) document.getElementById('maint-floor-select').value = '';
+      updateMaintRooms();
       openModal('maint-modal');
     }
 
     function confirmMaintenance() {
       const roomId = document.getElementById('maint-room-select').value;
+      if (!roomId) {
+        alert('Please select a valid room number.');
+        return;
+      }
       const reason = document.getElementById('maint-reason').value;
+      const engineer = document.getElementById('maint-engineer')?.value || 'Ramesh Kumar';
       const room = roomsData.find(r => r.id === roomId);
       if (room) {
         room.status = 'Maintenance';
@@ -1190,7 +1243,7 @@
         closeModal('maint-modal');
         renderRooms();
         updateKPICounters();
-        showToast(`Work order generated for Room ${room.no}: ${reason}`);
+        showToast(`Work order generated for Room ${room.no}: ${reason} (Assigned: ${engineer})`);
       }
     }
 

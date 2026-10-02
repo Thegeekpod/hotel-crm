@@ -687,7 +687,7 @@
     function openReservationModal() { openModal('reserve-modal'); }
 
     function openRoomDetails(roomNo, category, cleaningStatus, pmsStatus, rate, guestObj) {
-      document.getElementById('m-title').innerHTML = `<i class="fa-solid fa-door-open"></i> Room ${roomNo} - ${category} (Γé╣ ${rate.toLocaleString()}/night)`;
+      document.getElementById('m-title').innerHTML = `<i class="fa-solid fa-door-open"></i> Room ${roomNo} - ${category} (₹ ${rate.toLocaleString()}/night)`;
       const body = document.getElementById('m-body');
       const footer = document.getElementById('m-footer');
 
@@ -702,8 +702,8 @@
             </div>
             <div style="background: var(--bg-surface); padding: 16px; border: 1px solid var(--border-subtle); border-radius: var(--radius-md);">
               <h4 style="font-size: 11px; color: var(--accent-primary); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px;"><i class="fa-solid fa-wallet"></i> Folio Outstanding</h4>
-              <div style="font-size: 24px; font-weight: 900; color: var(--accent-rose); font-family: var(--font-mono);">Γé╣ ${guestObj.balance.toLocaleString()}</div>
-              <div style="font-size: 11px; color: var(--accent-emerald); margin-top: 6px;"><i class="fa-solid fa-check"></i> Advance: Γé╣ 5,000</div>
+              <div style="font-size: 24px; font-weight: 900; color: var(--accent-rose); font-family: var(--font-mono);">₹ ${guestObj.balance.toLocaleString()}</div>
+              <div style="font-size: 11px; color: var(--accent-emerald); margin-top: 6px;"><i class="fa-solid fa-check"></i> Advance: ₹ 5,000</div>
             </div>
           </div>
           <div class="pms-table-box">
@@ -711,11 +711,11 @@
             <table class="pms-table">
               <thead><tr><th>Date</th><th>Description</th><th>Amount</th></tr></thead>
               <tbody>
-                <tr><td>22 Sep 2026</td><td>Room Charge (${category})</td><td style="font-family: var(--font-mono); font-weight: 700;">Γé╣ ${rate.toLocaleString()}</td></tr>
-                <tr><td>22 Sep 2026</td><td>Restaurant Room Service</td><td style="font-family: var(--font-mono); font-weight: 700;">Γé╣ 1,450</td></tr>
-                <tr><td>23 Sep 2026</td><td>Room Charge (${category})</td><td style="font-family: var(--font-mono); font-weight: 700;">Γé╣ ${rate.toLocaleString()}</td></tr>
-                <tr><td>23 Sep 2026</td><td>Laundry Express</td><td style="font-family: var(--font-mono); font-weight: 700;">Γé╣ 450</td></tr>
-                <tr><td>23 Sep 2026</td><td>GST (12%)</td><td style="font-family: var(--font-mono); font-weight: 700;">Γé╣ 1,500</td></tr>
+                <tr><td>22 Sep 2026</td><td>Room Charge (${category})</td><td style="font-family: var(--font-mono); font-weight: 700;">₹ ${rate.toLocaleString()}</td></tr>
+                <tr><td>22 Sep 2026</td><td>Restaurant Room Service</td><td style="font-family: var(--font-mono); font-weight: 700;">₹ 1,450</td></tr>
+                <tr><td>23 Sep 2026</td><td>Room Charge (${category})</td><td style="font-family: var(--font-mono); font-weight: 700;">₹ ${rate.toLocaleString()}</td></tr>
+                <tr><td>23 Sep 2026</td><td>Laundry Express</td><td style="font-family: var(--font-mono); font-weight: 700;">₹ 450</td></tr>
+                <tr><td>23 Sep 2026</td><td>GST (12%)</td><td style="font-family: var(--font-mono); font-weight: 700;">₹ 1,500</td></tr>
               </tbody>
             </table>
           </div>
@@ -803,13 +803,13 @@
             <p style="margin: 0;"><strong>GSTIN:</strong> 19AAGCS7712K1Z9</p>
           </div>
           <table style="width: 100%; border-collapse: collapse; margin-bottom: 24px; font-size: 12px;">
-            <thead><tr style="background: #6366f1; color: #fff;"><th style="padding: 10px; text-align:left;">Description</th><th style="padding: 10px; text-align:right;">Amount (Γé╣)</th></tr></thead>
+            <thead><tr style="background: #6366f1; color: #fff;"><th style="padding: 10px; text-align:left;">Description</th><th style="padding: 10px; text-align:right;">Amount (₹)</th></tr></thead>
             <tbody>
               <tr style="border-bottom: 1px solid #cbd5e1;"><td style="padding: 10px;">Room Stay & Dining Charges</td><td style="padding: 10px; text-align:right;">${(balance + 5000).toLocaleString()}.00</td></tr>
               <tr style="border-bottom: 1px solid #cbd5e1;"><td style="padding: 10px; color: #10b981;">Less: Advance Deposit Paid</td><td style="padding: 10px; text-align:right; color: #10b981;">- 5,000.00</td></tr>
             </tbody>
             <tfoot>
-              <tr style="font-size: 14px; font-weight: bold; background: #f1f5f9;"><td style="padding: 10px;">Net Balance Payable:</td><td style="padding: 10px; text-align:right; color: #dc2626;">Γé╣ ${balance.toLocaleString()}.00</td></tr>
+              <tr style="font-size: 14px; font-weight: bold; background: #f1f5f9;"><td style="padding: 10px;">Net Balance Payable:</td><td style="padding: 10px; text-align:right; color: #dc2626;">₹ ${balance.toLocaleString()}.00</td></tr>
             </tfoot>
           </table>
           <div style="margin-top: 40px; display: flex; justify-content: space-between; font-size: 12px;">

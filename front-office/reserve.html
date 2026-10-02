@@ -517,22 +517,69 @@
 
             </div>
 
-            <!-- Right Column: Media / Action / QR Code -->
-            <div style="display: flex; flex-direction: column; align-items: center; background: #fff; padding: 24px; border-radius: var(--radius-md); border: 1px solid var(--border-medium); box-shadow: 0 4px 12px rgba(0,0,0,0.02);">
-              <div style="width: 180px; height: 180px; background: #f8fafc; border: 2px dashed var(--border-medium); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--text-muted); text-align: center; font-size: 12px; margin-bottom: 24px; transition: all 0.3s ease; cursor: pointer;" onmouseover="this.style.borderColor='var(--accent-primary)'; this.style.background='rgba(99,102,241,0.05)';" onmouseout="this.style.borderColor='var(--border-medium)'; this.style.background='#f8fafc';">
-                <div>
-                  <i class="fa-solid fa-camera" style="font-size: 32px; margin-bottom: 12px; color: var(--accent-primary);"></i><br>
-                  <strong style="color: var(--text-primary);">Capture Guest Photo</strong><br>
-                  <span style="font-size: 10px;">or browse image</span>
+            <!-- Right Column: Media / QR Codes / Action -->
+            <div style="display: flex; flex-direction: column; background: #fff; padding: 20px; border-radius: var(--radius-md); border: 1px solid var(--border-medium); box-shadow: 0 4px 12px rgba(0,0,0,0.02);">
+              
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border-medium);">
+                <span style="font-size: 11px; font-weight: 800; color: var(--accent-primary); text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; gap: 6px;">
+                  <i class="fa-solid fa-qrcode"></i> Digital Passes
+                </span>
+                <span style="font-size: 10px; font-weight: 800; color: #059669; background: rgba(16, 185, 129, 0.1); padding: 2px 8px; border-radius: 10px; display: inline-flex; align-items: center; gap: 4px;">
+                  <i class="fa-solid fa-circle-check"></i> Live Ready
+                </span>
+              </div>
+
+              <!-- Guest #1 QR Pass Card -->
+              <div style="background: #ffffff; border: 1px solid var(--border-medium); border-radius: 12px; padding: 14px; margin-bottom: 14px; box-shadow: 0 2px 6px rgba(0,0,0,0.02); transition: all 0.2s ease;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                  <span style="display: inline-flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 800; color: var(--accent-primary); background: rgba(99,102,241,0.08); padding: 3px 8px; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.5px;">
+                    <i class="fa-solid fa-user"></i> Guest #1
+                  </span>
+                  <span style="font-size: 10px; color: var(--text-muted); font-weight: 700; font-family: var(--font-mono);">PASS-01</span>
+                </div>
+                
+                <div style="font-size: 13px; font-weight: 800; color: var(--text-primary); line-height: 1.2;">Souvik Paul</div>
+                <div style="font-size: 11px; color: var(--text-secondary); font-weight: 600; margin-top: 3px; display: flex; align-items: center; gap: 5px; font-family: var(--font-mono);">
+                  <i class="fa-solid fa-phone" style="font-size: 10px; color: var(--accent-primary);"></i> +91 62955 87845
+                </div>
+
+                <div style="background: #f8fafc; border: 1px dashed var(--border-medium); border-radius: 10px; padding: 10px; margin-top: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                  <div style="background: #fff; padding: 6px; border-radius: 8px; border: 1px solid var(--border-medium); box-shadow: 0 2px 4px rgba(0,0,0,0.03);">
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=96x96&data=Guest1_Souvik_Paul_6295587845" alt="Guest 1 QR" style="width: 96px; height: 96px; display: block; border-radius: 4px;">
+                  </div>
+                  
                 </div>
               </div>
-              
-              <div style="width: 140px; height: 140px; background: #fff; border: 1px solid var(--border-medium); border-radius: 12px; padding: 12px; display: flex; align-items: center; justify-content: center; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);">
-                <img src="https://api.qrserver.com/v1/create-qr-code/?size=116x116&data=Reservation829" alt="QR Code" style="max-width: 100%; opacity: 0.8;">
+
+              <!-- Guest #2 QR Pass Card -->
+              <div style="background: #ffffff; border: 1px solid var(--border-medium); border-radius: 12px; padding: 14px; margin-bottom: 14px; box-shadow: 0 2px 6px rgba(0,0,0,0.02); transition: all 0.2s ease;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                  <span style="display: inline-flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 800; color: var(--accent-primary); background: rgba(99,102,241,0.08); padding: 3px 8px; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.5px;">
+                    <i class="fa-solid fa-user"></i> Guest #2
+                  </span>
+                  <span style="font-size: 10px; color: var(--text-muted); font-weight: 700; font-family: var(--font-mono);">PASS-02</span>
+                </div>
+                
+                <div style="font-size: 13px; font-weight: 800; color: var(--text-primary); line-height: 1.2;">Monika Paul</div>
+                <div style="font-size: 11px; color: var(--text-secondary); font-weight: 600; margin-top: 3px; display: flex; align-items: center; gap: 5px; font-family: var(--font-mono);">
+                  <i class="fa-solid fa-phone" style="font-size: 10px; color: var(--accent-primary);"></i> +91 58955 6568
+                </div>
+
+                <div style="background: #f8fafc; border: 1px dashed var(--border-medium); border-radius: 10px; padding: 10px; margin-top: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                  <div style="background: #fff; padding: 6px; border-radius: 8px; border: 1px solid var(--border-medium); box-shadow: 0 2px 4px rgba(0,0,0,0.03);">
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=96x96&data=Guest2_Monika_Paul_589556568" alt="Guest 2 QR" style="width: 96px; height: 96px; display: block; border-radius: 4px;">
+                  </div>
+                 
+                </div>
               </div>
-              <div style="text-align: center; font-size: 10px; color: var(--text-secondary); font-weight: 800; margin-top: 12px; text-transform: uppercase; letter-spacing: 1px;"><i class="fa-solid fa-qrcode"></i> Scan for Check-In</div>
+
+              <!-- Instant Dispatch Notice -->
+              <div style="background: rgba(99, 102, 241, 0.04); border: 1px dashed rgba(99, 102, 241, 0.3); border-radius: 8px; padding: 10px 12px; margin-bottom: 16px; font-size: 11px; color: var(--text-secondary); line-height: 1.4; display: flex; gap: 8px; align-items: flex-start;">
+                <i class="fa-solid fa-paper-plane" style="color: var(--accent-primary); margin-top: 2px;"></i>
+                <span>Passes are sent to WhatsApp & SMS automatically after booking.</span>
+              </div>
               
-              <div style="margin-top: auto; width: 100%; padding-top: 32px;">
+              <div style="margin-top: auto; width: 100%; padding-top: 8px;">
                 <button type="submit" class="btn-ui-success" style="width: 100%; height: 48px; justify-content: center; margin-bottom: 12px; font-size: 14px; box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3);">
                   <i class="fa-solid fa-floppy-disk"></i> Save Reservation
                 </button>

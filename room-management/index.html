@@ -795,6 +795,23 @@
     </div>
   </div>
 
+  <!-- MODAL 5: View Room Details & Live Status -->
+  <div class="modal-backdrop" id="view-room-modal">
+    <div class="modal-window" style="width: 680px; max-width: 92vw;">
+      <div class="modal-top" style="display: flex; justify-content: space-between; align-items: center;">
+        <h3 style="margin: 0;"><i class="fa-solid fa-door-open"></i> Room <span id="v-room-num" style="font-family: var(--font-mono); font-weight: 900;"></span> • Details</h3>
+        <button class="modal-close" onclick="closeModal('view-room-modal')">&times;</button>
+      </div>
+      <div class="modal-content-area" id="view-room-body" style="padding: 20px; background: #f8fafc;">
+        <!-- Dynamically populated via viewRoomDetails(id) -->
+      </div>
+      <div class="modal-bot" style="padding: 14px 20px; background: #fff; border-top: 1px solid var(--border-medium); display: flex; justify-content: flex-end; gap: 10px;">
+        <button type="button" class="btn-ui-secondary" onclick="closeModal('view-room-modal')" style="height: 38px; padding: 0 18px;">Close</button>
+        <button type="button" class="btn-ui-primary" id="v-btn-edit" style="height: 38px; padding: 0 20px;"><i class="fa-solid fa-pen"></i> Edit Room</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast Notification Feedback -->
   <div class="toast-popup" id="app-toast">
     <i class="fa-solid fa-circle-check" style="color: var(--accent-emerald); font-size: 16px;"></i>
@@ -888,7 +905,8 @@
             <td style="font-family: var(--font-mono); font-weight: 800; color: var(--accent-primary); font-size: 13px;">₹ ${r.rate.toLocaleString()}</td>
             <td><span class="badge-tag ${statusBadgeClass}"><i class="fa-solid fa-circle" style="font-size: 6px; margin-right: 5px;"></i>${r.status}</span></td>
             <td><span class="badge-tag ${hkBadgeClass}">${r.hk}</span></td>
-            <td style="text-align: right;">
+            <td style="text-align: right; white-space: nowrap;">
+              <button class="btn-ui-secondary" style="padding: 4px 8px; font-size: 11px; color: var(--accent-primary);" onclick="viewRoomDetails('${r.id}')" title="View Full Details & Live State"><i class="fa-solid fa-eye"></i></button>
               <button class="btn-ui-secondary" style="padding: 4px 8px; font-size: 11px;" onclick="openEditRoomModal('${r.id}')" title="Edit Details"><i class="fa-solid fa-pen"></i></button>
               <button class="btn-ui-secondary" style="padding: 4px 8px; font-size: 11px;" onclick="toggleRoomMaintenance('${r.id}')" title="Toggle Maintenance"><i class="fa-solid fa-wrench"></i></button>
               <button class="btn-ui-danger" style="padding: 4px 8px; font-size: 11px;" onclick="deleteRoom('${r.id}')" title="Archive Room"><i class="fa-solid fa-trash-can"></i></button>
@@ -928,6 +946,7 @@
               <div class="room-inv-rate">₹ ${r.rate.toLocaleString()}</div>
             </div>
             <div style="display: flex; gap: 6px;">
+              <button class="btn-ui-secondary" style="padding: 4px 8px; font-size: 11px; color: var(--accent-primary);" onclick="viewRoomDetails('${r.id}')" title="View Full Details & Live State"><i class="fa-solid fa-eye"></i></button>
               <button class="btn-ui-secondary" style="padding: 4px 8px; font-size: 11px;" onclick="openEditRoomModal('${r.id}')" title="Edit Details"><i class="fa-solid fa-pen"></i></button>
               <button class="btn-ui-secondary" style="padding: 4px 8px; font-size: 11px;" onclick="toggleRoomMaintenance('${r.id}')" title="Toggle Maintenance"><i class="fa-solid fa-wrench"></i></button>
               <button class="btn-ui-danger" style="padding: 4px 8px; font-size: 11px;" onclick="deleteRoom('${r.id}')" title="Archive Room"><i class="fa-solid fa-trash-can"></i></button>
@@ -1191,6 +1210,208 @@
       a.setAttribute('download', 'Hotel_Sagar_Sonnet_Rooms_Master.csv');
       a.click();
       showToast('Room inventory master exported as CSV!');
+    }
+
+    function viewRoomDetails(id) {
+      const room = roomsData.find(r => r.id === id);
+      if (!room) return;
+
+      document.getElementById('v-room-num').textContent = room.no;
+      const editBtn = document.getElementById('v-btn-edit');
+      if (editBtn) {
+        editBtn.onclick = () => {
+          closeModal('view-room-modal');
+          openEditRoomModal(room.id);
+        };
+      }
+
+      let catBadgeClass = 'blue';
+      if (room.cat === 'SUPER DELUXE') catBadgeClass = 'yellow';
+      else if (room.cat === 'SUITE') catBadgeClass = 'green';
+      else if (room.cat === 'EXECUTIVE') catBadgeClass = 'red';
+
+      let statusBadgeClass = 'green';
+      let statusLabel = 'Available';
+      let statusIcon = 'fa-circle-check';
+      if (room.status === 'Maintenance') {
+        statusBadgeClass = 'yellow';
+        statusLabel = 'Maintenance';
+        statusIcon = 'fa-wrench';
+      } else if (room.status === 'Blocked') {
+        statusBadgeClass = 'red';
+        statusLabel = 'Occupied';
+        statusIcon = 'fa-user-lock';
+      }
+
+      let hkBadgeClass = (room.hk === 'Cleaned') ? 'green' : (room.hk === 'Dirty' ? 'yellow' : 'blue');
+
+      // 1. Current State Card (Clean, concise & easy to read)
+      let statusCard = '';
+      if (room.status === 'Active') {
+        statusCard = `
+          <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: var(--radius-md); padding: 14px 18px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span class="badge-tag green" style="font-size: 11px;"><i class="fa-solid fa-circle-check"></i> Available</span>
+              <span style="font-size: 13px; font-weight: 600; color: #065f46;">Vacant & ready for guest</span>
+            </div>
+            <a href="../front-office/index.html" class="btn-ui-primary" style="padding: 6px 14px; font-size: 12px; text-decoration: none; border-radius: 6px;"><i class="fa-solid fa-plus"></i> Reserve Room</a>
+          </div>
+        `;
+      } else if (room.status === 'Blocked') {
+        statusCard = `
+          <div style="background: rgba(244, 63, 94, 0.04); border: 1px solid rgba(244, 63, 94, 0.22); border-radius: var(--radius-md); padding: 14px 16px; margin-bottom: 12px;">
+            <!-- Header Bar -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px dashed rgba(244, 63, 94, 0.2);">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span class="badge-tag red" style="font-size: 11px;"><i class="fa-solid fa-user-lock"></i> Currently Occupied</span>
+                <span style="font-size: 11px; font-weight: 700; color: var(--text-secondary);">Room 104 • Folio</span>
+              </div>
+              <span style="font-size: 11px; font-family: var(--font-mono); font-weight: 700; color: var(--text-muted); background: #fff; padding: 2px 8px; border-radius: 4px; border: 1px solid var(--border-medium);">#RES-8291/2026-27</span>
+            </div>
+
+            <!-- Guest & Stay Metrics Grid -->
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; background: #fff; padding: 12px 14px; border-radius: var(--radius-sm); border: 1px solid rgba(244, 63, 94, 0.15); margin-bottom: 12px;">
+              <div>
+                <div style="font-size: 9px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Primary Guest</div>
+                <div style="font-size: 12px; font-weight: 800; color: var(--text-primary); margin-top: 2px;">Souvik Paul</div>
+                <div style="font-size: 11px; color: var(--text-secondary);"><i class="fa-solid fa-phone" style="font-size: 9px;"></i> +91 62955 87845</div>
+              </div>
+              <div>
+                <div style="font-size: 9px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Check-In Time</div>
+                <div style="font-size: 12px; font-weight: 700; color: var(--text-primary); margin-top: 2px;">24 Sep 2026</div>
+                <div style="font-size: 11px; font-weight: 600; color: var(--accent-emerald);"><i class="fa-solid fa-clock" style="font-size: 9px;"></i> 12:30 PM (In)</div>
+              </div>
+              <div>
+                <div style="font-size: 9px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Expected Checkout</div>
+                <div style="font-size: 12px; font-weight: 700; color: var(--text-primary); margin-top: 2px;">26 Sep 2026</div>
+                <div style="font-size: 11px; font-weight: 600; color: #e11d48;"><i class="fa-solid fa-clock" style="font-size: 9px;"></i> 11:00 AM (Out)</div>
+              </div>
+              <div>
+                <div style="font-size: 9px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Payment Settlement</div>
+                <div style="font-size: 12px; font-weight: 800; color: var(--accent-emerald); margin-top: 2px;">₹ 3,500 Paid</div>
+                <div style="font-size: 11px; color: var(--text-secondary);"><i class="fa-solid fa-receipt" style="font-size: 9px;"></i> UPI Advance</div>
+              </div>
+            </div>
+
+            <!-- Identity Proofs Dummy Cards Grid -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+              <!-- Guest 1 ID Card (Proof 1 Front) -->
+              <div style="background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); border: 1px solid #e2e8f0; border-top: 3px solid #f97316; border-radius: 8px; padding: 12px 14px; box-shadow: 0 2px 6px rgba(0,0,0,0.04); position: relative;">
+                <div style="border-bottom: 1px solid #f1f5f9; padding-bottom: 6px; margin-bottom: 10px;">
+                  <span style="font-size: 11px; font-weight: 800; color: #1e293b;"><i class="fa-solid fa-id-card" style="color: #f97316;"></i> Aadhaar Card • Guest #1</span>
+                </div>
+                <div style="display: flex; gap: 12px; align-items: center;">
+                  <!-- Large Proof 1 Image -->
+                  <div style="width: 115px; height: 75px; border-radius: 6px; border: 1px solid #cbd5e1; overflow: hidden; background: #ffffff; flex-shrink: 0; position: relative; box-shadow: 0 2px 6px rgba(0,0,0,0.08); cursor: pointer;" onclick="window.open('../img/proof1.jpeg', '_blank')" title="Click to view full ID proof">
+                    <img src="../img/proof1.jpeg" alt="Aadhaar Card Front Proof" style="width: 100%; height: 100%; object-fit: contain; background: #fff;">
+                  </div>
+                  <!-- ID Details -->
+                  <div style="flex: 1; min-width: 0;">
+                    <div style="font-size: 13px; font-weight: 800; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Souvik Paul</div>
+                    <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">DOB: 14/08/1995 • Male</div>
+                    <div style="font-size: 12px; font-family: var(--font-mono); font-weight: 800; color: #0f172a; letter-spacing: 0.5px; margin-top: 4px;">1234 5678 9101</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Guest 2 ID Card (Proof 2 Back) -->
+              <div style="background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); border: 1px solid #e2e8f0; border-top: 3px solid #3b82f6; border-radius: 8px; padding: 12px 14px; box-shadow: 0 2px 6px rgba(0,0,0,0.04); position: relative;">
+                <div style="border-bottom: 1px solid #f1f5f9; padding-bottom: 6px; margin-bottom: 10px;">
+                  <span style="font-size: 11px; font-weight: 800; color: #1e293b;"><i class="fa-solid fa-id-card" style="color: #3b82f6;"></i> Aadhaar Card • Guest #2</span>
+                </div>
+                <div style="display: flex; gap: 12px; align-items: center;">
+                  <!-- Large Proof 2 Image -->
+                  <div style="width: 115px; height: 75px; border-radius: 6px; border: 1px solid #cbd5e1; overflow: hidden; background: #ffffff; flex-shrink: 0; position: relative; box-shadow: 0 2px 6px rgba(0,0,0,0.08); cursor: pointer;" onclick="window.open('../img/proof2.jpeg', '_blank')" title="Click to view full ID proof">
+                    <img src="../img/proof2.jpeg" alt="Aadhaar Card Back Proof" style="width: 100%; height: 100%; object-fit: contain; background: #fff;">
+                  </div>
+                  <!-- ID Details -->
+                  <div style="flex: 1; min-width: 0;">
+                    <div style="font-size: 13px; font-weight: 800; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Monika Paul</div>
+                    <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">DOB: 22/11/1998 • Female</div>
+                    <div style="font-size: 12px; font-family: var(--font-mono); font-weight: 800; color: #0f172a; letter-spacing: 0.5px; margin-top: 4px;">8952 9161 6206</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      } else if (room.status === 'Maintenance') {
+        statusCard = `
+          <div style="background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.25); border-radius: var(--radius-md); padding: 14px 16px; margin-bottom: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+              <span class="badge-tag yellow" style="font-size: 11px;"><i class="fa-solid fa-wrench"></i> Under Maintenance</span>
+              <button class="btn-ui-secondary" style="padding: 4px 10px; font-size: 11px; background: #fff;" onclick="closeModal('view-room-modal'); toggleRoomMaintenance('${room.id}');"><i class="fa-solid fa-check"></i> Mark as Ready</button>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; background: #fff; padding: 10px 12px; border-radius: 6px; border: 1px solid #fef3c7;">
+              <div>
+                <div style="font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Issue</div>
+                <div style="font-size: 12px; font-weight: 700; color: var(--text-primary); margin-top: 2px;">AC Repair & Service</div>
+              </div>
+              <div>
+                <div style="font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Technician</div>
+                <div style="font-size: 12px; font-weight: 700; color: var(--text-primary); margin-top: 2px;">Ramesh Kumar</div>
+              </div>
+              <div>
+                <div style="font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Ready By</div>
+                <div style="font-size: 12px; font-weight: 700; color: #b45309; margin-top: 2px;">25 Sep, 04:00 PM</div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      const amenitiesHtml = (room.amenities && room.amenities.length > 0)
+        ? room.amenities.map(a => `<span class="amenity-chip" style="font-size: 11px; padding: 3px 8px; background: #f1f5f9; border-radius: 4px; color: var(--text-secondary);"><i class="fa-solid fa-check" style="font-size: 9px; color: var(--accent-emerald); margin-right: 4px;"></i>${a}</span>`).join('')
+        : '<span style="font-size: 11px; color: var(--text-muted);">None configured</span>';
+
+      const content = `
+        <!-- Top Info Header Card -->
+        <div style="background: #fff; padding: 16px 18px; border: 1px solid var(--border-medium); border-radius: var(--radius-md); box-shadow: 0 2px 8px rgba(0,0,0,0.03); margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-family: var(--font-mono); font-size: 22px; font-weight: 900; color: var(--text-primary);">Room ${room.no}</span>
+              <span class="badge-tag ${catBadgeClass}" style="font-size: 10px;">${room.cat}</span>
+              <span class="badge-tag" style="background: #f1f5f9; color: var(--text-secondary); font-size: 10px;">Floor ${room.floor}</span>
+            </div>
+            <div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">
+              ${room.bed} • Max ${room.pax}
+            </div>
+          </div>
+          <div style="text-align: right;">
+            <div style="font-family: var(--font-mono); font-size: 18px; font-weight: 900; color: var(--accent-primary);">₹ ${room.rate.toLocaleString()} <span style="font-size: 11px; font-weight: 500; color: var(--text-muted);">/ night</span></div>
+            <div style="display: flex; gap: 6px; justify-content: flex-end; margin-top: 4px;">
+              <span class="badge-tag ${statusBadgeClass}"><i class="fa-solid ${statusIcon}" style="font-size: 7px; margin-right: 4px;"></i>${statusLabel}</span>
+              <span class="badge-tag ${hkBadgeClass}">${room.hk}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Live Operations / Status Block -->
+        ${statusCard}
+
+        <!-- Housekeeping & Amenities Side-by-Side -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <!-- Housekeeping -->
+          <div style="background: #fff; border: 1px solid var(--border-medium); border-radius: var(--radius-md); padding: 12px 14px;">
+            <div style="font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px;">Housekeeping</div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="badge-tag ${hkBadgeClass}">${room.hk}</span>
+              <span style="font-size: 12px; color: var(--text-secondary); font-weight: 500;">${room.hk === 'Cleaned' ? 'Clean & ready' : (room.hk === 'Dirty' ? 'Cleaning required' : 'Under inspection')}</span>
+            </div>
+          </div>
+
+          <!-- Amenities -->
+          <div style="background: #fff; border: 1px solid var(--border-medium); border-radius: var(--radius-md); padding: 12px 14px;">
+            <div style="font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px;">Amenities</div>
+            <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+              ${amenitiesHtml}
+            </div>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('view-room-body').innerHTML = content;
+      openModal('view-room-modal');
     }
 
     function showToast(msg) {

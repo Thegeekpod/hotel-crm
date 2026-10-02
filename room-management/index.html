@@ -445,91 +445,141 @@
 
   <!-- MODAL 1: Add New Room -->
   <div class="modal-backdrop" id="add-room-modal">
-    <div class="modal-window">
-      <div class="modal-top">
-        <h3><i class="fa-solid fa-plus-circle"></i> Add New Room Asset</h3>
+    <div class="modal-window large" style="width: 780px; max-width: 95vw;">
+      <div class="modal-top" style="display: flex; justify-content: space-between; align-items: center;">
+        <h3 style="margin: 0;"><i class="fa-solid fa-plus-circle"></i> Add New Room Asset • Hotel Sagar Sonnet</h3>
         <button class="modal-close" onclick="closeModal('add-room-modal')">&times;</button>
       </div>
       <form id="add-room-form" onsubmit="handleAddRoom(event)">
-        <div class="modal-content-area">
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
-            <div>
-              <label style="display:block; font-size:10px; font-weight:800; margin-bottom:6px; color: var(--text-secondary); text-transform: uppercase;">Room Number</label>
-              <input type="text" id="new-room-no" class="pms-input" placeholder="e.g. 501" required style="width: 100%; height: 38px; font-family: var(--font-mono); font-weight: 800;">
+        <div class="modal-content-area" style="max-height: 75vh; overflow-y: auto; padding: 24px; background: #f8fafc;">
+          
+          <!-- Section 1: Room Identification & Classification -->
+          <div style="display: flex; flex-direction: column; background: #fff; padding: 22px 24px; border: 1px solid var(--border-medium); border-radius: var(--radius-md); box-shadow: 0 4px 12px rgba(0,0,0,0.02); margin-bottom: 20px;">
+            <h4 style="font-size: 12px; color: var(--accent-primary); margin: 0 0 16px 0; text-transform: uppercase; font-weight: 900; letter-spacing: 1px; display: flex; align-items: center; gap: 8px;">
+              <i class="fa-solid fa-hotel"></i> Room Asset & Classification
+            </h4>
+            
+            <div style="display: flex; gap: 16px; margin-bottom: 16px;">
+              <div style="flex: 1;">
+                <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Room Number</label>
+                <input type="text" id="new-room-no" class="pms-input-field" placeholder="e.g. 501" required style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff; color: var(--text-primary); font-family: var(--font-mono); font-weight: 800;">
+              </div>
+              <div style="flex: 1;">
+                <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Floor</label>
+                <select id="new-room-floor" class="pms-input-field" style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff; color: var(--text-primary);" required>
+                  <option value="1">Floor 1 (Ground / Wing A)</option>
+                  <option value="2">Floor 2 (Sea Wing)</option>
+                  <option value="3">Floor 3 (Club Wing)</option>
+                  <option value="4">Floor 4 (Royal Penthouse)</option>
+                </select>
+              </div>
             </div>
-            <div>
-              <label style="display:block; font-size:10px; font-weight:800; margin-bottom:6px; color: var(--text-secondary); text-transform: uppercase;">Floor</label>
-              <select id="new-room-floor" class="pms-select" style="width: 100%; height: 38px;" required>
-                <option value="Floor 1">Floor 1 (Ground / Wing A)</option>
-                <option value="Floor 2">Floor 2 (Sea Wing)</option>
-                <option value="Floor 3">Floor 3 (Club Wing)</option>
-                <option value="Floor 4">Floor 4 (Royal Penthouse)</option>
-              </select>
+
+            <div style="display: flex; gap: 16px;">
+              <div style="flex: 1;">
+                <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Room Category</label>
+                <select id="new-room-cat" class="pms-input-field" style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff; color: var(--text-primary); font-weight: 700;" onchange="updateDefaultTariff(this.value)" required>
+                  <option value="DELUXE">Deluxe Room</option>
+                  <option value="SUPER DELUXE">Super Deluxe</option>
+                  <option value="SUITE">Suite Luxury</option>
+                  <option value="EXECUTIVE">Executive Penthouse</option>
+                </select>
+              </div>
+              <div style="flex: 1;">
+                <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Base Tariff (₹ / Night)</label>
+                <input type="number" id="new-room-rate" class="pms-input-field" value="3500" required style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff; color: var(--accent-primary); font-family: var(--font-mono); font-weight: 800;">
+              </div>
             </div>
           </div>
 
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
-            <div>
-              <label style="display:block; font-size:10px; font-weight:800; margin-bottom:6px; color: var(--text-secondary); text-transform: uppercase;">Room Category</label>
-              <select id="new-room-cat" class="pms-select" style="width: 100%; height: 38px;" onchange="updateDefaultTariff(this.value)" required>
-                <option value="DELUXE">Deluxe Room</option>
-                <option value="SUPER DELUXE">Super Deluxe</option>
-                <option value="SUITE">Suite Luxury</option>
-                <option value="EXECUTIVE">Executive Penthouse</option>
-              </select>
-            </div>
-            <div>
-              <label style="display:block; font-size:10px; font-weight:800; margin-bottom:6px; color: var(--text-secondary); text-transform: uppercase;">Base Tariff (₹ / Night)</label>
-              <input type="number" id="new-room-rate" class="pms-input" value="3500" required style="width: 100%; height: 38px; font-family: var(--font-mono); font-weight: 800;">
-            </div>
-          </div>
-
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
-            <div>
-              <label style="display:block; font-size:10px; font-weight:800; margin-bottom:6px; color: var(--text-secondary); text-transform: uppercase;">Bedding Setup</label>
-              <select id="new-room-bed" class="pms-select" style="width: 100%; height: 38px;">
-                <option value="King Size (72x78)">King Size Master (72x78)</option>
-                <option value="Twin Double Bed">Twin Double Beds</option>
-                <option value="Queen Deluxe">Queen Deluxe</option>
-                <option value="Imperial Royal Bed">Imperial Royal Bed</option>
-              </select>
-            </div>
-            <div>
-              <label style="display:block; font-size:10px; font-weight:800; margin-bottom:6px; color: var(--text-secondary); text-transform: uppercase;">Max Pax Capacity</label>
-              <select id="new-room-pax" class="pms-select" style="width: 100%; height: 38px;">
-                <option value="2 Adults">2 Adults</option>
-                <option value="2 Adults + 1 Child">2 Adults + 1 Child</option>
-                <option value="3 Adults">3 Adults</option>
-                <option value="4 Adults (Family Suite)">4 Adults (Family)</option>
-              </select>
+          <!-- Section 2: Bedding & Capacity Setup -->
+          <div style="display: flex; flex-direction: column; background: #fff; padding: 22px 24px; border: 1px solid var(--border-medium); border-radius: var(--radius-md); box-shadow: 0 4px 12px rgba(0,0,0,0.02); margin-bottom: 20px;">
+            <h4 style="font-size: 12px; color: var(--accent-primary); margin: 0 0 16px 0; text-transform: uppercase; font-weight: 900; letter-spacing: 1px; display: flex; align-items: center; gap: 8px;">
+              <i class="fa-solid fa-bed"></i> Bedding & Capacity Setup
+            </h4>
+            
+            <div style="display: flex; gap: 16px;">
+              <div style="flex: 1;">
+                <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Bedding Config</label>
+                <select id="new-room-bed" class="pms-input-field" style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff; color: var(--text-primary);">
+                  <option value="King Size (72x78)">King Size Master (72x78)</option>
+                  <option value="Twin Double Beds">Twin Double Beds</option>
+                  <option value="Queen Deluxe">Queen Deluxe</option>
+                  <option value="Imperial Royal Bed">Imperial Royal Bed</option>
+                  <option value="Emperor Royal 84&quot;">Emperor Royal 84&quot;</option>
+                </select>
+              </div>
+              <div style="flex: 1;">
+                <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Pax Capacity</label>
+                <select id="new-room-pax" class="pms-input-field" style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff; color: var(--text-primary);">
+                  <option value="2 Adults">2 Adults</option>
+                  <option value="2 Adults + 1 Child">2 Adults + 1 Child</option>
+                  <option value="3 Adults">3 Adults</option>
+                  <option value="4 Adults (Family Suite)">4 Adults (Family Suite)</option>
+                </select>
+              </div>
             </div>
           </div>
 
-          <div style="margin-bottom: 14px;">
-            <label style="display:block; font-size:10px; font-weight:800; margin-bottom:6px; color: var(--text-secondary); text-transform: uppercase;">Key Amenities</label>
-            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; font-size: 11px; font-weight: 600; color: var(--text-primary);">
-              <label style="display:flex; align-items:center; gap:6px;"><input type="checkbox" name="amenity" value="Ocean View" checked> Ocean View</label>
-              <label style="display:flex; align-items:center; gap:6px;"><input type="checkbox" name="amenity" value="Balcony" checked> Balcony</label>
-              <label style="display:flex; align-items:center; gap:6px;"><input type="checkbox" name="amenity" value="Smart 55 TV" checked> Smart 55" TV</label>
-              <label style="display:flex; align-items:center; gap:6px;"><input type="checkbox" name="amenity" value="Jacuzzi"> Jacuzzi Bath</label>
-              <label style="display:flex; align-items:center; gap:6px;"><input type="checkbox" name="amenity" value="Mini-Bar" checked> Mini-Bar</label>
-              <label style="display:flex; align-items:center; gap:6px;"><input type="checkbox" name="amenity" value="Free Wi-Fi" checked> Free Wi-Fi</label>
+          <!-- Section 3: Operational & Housekeeping Status -->
+          <div style="display: flex; flex-direction: column; background: #fff; padding: 22px 24px; border: 1px solid var(--border-medium); border-radius: var(--radius-md); box-shadow: 0 4px 12px rgba(0,0,0,0.02); margin-bottom: 20px;">
+            <h4 style="font-size: 12px; color: var(--accent-primary); margin: 0 0 16px 0; text-transform: uppercase; font-weight: 900; letter-spacing: 1px; display: flex; align-items: center; gap: 8px;">
+              <i class="fa-solid fa-clipboard-check"></i> Operational & Housekeeping State
+            </h4>
+            
+            <div style="display: flex; gap: 16px;">
+              <div style="flex: 1;">
+                <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Operational Status</label>
+                <select id="new-room-status" class="pms-input-field" style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff; color: var(--text-primary); font-weight: 700;">
+                  <option value="Active">Active In-Service</option>
+                  <option value="Maintenance">Under Maintenance</option>
+                  <option value="Blocked">Blocked / Out of Order</option>
+                </select>
+              </div>
+              <div style="flex: 1;">
+                <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Housekeeping State</label>
+                <select id="new-room-hk" class="pms-input-field" style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff; color: var(--text-primary); font-weight: 700;">
+                  <option value="Cleaned">Cleaned & Inspected</option>
+                  <option value="Dirty">Dirty (Needs Housekeeping)</option>
+                  <option value="Inspecting">Inspecting in Progress</option>
+                </select>
+              </div>
             </div>
           </div>
 
-          <div>
-            <label style="display:block; font-size:10px; font-weight:800; margin-bottom:6px; color: var(--text-secondary); text-transform: uppercase;">Initial Operational State</label>
-            <select id="new-room-status" class="pms-select" style="width: 100%; height: 38px;">
-              <option value="Active">Active In-Service</option>
-              <option value="Maintenance">Under Maintenance</option>
-              <option value="Blocked">Blocked / Out of Order</option>
-            </select>
+          <!-- Section 4: Key Amenities & Features -->
+          <div style="display: flex; flex-direction: column; background: #fff; padding: 22px 24px; border: 1px solid var(--border-medium); border-radius: var(--radius-md); box-shadow: 0 4px 12px rgba(0,0,0,0.02);">
+            <h4 style="font-size: 12px; color: var(--accent-primary); margin: 0 0 16px 0; text-transform: uppercase; font-weight: 900; letter-spacing: 1px; display: flex; align-items: center; gap: 8px;">
+              <i class="fa-solid fa-wand-magic-sparkles"></i> Amenities & Features
+            </h4>
+            
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
+              <label style="display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 12px; cursor: pointer; padding: 10px 14px; background: #f8fafc; border: 1px solid var(--border-medium); border-radius: var(--radius-md); color: var(--text-primary); transition: all 0.2s;">
+                <input type="checkbox" name="amenity" value="Ocean View" checked style="width: 16px; height: 16px; cursor: pointer; accent-color: var(--accent-primary);"> Ocean View
+              </label>
+              <label style="display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 12px; cursor: pointer; padding: 10px 14px; background: #f8fafc; border: 1px solid var(--border-medium); border-radius: var(--radius-md); color: var(--text-primary); transition: all 0.2s;">
+                <input type="checkbox" name="amenity" value="Balcony" checked style="width: 16px; height: 16px; cursor: pointer; accent-color: var(--accent-primary);"> Balcony
+              </label>
+              <label style="display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 12px; cursor: pointer; padding: 10px 14px; background: #f8fafc; border: 1px solid var(--border-medium); border-radius: var(--radius-md); color: var(--text-primary); transition: all 0.2s;">
+                <input type="checkbox" name="amenity" value="Smart 55 TV" checked style="width: 16px; height: 16px; cursor: pointer; accent-color: var(--accent-primary);"> Smart 55" TV
+              </label>
+              <label style="display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 12px; cursor: pointer; padding: 10px 14px; background: #f8fafc; border: 1px solid var(--border-medium); border-radius: var(--radius-md); color: var(--text-primary); transition: all 0.2s;">
+                <input type="checkbox" name="amenity" value="Jacuzzi" style="width: 16px; height: 16px; cursor: pointer; accent-color: var(--accent-primary);"> Jacuzzi Bath
+              </label>
+              <label style="display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 12px; cursor: pointer; padding: 10px 14px; background: #f8fafc; border: 1px solid var(--border-medium); border-radius: var(--radius-md); color: var(--text-primary); transition: all 0.2s;">
+                <input type="checkbox" name="amenity" value="Mini-Bar" checked style="width: 16px; height: 16px; cursor: pointer; accent-color: var(--accent-primary);"> Mini-Bar
+              </label>
+              <label style="display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 12px; cursor: pointer; padding: 10px 14px; background: #f8fafc; border: 1px solid var(--border-medium); border-radius: var(--radius-md); color: var(--text-primary); transition: all 0.2s;">
+                <input type="checkbox" name="amenity" value="Free Wi-Fi" checked style="width: 16px; height: 16px; cursor: pointer; accent-color: var(--accent-primary);"> Free Wi-Fi
+              </label>
+            </div>
           </div>
+
         </div>
 
-        <div class="modal-bot">
-          <button type="button" class="btn-ui-secondary" onclick="closeModal('add-room-modal')">Cancel</button>
-          <button type="submit" class="btn-ui-primary"><i class="fa-solid fa-check"></i> Register Room Asset</button>
+        <div class="modal-bot" style="padding: 16px 24px; background: #fff; border-top: 1px solid var(--border-medium); display: flex; justify-content: flex-end; gap: 12px;">
+          <button type="button" class="btn-ui-secondary" onclick="closeModal('add-room-modal')" style="height: 42px; padding: 0 20px;">Cancel</button>
+          <button type="submit" class="btn-ui-primary" style="height: 42px; padding: 0 24px;"><i class="fa-solid fa-check"></i> Register Room Asset</button>
         </div>
       </form>
     </div>
@@ -537,63 +587,142 @@
 
   <!-- MODAL 2: Edit Room Details -->
   <div class="modal-backdrop" id="edit-room-modal">
-    <div class="modal-window">
-      <div class="modal-top">
-        <h3><i class="fa-solid fa-pen-to-square"></i> Edit Room Asset: <span id="edit-modal-room-num"></span></h3>
+    <div class="modal-window large" style="width: 780px; max-width: 95vw;">
+      <div class="modal-top" style="display: flex; justify-content: space-between; align-items: center;">
+        <h3 style="margin: 0;"><i class="fa-solid fa-pen-to-square"></i> Edit Room Asset: <span id="edit-modal-room-num" style="font-family: var(--font-mono); font-weight: 900;"></span></h3>
         <button class="modal-close" onclick="closeModal('edit-room-modal')">&times;</button>
       </div>
       <form id="edit-room-form" onsubmit="handleSaveEditRoom(event)">
         <input type="hidden" id="edit-room-id">
-        <div class="modal-content-area">
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
-            <div>
-              <label style="display:block; font-size:10px; font-weight:800; margin-bottom:6px; color: var(--text-secondary); text-transform: uppercase;">Room Category</label>
-              <select id="edit-room-cat" class="pms-select" style="width: 100%; height: 38px;">
-                <option value="DELUXE">Deluxe Room</option>
-                <option value="SUPER DELUXE">Super Deluxe</option>
-                <option value="SUITE">Suite Luxury</option>
-                <option value="EXECUTIVE">Executive Penthouse</option>
-              </select>
+        <div class="modal-content-area" style="max-height: 75vh; overflow-y: auto; padding: 24px; background: #f8fafc;">
+          
+          <!-- Section 1: Room Identification & Classification -->
+          <div style="display: flex; flex-direction: column; background: #fff; padding: 22px 24px; border: 1px solid var(--border-medium); border-radius: var(--radius-md); box-shadow: 0 4px 12px rgba(0,0,0,0.02); margin-bottom: 20px;">
+            <h4 style="font-size: 12px; color: var(--accent-primary); margin: 0 0 16px 0; text-transform: uppercase; font-weight: 900; letter-spacing: 1px; display: flex; align-items: center; gap: 8px;">
+              <i class="fa-solid fa-hotel"></i> Room Asset & Classification
+            </h4>
+            
+            <div style="display: flex; gap: 16px; margin-bottom: 16px;">
+              <div style="flex: 1;">
+                <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Room Number</label>
+                <input type="text" id="edit-room-no" class="pms-input-field" required style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff; color: var(--text-primary); font-family: var(--font-mono); font-weight: 800;">
+              </div>
+              <div style="flex: 1;">
+                <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Floor</label>
+                <select id="edit-room-floor" class="pms-input-field" style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff; color: var(--text-primary);" required>
+                  <option value="1">Floor 1 (Ground / Wing A)</option>
+                  <option value="2">Floor 2 (Sea Wing)</option>
+                  <option value="3">Floor 3 (Club Wing)</option>
+                  <option value="4">Floor 4 (Royal Penthouse)</option>
+                </select>
+              </div>
             </div>
-            <div>
-              <label style="display:block; font-size:10px; font-weight:800; margin-bottom:6px; color: var(--text-secondary); text-transform: uppercase;">Base Tariff (₹ / Night)</label>
-              <input type="number" id="edit-room-rate" class="pms-input" required style="width: 100%; height: 38px; font-family: var(--font-mono); font-weight: 800;">
+
+            <div style="display: flex; gap: 16px;">
+              <div style="flex: 1;">
+                <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Room Category</label>
+                <select id="edit-room-cat" class="pms-input-field" style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff; color: var(--text-primary); font-weight: 700;" onchange="updateEditDefaultTariff(this.value)" required>
+                  <option value="DELUXE">Deluxe Room</option>
+                  <option value="SUPER DELUXE">Super Deluxe</option>
+                  <option value="SUITE">Suite Luxury</option>
+                  <option value="EXECUTIVE">Executive Penthouse</option>
+                </select>
+              </div>
+              <div style="flex: 1;">
+                <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Base Tariff (₹ / Night)</label>
+                <input type="number" id="edit-room-rate" class="pms-input-field" required style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff; color: var(--accent-primary); font-family: var(--font-mono); font-weight: 800;">
+              </div>
             </div>
           </div>
 
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
-            <div>
-              <label style="display:block; font-size:10px; font-weight:800; margin-bottom:6px; color: var(--text-secondary); text-transform: uppercase;">Bedding Setup</label>
-              <input type="text" id="edit-room-bed" class="pms-input" style="width: 100%; height: 38px;">
-            </div>
-            <div>
-              <label style="display:block; font-size:10px; font-weight:800; margin-bottom:6px; color: var(--text-secondary); text-transform: uppercase;">Max Pax Capacity</label>
-              <input type="text" id="edit-room-pax" class="pms-input" style="width: 100%; height: 38px;">
+          <!-- Section 2: Bedding & Capacity Setup -->
+          <div style="display: flex; flex-direction: column; background: #fff; padding: 22px 24px; border: 1px solid var(--border-medium); border-radius: var(--radius-md); box-shadow: 0 4px 12px rgba(0,0,0,0.02); margin-bottom: 20px;">
+            <h4 style="font-size: 12px; color: var(--accent-primary); margin: 0 0 16px 0; text-transform: uppercase; font-weight: 900; letter-spacing: 1px; display: flex; align-items: center; gap: 8px;">
+              <i class="fa-solid fa-bed"></i> Bedding & Capacity Setup
+            </h4>
+            
+            <div style="display: flex; gap: 16px;">
+              <div style="flex: 1;">
+                <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Bedding Config</label>
+                <select id="edit-room-bed" class="pms-input-field" style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff; color: var(--text-primary);">
+                  <option value="King Size (72x78)">King Size Master (72x78)</option>
+                  <option value="Twin Double Beds">Twin Double Beds</option>
+                  <option value="Queen Deluxe">Queen Deluxe</option>
+                  <option value="Imperial Royal Bed">Imperial Royal Bed</option>
+                  <option value="Emperor Royal 84&quot;">Emperor Royal 84&quot;</option>
+                </select>
+              </div>
+              <div style="flex: 1;">
+                <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Pax Capacity</label>
+                <select id="edit-room-pax" class="pms-input-field" style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff; color: var(--text-primary);">
+                  <option value="2 Adults">2 Adults</option>
+                  <option value="2 Adults + 1 Child">2 Adults + 1 Child</option>
+                  <option value="3 Adults">3 Adults</option>
+                  <option value="4 Adults (Family Suite)">4 Adults (Family Suite)</option>
+                </select>
+              </div>
             </div>
           </div>
 
-          <div style="margin-bottom: 14px;">
-            <label style="display:block; font-size:10px; font-weight:800; margin-bottom:6px; color: var(--text-secondary); text-transform: uppercase;">Operational Status</label>
-            <select id="edit-room-status" class="pms-select" style="width: 100%; height: 38px;">
-              <option value="Active">Active In-Service</option>
-              <option value="Maintenance">Under Maintenance</option>
-              <option value="Blocked">Blocked / Out of Order</option>
-            </select>
+          <!-- Section 3: Operational & Housekeeping Status -->
+          <div style="display: flex; flex-direction: column; background: #fff; padding: 22px 24px; border: 1px solid var(--border-medium); border-radius: var(--radius-md); box-shadow: 0 4px 12px rgba(0,0,0,0.02); margin-bottom: 20px;">
+            <h4 style="font-size: 12px; color: var(--accent-primary); margin: 0 0 16px 0; text-transform: uppercase; font-weight: 900; letter-spacing: 1px; display: flex; align-items: center; gap: 8px;">
+              <i class="fa-solid fa-clipboard-check"></i> Operational & Housekeeping State
+            </h4>
+            
+            <div style="display: flex; gap: 16px;">
+              <div style="flex: 1;">
+                <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Operational Status</label>
+                <select id="edit-room-status" class="pms-input-field" style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff; color: var(--text-primary); font-weight: 700;">
+                  <option value="Active">Active In-Service</option>
+                  <option value="Maintenance">Under Maintenance</option>
+                  <option value="Blocked">Blocked / Out of Order</option>
+                </select>
+              </div>
+              <div style="flex: 1;">
+                <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Housekeeping State</label>
+                <select id="edit-room-hk" class="pms-input-field" style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff; color: var(--text-primary); font-weight: 700;">
+                  <option value="Cleaned">Cleaned & Inspected</option>
+                  <option value="Dirty">Dirty (Needs Housekeeping)</option>
+                  <option value="Inspecting">Inspecting in Progress</option>
+                </select>
+              </div>
+            </div>
           </div>
 
-          <div>
-            <label style="display:block; font-size:10px; font-weight:800; margin-bottom:6px; color: var(--text-secondary); text-transform: uppercase;">Housekeeping State</label>
-            <select id="edit-room-hk" class="pms-select" style="width: 100%; height: 38px;">
-              <option value="Cleaned">Cleaned & Inspected</option>
-              <option value="Dirty">Dirty (Needs Housekeeping)</option>
-              <option value="Inspecting">Inspecting in Progress</option>
-            </select>
+          <!-- Section 4: Key Amenities & Features -->
+          <div style="display: flex; flex-direction: column; background: #fff; padding: 22px 24px; border: 1px solid var(--border-medium); border-radius: var(--radius-md); box-shadow: 0 4px 12px rgba(0,0,0,0.02);">
+            <h4 style="font-size: 12px; color: var(--accent-primary); margin: 0 0 16px 0; text-transform: uppercase; font-weight: 900; letter-spacing: 1px; display: flex; align-items: center; gap: 8px;">
+              <i class="fa-solid fa-wand-magic-sparkles"></i> Amenities & Features
+            </h4>
+            
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
+              <label style="display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 12px; cursor: pointer; padding: 10px 14px; background: #f8fafc; border: 1px solid var(--border-medium); border-radius: var(--radius-md); color: var(--text-primary); transition: all 0.2s;">
+                <input type="checkbox" name="edit-amenity" value="Ocean View" style="width: 16px; height: 16px; cursor: pointer; accent-color: var(--accent-primary);"> Ocean View
+              </label>
+              <label style="display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 12px; cursor: pointer; padding: 10px 14px; background: #f8fafc; border: 1px solid var(--border-medium); border-radius: var(--radius-md); color: var(--text-primary); transition: all 0.2s;">
+                <input type="checkbox" name="edit-amenity" value="Balcony" style="width: 16px; height: 16px; cursor: pointer; accent-color: var(--accent-primary);"> Balcony
+              </label>
+              <label style="display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 12px; cursor: pointer; padding: 10px 14px; background: #f8fafc; border: 1px solid var(--border-medium); border-radius: var(--radius-md); color: var(--text-primary); transition: all 0.2s;">
+                <input type="checkbox" name="edit-amenity" value="Smart 55 TV" style="width: 16px; height: 16px; cursor: pointer; accent-color: var(--accent-primary);"> Smart 55" TV
+              </label>
+              <label style="display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 12px; cursor: pointer; padding: 10px 14px; background: #f8fafc; border: 1px solid var(--border-medium); border-radius: var(--radius-md); color: var(--text-primary); transition: all 0.2s;">
+                <input type="checkbox" name="edit-amenity" value="Jacuzzi" style="width: 16px; height: 16px; cursor: pointer; accent-color: var(--accent-primary);"> Jacuzzi Bath
+              </label>
+              <label style="display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 12px; cursor: pointer; padding: 10px 14px; background: #f8fafc; border: 1px solid var(--border-medium); border-radius: var(--radius-md); color: var(--text-primary); transition: all 0.2s;">
+                <input type="checkbox" name="edit-amenity" value="Mini-Bar" style="width: 16px; height: 16px; cursor: pointer; accent-color: var(--accent-primary);"> Mini-Bar
+              </label>
+              <label style="display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 12px; cursor: pointer; padding: 10px 14px; background: #f8fafc; border: 1px solid var(--border-medium); border-radius: var(--radius-md); color: var(--text-primary); transition: all 0.2s;">
+                <input type="checkbox" name="edit-amenity" value="Free Wi-Fi" style="width: 16px; height: 16px; cursor: pointer; accent-color: var(--accent-primary);"> Free Wi-Fi
+              </label>
+            </div>
           </div>
+
         </div>
 
-        <div class="modal-bot">
-          <button type="button" class="btn-ui-secondary" onclick="closeModal('edit-room-modal')">Cancel</button>
-          <button type="submit" class="btn-ui-primary"><i class="fa-solid fa-floppy-disk"></i> Save Modifications</button>
+        <div class="modal-bot" style="padding: 16px 24px; background: #fff; border-top: 1px solid var(--border-medium); display: flex; justify-content: flex-end; gap: 12px;">
+          <button type="button" class="btn-ui-secondary" onclick="closeModal('edit-room-modal')" style="height: 42px; padding: 0 20px;">Cancel</button>
+          <button type="submit" class="btn-ui-primary" style="height: 42px; padding: 0 24px;"><i class="fa-solid fa-floppy-disk"></i> Save Modifications</button>
         </div>
       </form>
     </div>
@@ -601,49 +730,57 @@
 
   <!-- MODAL 3: Maintenance / Block Modal -->
   <div class="modal-backdrop" id="maint-modal">
-    <div class="modal-window">
-      <div class="modal-top">
-        <h3><i class="fa-solid fa-wrench"></i> Room Maintenance Work Order</h3>
+    <div class="modal-window large" style="width: 680px; max-width: 95vw;">
+      <div class="modal-top" style="display: flex; justify-content: space-between; align-items: center;">
+        <h3 style="margin: 0;"><i class="fa-solid fa-wrench"></i> Room Maintenance Work Order</h3>
         <button class="modal-close" onclick="closeModal('maint-modal')">&times;</button>
       </div>
-      <div class="modal-content-area">
-        <div style="margin-bottom: 14px;">
-          <label style="display:block; font-size:10px; font-weight:800; margin-bottom:6px; color: var(--text-secondary); text-transform: uppercase;">Target Room</label>
-          <select id="maint-room-select" class="pms-select" style="width: 100%; height: 38px; font-family: var(--font-mono); font-weight: 800;">
-            <!-- Populated via JS -->
-          </select>
-        </div>
+      <div class="modal-content-area" style="max-height: 75vh; overflow-y: auto; padding: 24px; background: #f8fafc;">
+        
+        <div style="display: flex; flex-direction: column; background: #fff; padding: 22px 24px; border: 1px solid var(--border-medium); border-radius: var(--radius-md); box-shadow: 0 4px 12px rgba(0,0,0,0.02); margin-bottom: 20px;">
+          <h4 style="font-size: 12px; color: var(--accent-primary); margin: 0 0 16px 0; text-transform: uppercase; font-weight: 900; letter-spacing: 1px; display: flex; align-items: center; gap: 8px;">
+            <i class="fa-solid fa-door-closed"></i> Work Order Specifications
+          </h4>
 
-        <div style="margin-bottom: 14px;">
-          <label style="display:block; font-size:10px; font-weight:800; margin-bottom:6px; color: var(--text-secondary); text-transform: uppercase;">Maintenance Reason</label>
-          <select id="maint-reason" class="pms-select" style="width: 100%; height: 38px;">
-            <option value="HVAC / Air Conditioning Repair">HVAC / Air Conditioning Repair</option>
-            <option value="Bathroom Plumbing & Fixtures">Bathroom Plumbing & Fixtures</option>
-            <option value="Deep Steam Cleaning & Sanitization">Deep Steam Cleaning & Sanitization</option>
-            <option value="Interior Painting & Touch-up">Interior Painting & Touch-up</option>
-            <option value="Electrical & Smart TV Wiring">Electrical & Smart TV Wiring</option>
-            <option value="Lock & Access Card Reader Service">Lock & Access Card Reader Service</option>
-          </select>
-        </div>
-
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
-          <div>
-            <label style="display:block; font-size:10px; font-weight:800; margin-bottom:6px; color: var(--text-secondary); text-transform: uppercase;">Assigned Engineer</label>
-            <input type="text" class="pms-input" value="Ramesh Kumar (Engineering Lead)" style="width: 100%; height: 38px;">
+          <div style="margin-bottom: 16px;">
+            <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Target Room</label>
+            <select id="maint-room-select" class="pms-input-field" style="width: 100%; height: 40px; padding: 8px 14px; font-size: 13px; border: 1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff; color: var(--text-primary); font-family: var(--font-mono); font-weight: 800;">
+              <!-- Populated via JS -->
+            </select>
           </div>
-          <div>
-            <label style="display:block; font-size:10px; font-weight:800; margin-bottom:6px; color: var(--text-secondary); text-transform: uppercase;">Expected Completion</label>
-            <input type="date" class="pms-input" value="2026-09-25" style="width: 100%; height: 38px;">
+
+          <div style="margin-bottom: 16px;">
+            <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Maintenance Reason</label>
+            <select id="maint-reason" class="pms-input-field" style="width: 100%; height: 40px; padding: 8px 14px; font-size: 13px; border: 1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff; color: var(--text-primary);">
+              <option value="HVAC / Air Conditioning Repair">HVAC / Air Conditioning Repair</option>
+              <option value="Bathroom Plumbing & Fixtures">Bathroom Plumbing & Fixtures</option>
+              <option value="Deep Steam Cleaning & Sanitization">Deep Steam Cleaning & Sanitization</option>
+              <option value="Interior Painting & Touch-up">Interior Painting & Touch-up</option>
+              <option value="Electrical & Smart TV Wiring">Electrical & Smart TV Wiring</option>
+              <option value="Lock & Access Card Reader Service">Lock & Access Card Reader Service</option>
+            </select>
+          </div>
+
+          <div style="display: flex; gap: 16px; margin-bottom: 16px;">
+            <div style="flex: 1;">
+              <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Assigned Engineer</label>
+              <input type="text" class="pms-input-field" value="Ramesh Kumar (Engineering Lead)" style="width: 100%; height: 40px; padding: 8px 14px; font-size: 13px; border: 1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff; color: var(--text-primary);">
+            </div>
+            <div style="flex: 1;">
+              <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Expected Completion</label>
+              <input type="date" class="pms-input-field" value="2026-09-25" style="width: 100%; height: 40px; padding: 8px 14px; font-size: 13px; border: 1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff; color: var(--text-primary);">
+            </div>
+          </div>
+
+          <div style="background: rgba(217, 119, 6, 0.08); border: 1px solid rgba(217, 119, 6, 0.2); border-radius: var(--radius-md); padding: 12px 16px; font-size: 11px; color: var(--accent-gold); font-weight: 600; display: flex; align-items: center; gap: 8px;">
+            <i class="fa-solid fa-triangle-exclamation" style="font-size: 14px;"></i> Setting this room into Maintenance will automatically prevent new guest check-ins from the Front Desk rack.
           </div>
         </div>
 
-        <div style="background: rgba(217, 119, 6, 0.08); border: 1px solid rgba(217, 119, 6, 0.2); border-radius: var(--radius-sm); padding: 12px; font-size: 11px; color: var(--accent-gold); font-weight: 600;">
-          <i class="fa-solid fa-triangle-exclamation" style="margin-right: 6px;"></i> Setting this room into Maintenance will automatically prevent new guest check-ins from the Front Desk rack.
-        </div>
       </div>
-      <div class="modal-bot">
-        <button class="btn-ui-secondary" onclick="closeModal('maint-modal')">Cancel</button>
-        <button class="btn-ui-primary" onclick="confirmMaintenance()"><i class="fa-solid fa-lock"></i> Put in Maintenance</button>
+      <div class="modal-bot" style="padding: 16px 24px; background: #fff; border-top: 1px solid var(--border-medium); display: flex; justify-content: flex-end; gap: 12px;">
+        <button class="btn-ui-secondary" onclick="closeModal('maint-modal')" style="height: 42px; padding: 0 20px;">Cancel</button>
+        <button class="btn-ui-primary" onclick="confirmMaintenance()" style="height: 42px; padding: 0 24px;"><i class="fa-solid fa-lock"></i> Put in Maintenance</button>
       </div>
     </div>
   </div>
@@ -809,8 +946,9 @@
               <div class="room-inv-rate">₹ ${r.rate.toLocaleString()}</div>
             </div>
             <div style="display: flex; gap: 6px;">
-              <button class="btn-ui-secondary" style="padding: 4px 8px; font-size: 11px;" onclick="openEditRoomModal('${r.id}')"><i class="fa-solid fa-pen"></i></button>
-              <button class="btn-ui-secondary" style="padding: 4px 8px; font-size: 11px;" onclick="toggleRoomMaintenance('${r.id}')"><i class="fa-solid fa-wrench"></i></button>
+              <button class="btn-ui-secondary" style="padding: 4px 8px; font-size: 11px;" onclick="openEditRoomModal('${r.id}')" title="Edit Details"><i class="fa-solid fa-pen"></i></button>
+              <button class="btn-ui-secondary" style="padding: 4px 8px; font-size: 11px;" onclick="toggleRoomMaintenance('${r.id}')" title="Toggle Maintenance"><i class="fa-solid fa-wrench"></i></button>
+              <button class="btn-ui-danger" style="padding: 4px 8px; font-size: 11px;" onclick="deleteRoom('${r.id}')" title="Archive Room"><i class="fa-solid fa-trash-can"></i></button>
             </div>
           </div>
         `;
@@ -886,16 +1024,24 @@
       else if (cat === 'EXECUTIVE') rateInput.value = 11000;
     }
 
+    function updateEditDefaultTariff(cat) {
+      const rateInput = document.getElementById('edit-room-rate');
+      if (cat === 'DELUXE') rateInput.value = 3500;
+      else if (cat === 'SUPER DELUXE') rateInput.value = 5200;
+      else if (cat === 'SUITE') rateInput.value = 8500;
+      else if (cat === 'EXECUTIVE') rateInput.value = 11000;
+    }
+
     function handleAddRoom(e) {
       e.preventDefault();
       const no = document.getElementById('new-room-no').value.trim();
-      const floorRaw = document.getElementById('new-room-floor').value;
-      const floor = floorRaw.replace('Floor ', '').trim();
+      const floor = document.getElementById('new-room-floor').value;
       const cat = document.getElementById('new-room-cat').value;
-      const rate = parseInt(document.getElementById('new-room-rate').value, 10);
+      const rate = parseInt(document.getElementById('new-room-rate').value, 10) || 0;
       const bed = document.getElementById('new-room-bed').value;
       const pax = document.getElementById('new-room-pax').value;
       const status = document.getElementById('new-room-status').value;
+      const hk = document.getElementById('new-room-hk').value;
 
       const checkedAmenities = [];
       document.querySelectorAll('#add-room-form input[name="amenity"]:checked').forEach(c => checkedAmenities.push(c.value));
@@ -916,7 +1062,7 @@
         rate: rate,
         amenities: checkedAmenities.length ? checkedAmenities : ['Standard Amenities'],
         status: status,
-        hk: 'Cleaned'
+        hk: hk
       });
 
       closeModal('add-room-modal');
@@ -933,12 +1079,21 @@
 
       document.getElementById('edit-room-id').value = room.id;
       document.getElementById('edit-modal-room-num').textContent = room.no;
+      document.getElementById('edit-room-no').value = room.no;
+      document.getElementById('edit-room-floor').value = room.floor;
       document.getElementById('edit-room-cat').value = room.cat;
       document.getElementById('edit-room-rate').value = room.rate;
       document.getElementById('edit-room-bed').value = room.bed;
       document.getElementById('edit-room-pax').value = room.pax;
       document.getElementById('edit-room-status').value = room.status;
       document.getElementById('edit-room-hk').value = room.hk;
+
+      // Set amenities checkboxes
+      document.querySelectorAll('#edit-room-form input[name="edit-amenity"]').forEach(cb => {
+        cb.checked = Array.isArray(room.amenities) && room.amenities.some(a => 
+          a.toLowerCase().includes(cb.value.toLowerCase()) || cb.value.toLowerCase().includes(a.toLowerCase())
+        );
+      });
 
       openModal('edit-room-modal');
     }
@@ -949,16 +1104,33 @@
       const room = roomsData.find(r => r.id === id);
       if (!room) return;
 
+      const newNo = document.getElementById('edit-room-no').value.trim();
+      const floor = document.getElementById('edit-room-floor').value;
+
+      // If room number changed, check if duplicate
+      if (newNo !== room.no && roomsData.some(r => r.no === newNo)) {
+        alert(`Room Number ${newNo} already exists in the system!`);
+        return;
+      }
+
+      const checkedAmenities = [];
+      document.querySelectorAll('#edit-room-form input[name="edit-amenity"]:checked').forEach(c => checkedAmenities.push(c.value));
+
+      room.no = newNo;
+      room.id = newNo;
+      room.floor = floor;
       room.cat = document.getElementById('edit-room-cat').value;
-      room.rate = parseInt(document.getElementById('edit-room-rate').value, 10);
+      room.rate = parseInt(document.getElementById('edit-room-rate').value, 10) || 0;
       room.bed = document.getElementById('edit-room-bed').value;
       room.pax = document.getElementById('edit-room-pax').value;
       room.status = document.getElementById('edit-room-status').value;
       room.hk = document.getElementById('edit-room-hk').value;
+      room.amenities = checkedAmenities.length ? checkedAmenities : ['Standard Amenities'];
 
       closeModal('edit-room-modal');
       renderRooms();
       updateKPICounters();
+      populateMaintenanceSelect();
       showToast(`Room ${room.no} configurations updated!`);
     }
 

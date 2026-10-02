@@ -3,81 +3,936 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Administrator - Hotel Sagar Sonnet</title>
+  <title>Administrator Master - Hotel Sagar Sonnet PMS</title>
   <link rel="stylesheet" href="../css/style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    /* Administrator Split-Layout Styles */
+    .admin-layout {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 20px;
+      min-height: calc(100vh - 165px);
+    }
+
+    .pms-page-header {
+      border-bottom: none !important;
+      background: transparent !important;
+    }
+
+    .admin-sidebar {
+      background: #ffffff;
+      border: 1px solid var(--border-medium);
+      border-radius: var(--radius-lg);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.03);
+      padding: 14px;
+      height: fit-content;
+      position: sticky;
+      top: 10px;
+      max-height: calc(100vh - 180px);
+      overflow-y: auto;
+    }
+
+    .admin-nav-group {
+      margin-bottom: 8px;
+    }
+
+    .admin-nav-header {
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      padding: 9px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.2s ease;
+      background: #f8fafc;
+      border: 1px solid #f1f5f9;
+    }
+
+    .admin-nav-header:hover {
+      background: #f1f5f9;
+      color: var(--accent-primary);
+    }
+
+    .admin-nav-header.active {
+      color: var(--accent-primary);
+      font-weight: 900;
+      background: rgba(99, 102, 241, 0.08);
+      border-color: rgba(99, 102, 241, 0.2);
+    }
+
+    /* Flat Non-collapsible Nav Items */
+    .admin-nav-flat {
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.2s ease;
+      background: #ffffff;
+      border: 1px solid #f1f5f9;
+      margin-bottom: 6px;
+    }
+
+    .admin-nav-flat:hover {
+      background: #f8fafc;
+      color: var(--accent-primary);
+      border-color: var(--border-medium);
+    }
+
+    .admin-nav-flat.active {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(168, 85, 247, 0.05));
+      color: var(--accent-primary);
+      border-color: var(--accent-primary);
+      font-weight: 900;
+    }
+
+    .admin-sub-list {
+      list-style: none;
+      padding: 4px 0 4px 8px;
+      margin: 4px 0 0 4px;
+      border-left: 2px solid var(--border-medium);
+    }
+
+    .admin-sub-item {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      padding: 7px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+      margin-bottom: 2px;
+    }
+
+    .admin-sub-item:hover {
+      background: rgba(99, 102, 241, 0.06);
+      color: var(--accent-primary);
+      transform: translateX(3px);
+    }
+
+    .admin-sub-item.active {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(168, 85, 247, 0.08));
+      color: var(--accent-primary);
+      font-weight: 800;
+      border-left: 3px solid var(--accent-primary);
+    }
+
+    .admin-content-pane {
+      background: #ffffff;
+      border: 1px solid var(--border-medium);
+      border-radius: var(--radius-lg);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.03);
+      padding: 24px;
+    }
+
+    .crud-header-card {
+      background: #ffffff;
+      border: 1px solid var(--border-medium);
+      border-radius: var(--radius-md);
+      padding: 16px 20px;
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+    }
+
+    .crud-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .crud-search-input {
+      height: 38px;
+      padding: 8px 14px;
+      font-size: 13px;
+      border: 1px solid var(--border-medium);
+      border-radius: var(--radius-md);
+      background: #fff;
+      color: var(--text-primary);
+      width: 280px;
+      max-width: 100%;
+    }
+
+    .crud-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      background: #ffffff;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      border: 1px solid var(--border-medium);
+    }
+
+    .crud-table th {
+      background: #f8fafc;
+      padding: 12px 16px;
+      font-size: 10px;
+      font-weight: 800;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      border-bottom: 1px solid var(--border-medium);
+      text-align: left;
+    }
+
+    .crud-table td {
+      padding: 12px 16px;
+      border-bottom: 1px solid #f1f5f9;
+      color: var(--text-primary);
+      vertical-align: middle;
+    }
+
+    .crud-table tr:hover td {
+      background: rgba(99, 102, 241, 0.02);
+    }
+
+    .crud-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    .btn-action-edit {
+      padding: 5px 10px;
+      font-size: 11px;
+      font-weight: 700;
+      border: 1px solid var(--border-medium);
+      border-radius: var(--radius-sm);
+      background: #fff;
+      color: var(--accent-primary);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-action-edit:hover {
+      background: var(--accent-primary);
+      color: #fff;
+    }
+
+    .btn-action-del {
+      padding: 5px 10px;
+      font-size: 11px;
+      font-weight: 700;
+      border: 1px solid #fecaca;
+      border-radius: var(--radius-sm);
+      background: #fff;
+      color: var(--accent-rose);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-action-del:hover {
+      background: var(--accent-rose);
+      color: #fff;
+    }
+
+    .admin-form-group {
+      margin-bottom: 16px;
+    }
+
+    .admin-form-label {
+      display: block;
+      font-size: 10px;
+      font-weight: 800;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      margin-bottom: 6px;
+    }
+
+    .admin-form-input {
+      width: 100%;
+      height: 40px;
+      padding: 8px 14px;
+      font-size: 13px;
+      border: 1px solid var(--border-medium);
+      border-radius: var(--radius-md);
+      background: #fff;
+      color: var(--text-primary);
+      box-sizing: border-box;
+    }
+
+    .admin-form-input:focus {
+      outline: none;
+      border-color: var(--accent-primary);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+    }
+
+    .toast-popup {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #0f172a;
+      color: #ffffff;
+      padding: 12px 20px;
+      border-radius: var(--radius-md);
+      font-size: 12px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+      z-index: 99999;
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      pointer-events: none;
+    }
+
+    .toast-popup.show {
+      transform: translateY(0);
+      opacity: 1;
+      pointer-events: auto;
+    }
+  </style>
 </head>
 <body>
+
+  <!-- Top PMS App Header -->
   <header class="pms-app-header">
-    <div class="pms-header-brand"><i class="fa-solid fa-hotel gold-star"></i><span>HOTEL SAGAR SONNET</span><span style="background: #fbc531; color: #1e293b; font-size: 9px; padding: 2px 5px; border-radius: 3px; font-weight: 800;">PMS 2026</span></div>
-    <div class="pms-header-center"><span><i class="fa-regular fa-calendar-days"></i> Wednesday, 24 Sep 2026</span><span><i class="fa-solid fa-user-gear" style="color: #94a3b8;"></i> System Administrator</span></div>
-    <div class="pms-header-right"><div class="pms-user-tag"><i class="fa-solid fa-user-tie"></i> Super Admin</div><a href="../login.html" class="btn-pms-logout"><i class="fa-solid fa-power-off"></i> Logout</a></div>
+    <div class="pms-header-brand">
+      <i class="fa-solid fa-hotel gold-star"></i>
+      <span>HOTEL SAGAR SONNET</span>
+      <span style="background: #fbc531; color: #1e293b; font-size: 9px; padding: 2px 5px; border-radius: 3px; font-weight: 800;">PMS 2026</span>
+    </div>
+    <div class="pms-header-center">
+      <span><i class="fa-regular fa-calendar-days"></i> Wednesday, 24 Sep 2026</span>
+      <span><i class="fa-solid fa-user-gear" style="color: #94a3b8;"></i> System Administrator Control</span>
+    </div>
+    <div class="pms-header-right">
+      <div class="pms-user-tag"><i class="fa-solid fa-user-tie"></i> Super Admin</div>
+      <a href="../login.html" class="btn-pms-logout"><i class="fa-solid fa-power-off"></i> Logout</a>
+    </div>
   </header>
+
+  <!-- 8-Module Navigation Tabs Ribbon -->
   <nav class="pms-tabs-ribbon">
-    <a href="../front-office/index.html" class="pms-tab-link"><i class="fa-solid fa-desktop tab-ico" style="color: #6366f1;"></i> Front Office</a>
-    <a href="../room-management/index.html" class="pms-tab-link"><i class="fa-solid fa-door-open tab-ico" style="color: #ec4899;"></i> Room Management</a>
-    <a href="../pos-sales/index.html" class="pms-tab-link"><i class="fa-solid fa-utensils tab-ico" style="color: #10b981;"></i> POS Sales</a>
-    <a href="../house-keeping/index.html" class="pms-tab-link"><i class="fa-solid fa-broom tab-ico" style="color: #f59e0b;"></i> House Keeping</a>
-    <a href="../stores/index.html" class="pms-tab-link"><i class="fa-solid fa-boxes-stacked tab-ico" style="color: #22d3ee;"></i> Stores</a>
-    <a href="../accounts/index.html" class="pms-tab-link"><i class="fa-solid fa-file-invoice-dollar tab-ico" style="color: #a78bfa;"></i> Accounts</a>
-    <a href="../banquet/index.html" class="pms-tab-link"><i class="fa-solid fa-champagne-glasses tab-ico" style="color: #fbbf24;"></i> Banquet & Services</a>
-    <a href="../administrator/index.html" class="pms-tab-link active"><i class="fa-solid fa-user-gear tab-ico" style="color: #94a3b8;"></i> Administrator</a>
+    <a href="../front-office/index.html" class="pms-tab-link">
+      <i class="fa-solid fa-desktop tab-ico" style="color: #6366f1;"></i> Front Office
+    </a>
+    <a href="../room-management/index.html" class="pms-tab-link">
+      <i class="fa-solid fa-door-open tab-ico" style="color: #ec4899;"></i> Room Management
+    </a>
+    <a href="../pos-sales/index.html" class="pms-tab-link">
+      <i class="fa-solid fa-utensils tab-ico" style="color: #10b981;"></i> POS Sales
+    </a>
+    <a href="../house-keeping/index.html" class="pms-tab-link">
+      <i class="fa-solid fa-broom tab-ico" style="color: #f59e0b;"></i> House Keeping
+    </a>
+    <a href="../stores/index.html" class="pms-tab-link">
+      <i class="fa-solid fa-boxes-stacked tab-ico" style="color: #22d3ee;"></i> Stores
+    </a>
+    <a href="../accounts/index.html" class="pms-tab-link">
+      <i class="fa-solid fa-file-invoice-dollar tab-ico" style="color: #a78bfa;"></i> Accounts
+    </a>
+    <a href="../banquet/index.html" class="pms-tab-link">
+      <i class="fa-solid fa-champagne-glasses tab-ico" style="color: #fbbf24;"></i> Banquet & Services
+    </a>
+    <a href="../administrator/index.html" class="pms-tab-link active">
+      <i class="fa-solid fa-user-gear tab-ico" style="color: #94a3b8;"></i> Administrator
+    </a>
   </nav>
+
+  <!-- Action Sub-Ribbon -->
+  <div class="pms-sub-ribbon">
+    <div class="ribbon-left-section">
+      <div class="ribbon-nav-links">
+        <span class="ribbon-nav-item active" style="color: #94a3b8;"><i class="fa-solid fa-sliders"></i> Master Configuration</span>
+        <span class="ribbon-nav-item" onclick="exportDatabaseJSON()"><i class="fa-solid fa-database"></i> Backup Master DB</span>
+        <span class="ribbon-nav-item" onclick="showToast('Hotel profile synchronized!')"><i class="fa-solid fa-building"></i> Hotel Profile</span>
+      </div>
+    </div>
+    <div style="font-weight: 700; color: var(--accent-primary); font-size: 12px; display: flex; align-items: center; gap: 6px;">
+      <span style="width: 8px; height: 8px; background: var(--accent-emerald); border-radius: 50%; box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);"></span>
+      Administrator Master Online
+    </div>
+  </div>
+
+  <!-- Main Viewport -->
   <main class="pms-main-viewport">
     <div class="pms-page-container">
+      
+      <!-- Page Header -->
       <div class="pms-page-header">
-        <h2><i class="fa-solid fa-user-gear" style="color: #94a3b8;"></i> Hotel Master & Configuration</h2>
-        <button class="btn-ui-success" onclick="alert('Hotel settings saved!')"><i class="fa-solid fa-floppy-disk"></i> Save Changes</button>
+        <div>
+          <h2>
+            <i class="fa-solid fa-user-gear" style="color: #94a3b8;"></i>
+            Administrator • Master Data Management
+          </h2>
+          <div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">
+            Configure and manage live records for active hotel modules.
+          </div>
+        </div>
+        <div style="display: flex; gap: 10px; align-items: center;">
+          <button class="btn-ui-secondary" onclick="exportDatabaseJSON()"><i class="fa-solid fa-file-export"></i> Export Master DB</button>
+        </div>
       </div>
-      <div class="pms-page-content">
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-          <div style="background: var(--bg-card); border:1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 20px;">
-            <h3 style="font-size: 13px; margin-bottom: 16px; color: var(--accent-primary); display: flex; align-items: center; gap: 8px; text-transform: uppercase; letter-spacing: 1px;"><i class="fa-solid fa-hotel"></i> Hotel Profile</h3>
-            <div style="margin-bottom: 14px;">
-              <label style="display:block; font-size:10px; font-weight:800; margin-bottom:6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">HOTEL NAME</label>
-              <input type="text" class="pms-input" style="width:100%; height:38px; border-radius: var(--radius-md);" value="Hotel Sagar Sonnet - Luxury Resort & Suites">
+
+      <!-- Administrator 2-Column Split Layout -->
+      <div class="admin-layout">
+        
+        <!-- LEFT SIDEBAR -->
+        <aside class="admin-sidebar">
+          
+          <!-- 1. Front Office (Active & Collapsible) -->
+          <div class="admin-nav-group">
+            <div class="admin-nav-header active" onclick="toggleNavGroup(this)">
+              <span><i class="fa-solid fa-desktop" style="color: #6366f1; width: 16px;"></i> Front Office</span>
+              <i class="fa-solid fa-chevron-down" style="font-size: 10px;"></i>
             </div>
-            <div style="margin-bottom: 14px;">
-              <label style="display:block; font-size:10px; font-weight:800; margin-bottom:6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">GSTIN / TAX REGISTRATION</label>
-              <input type="text" class="pms-input" style="width:100%; height:38px; border-radius: var(--radius-md); font-family: var(--font-mono);" value="19AAGCS7712K1Z9">
+            <ul class="admin-sub-list">
+              <li class="admin-sub-item active" onclick="switchSection('fo_channels', 'Booking Sources & Channels', this)"><i class="fa-solid fa-clipboard-check"></i> Booking Sources</li>
+              <li class="admin-sub-item" onclick="switchSection('fo_id_types', 'Identity Card Types', this)"><i class="fa-solid fa-id-card"></i> Identity Card Types</li>
+              <li class="admin-sub-item" onclick="switchSection('fo_payments', 'Payment Modes & Gateways', this)"><i class="fa-solid fa-cash-register"></i> Payment Modes</li>
+            </ul>
+          </div>
+
+          <!-- 2. Room Management (Active & Collapsible) -->
+          <div class="admin-nav-group">
+            <div class="admin-nav-header" onclick="toggleNavGroup(this)">
+              <span><i class="fa-solid fa-door-open" style="color: #ec4899; width: 16px;"></i> Room Management</span>
+              <i class="fa-solid fa-chevron-down" style="font-size: 10px;"></i>
             </div>
-            <div style="display:flex; gap:12px;">
-              <div style="flex:1;">
-                <label style="display:block; font-size:10px; font-weight:800; margin-bottom:6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">GST TAX (%)</label>
-                <input type="number" class="pms-input" style="width:100%; height:38px; border-radius: var(--radius-md); font-family: var(--font-mono);" value="12">
+            <ul class="admin-sub-list">
+              <li class="admin-sub-item" onclick="switchSection('rm_categories', 'Room Categories & Tariffs', this)"><i class="fa-solid fa-tags"></i> Room Categories</li>
+              <li class="admin-sub-item" onclick="switchSection('rm_floors', 'Floors & Block Master', this)"><i class="fa-solid fa-layer-group"></i> Floors & Wings</li>
+              <li class="admin-sub-item" onclick="switchSection('rm_amenities', 'Room Amenities Directory', this)"><i class="fa-solid fa-wifi"></i> Amenities Master</li>
+              <li class="admin-sub-item" onclick="switchSection('rm_maintenance_types', 'Maintenance Task Reasons', this)"><i class="fa-solid fa-wrench"></i> Maintenance Reasons</li>
+            </ul>
+          </div>
+
+          <!-- 3 to 8: Flat Non-Collapsible Items (No content for now / Scheduled for client review) -->
+          <div class="admin-nav-flat" onclick="showPendingModule('POS Sales', 'fa-utensils', '#10b981', this)">
+            <i class="fa-solid fa-utensils" style="color: #10b981; width: 16px;"></i> POS Sales
+          </div>
+
+          <div class="admin-nav-flat" onclick="showPendingModule('House Keeping', 'fa-broom', '#f59e0b', this)">
+            <i class="fa-solid fa-broom" style="color: #f59e0b; width: 16px;"></i> House Keeping
+          </div>
+
+          <div class="admin-nav-flat" onclick="showPendingModule('Stores & Inventory', 'fa-boxes-stacked', '#22d3ee', this)">
+            <i class="fa-solid fa-boxes-stacked" style="color: #22d3ee; width: 16px;"></i> Stores & Inventory
+          </div>
+
+          <div class="admin-nav-flat" onclick="showPendingModule('Accounts & Finance', 'fa-file-invoice-dollar', '#a78bfa', this)">
+            <i class="fa-solid fa-file-invoice-dollar" style="color: #a78bfa; width: 16px;"></i> Accounts & Finance
+          </div>
+
+          <div class="admin-nav-flat" onclick="showPendingModule('Banquet & Services', 'fa-champagne-glasses', '#fbbf24', this)">
+            <i class="fa-solid fa-champagne-glasses" style="color: #fbbf24; width: 16px;"></i> Banquet & Services
+          </div>
+
+          <div class="admin-nav-flat" onclick="showPendingModule('System & Roles', 'fa-shield-halved', '#64748b', this)">
+            <i class="fa-solid fa-shield-halved" style="color: #64748b; width: 16px;"></i> System & Roles
+          </div>
+
+        </aside>
+
+        <!-- RIGHT CONTENT AREA -->
+        <section class="admin-content-pane">
+          
+          <!-- CRUD Active Container -->
+          <div id="crud-view-container">
+            <!-- Header Card -->
+            <div class="crud-header-card">
+              <div>
+                <div style="font-size: 16px; font-weight: 900; color: var(--text-primary); display: flex; align-items: center; gap: 8px;">
+                  <span id="view-title">Booking Sources & Channels</span>
+                  <span class="badge-tag blue" id="view-count" style="font-size: 11px;">6 Records</span>
+                </div>
+                <div style="font-size: 12px; color: var(--text-secondary); margin-top: 3px;" id="view-desc">
+                  Configure direct booking channels, OTAs, and corporate travel sources.
+                </div>
               </div>
-              <div style="flex:1;">
-                <label style="display:block; font-size:10px; font-weight:800; margin-bottom:6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">CHECK-OUT TIME</label>
-                <input type="text" class="pms-input" style="width:100%; height:38px; border-radius: var(--radius-md);" value="11:00 AM">
+              <button class="btn-ui-primary" onclick="openCurrentAddModal()"><i class="fa-solid fa-plus"></i> <span id="btn-add-label">Add Entry</span></button>
+            </div>
+
+            <!-- Toolbar -->
+            <div class="crud-toolbar">
+              <div style="position: relative;">
+                <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 12px; top: 12px; color: var(--text-muted); font-size: 12px;"></i>
+                <input type="text" id="table-search" class="crud-search-input" style="padding-left: 32px;" placeholder="Search active records..." oninput="handleSearch(this.value)">
               </div>
+              <div style="display: flex; gap: 8px;">
+                <button class="btn-ui-secondary" onclick="exportCurrentTableCSV()"><i class="fa-solid fa-file-csv"></i> Export CSV</button>
+                <button class="btn-ui-secondary" onclick="renderCurrentTable()"><i class="fa-solid fa-rotate"></i> Refresh</button>
+              </div>
+            </div>
+
+            <!-- Table -->
+            <div style="overflow-x: auto;">
+              <table class="crud-table" id="main-crud-table">
+                <!-- Dynamically rendered -->
+              </table>
             </div>
           </div>
 
-          <div style="background: var(--bg-card); border:1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 20px;">
-            <h3 style="font-size: 13px; margin-bottom: 16px; color: var(--accent-gold); display: flex; align-items: center; gap: 8px; text-transform: uppercase; letter-spacing: 1px;"><i class="fa-solid fa-tags"></i> Base Room Tariffs</h3>
-            <div style="margin-bottom: 12px;">
-              <label style="display:block; font-size:10px; font-weight:800; margin-bottom:6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">DELUXE ROOM (₹)</label>
-              <input type="number" class="pms-input" style="width:100%; height:38px; border-radius: var(--radius-md); font-family: var(--font-mono);" value="3500">
+          <!-- Pending / Under Review Container -->
+          <div id="pending-view-container" style="display: none; text-align: center; padding: 60px 20px;">
+            <div style="width: 70px; height: 70px; border-radius: 50%; background: #f8fafc; border: 1px solid var(--border-medium); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px auto; font-size: 28px;">
+              <i id="pending-icon" class="fa-solid fa-utensils" style="color: #10b981;"></i>
             </div>
-            <div style="margin-bottom: 12px;">
-              <label style="display:block; font-size:10px; font-weight:800; margin-bottom:6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">SUPER DELUXE (₹)</label>
-              <input type="number" class="pms-input" style="width:100%; height:38px; border-radius: var(--radius-md); font-family: var(--font-mono);" value="5200">
+            <h3 id="pending-title" style="font-size: 18px; font-weight: 800; color: var(--text-primary); margin: 0 0 8px 0;">POS Sales</h3>
+            <div style="display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 800; background: rgba(245, 158, 11, 0.1); color: #b45309; margin-bottom: 14px;">
+              <i class="fa-solid fa-clock"></i> Module Settings Queued for Client Review
             </div>
-            <div style="margin-bottom: 12px;">
-              <label style="display:block; font-size:10px; font-weight:800; margin-bottom:6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">SUITE LUXURY (₹)</label>
-              <input type="number" class="pms-input" style="width:100%; height:38px; border-radius: var(--radius-md); font-family: var(--font-mono);" value="8500">
-            </div>
-            <div>
-              <label style="display:block; font-size:10px; font-weight:800; margin-bottom:6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">EXECUTIVE PENTHOUSE (₹)</label>
-              <input type="number" class="pms-input" style="width:100%; height:38px; border-radius: var(--radius-md); font-family: var(--font-mono);" value="11000">
-            </div>
+            <p style="font-size: 13px; color: var(--text-secondary); max-width: 480px; margin: 0 auto; line-height: 1.6;">
+              This module's configuration parameters and workflow schemas will be integrated after discussion and sign-off with the client.
+            </p>
           </div>
-        </div>
+
+        </section>
       </div>
+
     </div>
   </main>
+
+  <!-- UNIVERSAL CRUD MODAL -->
+  <div class="modal-backdrop" id="admin-crud-modal">
+    <div class="modal-window" style="width: 580px; max-width: 95vw;">
+      <div class="modal-top" style="display: flex; justify-content: space-between; align-items: center;">
+        <h3 style="margin: 0;"><i class="fa-solid fa-pen-to-square"></i> <span id="modal-title">Add Record</span></h3>
+        <button class="modal-close" onclick="closeModal('admin-crud-modal')">&times;</button>
+      </div>
+      <form onsubmit="handleSaveCrud(event)">
+        <input type="hidden" id="crud-id">
+        <input type="hidden" id="crud-entity">
+        <div class="modal-content-area" id="modal-form-fields" style="padding: 20px; background: #f8fafc; max-height: 70vh; overflow-y: auto;">
+          <!-- Dynamically generated fields based on active entity -->
+        </div>
+        <div class="modal-bot" style="padding: 14px 20px; background: #fff; border-top: 1px solid var(--border-medium); display: flex; justify-content: flex-end; gap: 10px;">
+          <button type="button" class="btn-ui-secondary" onclick="closeModal('admin-crud-modal')">Cancel</button>
+          <button type="submit" class="btn-ui-primary"><i class="fa-solid fa-floppy-disk"></i> Save Entry</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Bottom App Bar -->
   <footer class="pms-bottom-bar">
-    <div style="font-size: 11px; font-weight: 700; color: var(--text-secondary);"><i class="fa-solid fa-code-branch" style="color: var(--accent-primary);"></i> System Version: Hotel Sagar Sonnet PMS v2026.1</div>
+    <div style="font-size: 11px; font-weight: 700; color: var(--text-secondary);">
+      <i class="fa-solid fa-code-branch" style="color: var(--accent-primary);"></i> Hotel Sagar Sonnet PMS v2026.1 • Enterprise Administrator Engine
+    </div>
+    <div style="font-size: 11px; font-weight: 600; color: var(--text-muted);">
+      Active Modules: Front Office & Room Management
+    </div>
   </footer>
+
+  <!-- Toast Notification Feedback -->
+  <div class="toast-popup" id="app-toast">
+    <i class="fa-solid fa-circle-check" style="color: var(--accent-emerald); font-size: 16px;"></i>
+    <span id="toast-msg">Action completed successfully!</span>
+  </div>
+
+  <script>
+    // Active Master Database for Front Office and Room Management
+    const adminDB = {
+      // 1. FRONT OFFICE
+      fo_channels: [
+        { id: '1', name: 'Direct Front Desk / Walk-in', type: 'Direct', comm: '0%', status: 'Active' },
+        { id: '2', name: 'Official Website Booking Engine', type: 'Direct Web', comm: '0%', status: 'Active' },
+        { id: '3', name: 'MakeMyTrip / Goibibo', type: 'OTA', comm: '15%', status: 'Active' },
+        { id: '4', name: 'Booking.com Global', type: 'OTA', comm: '18%', status: 'Active' },
+        { id: '5', name: 'Agoda Travel Network', type: 'OTA', comm: '14%', status: 'Active' },
+        { id: '6', name: 'TCS Corporate Travel Desk', type: 'Corporate', comm: '5%', status: 'Active' }
+      ],
+      fo_id_types: [
+        { id: '1', name: 'Aadhaar Card (UIDAI)', code: 'AADHAAR', country: 'India', mandatory: 'Yes', status: 'Active' },
+        { id: '2', name: 'Passport (International)', code: 'PASSPORT', country: 'All Nations', mandatory: 'Yes (NRI/Foreign)', status: 'Active' },
+        { id: '3', name: 'Driving License', code: 'DL', country: 'India', mandatory: 'No', status: 'Active' },
+        { id: '4', name: 'Voter ID Card', code: 'VOTER', country: 'India', mandatory: 'No', status: 'Active' },
+        { id: '5', name: 'PAN Card (Income Tax)', code: 'PAN', country: 'India', mandatory: 'No', status: 'Active' }
+      ],
+      fo_payments: [
+        { id: '1', name: 'UPI Dynamic QR (PhonePe/GPay)', gateway: 'UPI Direct', surcharge: '0%', status: 'Active' },
+        { id: '2', name: 'Cash Desk Settlement', gateway: 'Cash Drawer Ledger', surcharge: '0%', status: 'Active' },
+        { id: '3', name: 'Credit/Debit Card POS (HDFC)', gateway: 'PineLabs EDC', surcharge: '1.2%', status: 'Active' },
+        { id: '4', name: 'NEFT / RTGS Bank Transfer', gateway: 'ICICI Current A/C', surcharge: '0%', status: 'Active' }
+      ],
+
+      // 2. ROOM MANAGEMENT
+      rm_categories: [
+        { id: '1', name: 'Deluxe Room', code: 'DELUXE', baseRate: '3500', pax: '2 Adults', bedding: 'King / Twin' },
+        { id: '2', name: 'Super Deluxe', code: 'SUPER DELUXE', baseRate: '5200', pax: '2 Adults + 1 Child', bedding: 'King Size (72x78)' },
+        { id: '3', name: 'Suite Luxury', code: 'SUITE', baseRate: '8500', pax: '3 Adults', bedding: 'Imperial Royal Bed' },
+        { id: '4', name: 'Executive Penthouse', code: 'EXECUTIVE', baseRate: '11000', pax: '4 Adults', bedding: 'Emperor Royal 84"' }
+      ],
+      rm_floors: [
+        { id: '1', floor: '1', name: 'First Floor Sea Deck', rooms: '12 Rooms (101 - 112)', status: 'Active' },
+        { id: '2', floor: '2', name: 'Second Floor Ocean View', rooms: '12 Rooms (201 - 212)', status: 'Active' },
+        { id: '3', floor: '3', name: 'Third Floor Executive Suites', rooms: '12 Rooms (301 - 312)', status: 'Active' },
+        { id: '4', floor: '4', name: 'Fourth Floor Royal Penthouse', rooms: '12 Rooms (401 - 412)', status: 'Active' }
+      ],
+      rm_amenities: [
+        { id: '1', name: 'Panoramic Ocean View', icon: 'fa-water', category: 'View', chargeable: 'No' },
+        { id: '2', name: 'Private Sea Breeze Balcony', icon: 'fa-door-open', category: 'Room Feature', chargeable: 'No' },
+        { id: '3', name: 'Luxury Jacuzzi & Hot Tub', icon: 'fa-bath', category: 'Bathroom', chargeable: 'Included in Suite' },
+        { id: '4', name: 'Mini-Bar & Refrigerator', icon: 'fa-wine-bottle', category: 'Dining', chargeable: 'Usage Basis' },
+        { id: '5', name: 'High-Speed Wi-Fi 6', icon: 'fa-wifi', category: 'Technology', chargeable: 'Complimentary' }
+      ],
+      rm_maintenance_types: [
+        { id: '1', name: 'HVAC Air Conditioning & Compressor Service', dept: 'Engineering', priority: 'High', sla: '4 Hours' },
+        { id: '2', name: 'Bathroom Plumbing & Water Pressure', dept: 'Facilities', priority: 'High', sla: '2 Hours' },
+        { id: '3', name: 'Deep Steam Cleaning & Sanitization', dept: 'Housekeeping', priority: 'Medium', sla: '3 Hours' },
+        { id: '4', name: 'Interior Wall Painting & Touch-up', dept: 'Civil / Maintenance', priority: 'Low', sla: '24 Hours' },
+        { id: '5', name: 'RFID Smart Lock & Reader Repair', dept: 'IT / Security', priority: 'Immediate', sla: '1 Hour' }
+      ]
+    };
+
+    const entityDescriptions = {
+      fo_channels: 'Configure direct booking channels, OTAs, and corporate travel sources.',
+      fo_id_types: 'Manage acceptable guest identity verification documents & KYC compliance.',
+      fo_payments: 'Configure payment modes, gateways, settlement ledgers, and surcharge fees.',
+      rm_categories: 'Manage room categories, base tariffs, occupant capacities, and bedding configurations.',
+      rm_floors: 'Configure floor distributions, room wings, and building blocks.',
+      rm_amenities: 'Manage hotel room amenities, feature tags, and room inclusion rules.',
+      rm_maintenance_types: 'Configure maintenance task reasons, department routing, and SLA turnaround.'
+    };
+
+    let currentEntity = 'fo_channels';
+    let currentEntityTitle = 'Booking Sources & Channels';
+    let searchQuery = '';
+
+    const entitySchemas = {
+      fo_channels: [
+        { key: 'name', label: 'Channel / Source Name', type: 'text', placeholder: 'e.g. Agoda Travel' },
+        { key: 'type', label: 'Channel Type', type: 'select', options: ['Direct', 'Direct Web', 'OTA', 'Corporate', 'Travel Agent'] },
+        { key: 'comm', label: 'Commission Rate', type: 'text', placeholder: 'e.g. 15%' },
+        { key: 'status', label: 'Operational Status', type: 'select', options: ['Active', 'Inactive'] }
+      ],
+      fo_id_types: [
+        { key: 'name', label: 'ID Type Name', type: 'text', placeholder: 'e.g. Voter ID' },
+        { key: 'code', label: 'Code', type: 'text', placeholder: 'e.g. VOTER' },
+        { key: 'country', label: 'Country Eligibility', type: 'text', placeholder: 'India / All Nations' },
+        { key: 'mandatory', label: 'Mandatory Rule', type: 'select', options: ['Yes', 'No', 'Yes (NRI/Foreign)'] },
+        { key: 'status', label: 'Status', type: 'select', options: ['Active', 'Inactive'] }
+      ],
+      fo_payments: [
+        { key: 'name', label: 'Payment Mode Name', type: 'text', placeholder: 'e.g. UPI QR' },
+        { key: 'gateway', label: 'Gateway / Ledger', type: 'text', placeholder: 'e.g. PhonePe Direct' },
+        { key: 'surcharge', label: 'Surcharge %', type: 'text', placeholder: 'e.g. 0%' },
+        { key: 'status', label: 'Status', type: 'select', options: ['Active', 'Inactive'] }
+      ],
+      rm_categories: [
+        { key: 'name', label: 'Category Name', type: 'text', placeholder: 'e.g. Royal Suite' },
+        { key: 'code', label: 'Category Code', type: 'text', placeholder: 'e.g. SUITE' },
+        { key: 'baseRate', label: 'Base Tariff (₹)', type: 'number', placeholder: '8500' },
+        { key: 'pax', label: 'Pax Capacity', type: 'text', placeholder: '3 Adults' },
+        { key: 'bedding', label: 'Bedding Configuration', type: 'text', placeholder: 'King Size Bed' }
+      ],
+      rm_floors: [
+        { key: 'floor', label: 'Floor Number', type: 'text', placeholder: '1' },
+        { key: 'name', label: 'Wing / Floor Name', type: 'text', placeholder: 'First Floor Ocean Deck' },
+        { key: 'rooms', label: 'Room Range / Count', type: 'text', placeholder: '12 Rooms (101 - 112)' },
+        { key: 'status', label: 'Status', type: 'select', options: ['Active', 'Maintenance'] }
+      ],
+      rm_amenities: [
+        { key: 'name', label: 'Amenity Name', type: 'text', placeholder: 'e.g. Free Wi-Fi' },
+        { key: 'icon', label: 'FontAwesome Icon Class', type: 'text', placeholder: 'fa-wifi' },
+        { key: 'category', label: 'Category', type: 'select', options: ['View', 'Room Feature', 'Bathroom', 'Dining', 'Technology'] },
+        { key: 'chargeable', label: 'Chargeable Policy', type: 'text', placeholder: 'Complimentary / Paid' }
+      ],
+      rm_maintenance_types: [
+        { key: 'name', label: 'Maintenance Issue Type', type: 'text', placeholder: 'e.g. AC Repair' },
+        { key: 'dept', label: 'Assigned Department', type: 'select', options: ['Engineering', 'Facilities', 'Housekeeping', 'Civil / Maintenance', 'IT / Security'] },
+        { key: 'priority', label: 'Priority Level', type: 'select', options: ['Low', 'Medium', 'High', 'Immediate'] },
+        { key: 'sla', label: 'SLA Turnaround Time', type: 'text', placeholder: 'e.g. 4 Hours' }
+      ]
+    };
+
+    function toggleNavGroup(headerElem) {
+      const subList = headerElem.nextElementSibling;
+      if (subList && subList.tagName === 'UL') {
+        const isHidden = subList.style.display === 'none';
+        subList.style.display = isHidden ? 'block' : 'none';
+        const icon = headerElem.querySelector('.fa-chevron-down, .fa-chevron-right');
+        if (icon) {
+          icon.className = isHidden ? 'fa-solid fa-chevron-down' : 'fa-solid fa-chevron-right';
+        }
+      }
+    }
+
+    function switchSection(entityKey, title, clickedItem) {
+      currentEntity = entityKey;
+      currentEntityTitle = title;
+
+      document.querySelectorAll('.admin-sub-item, .admin-nav-flat').forEach(el => el.classList.remove('active'));
+      if (clickedItem) clickedItem.classList.add('active');
+
+      document.getElementById('pending-view-container').style.display = 'none';
+      document.getElementById('crud-view-container').style.display = 'block';
+
+      document.getElementById('view-title').textContent = title;
+      document.getElementById('view-desc').textContent = entityDescriptions[entityKey] || 'Configure and manage master records.';
+      document.getElementById('btn-add-label').textContent = `Add Entry`;
+
+      document.getElementById('table-search').value = '';
+      searchQuery = '';
+
+      renderCurrentTable();
+    }
+
+    function showPendingModule(moduleTitle, iconClass, iconColor, clickedItem) {
+      document.querySelectorAll('.admin-sub-item, .admin-nav-flat').forEach(el => el.classList.remove('active'));
+      if (clickedItem) clickedItem.classList.add('active');
+
+      document.getElementById('crud-view-container').style.display = 'none';
+      document.getElementById('pending-view-container').style.display = 'block';
+
+      document.getElementById('pending-icon').className = `fa-solid ${iconClass}`;
+      document.getElementById('pending-icon').style.color = iconColor;
+      document.getElementById('pending-title').textContent = moduleTitle;
+    }
+
+    function handleSearch(val) {
+      searchQuery = (val || '').toLowerCase().trim();
+      renderCurrentTable();
+    }
+
+    function renderCurrentTable() {
+      const records = adminDB[currentEntity] || [];
+      const schema = entitySchemas[currentEntity] || [];
+      const table = document.getElementById('main-crud-table');
+
+      let filtered = records;
+      if (searchQuery) {
+        filtered = filtered.filter(item => {
+          return Object.values(item).some(v => String(v).toLowerCase().includes(searchQuery));
+        });
+      }
+
+      document.getElementById('view-count').textContent = `${filtered.length} Record${filtered.length === 1 ? '' : 's'}`;
+
+      if (schema.length === 0 || records.length === 0 && !searchQuery) {
+        table.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 40px; color: var(--text-muted);"><i class="fa-solid fa-inbox" style="font-size: 28px; margin-bottom: 10px; display: block;"></i>No records found. Click "+ Add Entry" to create one.</td></tr>`;
+        return;
+      }
+
+      let thead = '<thead><tr>';
+      thead += '<th style="width: 50px;">#</th>';
+      schema.forEach(col => {
+        thead += `<th>${col.label}</th>`;
+      });
+      thead += '<th style="text-align: right; width: 120px;">Actions</th>';
+      thead += '</tr></thead>';
+
+      let tbody = '<tbody>';
+      if (filtered.length === 0) {
+        tbody += `<tr><td colspan="${schema.length + 2}" style="text-align: center; padding: 30px; color: var(--text-muted);">No records match your search query "${searchQuery}".</td></tr>`;
+      } else {
+        filtered.forEach((row, idx) => {
+          tbody += '<tr>';
+          tbody += `<td style="font-family: var(--font-mono); font-weight: 700; color: var(--text-muted); font-size: 11px;">${idx + 1}</td>`;
+          schema.forEach(col => {
+            let val = row[col.key] || '-';
+            let formattedVal = val;
+            if (col.key === 'status') {
+              let badgeClass = (val === 'Active' || val === 'Online' || val === 'Available') ? 'green' : 'yellow';
+              formattedVal = `<span class="badge-tag ${badgeClass}"><i class="fa-solid fa-circle-check" style="font-size: 6px; margin-right: 4px;"></i>${val}</span>`;
+            } else if (col.key === 'mandatory') {
+              let badgeClass = (val.startsWith('Yes')) ? 'blue' : 'gray';
+              formattedVal = `<span class="badge-tag ${badgeClass}">${val}</span>`;
+            } else if (col.key === 'priority') {
+              let badgeClass = (val === 'Immediate' || val === 'High') ? 'red' : 'blue';
+              formattedVal = `<span class="badge-tag ${badgeClass}">${val}</span>`;
+            } else if (col.key === 'baseRate' || col.key === 'price') {
+              formattedVal = `<span style="font-family: var(--font-mono); font-weight: 800; color: var(--accent-primary);">${val.startsWith('₹') ? val : '₹ ' + Number(val).toLocaleString()}</span>`;
+            } else if (col.key === 'icon') {
+              formattedVal = `<i class="fa-solid ${val}" style="font-size: 14px; color: var(--accent-primary);"></i> <span style="font-size: 11px; font-family: var(--font-mono); color: var(--text-muted);">${val}</span>`;
+            }
+            tbody += `<td>${formattedVal}</td>`;
+          });
+          tbody += `
+            <td style="text-align: right;">
+              <div class="crud-actions">
+                <button class="btn-action-edit" onclick="openEditModal('${row.id}')" title="Edit Record"><i class="fa-solid fa-pen"></i></button>
+                <button class="btn-action-del" onclick="deleteCrudItem('${row.id}')" title="Delete Record"><i class="fa-solid fa-trash"></i></button>
+              </div>
+            </td>
+          `;
+          tbody += '</tr>';
+        });
+      }
+      tbody += '</tbody>';
+
+      table.innerHTML = thead + tbody;
+    }
+
+    function openCurrentAddModal() {
+      const schema = entitySchemas[currentEntity] || [];
+      document.getElementById('modal-title').textContent = `Add New ${currentEntityTitle}`;
+      document.getElementById('crud-entity').value = currentEntity;
+      document.getElementById('crud-id').value = '';
+
+      let formHtml = '';
+      schema.forEach(field => {
+        formHtml += `<div class="admin-form-group">`;
+        formHtml += `<label class="admin-form-label">${field.label}</label>`;
+        if (field.type === 'select') {
+          formHtml += `<select id="f_${field.key}" class="admin-form-input">`;
+          field.options.forEach(opt => {
+            formHtml += `<option value="${opt}">${opt}</option>`;
+          });
+          formHtml += `</select>`;
+        } else {
+          formHtml += `<input type="${field.type || 'text'}" id="f_${field.key}" class="admin-form-input" placeholder="${field.placeholder || ''}" required>`;
+        }
+        formHtml += `</div>`;
+      });
+
+      document.getElementById('modal-form-fields').innerHTML = formHtml;
+      openModal('admin-crud-modal');
+    }
+
+    function openEditModal(id) {
+      const record = (adminDB[currentEntity] || []).find(r => r.id === id);
+      if (!record) return;
+
+      const schema = entitySchemas[currentEntity] || [];
+      document.getElementById('modal-title').textContent = `Edit ${currentEntityTitle}`;
+      document.getElementById('crud-entity').value = currentEntity;
+      document.getElementById('crud-id').value = record.id;
+
+      let formHtml = '';
+      schema.forEach(field => {
+        formHtml += `<div class="admin-form-group">`;
+        formHtml += `<label class="admin-form-label">${field.label}</label>`;
+        if (field.type === 'select') {
+          formHtml += `<select id="f_${field.key}" class="admin-form-input">`;
+          field.options.forEach(opt => {
+            const isSel = (record[field.key] === opt) ? 'selected' : '';
+            formHtml += `<option value="${opt}" ${isSel}>${opt}</option>`;
+          });
+          formHtml += `</select>`;
+        } else {
+          const val = record[field.key] || '';
+          formHtml += `<input type="${field.type || 'text'}" id="f_${field.key}" class="admin-form-input" value="${val}" required>`;
+        }
+        formHtml += `</div>`;
+      });
+
+      document.getElementById('modal-form-fields').innerHTML = formHtml;
+      openModal('admin-crud-modal');
+    }
+
+    function handleSaveCrud(e) {
+      e.preventDefault();
+      const entity = document.getElementById('crud-entity').value;
+      const id = document.getElementById('crud-id').value;
+      const schema = entitySchemas[entity] || [];
+      const records = adminDB[entity] || [];
+
+      const newRecord = { id: id || String(Date.now()) };
+      schema.forEach(field => {
+        const input = document.getElementById(`f_${field.key}`);
+        if (input) {
+          newRecord[field.key] = input.value;
+        }
+      });
+
+      if (id) {
+        const index = records.findIndex(r => r.id === id);
+        if (index !== -1) {
+          records[index] = newRecord;
+          showToast(`Record updated successfully in ${currentEntityTitle}!`);
+        }
+      } else {
+        records.unshift(newRecord);
+        showToast(`New record created in ${currentEntityTitle}!`);
+      }
+
+      closeModal('admin-crud-modal');
+      renderCurrentTable();
+    }
+
+    function deleteCrudItem(id) {
+      const records = adminDB[currentEntity] || [];
+      const record = records.find(r => r.id === id);
+      if (!record) return;
+
+      if (confirm(`Are you sure you want to delete this entry from ${currentEntityTitle}?`)) {
+        adminDB[currentEntity] = records.filter(r => r.id !== id);
+        showToast(`Record deleted from ${currentEntityTitle}.`);
+        renderCurrentTable();
+      }
+    }
+
+    function exportCurrentTableCSV() {
+      const records = adminDB[currentEntity] || [];
+      const schema = entitySchemas[currentEntity] || [];
+      if (records.length === 0) {
+        alert('No records available to export.');
+        return;
+      }
+
+      let csv = schema.map(c => `"${c.label}"`).join(',') + '\n';
+      records.forEach(r => {
+        csv += schema.map(c => `"${r[c.key] || ''}"`).join(',') + '\n';
+      });
+
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.setAttribute('href', url);
+      a.setAttribute('download', `${currentEntity}_Master_Data.csv`);
+      a.click();
+      showToast(`Exported ${currentEntityTitle} as CSV!`);
+    }
+
+    function exportDatabaseJSON() {
+      const blob = new Blob([JSON.stringify(adminDB, null, 2)], { type: 'application/json' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.setAttribute('href', url);
+      a.setAttribute('download', 'Hotel_Sagar_Sonnet_Administrator_Master_DB.json');
+      a.click();
+      showToast('Master Database exported as JSON!');
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('app-toast');
+      document.getElementById('toast-msg').textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3500);
+    }
+
+    function openModal(id) {
+      const m = document.getElementById(id);
+      if (m) m.classList.add('active');
+    }
+
+    function closeModal(id) {
+      const m = document.getElementById(id);
+      if (m) m.classList.remove('active');
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      renderCurrentTable();
+    });
+  </script>
+
 </body>
 </html>

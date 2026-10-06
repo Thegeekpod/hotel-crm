@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Hotel Sagar Sonnet CRM</title>
+  <link rel="stylesheet" href="{{ asset('css/style.css') }}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body {
+      background: #f0f4f8;
+      background-image:
+        radial-gradient(ellipse at 20% 30%, rgba(99, 102, 241, 0.1) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 20%, rgba(236, 72, 153, 0.08) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 85%, rgba(16, 185, 129, 0.06) 0%, transparent 50%),
+        radial-gradient(ellipse at 60% 50%, rgba(245, 158, 11, 0.05) 0%, transparent 40%);
+      background-attachment: fixed;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      overflow: auto;
+      position: relative;
+    }
+
+    /* Decorative floating glass orbs */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 8%;
+      left: 10%;
+      width: 300px;
+      height: 300px;
+      background: radial-gradient(circle, rgba(99, 102, 241, 0.08) 0%, transparent 70%);
+      border-radius: 50%;
+      pointer-events: none;
+      animation: breathe 6s ease-in-out infinite;
+    }
+
+    body::after {
+      content: '';
+      position: fixed;
+      bottom: 10%;
+      right: 8%;
+      width: 350px;
+      height: 350px;
+      background: radial-gradient(circle, rgba(236, 72, 153, 0.06) 0%, transparent 70%);
+      border-radius: 50%;
+      pointer-events: none;
+      animation: breathe 8s ease-in-out infinite 2s;
+    }
+
+    @keyframes breathe {
+      0%, 100% { opacity: 0.4; transform: scale(1); }
+      50% { opacity: 0.8; transform: scale(1.15); }
+    }
+
+    .login-container {
+      width: 100%;
+      max-width: 460px;
+      position: relative;
+      z-index: 10;
+      animation: slideUp 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .login-box {
+      background: rgba(255, 255, 255, 0.72);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border-radius: var(--radius-xl);
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      overflow: hidden;
+      box-shadow:
+        0 20px 60px rgba(0, 0, 0, 0.08),
+        0 0 80px rgba(99, 102, 241, 0.05),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9);
+      position: relative;
+    }
+
+    .login-box::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--accent-primary), var(--accent-gold-light), var(--accent-primary), transparent);
+      opacity: 0.6;
+    }
+
+    .login-hdr {
+      background: linear-gradient(135deg, rgba(241, 245, 249, 0.6) 0%, rgba(224, 231, 255, 0.4) 100%);
+      padding: 34px 24px;
+      text-align: center;
+      position: relative;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+    }
+
+    .login-icon-wrap {
+      width: 68px;
+      height: 68px;
+      background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 18px;
+      font-size: 28px;
+      color: #fff;
+      box-shadow: 0 8px 30px rgba(99, 102, 241, 0.3);
+      animation: float 3s ease-in-out infinite;
+    }
+
+    .login-hdr h2 {
+      font-size: 22px;
+      font-weight: 900;
+      letter-spacing: 2px;
+      margin: 0;
+      background: linear-gradient(135deg, #1e293b 20%, var(--accent-primary) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .login-hdr p {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin: 6px 0 0 0;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+
+    .login-body {
+      padding: 28px;
+    }
+
+    .form-grp {
+      margin-bottom: 16px;
+    }
+
+    .form-grp label {
+      display: block;
+      font-size: 10px;
+      font-weight: 800;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .form-ctrl {
+      width: 100%;
+      height: 44px;
+      padding: 8px 16px;
+      font-size: 13px;
+      border: 1px solid rgba(148, 163, 184, 0.3);
+      border-radius: var(--radius-md);
+      outline: none;
+      font-family: var(--font-main);
+      background: rgba(255, 255, 255, 0.6);
+      color: var(--text-primary);
+      transition: all 0.3s ease;
+      font-weight: 500;
+      box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.04);
+    }
+
+    .form-ctrl:focus {
+      border-color: var(--accent-primary);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1), inset 0 1px 3px rgba(0, 0, 0, 0.02);
+      background: rgba(255, 255, 255, 0.85);
+    }
+
+    .btn-login-submit {
+      width: 100%;
+      height: 48px;
+      background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+      color: #ffffff;
+      font-size: 13px;
+      font-weight: 800;
+      border: none;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      margin-top: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: all 0.3s ease;
+      font-family: var(--font-main);
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3);
+      text-decoration: none;
+    }
+
+    .btn-login-submit:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(99, 102, 241, 0.4);
+      color: #ffffff;
+    }
+
+    .demo-box {
+      margin-top: 20px;
+      padding: 14px;
+      background: rgba(241, 245, 249, 0.6);
+      border: 1px solid rgba(148, 163, 184, 0.15);
+      border-radius: var(--radius-md);
+      font-size: 11px;
+      color: var(--text-secondary);
+      text-align: center;
+    }
+
+    .demo-box a {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 8px;
+      padding: 8px 22px;
+      background: rgba(99, 102, 241, 0.08);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      border-radius: 22px;
+      color: var(--accent-primary);
+      font-weight: 700;
+      font-size: 12px;
+      transition: all 0.3s ease;
+      text-decoration: none;
+    }
+
+    .demo-box a:hover {
+      background: var(--accent-primary);
+      color: #fff;
+      border-color: var(--accent-primary);
+      transform: scale(1.05);
+      box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3);
+    }
+
+    .login-footer {
+      text-align: center;
+      padding: 0 28px 20px;
+      color: var(--text-muted);
+      font-size: 10px;
+      letter-spacing: 0.5px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="login-container">
+    <div class="login-box">
+      <div class="login-hdr">
+        <div class="login-icon-wrap">
+          <i class="fa-solid fa-hotel"></i>
+        </div>
+        <h2>HOTEL SAGAR SONNET</h2>
+        <p>Property Management System & CRM</p>
+      </div>
+      <div class="login-body">
+        <form action="{{ route('admin.dashboard') }}" method="GET">
+          <div class="form-grp">
+            <label>Hotel Wing / Property</label>
+            <select class="form-ctrl">
+              <option>Hotel Sagar Sonnet - Main Luxury Wing</option>
+              <option>Hotel Sagar Sonnet - Sea Beach Resort & Spa</option>
+              <option>Hotel Sagar Sonnet - Executive Heritage Suites</option>
+            </select>
+          </div>
+          <div style="display: flex; gap: 12px;">
+            <div class="form-grp" style="flex: 1;">
+              <label>Staff Role</label>
+              <select class="form-ctrl">
+                <option>Front Desk Cashier</option>
+                <option>Duty Manager</option>
+                <option>Housekeeping Lead</option>
+                <option>Restaurant Cashier</option>
+                <option selected>Administrator</option>
+              </select>
+            </div>
+            <div class="form-grp" style="flex: 1;">
+              <label>Duty Shift</label>
+              <select class="form-ctrl">
+                <option>Morning (07:00 - 15:00)</option>
+                <option>Evening (15:00 - 23:00)</option>
+                <option>Night Audit (23:00 - 07:00)</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-grp">
+            <label>Staff Username</label>
+            <input type="text" class="form-ctrl" value="admin.sagar" required>
+          </div>
+          <div class="form-grp">
+            <label>Password</label>
+            <input type="password" class="form-ctrl" value="sagar2026" required>
+          </div>
+          <button type="submit" class="btn-login-submit">
+            <i class="fa-solid fa-right-to-bracket"></i> Login to PMS Dashboard
+          </button>
+          <div class="demo-box">
+            <strong><i class="fa-solid fa-circle-info"></i> Demo Access:</strong><br>
+            User: <strong style="color: var(--accent-primary);">admin.sagar</strong> | Password: <strong style="color: var(--accent-primary);">sagar2026</strong>
+            <div>
+              <a href="{{ route('admin.dashboard') }}">
+                <i class="fa-solid fa-bolt"></i> One-Click Direct Entrance
+              </a>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="login-footer">
+        <i class="fa-solid fa-shield-halved"></i> Secured Enterprise PMS v2026.1 • Hotel Sagar Sonnet Group
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

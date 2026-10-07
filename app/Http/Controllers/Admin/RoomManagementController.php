@@ -10,13 +10,14 @@ use App\Models\BeddingConfig;
 use App\Models\Amenity;
 use App\Models\HousekeepingState;
 use App\Models\OperationalStatus;
+use App\Models\RoomMaintenance;
 use Illuminate\Http\Request;
 
 class RoomManagementController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Room::query()->orderBy('room_number', 'asc');
+        $query = Room::with('latestMaintenance')->orderBy('room_number', 'asc');
 
         // Filters
         if ($request->filled('search')) {
@@ -290,15 +291,35 @@ class RoomManagementController extends Controller
                 'housekeeping_status' => 'Cleaned',
                 'housekeeping_state_id' => $hks ? $hks->id : null,
             ]);
+
+            // Mark active maintenances as completed
+            RoomMaintenance::where('room_id', $room->id)
+                ->where('status', 'In-Progress')
+                ->update(['status' => 'Completed']);
+
             $msg = 'Room #' . $room->room_number . ' marked as Active & In-Service.';
         } else {
             $ops = OperationalStatus::where('name', 'Under Maintenance')->orWhere('name', 'Maintenance')->first();
             $room->update([
                 'status' => $ops ? $ops->name : 'Under Maintenance',
                 'operational_status_id' => $ops ? $ops->id : null,
+                'notes' => $request->input('note') ?? $room->notes,
             ]);
+
+            // Create new RoomMaintenance entry
+            RoomMaintenance::create([
+                'room_id' => $room->id,
+                'reason' => $request->input('reason'),
+                'assign' => $request->input('assign') ?? $request->input('engineer'),
+                'expected_date_time' => $request->input('expected_date_time') ?? $request->input('completion'),
+                'note' => $request->input('note'),
+                'status' => 'In-Progress',
+            ]);
+
             $msg = 'Room #' . $room->room_number . ' marked as Under Maintenance.';
         }
+
+        $room->load('latestMaintenance');
 
         return response()->json([
             'success' => true,

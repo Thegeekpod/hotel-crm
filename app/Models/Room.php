@@ -61,4 +61,14 @@ class Room extends Model
     {
         return $this->belongsTo(HousekeepingState::class, 'housekeeping_state_id');
     }
+
+    public function maintenances(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(RoomMaintenance::class, 'room_id');
+    }
+
+    public function latestMaintenance(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(RoomMaintenance::class, 'room_id')->latestOfMany();
+    }
 }

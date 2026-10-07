@@ -945,24 +945,16 @@
           <label style="display:block; font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px;">
             MAINTENANCE REASON / WORK DESCRIPTION <span style="color: red;">*</span>
           </label>
-          <select id="maint-reason" class="select2-field" style="width: 100%;" required>
-            <option value="HVAC Air Conditioning & Compressor Service">HVAC Air Conditioning & Compressor Service</option>
-            <option value="Bathroom Plumbing & Water Pressure">Bathroom Plumbing & Water Pressure</option>
-            <option value="Deep Steam Cleaning & Sanitization">Deep Steam Cleaning & Sanitization</option>
-            <option value="Interior Painting & Wall Touch-up">Interior Painting & Wall Touch-up</option>
-            <option value="Electrical & Lighting Repair">Electrical & Lighting Repair</option>
-            <option value="RFID Smart Lock & Reader Repair">RFID Smart Lock & Reader Repair</option>
-            <option value="General Preventive Maintenance">General Preventive Maintenance</option>
-          </select>
+          <input type="text" id="maint-reason" class="crud-search-input" placeholder="e.g. HVAC Air Conditioning & Compressor Service" required style="width: 100%; height: 38px; font-weight: 600; color: var(--text-primary);">
         </div>
 
         <!-- Row 3: Assigned Personnel & Expected Completion (Date & Time) -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 18px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px;">
           <div>
             <label style="display:block; font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px;">
-              ASSIGNED PERSONNEL / TEAM
+              ASSIGNED PERSONNEL
             </label>
-            <input type="text" id="maint-engineer" class="crud-search-input" value="Duty Maintenance Technician" style="width: 100%; height: 38px; font-weight: 600; color: var(--text-primary);">
+            <input type="text" id="maint-engineer" class="crud-search-input" value="" placeholder="e.g. Maintenance Technician" style="width: 100%; height: 38px; font-weight: 600; color: var(--text-primary);">
           </div>
           <div>
             <label style="display:block; font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px;">
@@ -970,6 +962,14 @@
             </label>
             <input type="datetime-local" id="maint-completion" class="crud-search-input" required style="width: 100%; height: 38px; font-weight: 600; color: var(--text-primary);">
           </div>
+        </div>
+
+        <!-- Row 4: Note -->
+        <div style="margin-bottom: 18px;">
+          <label style="display:block; font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px;">
+            NOTE
+          </label>
+          <textarea id="maint-note" class="crud-search-input" rows="3" placeholder="Enter special instructions or notes..." style="width: 100%; height: auto; padding: 10px 14px; font-weight: 500; color: var(--text-primary); border-radius: var(--radius-md); font-family: inherit; resize: vertical;"></textarea>
         </div>
 
         <!-- Amber Warning Callout -->
@@ -1095,9 +1095,6 @@
       });
       $('#edit-room-floor, #edit-room-cat, #edit-room-bed, #edit-room-status').select2({
         dropdownParent: $('#edit-room-modal')
-      });
-      $('#maint-reason').select2({
-        dropdownParent: $('#maint-workorder-modal')
       });
 
       // Auto update pax capacity on bedding config change
@@ -1436,11 +1433,10 @@
     const futureDate = new Date(Date.now() + 48 * 3600 * 1000);
     const localIso = new Date(futureDate.getTime() - (futureDate.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
     document.getElementById('maint-completion').value = localIso;
-
-    if (typeof $ !== 'undefined' && $.fn.select2) {
-      $('#maint-reason').val($('#maint-reason option:eq(0)').val()).trigger('change');
-    }
-    document.getElementById('maint-engineer').value = 'Duty Maintenance Technician';
+    document.getElementById('maint-reason').value = '';
+    document.getElementById('maint-engineer').value = '';
+    const noteEl = document.getElementById('maint-note');
+    if (noteEl) noteEl.value = '';
 
     openModal('maint-workorder-modal');
   }
@@ -1451,6 +1447,8 @@
     const reason = document.getElementById('maint-reason').value;
     const engineer = document.getElementById('maint-engineer').value;
     const completion = document.getElementById('maint-completion').value;
+    const noteEl = document.getElementById('maint-note');
+    const note = noteEl ? noteEl.value : '';
 
     try {
       const res = await fetch(`${baseUrl}/${id}/toggle-maintenance`, {
@@ -1460,7 +1458,7 @@
           'Accept': 'application/json',
           'X-CSRF-TOKEN': csrfToken
         },
-        body: JSON.stringify({ reason, engineer, completion })
+        body: JSON.stringify({ reason, engineer, completion, note })
       });
       const data = await res.json();
       if (res.ok && data.success) {
@@ -1813,6 +1811,57 @@
         `).join('')
       : `<div style="font-size: 12px; color: #94a3b8; font-style: italic; padding: 6px 0;">No amenities assigned to this room.</div>`;
 
+    let liveStatusBlock = '';
+    if (room.status === 'Maintenance' || room.status === 'Under Maintenance') {
+      const maint = room.latest_maintenance || {};
+      const reasonText = maint.reason || room.notes || 'General Maintenance & Service';
+      const assignText = maint.assign || 'Maintenance Team';
+      let completionText = 'Scheduled Soon';
+      if (maint.expected_date_time) {
+        try {
+          completionText = new Date(maint.expected_date_time).toLocaleString(undefined, {
+            month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit'
+          });
+        } catch(e) { completionText = maint.expected_date_time; }
+      }
+      const noteText = maint.note || '';
+
+      liveStatusBlock = `
+        <div style="background: #fffbeb; border: 1.5px solid #fed7aa; border-radius: 12px; padding: 14px 18px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(245, 158, 11, 0.05);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <span style="background: #fef3c7; color: #b45309; border: 1px solid #fde68a; font-size: 11px; font-weight: 800; padding: 3px 10px; border-radius: 8px; display: inline-flex; align-items: center; gap: 6px;">
+              <i class="fa-solid fa-wrench"></i> ACTIVE MAINTENANCE WORK ORDER
+            </span>
+            <button class="btn-ui-secondary" style="padding: 3px 10px; font-size: 11px; font-weight: 700; background: #ffffff; border-color: #f59e0b; color: #b45309;" onclick="closeModal('view-room-modal'); toggleRoomMaintenance(${room.id});">
+              <i class="fa-solid fa-check"></i> Mark In-Service
+            </button>
+          </div>
+          
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; background: #ffffff; padding: 10px 12px; border-radius: 8px; border: 1px solid #fef3c7;">
+            <div>
+              <div style="font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase;">Reason / Work</div>
+              <div style="font-size: 12px; font-weight: 800; color: #1e293b; margin-top: 2px;">${reasonText}</div>
+            </div>
+            <div>
+              <div style="font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase;">Assigned To</div>
+              <div style="font-size: 12px; font-weight: 800; color: #1e293b; margin-top: 2px;">${assignText}</div>
+            </div>
+            <div>
+              <div style="font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase;">Target Completion</div>
+              <div style="font-size: 12px; font-weight: 800; color: #b45309; margin-top: 2px;">${completionText}</div>
+            </div>
+          </div>
+
+          ${noteText ? `
+            <div style="margin-top: 8px; background: #fff; padding: 8px 12px; border-radius: 8px; border: 1px solid #fef3c7; font-size: 11px; color: #475569;">
+              <strong style="color: #64748b; text-transform: uppercase; font-size: 10px; display: block; margin-bottom: 2px;">Notes:</strong>
+              ${noteText}
+            </div>
+          ` : ''}
+        </div>
+      `;
+    }
+
     const content = `
       <!-- Top 2 Equal-Size Boxes Grid -->
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px;">
@@ -1862,6 +1911,8 @@
         </div>
 
       </div>
+
+      ${liveStatusBlock}
 
       <!-- Quick Info Tiles -->
       <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 16px;">

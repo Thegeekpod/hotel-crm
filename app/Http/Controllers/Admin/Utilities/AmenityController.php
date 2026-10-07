@@ -56,7 +56,13 @@ class AmenityController extends Controller
 
     public function update(Request $request, $id)
     {
-        $item = Amenity::findOrFail($id);
+        $item = Amenity::find($id);
+        if (!$item) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Amenity not found or already removed.',
+            ], 404);
+        }
 
         $validated = $request->validate([
             'icon' => 'required|string|max:100',
@@ -75,7 +81,14 @@ class AmenityController extends Controller
 
     public function destroy($id)
     {
-        $item = Amenity::findOrFail($id);
+        $item = Amenity::find($id);
+        if (!$item) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Amenity already removed or does not exist.',
+            ]);
+        }
+
         $item->delete();
 
         return response()->json([

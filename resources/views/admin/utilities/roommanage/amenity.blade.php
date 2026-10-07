@@ -216,79 +216,18 @@
     box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
   }
 
-  /* Custom Inline Searchable FontAwesome Picker UI */
-  .fa-picker-card {
+  /* Simple Clean Searchable FontAwesome Picker UI */
+  .fa-simple-picker-wrap {
     background: #ffffff;
     border: 1px solid var(--border-medium);
     border-radius: var(--radius-md);
-    overflow: hidden;
-    transition: all 0.2s ease;
-  }
-  .fa-picker-trigger {
-    padding: 10px 14px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    cursor: pointer;
-    background: #ffffff;
-    user-select: none;
-  }
-  .fa-picker-trigger:hover {
-    background: #f8fafc;
-  }
-  .fa-picker-active-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-  .fa-picker-icon-badge {
-    width: 36px;
-    height: 36px;
-    border-radius: 8px;
-    background: linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(168, 85, 247, 0.12));
-    border: 1px solid rgba(99, 102, 241, 0.2);
-    color: var(--accent-primary);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 16px;
-    flex-shrink: 0;
-  }
-  .fa-picker-title {
-    font-size: 13px;
-    font-weight: 700;
-    color: var(--text-primary);
-  }
-  .fa-picker-subtitle {
-    font-size: 11px;
-    color: var(--text-muted);
-    font-family: var(--font-mono);
-  }
-  .fa-picker-btn {
-    font-size: 11px;
-    font-weight: 700;
-    padding: 5px 10px;
-    border-radius: 6px;
-    background: #f1f5f9;
-    color: var(--accent-primary);
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-  }
-  .fa-picker-drawer {
-    border-top: 1px solid var(--border-medium);
-    background: #f8fafc;
     padding: 12px;
-    display: block;
   }
-  .fa-picker-drawer.collapsed {
-    display: none;
-  }
-  .fa-picker-search-bar {
+  .fa-simple-search {
     position: relative;
     margin-bottom: 10px;
   }
-  .fa-picker-search-bar i {
+  .fa-simple-search i {
     position: absolute;
     left: 12px;
     top: 50%;
@@ -296,96 +235,82 @@
     color: var(--text-muted);
     font-size: 12px;
   }
-  .fa-picker-search-input {
+  .fa-simple-search-input {
     width: 100%;
-    height: 36px;
-    padding: 6px 12px 6px 32px;
-    font-size: 12px;
+    height: 38px;
+    padding: 6px 12px 6px 34px;
+    font-size: 13px;
     border: 1px solid var(--border-medium);
     border-radius: 8px;
-    background: #ffffff;
+    background: #f8fafc;
     color: var(--text-primary);
     outline: none;
     box-sizing: border-box;
+    transition: all 0.2s ease;
   }
-  .fa-picker-search-input:focus {
+  .fa-simple-search-input:focus {
     border-color: var(--accent-primary);
+    background: #ffffff;
     box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
   }
-  .fa-picker-chips {
-    display: flex;
-    gap: 6px;
-    overflow-x: auto;
-    padding-bottom: 8px;
-    margin-bottom: 8px;
-  }
-  .fa-chip-btn {
-    padding: 4px 8px;
-    font-size: 10px;
-    font-weight: 700;
-    border-radius: 12px;
-    border: 1px solid var(--border-medium);
-    background: #ffffff;
-    color: var(--text-secondary);
-    cursor: pointer;
-    white-space: nowrap;
-    transition: all 0.15s;
-  }
-  .fa-chip-btn:hover, .fa-chip-btn.active {
-    background: var(--accent-primary);
-    color: #ffffff;
-    border-color: var(--accent-primary);
-  }
-  .fa-picker-grid {
+  .fa-simple-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 6px;
-    max-height: 180px;
+    gap: 8px;
+    max-height: 190px;
     overflow-y: auto;
     padding-right: 4px;
   }
-  .fa-picker-option {
+  .fa-simple-item {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 6px 8px;
-    background: #ffffff;
-    border: 1px solid var(--border-medium);
+    gap: 10px;
+    padding: 8px 12px;
+    background: #f8fafc;
+    border: 1.5px solid #e2e8f0;
     border-radius: 8px;
     cursor: pointer;
     transition: all 0.15s ease;
+    user-select: none;
   }
-  .fa-picker-option:hover {
+  .fa-simple-item:hover {
+    background: rgba(99, 102, 241, 0.05);
     border-color: var(--accent-primary);
-    background: rgba(99, 102, 241, 0.04);
+    transform: translateY(-1px);
   }
-  .fa-picker-option.selected {
+  .fa-simple-item.selected {
+    background: rgba(99, 102, 241, 0.1);
     border-color: var(--accent-primary);
-    background: rgba(99, 102, 241, 0.08);
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
   }
-  .fa-option-mini-icon {
-    width: 26px;
-    height: 26px;
+  .fa-simple-icon {
+    width: 32px;
+    height: 32px;
     border-radius: 6px;
-    background: #f1f5f9;
+    background: #ffffff;
     color: var(--accent-primary);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 12px;
+    font-size: 14px;
     flex-shrink: 0;
+    border: 1px solid #e2e8f0;
   }
-  .fa-picker-option.selected .fa-option-mini-icon, .fa-picker-option:hover .fa-option-mini-icon {
+  .fa-simple-item.selected .fa-simple-icon {
     background: var(--accent-primary);
     color: #ffffff;
+    border-color: var(--accent-primary);
   }
-  .fa-option-text {
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    font-size: 11.5px;
-    font-weight: 600;
+  .fa-simple-name {
+    font-size: 12px;
+    font-weight: 700;
     color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .fa-simple-item.selected .fa-simple-name {
+    color: var(--accent-primary);
   }
 </style>
 @endpush
@@ -544,55 +469,26 @@
       
       <div class="modal-content-area" style="padding: 22px; background: #f8fafc; overflow-y: auto; flex: 1;">
         
-        <!-- Searchable FontAwesome Icon Picker -->
+        <!-- Simple Searchable FontAwesome Icon Picker -->
         <div class="admin-form-group">
-          <label class="admin-form-label">FontAwesome Icon Class <span style="color: var(--accent-rose);">*</span></label>
-          <div class="fa-picker-card">
-            <div class="fa-picker-trigger" onclick="toggleFaDrawer()">
-              <div class="fa-picker-active-item">
-                <div class="fa-picker-icon-badge" id="fa-trigger-icon-box">
-                  <i class="fa-solid fa-wifi" id="fa-trigger-icon-el"></i>
-                </div>
-                <div>
-                  <div class="fa-picker-title" id="fa-trigger-name">Free Wi-Fi / High-Speed Internet</div>
-                  <div class="fa-picker-subtitle" id="fa-trigger-class">fa-solid fa-wifi</div>
-                </div>
-              </div>
-              <div class="fa-picker-btn">
-                <span id="fa-toggle-text">Change Icon</span>
-                <i class="fa-solid fa-chevron-down" id="fa-toggle-icon" style="font-size: 10px;"></i>
-              </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <label class="admin-form-label" style="margin-bottom: 0;">Select Icon <span style="color: var(--accent-rose);">*</span></label>
+            <span style="font-size: 11px; color: var(--text-muted); font-weight: 600;">Click icon to auto-fill name</span>
+          </div>
+          <div class="fa-simple-picker-wrap">
+            <div class="fa-simple-search">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input type="text" id="fa-search-input" class="fa-simple-search-input" placeholder="Search icon (e.g. wifi, ac, tv, pool, bath, bed, safe)..." oninput="filterFaIcons(this.value)">
             </div>
-
-            <div class="fa-picker-drawer" id="fa-picker-drawer">
-              <div class="fa-picker-search-bar">
-                <i class="fa-solid fa-magnifying-glass"></i>
-                <input type="text" id="fa-search-input" class="fa-picker-search-input" placeholder="Search icons (e.g. wifi, tv, ac, pool, coffee, bath, key)..." oninput="filterFaIcons(this.value)">
-              </div>
-              
-              <div class="fa-picker-chips" id="fa-category-chips">
-                <button type="button" class="fa-chip-btn active" onclick="filterFaCategory('all', this)">All</button>
-                <button type="button" class="fa-chip-btn" onclick="filterFaCategory('Connectivity', this)">Connectivity</button>
-                <button type="button" class="fa-chip-btn" onclick="filterFaCategory('Technology', this)">Tech</button>
-                <button type="button" class="fa-chip-btn" onclick="filterFaCategory('Climate', this)">Climate</button>
-                <button type="button" class="fa-chip-btn" onclick="filterFaCategory('Bathroom', this)">Bathroom</button>
-                <button type="button" class="fa-chip-btn" onclick="filterFaCategory('Wellness', this)">Wellness</button>
-                <button type="button" class="fa-chip-btn" onclick="filterFaCategory('Food & Drink', this)">Dining</button>
-                <button type="button" class="fa-chip-btn" onclick="filterFaCategory('Views', this)">Views</button>
-                <button type="button" class="fa-chip-btn" onclick="filterFaCategory('Security', this)">Security</button>
-                <button type="button" class="fa-chip-btn" onclick="filterFaCategory('Services', this)">Services</button>
-              </div>
-
-              <div class="fa-picker-grid" id="fa-options-grid">
-                <!-- Populated dynamically via JS -->
-              </div>
+            <div class="fa-simple-grid" id="fa-options-grid">
+              <!-- Rendered dynamically via JS -->
             </div>
           </div>
         </div>
 
         <div class="admin-form-group">
           <label class="admin-form-label">Facility / Amenity Name <span style="color: var(--accent-rose);">*</span></label>
-          <input type="text" id="form-name" class="admin-form-input" placeholder="e.g. Free Wi-Fi, Balcony, Safe Locker" required>
+          <input type="text" id="form-name" class="admin-form-input" placeholder="e.g. Free Wi-Fi, Smart TV, Balcony" required>
         </div>
 
         <div class="admin-form-group" style="margin-bottom: 0;">
@@ -631,7 +527,6 @@
   // FontAwesome Icons Data & Logic
   const iconsData = window.FONTAWESOME_ICONS || [];
   let selectedIconClass = 'fa-solid fa-wifi';
-  let currentCategory = 'all';
   let currentSearchQuery = '';
 
   function renderFaGrid() {
@@ -640,12 +535,9 @@
 
     const query = currentSearchQuery.toLowerCase().trim();
     const filtered = iconsData.filter(item => {
-      const matchCat = (currentCategory === 'all') || (item.category === currentCategory);
-      if (!matchCat) return false;
       if (!query) return true;
       return item.name.toLowerCase().includes(query) ||
-             item.class.toLowerCase().includes(query) ||
-             (item.category && item.category.toLowerCase().includes(query));
+             item.class.toLowerCase().includes(query);
     });
 
     if (filtered.length === 0) {
@@ -654,32 +546,13 @@
     }
 
     grid.innerHTML = filtered.map(item => `
-      <div class="fa-picker-option ${item.class === selectedIconClass ? 'selected' : ''}" onclick="selectFaIcon('${item.class}', '${escapeJs(item.name)}')">
-        <div class="fa-option-mini-icon">
+      <div class="fa-simple-item ${item.class === selectedIconClass ? 'selected' : ''}" onclick="selectFaIcon('${item.class}', '${escapeJs(item.name)}')">
+        <div class="fa-simple-icon">
           <i class="${item.class}"></i>
         </div>
-        <div class="fa-option-text" title="${escapeHtml(item.name)} (${item.class})">
-          ${escapeHtml(item.name)}
-        </div>
+        <div class="fa-simple-name" title="${escapeHtml(item.name)}">${escapeHtml(item.name)}</div>
       </div>
     `).join('');
-  }
-
-  function toggleFaDrawer(force = null) {
-    const drawer = document.getElementById('fa-picker-drawer');
-    const isHidden = drawer.classList.contains('collapsed');
-    const shouldOpen = force !== null ? force : isHidden;
-
-    if (shouldOpen) {
-      drawer.classList.remove('collapsed');
-      document.getElementById('fa-toggle-text').textContent = 'Hide Picker';
-      document.getElementById('fa-toggle-icon').className = 'fa-solid fa-chevron-up';
-      document.getElementById('fa-search-input').focus();
-    } else {
-      drawer.classList.add('collapsed');
-      document.getElementById('fa-toggle-text').textContent = 'Change Icon';
-      document.getElementById('fa-toggle-icon').className = 'fa-solid fa-chevron-down';
-    }
   }
 
   function filterFaIcons(val) {
@@ -687,123 +560,26 @@
     renderFaGrid();
   }
 
-  function filterFaCategory(cat, btn) {
-    currentCategory = cat;
-    document.querySelectorAll('.fa-chip-btn').forEach(b => b.classList.remove('active'));
-    if (btn) btn.classList.add('active');
-    renderFaGrid();
-  }
-
   function selectFaIcon(iconClass, iconName) {
     selectedIconClass = iconClass;
     document.getElementById('form-icon').value = iconClass;
 
-    let fullClass = iconClass;
-    if (!fullClass.includes('fa-solid') && !fullClass.includes('fa-regular') && !fullClass.includes('fa-brands')) {
-      fullClass = 'fa-solid ' + fullClass;
-    }
-
-    document.getElementById('fa-trigger-icon-el').className = fullClass;
-    document.getElementById('fa-trigger-name').textContent = iconName;
-    document.getElementById('fa-trigger-class').textContent = iconClass;
-
-    // Auto-fill Amenity name if currently empty
-    const nameInput = document.getElementById('form-name');
-    if (!nameInput.value.trim()) {
-      // Clean name (remove extra descriptions like "/ High-Speed Internet")
-      const cleanName = iconName.split('/')[0].replace(/\(.*?\)/g, '').trim();
-      nameInput.value = cleanName;
-    }
+    // Automatically fill the editable Facility / Amenity Name input field
+    document.getElementById('form-name').value = iconName;
 
     renderFaGrid();
-  }
-
-  function setDropdownIcon(iconClass) {
-    let target = iconClass || 'fa-solid fa-wifi';
-    let fullClass = target;
-    if (!fullClass.includes('fa-solid') && !fullClass.includes('fa-regular') && !fullClass.includes('fa-brands')) {
-      fullClass = 'fa-solid ' + fullClass;
-    }
-
-    const found = iconsData.find(i => i.class === target || i.class === fullClass || i.class.endsWith(target));
-    const name = found ? found.name : target;
-    const finalClass = found ? found.class : fullClass;
-
-    selectedIconClass = finalClass;
-    document.getElementById('form-icon').value = finalClass;
-    document.getElementById('fa-trigger-icon-el').className = finalClass;
-    document.getElementById('fa-trigger-name').textContent = name;
-    document.getElementById('fa-trigger-class').textContent = finalClass;
-    renderFaGrid();
-  }
-
-  function updateUrlParams() {
-    const params = new URLSearchParams();
-    if (searchQuery) params.set('search', searchQuery);
-    if (statusFilter && statusFilter !== 'all') params.set('status', statusFilter);
-    if (currentPage > 1) params.set('page', currentPage);
-    if (pageSize !== '10') params.set('per_page', pageSize);
-
-    const newUrl = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
-    window.history.replaceState(null, '', newUrl);
-  }
-
-  async function loadTableData() {
-    updateUrlParams();
-    try {
-      const params = new URLSearchParams();
-      if (searchQuery) params.set('search', searchQuery);
-      if (statusFilter && statusFilter !== 'all') params.set('status', statusFilter);
-
-      const res = await fetch(`${baseUrl}?${params.toString()}`, {
-        headers: { 'Accept': 'application/json' }
-      });
-      const data = await res.json();
-      if (data.success) {
-        tableRecords = data.data;
-        renderTable();
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  }
-
-  let searchDebounceTimer = null;
-  function handleSearch(val) {
-    searchQuery = (val || '').toLowerCase().trim();
-    currentPage = 1;
-    clearTimeout(searchDebounceTimer);
-    searchDebounceTimer = setTimeout(() => {
-      loadTableData();
-    }, 250);
-  }
-
-  function handleStatusFilter(val) {
-    statusFilter = val;
-    currentPage = 1;
-    loadTableData();
-  }
-
-  function handlePageSizeChange(val) {
-    pageSize = val === 'all' ? 'all' : parseInt(val, 10);
-    currentPage = 1;
-    updateUrlParams();
-    renderTable();
-  }
-
-  function goToPage(page) {
-    currentPage = page;
-    updateUrlParams();
-    renderTable();
   }
 
   function openAddModal() {
     document.getElementById('modal-title').textContent = 'Add Amenity';
     document.getElementById('item-id').value = '';
-    document.getElementById('form-name').value = '';
+    document.getElementById('form-name').value = 'Free Wi-Fi';
     document.getElementById('form-status').value = 'Active';
-    setDropdownIcon('fa-solid fa-wifi');
-    toggleFaDrawer(true);
+    document.getElementById('fa-search-input').value = '';
+    currentSearchQuery = '';
+    selectedIconClass = 'fa-solid fa-wifi';
+    document.getElementById('form-icon').value = 'fa-solid fa-wifi';
+    renderFaGrid();
     openModal('crud-modal');
   }
 
@@ -818,8 +594,11 @@
     document.getElementById('item-id').value = item.id;
     document.getElementById('form-name').value = item.name;
     document.getElementById('form-status').value = item.status;
-    setDropdownIcon(item.icon);
-    toggleFaDrawer(false);
+    document.getElementById('fa-search-input').value = '';
+    currentSearchQuery = '';
+    selectedIconClass = item.icon || 'fa-solid fa-wifi';
+    document.getElementById('form-icon').value = selectedIconClass;
+    renderFaGrid();
     openModal('crud-modal');
   }
 
@@ -865,23 +644,26 @@
 
   async function deleteItem(id) {
     const result = await PmsAlert.confirmDelete('Delete Amenity?', 'This amenity will be removed.');
-    if (result.isConfirmed) {
+    if (result && (result.isConfirmed || result === true)) {
       try {
         const res = await fetch(`${baseUrl}/${id}`, {
           method: 'DELETE',
           headers: {
+            'Content-Type': 'application/json',
             'Accept': 'application/json',
             'X-CSRF-TOKEN': csrfToken
           }
         });
-        const data = await res.json();
-        if (res.ok && data.success) {
-          PmsAlert.toast('Record deleted successfully!');
+        const data = await res.json().catch(() => ({}));
+        if (res.ok && data.success !== false) {
+          PmsAlert.toast(data.message || 'Record deleted successfully!');
           await loadTableData();
         } else {
           PmsAlert.error('Delete Failed', data.message || 'Could not delete record.');
+          await loadTableData();
         }
       } catch (err) {
+        console.error(err);
         PmsAlert.error('Server Error', 'An error occurred during deletion.');
       }
     }

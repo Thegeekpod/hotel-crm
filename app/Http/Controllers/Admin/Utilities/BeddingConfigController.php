@@ -67,7 +67,13 @@ class BeddingConfigController extends Controller
 
     public function update(Request $request, $id)
     {
-        $item = BeddingConfig::findOrFail($id);
+        $item = BeddingConfig::find($id);
+        if (!$item) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Bedding configuration not found.',
+            ], 404);
+        }
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -98,7 +104,14 @@ class BeddingConfigController extends Controller
 
     public function destroy($id)
     {
-        $item = BeddingConfig::findOrFail($id);
+        $item = BeddingConfig::find($id);
+        if (!$item) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Bedding configuration already removed or does not exist.',
+            ]);
+        }
+
         $item->delete();
 
         return response()->json([

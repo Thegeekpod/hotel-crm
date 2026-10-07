@@ -522,23 +522,26 @@
 
   async function deleteItem(id) {
     const result = await PmsAlert.confirmDelete('Delete Floor?', 'This floor configuration will be removed.');
-    if (result.isConfirmed) {
+    if (result && (result.isConfirmed || result === true)) {
       try {
         const res = await fetch(`${baseUrl}/${id}`, {
           method: 'DELETE',
           headers: {
+            'Content-Type': 'application/json',
             'Accept': 'application/json',
             'X-CSRF-TOKEN': csrfToken
           }
         });
-        const data = await res.json();
-        if (res.ok && data.success) {
-          PmsAlert.toast('Record deleted successfully!');
+        const data = await res.json().catch(() => ({}));
+        if (res.ok && data.success !== false) {
+          PmsAlert.toast(data.message || 'Record deleted successfully!');
           await loadTableData();
         } else {
           PmsAlert.error('Delete Failed', data.message || 'Could not delete record.');
+          await loadTableData();
         }
       } catch (err) {
+        console.error(err);
         PmsAlert.error('Server Error', 'An error occurred during deletion.');
       }
     }

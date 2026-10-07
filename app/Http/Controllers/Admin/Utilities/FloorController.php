@@ -77,7 +77,13 @@ class FloorController extends Controller
 
     public function update(Request $request, $id)
     {
-        $item = Floor::findOrFail($id);
+        $item = Floor::find($id);
+        if (!$item) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Floor not found.',
+            ], 404);
+        }
 
         $validated = $request->validate([
             'floor' => 'required|string|max:50',
@@ -107,7 +113,14 @@ class FloorController extends Controller
 
     public function destroy($id)
     {
-        $item = Floor::findOrFail($id);
+        $item = Floor::find($id);
+        if (!$item) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Floor already removed or does not exist.',
+            ]);
+        }
+
         $item->delete();
 
         return response()->json([

@@ -375,9 +375,8 @@
                 <tr>
                   <th style="width: 40px; text-align: center;"><input type="checkbox" id="select-all-check" onchange="toggleSelectAll(this)" style="cursor: pointer; width: 16px; height: 16px; accent-color: var(--accent-primary);"></th>
                   <th style="width: 50px;">#</th>
-                  <th style="width: 90px;">Icon</th>
+                  <th style="width: 80px;">Icon</th>
                   <th>Facility / Amenity Name</th>
-                  <th>Icon Class</th>
                   <th style="width: 120px;">Status</th>
                   <th style="text-align: right; width: 120px;">Actions</th>
                 </tr>
@@ -404,11 +403,6 @@
                     {{ $item->name }}
                   </td>
                   <td>
-                    <code style="font-size: 11px; padding: 3px 6px; background: #f1f5f9; border-radius: 4px; color: var(--accent-indigo); font-weight: 600;">
-                      {{ $item->icon }}
-                    </code>
-                  </td>
-                  <td>
                     <span class="badge-tag {{ $item->status === 'Active' ? 'green' : 'yellow' }}">
                       <i class="fa-solid fa-circle-check" style="font-size: 6px; margin-right: 4px;"></i>{{ $item->status }}
                     </span>
@@ -422,7 +416,7 @@
                 </tr>
                 @empty
                 <tr>
-                  <td colspan="7" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                  <td colspan="6" style="text-align: center; padding: 40px; color: var(--text-muted);">
                     <i class="fa-solid fa-inbox" style="font-size: 28px; margin-bottom: 10px; display: block;"></i>
                     No records found. Click "+ Add Entry" to create one.
                   </td>
@@ -841,7 +835,7 @@
     if (paginatedRecords.length === 0) {
       tbody.innerHTML = `
         <tr>
-          <td colspan="7" style="text-align: center; padding: 40px; color: var(--text-muted);">
+          <td colspan="6" style="text-align: center; padding: 40px; color: var(--text-muted);">
             <i class="fa-solid fa-inbox" style="font-size: 28px; margin-bottom: 10px; display: block;"></i>
             No matching amenities found.
           </td>
@@ -875,11 +869,6 @@
           </td>
           <td style="font-weight: 700; color: var(--text-primary);">
             ${escapeHtml(item.name)}
-          </td>
-          <td>
-            <code style="font-size: 11px; padding: 3px 6px; background: #f1f5f9; border-radius: 4px; color: var(--accent-indigo); font-weight: 600;">
-              ${escapeHtml(item.icon)}
-            </code>
           </td>
           <td>
             <span class="badge-tag ${item.status === 'Active' ? 'green' : 'yellow'}">

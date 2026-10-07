@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\Utilities\AmenityController;
 use App\Http\Controllers\Admin\Utilities\HousekeepingStateController;
 use App\Http\Controllers\Admin\Utilities\OperationalStatusController;
 use App\Http\Controllers\Admin\RoomManagementController;
+use App\Http\Controllers\Admin\RoomMaintainController;
 
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('/', function () {
@@ -37,6 +38,16 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::put('/{id}', [RoomManagementController::class, 'update'])->name('update');
         Route::delete('/{id}', [RoomManagementController::class, 'destroy'])->name('destroy');
         Route::post('/{id}/toggle-maintenance', [RoomManagementController::class, 'toggleMaintenance'])->name('toggle-maintenance');
+    });
+
+    // Room Maintenance Module CRUD
+    Route::prefix('room-maintain')->name('roommaintain.')->group(function () {
+        Route::get('/', [RoomMaintainController::class, 'index'])->name('index');
+        Route::post('/', [RoomMaintainController::class, 'store'])->name('store');
+        Route::post('/bulk-delete', [RoomMaintainController::class, 'bulkDestroy'])->name('bulk-destroy');
+        Route::get('/{id}', [RoomMaintainController::class, 'show'])->name('show');
+        Route::put('/{id}', [RoomMaintainController::class, 'update'])->name('update');
+        Route::delete('/{id}', [RoomMaintainController::class, 'destroy'])->name('destroy');
     });
 
     // Master Utilities Group

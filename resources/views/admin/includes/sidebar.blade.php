@@ -47,11 +47,11 @@
 
   <!-- Group 2: Room Management Master -->
   <div class="admin-nav-group">
-    <div class="admin-nav-header {{ request()->routeIs('admin.utilities.roommanage.*') || request()->routeIs('admin.roommanagement.*') ? 'active' : '' }}" onclick="toggleNavGroup(this)">
+    <div class="admin-nav-header {{ request()->routeIs('admin.utilities.roommanage.*') || request()->routeIs('admin.roommanagement.*') || request()->routeIs('admin.roommaintain.*') ? 'active' : '' }}" onclick="toggleNavGroup(this)">
       <span><i class="fa-solid fa-door-open" style="margin-right: 6px; color: var(--accent-secondary);"></i> ROOM MANAGEMENT</span>
-      <i class="fa-solid {{ request()->routeIs('admin.utilities.roommanage.*') || request()->routeIs('admin.roommanagement.*') ? 'fa-chevron-down' : 'fa-chevron-right' }}" style="font-size: 10px;"></i>
+      <i class="fa-solid {{ request()->routeIs('admin.utilities.roommanage.*') || request()->routeIs('admin.roommanagement.*') || request()->routeIs('admin.roommaintain.*') ? 'fa-chevron-down' : 'fa-chevron-right' }}" style="font-size: 10px;"></i>
     </div>
-    <ul class="admin-sub-list" style="{{ request()->routeIs('admin.utilities.roommanage.*') || request()->routeIs('admin.roommanagement.*') ? 'display: block;' : 'display: none;' }}">
+    <ul class="admin-sub-list" style="{{ request()->routeIs('admin.utilities.roommanage.*') || request()->routeIs('admin.roommanagement.*') || request()->routeIs('admin.roommaintain.*') ? 'display: block;' : 'display: none;' }}">
      
       <li>
         <a href="{{ route('admin.utilities.roommanage.category.index') }}" class="admin-sub-item {{ request()->routeIs('admin.utilities.roommanage.category.*') ? 'active' : '' }}">
@@ -73,13 +73,13 @@
           <i class="fa-solid fa-wifi"></i> Amenities Master
         </a>
       </li>
-       <li>
-        <a href="{{ route('admin.roommanagement.index') }}" class="admin-sub-item {{ request()->routeIs('admin.roommanagement.*') && request('status') !== 'Maintenance' ? 'active' : '' }}">
+      <li>
+        <a href="{{ route('admin.roommanagement.index') }}" class="admin-sub-item {{ request()->routeIs('admin.roommanagement.*') ? 'active' : '' }}">
           <i class="fa-solid fa-door-open"></i> Room Add
         </a>
       </li>
       <li>
-        <a href="{{ route('admin.roommanagement.index', ['status' => 'Maintenance']) }}" class="admin-sub-item {{ request()->routeIs('admin.roommanagement.*') && request('status') === 'Maintenance' ? 'active' : '' }}">
+        <a href="{{ route('admin.roommaintain.index') }}" class="admin-sub-item {{ request()->routeIs('admin.roommaintain.*') ? 'active' : '' }}">
           <i class="fa-solid fa-screwdriver-wrench"></i> Room Maintenance
         </a>
       </li>

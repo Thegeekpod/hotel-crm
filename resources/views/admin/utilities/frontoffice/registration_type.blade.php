@@ -1,6 +1,6 @@
 @extends('admin.layouts.app')
 
-@section('title', 'Mode of Reserve - Hotel Sagar Sonnet PMS')
+@section('title', 'Registration Type - Hotel Sagar Sonnet PMS')
 
 @push('styles')
 <style>
@@ -243,11 +243,11 @@
           <div class="crud-header-card">
             <div>
               <div style="display: flex; align-items: center; gap: 8px;">
-                <h2 style="font-size: 16px; font-weight: 800; color: var(--text-primary); margin: 0;">Mode of Reserve</h2>
+                <h2 style="font-size: 16px; font-weight: 800; color: var(--text-primary); margin: 0;">Registration Type</h2>
                 <span class="badge-tag blue" id="view-count">{{ count($items) }} Records</span>
               </div>
               <div style="font-size: 12px; color: var(--text-secondary); margin-top: 3px;">
-                Manage reservation booking modes (Phone Call, Physical, Website, Online).
+                Manage front office guest registration types (e.g. Regular, Corporate, VIP, Walk-In).
               </div>
             </div>
             <button class="btn-ui-primary" onclick="openAddModal()"><i class="fa-solid fa-plus"></i> Add Entry</button>
@@ -257,7 +257,7 @@
             <div class="crud-toolbar-left">
               <div class="crud-search-wrap">
                 <i class="fa-solid fa-magnifying-glass"></i>
-                <input type="text" id="table-search" class="crud-search-input" placeholder="Search active records..." value="{{ request('search') }}" oninput="handleSearch(this.value)">
+                <input type="text" id="table-search" class="crud-search-input" placeholder="Search registration types..." value="{{ request('search') }}" oninput="handleSearch(this.value)">
               </div>
               <select id="status-filter" class="crud-filter-select" onchange="handleStatusFilter(this.value)">
                 <option value="all" {{ request('status', 'all') === 'all' ? 'selected' : '' }}>All Statuses</option>
@@ -278,7 +278,7 @@
                 <tr>
                   <th style="width: 40px; text-align: center;"><input type="checkbox" id="select-all-check" onchange="toggleSelectAll(this)" style="cursor: pointer; width: 16px; height: 16px; accent-color: var(--accent-primary);"></th>
                   <th style="width: 50px;">#</th>
-                  <th>Mode of Reserve</th>
+                  <th>Registration Type</th>
                   <th>Status</th>
                   <th style="text-align: right; width: 120px;">Actions</th>
                 </tr>
@@ -345,15 +345,15 @@
 <div class="modal-backdrop" id="crud-modal">
   <div class="modal-window" style="width: 520px; max-width: 95vw;">
     <div class="modal-top" style="display: flex; justify-content: space-between; align-items: center;">
-      <h3 style="margin: 0;"><i class="fa-solid fa-pen-to-square"></i> <span id="modal-title">Add Mode of Reserve</span></h3>
+      <h3 style="margin: 0;"><i class="fa-solid fa-pen-to-square"></i> <span id="modal-title">Add Registration Type</span></h3>
       <button class="modal-close" onclick="closeModal('crud-modal')">&times;</button>
     </div>
     <form id="crud-form" onsubmit="handleFormSubmit(event)">
       <input type="hidden" id="item-id">
       <div class="modal-content-area" style="padding: 20px; background: #f8fafc;">
         <div class="admin-form-group">
-          <label class="admin-form-label">Mode of Reserve Name <span style="color: var(--accent-rose);">*</span></label>
-          <input type="text" id="form-name" class="admin-form-input" placeholder="e.g. Phone Call, Physical, Website" required>
+          <label class="admin-form-label">Registration Type Name <span style="color: var(--accent-rose);">*</span></label>
+          <input type="text" id="form-name" class="admin-form-input" placeholder="e.g. Regular, Corporate, VIP, Walk-In" required>
         </div>
         <div class="admin-form-group">
           <label class="admin-form-label">Status <span style="color: var(--accent-rose);">*</span></label>
@@ -381,7 +381,7 @@
   let pageSize = urlParams.get('per_page') || "{{ request('per_page', '10') }}" || '10';
   let tableRecords = @json($items);
 
-  const baseUrl = "{{ url('admin/utilities/front-office/reservation-mode') }}";
+  const baseUrl = "{{ url('admin/utilities/front-office/registration-type') }}";
   const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
   function updateUrlParams() {
@@ -396,7 +396,7 @@
   }
 
   function openAddModal() {
-    document.getElementById('modal-title').textContent = 'Add Mode of Reserve';
+    document.getElementById('modal-title').textContent = 'Add Registration Type';
     document.getElementById('item-id').value = '';
     document.getElementById('form-name').value = '';
     document.getElementById('form-status').value = 'Active';
@@ -410,7 +410,7 @@
       return;
     }
 
-    document.getElementById('modal-title').textContent = 'Edit Mode of Reserve';
+    document.getElementById('modal-title').textContent = 'Edit Registration Type';
     document.getElementById('item-id').value = item.id;
     document.getElementById('form-name').value = item.name;
     document.getElementById('form-status').value = item.status;
@@ -424,7 +424,7 @@
     const status = document.getElementById('form-status').value;
 
     if (!name) {
-      PmsAlert.error('Validation Error', 'Please provide a valid reservation mode name.');
+      PmsAlert.error('Validation Error', 'Please provide a valid registration type name.');
       return;
     }
 
@@ -457,7 +457,7 @@
   }
 
   async function deleteItem(id) {
-    const result = await PmsAlert.confirmDelete('Delete Reservation Mode?', 'This reservation mode will be removed permanently.');
+    const result = await PmsAlert.confirmDelete('Delete Registration Type?', 'This registration type will be removed permanently.');
     if (result.isConfirmed) {
       try {
         const res = await fetch(`${baseUrl}/${id}`, {
@@ -571,7 +571,7 @@
   async function handleBulkDelete() {
     if (selectedIds.size === 0) return;
     const count = selectedIds.size;
-    const result = await PmsAlert.confirmDelete(`Delete ${count} Selected Reservation Modes?`, 'All selected reservation modes will be permanently removed.');
+    const result = await PmsAlert.confirmDelete(`Delete ${count} Selected Registration Types?`, 'All selected registration types will be permanently removed.');
     if (result && (result.isConfirmed || result === true)) {
       try {
         const res = await fetch(`${baseUrl}/bulk-delete`, {
@@ -726,7 +726,7 @@
       PmsAlert.toast('No records to export', 'info');
       return;
     }
-    let csv = '"ID","Mode of Reserve","Status"\n';
+    let csv = '"ID","Registration Type","Status"\n';
     filtered.forEach(r => {
       csv += `"${r.id}","${r.name}","${r.status}"\n`;
     });
@@ -734,7 +734,7 @@
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `Reservation_Modes_${Date.now()}.csv`;
+    a.download = `Registration_Types_${Date.now()}.csv`;
     a.click();
     PmsAlert.toast('CSV exported successfully!');
   }
@@ -749,7 +749,6 @@
       .replace(/'/g, '&#039;');
   }
 
-  // Initialize table on load
   window.addEventListener('DOMContentLoaded', () => {
     renderTable();
   });

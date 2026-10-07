@@ -18,7 +18,7 @@
 
 <!-- Module Navigation Tabs Ribbon -->
 <nav class="pms-tabs-ribbon">
-  <a href="{{ route('admin.utilities.frontoffice.reservation-mode.index') }}" class="pms-tab-link {{ request()->routeIs('admin.utilities.frontoffice.*') ? 'active' : '' }}">
+  <a href="#" class="pms-tab-link {{ request()->routeIs('admin.frontoffice.operations.*') ? 'active' : '' }}" onclick="if(typeof PmsAlert !== 'undefined') PmsAlert.toast('Front Office operations module queued for live operations.', 'info')">
     <i class="fa-solid fa-desktop tab-ico" style="color: #6366f1;"></i> Front Office
   </a>
   <a href="{{ route('admin.roommanagement.index') }}" class="pms-tab-link {{ request()->routeIs('admin.roommanagement.*') ? 'active' : '' }}">
@@ -27,7 +27,7 @@
   <a href="#" class="pms-tab-link" onclick="if(typeof PmsAlert !== 'undefined') PmsAlert.toast('POS Sales master module queued for client review.', 'info')">
     <i class="fa-solid fa-utensils tab-ico" style="color: #10b981;"></i> POS Sales
   </a>
-  <a href="{{ route('admin.utilities.housekeeping.state.index') }}" class="pms-tab-link {{ request()->routeIs('admin.utilities.housekeeping.*') ? 'active' : '' }}">
+  <a href="#" class="pms-tab-link" onclick="if(typeof PmsAlert !== 'undefined') PmsAlert.toast('House Keeping operational module queued.', 'info')">
     <i class="fa-solid fa-broom tab-ico" style="color: #f59e0b;"></i> House Keeping
   </a>
   <a href="#" class="pms-tab-link" onclick="if(typeof PmsAlert !== 'undefined') PmsAlert.toast('Stores & Inventory module queued for client review.', 'info')">
@@ -39,7 +39,7 @@
   <a href="#" class="pms-tab-link" onclick="if(typeof PmsAlert !== 'undefined') PmsAlert.toast('Banquet & Services module queued for client review.', 'info')">
     <i class="fa-solid fa-champagne-glasses tab-ico" style="color: #fbbf24;"></i> Banquet & Services
   </a>
-  <a href="{{ route('admin.dashboard') }}" class="pms-tab-link {{ request()->routeIs('admin.utilities.roommanage.*') || request()->routeIs('admin.dashboard') ? 'active' : '' }}">
+  <a href="{{ route('admin.dashboard') }}" class="pms-tab-link {{ request()->routeIs('admin.utilities.*') || request()->routeIs('admin.dashboard') ? 'active' : '' }}">
     <i class="fa-solid fa-user-gear tab-ico" style="color: #94a3b8;"></i> Administrator
   </a>
 </nav>

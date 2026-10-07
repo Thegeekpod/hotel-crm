@@ -7,11 +7,31 @@
       <i class="fa-solid {{ request()->routeIs('admin.utilities.frontoffice.*') ? 'fa-chevron-down' : 'fa-chevron-right' }}" style="font-size: 10px;"></i>
     </div>
     <ul class="admin-sub-list" style="{{ request()->routeIs('admin.utilities.frontoffice.*') ? 'display: block;' : 'display: none;' }}">
+
+      <li>
+        <a href="{{ route('admin.utilities.frontoffice.registration-type.index') }}" class="admin-sub-item {{ request()->routeIs('admin.utilities.frontoffice.registration-type.*') ? 'active' : '' }}">
+          <i class="fa-solid fa-address-card"></i> Registration Type
+        </a>
+      </li>
+
       <li>
         <a href="{{ route('admin.utilities.frontoffice.reservation-mode.index') }}" class="admin-sub-item {{ request()->routeIs('admin.utilities.frontoffice.reservation-mode.*') ? 'active' : '' }}">
           <i class="fa-solid fa-clipboard-check"></i> Mode of Reserve
         </a>
       </li>
+
+      <li>
+        <a href="{{ route('admin.utilities.frontoffice.title.index') }}" class="admin-sub-item {{ request()->routeIs('admin.utilities.frontoffice.title.*') ? 'active' : '' }}">
+          <i class="fa-solid fa-user-tag"></i> Titles
+        </a>
+      </li>
+
+      <li>
+        <a href="{{ route('admin.utilities.frontoffice.nationality.index') }}" class="admin-sub-item {{ request()->routeIs('admin.utilities.frontoffice.nationality.*') ? 'active' : '' }}">
+          <i class="fa-solid fa-flag"></i> Nationality
+        </a>
+      </li>
+
       <li>
         <a href="{{ route('admin.utilities.frontoffice.idcard-type.index') }}" class="admin-sub-item {{ request()->routeIs('admin.utilities.frontoffice.idcard-type.*') ? 'active' : '' }}">
           <i class="fa-solid fa-id-card"></i> ID Card Type

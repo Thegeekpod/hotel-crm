@@ -4,6 +4,9 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use App\Models\ReservationMode;
+use App\Models\RegistrationType;
+use App\Models\Title;
+use App\Models\Nationality;
 use App\Models\IdCardType;
 use App\Models\PaymentMode;
 use App\Models\RoomCategory;
@@ -17,7 +20,48 @@ class MasterUtilitiesSeeder extends Seeder
 {
     public function run(): void
     {
-        // 1. Reservation Modes
+        // 0. Registration Types
+        $registrationTypes = [
+            ['name' => 'Regular Check-in', 'status' => 'Active'],
+            ['name' => 'Corporate / Business', 'status' => 'Active'],
+            ['name' => 'VIP / High Priority', 'status' => 'Active'],
+            ['name' => 'Walk-In Guest', 'status' => 'Active'],
+            ['name' => 'Complimentary Stay', 'status' => 'Active'],
+        ];
+        foreach ($registrationTypes as $item) {
+            RegistrationType::firstOrCreate(['name' => $item['name']], $item);
+        }
+
+        // 1. Titles / Salutations
+        $titles = [
+            ['name' => 'Mr.', 'status' => 'Active'],
+            ['name' => 'Mrs.', 'status' => 'Active'],
+            ['name' => 'Ms.', 'status' => 'Active'],
+            ['name' => 'Dr.', 'status' => 'Active'],
+            ['name' => 'Prof.', 'status' => 'Active'],
+            ['name' => 'Hon.', 'status' => 'Active'],
+        ];
+        foreach ($titles as $item) {
+            Title::firstOrCreate(['name' => $item['name']], $item);
+        }
+
+        // 2. Nationalities
+        $nationalities = [
+            ['name' => 'Indian', 'status' => 'Active'],
+            ['name' => 'American', 'status' => 'Active'],
+            ['name' => 'British', 'status' => 'Active'],
+            ['name' => 'Canadian', 'status' => 'Active'],
+            ['name' => 'Australian', 'status' => 'Active'],
+            ['name' => 'German', 'status' => 'Active'],
+            ['name' => 'French', 'status' => 'Active'],
+            ['name' => 'Japanese', 'status' => 'Active'],
+            ['name' => 'Emirati (UAE)', 'status' => 'Active'],
+        ];
+        foreach ($nationalities as $item) {
+            Nationality::firstOrCreate(['name' => $item['name']], $item);
+        }
+
+        // 3. Reservation Modes
         $reservationModes = [
             ['name' => 'Phone Call', 'status' => 'Active'],
             ['name' => 'Physical', 'status' => 'Active'],

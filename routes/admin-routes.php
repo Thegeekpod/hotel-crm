@@ -2,6 +2,9 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\Utilities\ReservationModeController;
+use App\Http\Controllers\Admin\Utilities\RegistrationTypeController;
+use App\Http\Controllers\Admin\Utilities\TitleController;
+use App\Http\Controllers\Admin\Utilities\NationalityController;
 use App\Http\Controllers\Admin\Utilities\IdCardTypeController;
 use App\Http\Controllers\Admin\Utilities\PaymentModeController;
 use App\Http\Controllers\Admin\Utilities\RoomCategoryController;
@@ -40,8 +43,17 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::prefix('utilities')->name('utilities.')->group(function () {
         // Front Office Utilities
         Route::prefix('front-office')->name('frontoffice.')->group(function () {
+            Route::post('registration-type/bulk-delete', [RegistrationTypeController::class, 'bulkDestroy'])->name('registration-type.bulk-destroy');
+            Route::resource('registration-type', RegistrationTypeController::class)->except(['create', 'edit', 'show']);
+
             Route::post('reservation-mode/bulk-delete', [ReservationModeController::class, 'bulkDestroy'])->name('reservation-mode.bulk-destroy');
             Route::resource('reservation-mode', ReservationModeController::class)->except(['create', 'edit', 'show']);
+
+            Route::post('title/bulk-delete', [TitleController::class, 'bulkDestroy'])->name('title.bulk-destroy');
+            Route::resource('title', TitleController::class)->except(['create', 'edit', 'show']);
+
+            Route::post('nationality/bulk-delete', [NationalityController::class, 'bulkDestroy'])->name('nationality.bulk-destroy');
+            Route::resource('nationality', NationalityController::class)->except(['create', 'edit', 'show']);
 
             Route::post('idcard-type/bulk-delete', [IdCardTypeController::class, 'bulkDestroy'])->name('idcard-type.bulk-destroy');
             Route::resource('idcard-type', IdCardTypeController::class)->except(['create', 'edit', 'show']);

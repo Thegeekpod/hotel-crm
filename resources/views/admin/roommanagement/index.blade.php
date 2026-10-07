@@ -582,8 +582,7 @@
             <th>Category</th>
             <th>Bedding & Pax</th>
             <th>Base Tariff</th>
-            <th>Operational Status</th>
-            <th>Housekeeping</th>
+            <th>Status</th>
             <th>Amenities</th>
             <th style="text-align: right; width: 170px;">Actions</th>
           </tr>
@@ -1603,20 +1602,8 @@
         else if (room.category && room.category.includes('SUITE')) catBadgeClass = 'yellow';
         else if (room.category && room.category.includes('EXEC')) catBadgeClass = 'green';
 
-        let statusBadgeClass = 'green';
+        let statusBadgeClass = (room.status === 'Inactive' || room.status === 'Blocked') ? 'red' : (room.status === 'Maintenance' ? 'yellow' : 'green');
         let statusLabel = room.status || 'Active';
-        if (room.status === 'Maintenance') {
-          statusBadgeClass = 'yellow';
-          statusLabel = 'Maintenance';
-        } else if (room.status === 'Blocked') {
-          statusBadgeClass = 'red';
-          statusLabel = 'Blocked';
-        }
-
-        let hkBadgeClass = 'green';
-        let hkLabel = room.housekeeping_status || 'Cleaned';
-        if (room.housekeeping_status === 'Dirty') hkBadgeClass = 'red';
-        else if (room.housekeeping_status === 'Inspecting') hkBadgeClass = 'yellow';
 
         const amenitiesList = Array.isArray(room.amenities) ? room.amenities : [];
         const amenitiesHtml = amenitiesList.slice(0, 3).map(a => `<span class="amenity-chip">${a}</span>`).join('') +
@@ -1645,11 +1632,6 @@
             <td>
               <span class="badge-tag ${statusBadgeClass}">
                 <i class="fa-solid fa-circle" style="font-size: 6px; margin-right: 4px;"></i>${statusLabel}
-              </span>
-            </td>
-            <td>
-              <span class="badge-tag ${hkBadgeClass}">
-                <i class="fa-solid fa-spray-can-sparkles" style="font-size: 8px; margin-right: 4px;"></i>${hkLabel}
               </span>
             </td>
             <td>
@@ -1685,23 +1667,9 @@
         else if (room.category && room.category.includes('SUITE')) catBadgeClass = 'yellow';
         else if (room.category && room.category.includes('EXEC')) catBadgeClass = 'green';
 
-        let statusBadgeClass = 'green';
+        let statusBadgeClass = (room.status === 'Inactive' || room.status === 'Blocked') ? 'red' : (room.status === 'Maintenance' ? 'yellow' : 'green');
         let statusLabel = room.status || 'Active';
-        let borderTopColor = '#10b981';
-        if (room.status === 'Maintenance') {
-          statusBadgeClass = 'yellow';
-          statusLabel = 'Maintenance';
-          borderTopColor = '#f59e0b';
-        } else if (room.status === 'Blocked') {
-          statusBadgeClass = 'red';
-          statusLabel = 'Blocked';
-          borderTopColor = '#ef4444';
-        }
-
-        let hkBadgeClass = 'green';
-        let hkLabel = room.housekeeping_status || 'Cleaned';
-        if (room.housekeeping_status === 'Dirty') hkBadgeClass = 'red';
-        else if (room.housekeeping_status === 'Inspecting') hkBadgeClass = 'yellow';
+        let borderTopColor = (room.status === 'Inactive' || room.status === 'Blocked') ? '#ef4444' : (room.status === 'Maintenance' ? '#f59e0b' : '#10b981');
 
         const amenitiesList = Array.isArray(room.amenities) ? room.amenities : [];
         const amenitiesHtml = amenitiesList.slice(0, 3).map(a => `<span class="amenity-chip">${a}</span>`).join('') +
@@ -1728,7 +1696,6 @@
 
               <div style="display: flex; gap: 6px; margin-top: 10px;">
                 <span class="badge-tag ${statusBadgeClass}"><i class="fa-solid fa-circle" style="font-size: 6px; margin-right: 4px;"></i>${statusLabel}</span>
-                <span class="badge-tag ${hkBadgeClass}"><i class="fa-solid fa-spray-can-sparkles" style="font-size: 8px; margin-right: 4px;"></i>${hkLabel}</span>
               </div>
             </div>
 

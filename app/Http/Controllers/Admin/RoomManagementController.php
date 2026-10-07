@@ -292,9 +292,9 @@ class RoomManagementController extends Controller
                 'housekeeping_state_id' => $hks ? $hks->id : null,
             ]);
 
-            // Mark active maintenances as completed
+            // Update active maintenance data status to Completed (preserve data, do NOT delete)
             RoomMaintenance::where('room_id', $room->id)
-                ->where('status', 'In-Progress')
+                ->where('status', '!=', 'Completed')
                 ->update(['status' => 'Completed']);
 
             $msg = 'Room #' . $room->room_number . ' marked as Active & In-Service.';
@@ -306,14 +306,14 @@ class RoomManagementController extends Controller
                 'notes' => $request->input('note') ?? $room->notes,
             ]);
 
-            // Create new RoomMaintenance entry
+            // Create new RoomMaintenance entry with status Active
             RoomMaintenance::create([
                 'room_id' => $room->id,
                 'reason' => $request->input('reason'),
                 'assign' => $request->input('assign') ?? $request->input('engineer'),
                 'expected_date_time' => $request->input('expected_date_time') ?? $request->input('completion'),
                 'note' => $request->input('note'),
-                'status' => 'In-Progress',
+                'status' => $request->input('status', 'Active'), // Active, Checking, Completed
             ]);
 
             $msg = 'Room #' . $room->room_number . ' marked as Under Maintenance.';

@@ -116,6 +116,21 @@
       z-index: 10000000 !important;
     }
 
+    /* Prevent SweetAlert from collapsing or shifting layout and footer */
+    html.swal2-shown,
+    body.swal2-shown {
+      height: 100% !important;
+      min-height: 100vh !important;
+      overflow-y: auto !important;
+      padding-right: 0px !important;
+      margin-right: 0px !important;
+    }
+    html.swal2-height-auto,
+    body.swal2-height-auto {
+      height: 100% !important;
+      min-height: 100vh !important;
+    }
+
     .swal2-icon.swal2-warning {
       border-color: #f59e0b !important;
       color: #f59e0b !important;
@@ -400,9 +415,32 @@
           showConfirmButton: false,
           timer: 3000,
           timerProgressBar: true,
+          heightAuto: false,
+          scrollbarPadding: false,
           customClass: {
             popup: 'pms-swal-popup'
           }
+        });
+      },
+      confirm: function(title = 'Are you sure?', text = '', confirmText = '<i class="fa-solid fa-check" style="margin-right: 6px;"></i> Yes, Confirm', icon = 'question') {
+        return Swal.fire({
+          title: title,
+          text: text,
+          icon: icon,
+          showCancelButton: true,
+          confirmButtonText: confirmText,
+          cancelButtonText: 'Cancel',
+          heightAuto: false,
+          scrollbarPadding: false,
+          customClass: {
+            popup: 'pms-swal-popup',
+            title: 'pms-swal-title',
+            htmlContainer: 'pms-swal-text',
+            confirmButton: 'pms-swal-confirm-btn',
+            cancelButton: 'pms-swal-cancel-btn',
+            actions: 'swal2-actions'
+          },
+          buttonsStyling: false
         });
       },
       confirmDelete: function(title = 'Are you sure?', text = "This record will be permanently deleted from master database.") {
@@ -413,6 +451,8 @@
           showCancelButton: true,
           confirmButtonText: '<i class="fa-solid fa-trash-can" style="color: #ffffff !important; margin-right: 6px;"></i> Yes, Delete',
           cancelButtonText: 'Cancel',
+          heightAuto: false,
+          scrollbarPadding: false,
           customClass: {
             popup: 'pms-swal-popup',
             title: 'pms-swal-title',
@@ -429,6 +469,8 @@
           icon: 'success',
           title: title,
           text: text,
+          heightAuto: false,
+          scrollbarPadding: false,
           customClass: {
             popup: 'pms-swal-popup',
             title: 'pms-swal-title',
@@ -443,6 +485,8 @@
           icon: 'error',
           title: title,
           text: text,
+          heightAuto: false,
+          scrollbarPadding: false,
           customClass: {
             popup: 'pms-swal-popup',
             title: 'pms-swal-title',

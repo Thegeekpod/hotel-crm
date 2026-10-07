@@ -1393,9 +1393,11 @@
     if (!room) return;
 
     if (room.status === 'Maintenance' || room.status === 'Under Maintenance') {
-      PmsAlert.confirmDelete(
+      PmsAlert.confirm(
         'Return to In-Service?',
-        `Room #${room.room_number} is currently Under Maintenance. Complete work order and return room to Active In-Service?`
+        `Room #${room.room_number} is currently Under Maintenance. Complete work order and return room to Active In-Service?`,
+        '<i class="fa-solid fa-check" style="margin-right: 6px;"></i> Yes, Return to In-Service',
+        'question'
       ).then(async (result) => {
         if (result.isConfirmed) {
           try {

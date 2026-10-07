@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('assign')->nullable();
             $table->dateTime('expected_date_time')->nullable();
             $table->longText('note')->nullable();
-            $table->string('status')->default('In-Progress');
+            $table->string('status')->default('Active'); // Active, Checking, Completed
             $table->timestamps();
         });
     }

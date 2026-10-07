@@ -129,14 +129,15 @@ class RoomManagementController extends Controller
             'notes' => 'nullable|string',
         ]);
 
-        $status = $validated['operational_status'] ?? $validated['status'] ?? 'Active';
-        $hkStatus = $validated['housekeeping_state'] ?? 'Cleaned';
+        $status = $validated['status'] ?? 'Active';
+        $operationalStatus = $validated['operational_status'] ?? null;
+        $hkStatus = $validated['housekeeping_state'] ?? null;
 
         $fl = Floor::where('floor', $validated['floor'])->orWhere('name', 'like', '%' . $validated['floor'] . '%')->first();
         $cat = RoomCategory::where('name', $validated['category'])->first();
         $bed = BeddingConfig::where('name', $validated['bedding_config'] ?? '')->first();
-        $ops = OperationalStatus::where('name', $status)->first();
-        $hks = HousekeepingState::where('name', $hkStatus)->first();
+        $ops = $operationalStatus ? OperationalStatus::where('name', $operationalStatus)->first() : null;
+        $hks = $hkStatus ? HousekeepingState::where('name', $hkStatus)->first() : null;
 
         $room = Room::create([
             'room_number' => $validated['room_number'],
@@ -187,28 +188,29 @@ class RoomManagementController extends Controller
             'notes' => 'nullable|string',
         ]);
 
-        $status = $validated['operational_status'] ?? $validated['status'] ?? $room->status;
-        $hkStatus = $validated['housekeeping_state'] ?? $room->housekeeping_status;
+        $status = $validated['status'] ?? $room->status ?? 'Active';
+        $operationalStatus = $validated['operational_status'] ?? null;
+        $hkStatus = $validated['housekeeping_state'] ?? null;
 
         $fl = Floor::where('floor', $validated['floor'])->orWhere('name', 'like', '%' . $validated['floor'] . '%')->first();
         $cat = RoomCategory::where('name', $validated['category'])->first();
         $bed = BeddingConfig::where('name', $validated['bedding_config'] ?? '')->first();
-        $ops = OperationalStatus::where('name', $status)->first();
-        $hks = HousekeepingState::where('name', $hkStatus)->first();
+        $ops = $operationalStatus ? OperationalStatus::where('name', $operationalStatus)->first() : null;
+        $hks = $hkStatus ? HousekeepingState::where('name', $hkStatus)->first() : null;
 
         $room->update([
             'room_number' => $validated['room_number'],
             'floor_id' => $fl ? $fl->id : null,
             'category_id' => $cat ? $cat->id : null,
             'bedding_config_id' => $bed ? $bed->id : null,
-            'operational_status_id' => $ops ? $ops->id : null,
-            'housekeeping_state_id' => $hks ? $hks->id : null,
+            'operational_status_id' => $ops ? $ops->id : $room->operational_status_id,
+            'housekeeping_state_id' => $hks ? $hks->id : $room->housekeeping_state_id,
             'floor' => $validated['floor'],
             'category' => $validated['category'],
             'rate' => $validated['rate'],
             'bedding_config' => $validated['bedding_config'] ?? null,
             'status' => $status,
-            'housekeeping_status' => $hkStatus,
+            'housekeeping_status' => $hkStatus ?? $room->housekeeping_status,
             'amenities' => $validated['amenities'] ?? [],
             'notes' => $validated['notes'] ?? null,
         ]);

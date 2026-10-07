@@ -650,7 +650,7 @@
           </div>
 
           <div style="display: flex; gap: 16px; flex-wrap: wrap;">
-            <div style="flex: 1; min-width: 220px;">
+            <div style="flex: 1; min-width: 200px;">
               <label style="display:block; font-size: 11px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.6px;">
                 Room Category <span style="color: red;">*</span>
               </label>
@@ -661,11 +661,20 @@
                 @endforeach
               </select>
             </div>
-            <div style="flex: 1; min-width: 220px;">
+            <div style="flex: 1; min-width: 200px;">
               <label style="display:block; font-size: 11px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.6px;">
                 Base Tariff (₹ / Night) <span style="color: red;">*</span>
               </label>
               <input type="number" id="new-room-rate" class="pms-input-field" value="3500" required style="width:100%; height:42px; padding:8px 14px; font-size:14px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff; color: var(--accent-primary); font-family: var(--font-mono); font-weight: 800;">
+            </div>
+            <div style="flex: 1; min-width: 200px;">
+              <label style="display:block; font-size: 11px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.6px;">
+                Status <span style="color: red;">*</span>
+              </label>
+              <select id="new-room-status" class="select2-field" style="width:100%;">
+                <option value="Active" selected>Active</option>
+                <option value="Inactive">Inactive</option>
+              </select>
             </div>
           </div>
         </div>
@@ -711,37 +720,7 @@
           </div>
         </div>
 
-        <!-- Section 3: Operational & Housekeeping State -->
-        <div style="display: flex; flex-direction: column; background: #fff; padding: 22px 24px; border: 1px solid var(--border-medium); border-radius: var(--radius-md); box-shadow: 0 4px 12px rgba(0,0,0,0.02); margin-bottom: 20px;">
-          <h4 style="font-size: 12px; color: var(--accent-primary); margin: 0 0 16px 0; text-transform: uppercase; font-weight: 900; letter-spacing: 1px; display: flex; align-items: center; gap: 8px;">
-            <i class="fa-solid fa-clipboard-check"></i> Operational & Housekeeping State
-          </h4>
-          
-          <div style="display: flex; gap: 16px; flex-wrap: wrap;">
-            <div style="flex: 1; min-width: 220px;">
-              <label style="display:block; font-size: 11px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.6px;">
-                Operational Status
-              </label>
-              <select id="new-room-operational-status" class="select2-field" style="width:100%;">
-                @foreach($operationalStatuses as $ops)
-                  <option value="{{ $ops->name }}">{{ $ops->name }}</option>
-                @endforeach
-              </select>
-            </div>
-            <div style="flex: 1; min-width: 220px;">
-              <label style="display:block; font-size: 11px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.6px;">
-                Housekeeping State
-              </label>
-              <select id="new-room-hk-state" class="select2-field" style="width:100%;">
-                @foreach($housekeepingStates as $hks)
-                  <option value="{{ $hks->name }}">{{ $hks->name }}</option>
-                @endforeach
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <!-- Section 4: Amenities & Features (Dynamic from Amenities Master) -->
+        <!-- Section 3: Amenities & Features (Dynamic from Amenities Master) -->
         <div style="display: flex; flex-direction: column; background: #fff; padding: 22px 24px; border: 1px solid var(--border-medium); border-radius: var(--radius-md); box-shadow: 0 4px 12px rgba(0,0,0,0.02);">
           <h4 style="font-size: 12px; color: var(--accent-primary); margin: 0 0 16px 0; text-transform: uppercase; font-weight: 900; letter-spacing: 1px; display: flex; align-items: center; gap: 8px;">
             <i class="fa-solid fa-wand-magic-sparkles"></i> Amenities & Features
@@ -805,7 +784,7 @@
           </div>
 
           <div style="display: flex; gap: 16px; flex-wrap: wrap;">
-            <div style="flex: 1; min-width: 220px;">
+            <div style="flex: 1; min-width: 200px;">
               <label style="display:block; font-size: 11px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.6px;">
                 Room Category <span style="color: red;">*</span>
               </label>
@@ -815,11 +794,20 @@
                 @endforeach
               </select>
             </div>
-            <div style="flex: 1; min-width: 220px;">
+            <div style="flex: 1; min-width: 200px;">
               <label style="display:block; font-size: 11px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.6px;">
                 Base Tariff (₹ / Night) <span style="color: red;">*</span>
               </label>
               <input type="number" id="edit-room-rate" class="pms-input-field" required style="width:100%; height:42px; padding:8px 14px; font-size:14px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff; color: var(--accent-primary); font-family: var(--font-mono); font-weight: 800;">
+            </div>
+            <div style="flex: 1; min-width: 200px;">
+              <label style="display:block; font-size: 11px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.6px;">
+                Status <span style="color: red;">*</span>
+              </label>
+              <select id="edit-room-status" class="select2-field" style="width:100%;">
+                <option value="Active">Active</option>
+                <option value="Inactive">Inactive</option>
+              </select>
             </div>
           </div>
         </div>
@@ -865,37 +853,7 @@
           </div>
         </div>
 
-        <!-- Section 3: Operational & Housekeeping State -->
-        <div style="display: flex; flex-direction: column; background: #fff; padding: 22px 24px; border: 1px solid var(--border-medium); border-radius: var(--radius-md); box-shadow: 0 4px 12px rgba(0,0,0,0.02); margin-bottom: 20px;">
-          <h4 style="font-size: 12px; color: var(--accent-primary); margin: 0 0 16px 0; text-transform: uppercase; font-weight: 900; letter-spacing: 1px; display: flex; align-items: center; gap: 8px;">
-            <i class="fa-solid fa-clipboard-check"></i> Operational & Housekeeping State
-          </h4>
-          
-          <div style="display: flex; gap: 16px; flex-wrap: wrap;">
-            <div style="flex: 1; min-width: 220px;">
-              <label style="display:block; font-size: 11px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.6px;">
-                Operational Status
-              </label>
-              <select id="edit-room-operational-status" class="select2-field" style="width:100%;">
-                @foreach($operationalStatuses as $ops)
-                  <option value="{{ $ops->name }}">{{ $ops->name }}</option>
-                @endforeach
-              </select>
-            </div>
-            <div style="flex: 1; min-width: 220px;">
-              <label style="display:block; font-size: 11px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.6px;">
-                Housekeeping State
-              </label>
-              <select id="edit-room-hk-state" class="select2-field" style="width:100%;">
-                @foreach($housekeepingStates as $hks)
-                  <option value="{{ $hks->name }}">{{ $hks->name }}</option>
-                @endforeach
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <!-- Section 4: Amenities & Features (Dynamic from Amenities Master) -->
+        <!-- Section 3: Amenities & Features (Dynamic from Amenities Master) -->
         <div style="display: flex; flex-direction: column; background: #fff; padding: 22px 24px; border: 1px solid var(--border-medium); border-radius: var(--radius-md); box-shadow: 0 4px 12px rgba(0,0,0,0.02);">
           <h4 style="font-size: 12px; color: var(--accent-primary); margin: 0 0 16px 0; text-transform: uppercase; font-weight: 900; letter-spacing: 1px; display: flex; align-items: center; gap: 8px;">
             <i class="fa-solid fa-wand-magic-sparkles"></i> Amenities & Features
@@ -1129,10 +1087,10 @@
         handleHkFilter(this.value);
       });
 
-      $('#new-room-floor, #new-room-cat, #new-room-bed, #new-room-operational-status, #new-room-hk-state').select2({
+      $('#new-room-floor, #new-room-cat, #new-room-bed, #new-room-status').select2({
         dropdownParent: $('#add-room-modal')
       });
-      $('#edit-room-floor, #edit-room-cat, #edit-room-bed, #edit-room-operational-status, #edit-room-hk-state').select2({
+      $('#edit-room-floor, #edit-room-cat, #edit-room-bed, #edit-room-status').select2({
         dropdownParent: $('#edit-room-modal')
       });
       $('#maint-reason').select2({
@@ -1160,8 +1118,7 @@
       const defaultBed = $('#new-room-bed option:eq(0)').val();
       $('#new-room-bed').val(defaultBed).trigger('change');
       updateNewRoomPaxCapacity(defaultBed);
-      $('#new-room-operational-status').val($('#new-room-operational-status option:eq(0)').val()).trigger('change');
-      $('#new-room-hk-state').val($('#new-room-hk-state option:eq(0)').val()).trigger('change');
+      $('#new-room-status').val('Active').trigger('change');
     }
 
     // Default checkboxes
@@ -1214,22 +1171,7 @@
       $('#edit-room-cat').val(room.category).trigger('change');
       $('#edit-room-bed').val(room.bedding_config).trigger('change');
       updateEditRoomPaxCapacity(room.bedding_config);
-
-      // Match dynamic operational status
-      let opVal = room.status;
-      if ($('#edit-room-operational-status option[value="' + room.status + '"]').length) {
-        opVal = room.status;
-      } else if (room.status === 'Maintenance' && $('#edit-room-operational-status option[value="Under Maintenance"]').length) {
-        opVal = 'Under Maintenance';
-      }
-      $('#edit-room-operational-status').val(opVal).trigger('change');
-
-      // Match dynamic housekeeping state
-      let hkVal = room.housekeeping_status;
-      if ($('#edit-room-hk-state option[value="' + room.housekeeping_status + '"]').length) {
-        hkVal = room.housekeeping_status;
-      }
-      $('#edit-room-hk-state').val(hkVal).trigger('change');
+      $('#edit-room-status').val(room.status || 'Active').trigger('change');
     }
 
     // Check amenities
@@ -1248,8 +1190,7 @@
     const category = document.getElementById('new-room-cat').value;
     const rate = document.getElementById('new-room-rate').value;
     const bedding_config = document.getElementById('new-room-bed').value;
-    const operational_status = document.getElementById('new-room-operational-status').value;
-    const housekeeping_state = document.getElementById('new-room-hk-state').value;
+    const status = document.getElementById('new-room-status').value || 'Active';
 
     const checkedAmenities = [];
     document.querySelectorAll('#add-amenities-container input[type="checkbox"]:checked').forEach(cb => {
@@ -1267,8 +1208,7 @@
       category,
       rate,
       bedding_config,
-      operational_status,
-      housekeeping_state,
+      status,
       amenities: checkedAmenities
     };
 
@@ -1304,8 +1244,7 @@
     const category = document.getElementById('edit-room-cat').value;
     const rate = document.getElementById('edit-room-rate').value;
     const bedding_config = document.getElementById('edit-room-bed').value;
-    const operational_status = document.getElementById('edit-room-operational-status').value;
-    const housekeeping_state = document.getElementById('edit-room-hk-state').value;
+    const status = document.getElementById('edit-room-status').value || 'Active';
 
     const checkedAmenities = [];
     document.querySelectorAll('#edit-amenities-container input[type="checkbox"]:checked').forEach(cb => {
@@ -1323,8 +1262,7 @@
       category,
       rate,
       bedding_config,
-      operational_status,
-      housekeeping_state,
+      status,
       amenities: checkedAmenities
     };
 

@@ -1814,40 +1814,53 @@
       : `<div style="font-size: 12px; color: #94a3b8; font-style: italic; padding: 6px 0;">No amenities assigned to this room.</div>`;
 
     const content = `
-      <!-- Hero Header Card with Equal Priority Highlights -->
-      <div style="background: #ffffff; border-radius: 14px; border: 1px solid #e2e8f0; padding: 18px 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
-        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-          <!-- Room Highlight -->
-          <div style="background: #f8fafc; border: 1.5px solid #cbd5e1; padding: 7px 14px; border-radius: 10px; display: inline-flex; align-items: center; gap: 7px;">
-            <i class="fa-solid fa-door-closed" style="color: #6366f1; font-size: 14px;"></i>
-            <span style="font-family: var(--font-mono, monospace); font-size: 16px; font-weight: 900; color: #0f172a;">Room #${room.room_number}</span>
+      <!-- Top 2 Equal-Size Boxes Grid -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px;">
+        
+        <!-- Left Box: Floor, Room Number & Category (One by One with Same Priority & Design) -->
+        <div style="background: #ffffff; border-radius: 14px; border: 1px solid #e2e8f0; padding: 14px 18px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); display: flex; flex-direction: column; justify-content: center; gap: 8px;">
+          
+          <!-- Item 1: Floor -->
+          <div style="display: flex; align-items: center; justify-content: space-between; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 6px 12px;">
+            <span style="font-size: 11px; font-weight: 700; color: #64748b; display: flex; align-items: center; gap: 6px;">
+              <i class="fa-solid fa-layer-group" style="color: #6366f1; font-size: 12px; width: 14px;"></i> Floor
+            </span>
+            <span style="font-size: 12px; font-weight: 800; color: #1e293b;">Floor ${room.floor}</span>
           </div>
 
-          <!-- Category Highlight -->
-          <div style="background: ${catBadgeBg}; border: 1.5px solid ${catBadgeBorder}; padding: 7px 14px; border-radius: 10px; display: inline-flex; align-items: center; gap: 7px;">
-            <i class="fa-solid fa-crown" style="color: ${catBadgeColor}; font-size: 14px;"></i>
-            <span style="font-size: 14px; font-weight: 800; color: ${catBadgeColor};">${room.category}</span>
+          <!-- Item 2: Room Number -->
+          <div style="display: flex; align-items: center; justify-content: space-between; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 6px 12px;">
+            <span style="font-size: 11px; font-weight: 700; color: #64748b; display: flex; align-items: center; gap: 6px;">
+              <i class="fa-solid fa-door-closed" style="color: #6366f1; font-size: 12px; width: 14px;"></i> Room Number
+            </span>
+            <span style="font-family: var(--font-mono, monospace); font-size: 13px; font-weight: 900; color: #0f172a;">Room #${room.room_number}</span>
           </div>
 
-          <!-- Floor Highlight -->
-          <div style="background: #f1f5f9; border: 1.5px solid #cbd5e1; padding: 7px 14px; border-radius: 10px; display: inline-flex; align-items: center; gap: 7px;">
-            <i class="fa-solid fa-layer-group" style="color: #475569; font-size: 14px;"></i>
-            <span style="font-size: 14px; font-weight: 800; color: #334155;">Floor ${room.floor}</span>
+          <!-- Item 3: Category -->
+          <div style="display: flex; align-items: center; justify-content: space-between; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 6px 12px;">
+            <span style="font-size: 11px; font-weight: 700; color: #64748b; display: flex; align-items: center; gap: 6px;">
+              <i class="fa-solid fa-crown" style="color: #6366f1; font-size: 12px; width: 14px;"></i> Category
+            </span>
+            <span style="font-size: 12px; font-weight: 800; color: #1e293b;">${room.category}</span>
           </div>
+
         </div>
 
-        <!-- Tariff & Status Box -->
-        <div style="text-align: right; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 8px 16px; min-width: 150px;">
-          <div style="font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Base Tariff</div>
-          <div style="font-family: var(--font-mono, monospace); font-size: 20px; font-weight: 900; color: #4f46e5; margin: 2px 0;">
-            ₹ ${Number(room.rate).toLocaleString()}
-            <span style="font-size: 11px; font-weight: 600; color: #94a3b8;">/ night</span>
+        <!-- Right Box: Base Tariff & Status -->
+        <div style="background: #ffffff; border-radius: 14px; border: 1px solid #e2e8f0; padding: 14px 18px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); display: flex; flex-direction: column; justify-content: center; align-items: flex-end; gap: 6px;">
+          <div style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">
+            Base Tariff
           </div>
-          <div style="display: inline-flex; align-items: center; gap: 5px; background: ${statusBg}; color: ${statusColor}; border: 1px solid ${statusBorder}; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 700;">
+          <div style="font-family: var(--font-mono, monospace); font-size: 24px; font-weight: 900; color: #4f46e5; margin: 2px 0;">
+            ₹ ${Number(room.rate).toLocaleString()}
+            <span style="font-size: 12px; font-weight: 600; color: #94a3b8;">/ night</span>
+          </div>
+          <div style="display: inline-flex; align-items: center; gap: 6px; background: ${statusBg}; color: ${statusColor}; border: 1px solid ${statusBorder}; padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: 700;">
             <span style="width: 6px; height: 6px; border-radius: 50%; background: ${statusDot}; display: inline-block;"></span>
             ${statusText}
           </div>
         </div>
+
       </div>
 
       <!-- Quick Info Tiles -->

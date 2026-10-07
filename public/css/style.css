@@ -1295,7 +1295,11 @@ a {
   box-shadow: var(--shadow-sm);
 }
 
-/* ====== MODALS ====== */
+/* ====== MODALS & SWEETALERT ====== */
+.swal2-container {
+  z-index: 9999999 !important;
+}
+
 .modal-backdrop {
   position: fixed;
   inset: 0;

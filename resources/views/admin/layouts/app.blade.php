@@ -101,14 +101,19 @@
       color: #ffffff !important;
       font-weight: 700 !important;
     }
-    /* Custom SweetAlert2 Theme for Luxury Hotel PMS */
-    .swal2-popup.pms-swal-popup {
+    /* Custom SweetAlert2 Theme for Luxury Hotel PMS - High z-index to guarantee top layer */
+    .swal2-container {
+      z-index: 9999999 !important;
+    }
+    .swal2-popup.pms-swal-popup,
+    .swal2-popup {
       font-family: var(--font-main, 'Plus Jakarta Sans', sans-serif) !important;
       border-radius: 20px !important;
       background: #ffffff !important;
       border: 1px solid #e2e8f0 !important;
-      box-shadow: 0 25px 70px rgba(15, 23, 42, 0.16) !important;
+      box-shadow: 0 25px 70px rgba(15, 23, 42, 0.25) !important;
       padding: 30px 24px 24px !important;
+      z-index: 10000000 !important;
     }
 
     .swal2-icon.swal2-warning {

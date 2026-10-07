@@ -2008,6 +2008,9 @@
   window.addEventListener('DOMContentLoaded', () => {
     initSelect2();
     renderView();
+    if (urlParams.get('action') === 'add') {
+      openAddRoomModal();
+    }
   });
 </script>
 @endpush

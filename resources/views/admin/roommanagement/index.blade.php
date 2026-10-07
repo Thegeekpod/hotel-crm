@@ -1604,8 +1604,11 @@
         else if (room.category && room.category.includes('SUITE')) catBadgeClass = 'yellow';
         else if (room.category && room.category.includes('EXEC')) catBadgeClass = 'green';
 
-        let statusBadgeClass = (room.status === 'Inactive' || room.status === 'Blocked') ? 'red' : (room.status === 'Maintenance' ? 'yellow' : 'green');
-        let statusLabel = room.status || 'Active';
+        const isMaintenance = room.status && room.status.toLowerCase().includes('maintenance');
+        const isBlocked = room.status && (room.status === 'Inactive' || room.status === 'Blocked');
+        
+        let statusBadgeClass = isBlocked ? 'red' : (isMaintenance ? 'yellow' : 'green');
+        let statusLabel = isMaintenance ? 'Under Maintenance' : (room.status || 'Active');
 
         const amenitiesList = Array.isArray(room.amenities) ? room.amenities : [];
         const amenitiesHtml = amenitiesList.slice(0, 3).map(a => `<span class="amenity-chip">${a}</span>`).join('') +
@@ -1645,8 +1648,8 @@
               <div style="display: flex; align-items: center; justify-content: flex-end; gap: 6px;">
                 <button class="btn-action-view" onclick="openViewRoomModal(${room.id})" title="View Details"><i class="fa-solid fa-eye"></i></button>
                 <button class="btn-action-edit" onclick="openEditRoomModal(${room.id})" title="Edit Room Asset"><i class="fa-solid fa-pen"></i></button>
-                <button class="btn-action-maint" onclick="toggleRoomMaintenance(${room.id})" title="${room.status === 'Maintenance' ? 'Mark In-Service' : 'Mark Maintenance'}">
-                  <i class="fa-solid ${room.status === 'Maintenance' ? 'fa-check' : 'fa-wrench'}"></i>
+                <button class="btn-action-maint" onclick="toggleRoomMaintenance(${room.id})" title="${isMaintenance ? 'Mark In-Service' : 'Mark Maintenance'}">
+                  <i class="fa-solid ${isMaintenance ? 'fa-check' : 'fa-wrench'}"></i>
                 </button>
                 <button class="btn-action-del" onclick="deleteRoom(${room.id})" title="Delete Room"><i class="fa-solid fa-trash"></i></button>
               </div>
@@ -1669,9 +1672,12 @@
         else if (room.category && room.category.includes('SUITE')) catBadgeClass = 'yellow';
         else if (room.category && room.category.includes('EXEC')) catBadgeClass = 'green';
 
-        let statusBadgeClass = (room.status === 'Inactive' || room.status === 'Blocked') ? 'red' : (room.status === 'Maintenance' ? 'yellow' : 'green');
-        let statusLabel = room.status || 'Active';
-        let borderTopColor = (room.status === 'Inactive' || room.status === 'Blocked') ? '#ef4444' : (room.status === 'Maintenance' ? '#f59e0b' : '#10b981');
+        const isMaintenance = room.status && room.status.toLowerCase().includes('maintenance');
+        const isBlocked = room.status && (room.status === 'Inactive' || room.status === 'Blocked');
+
+        let statusBadgeClass = isBlocked ? 'red' : (isMaintenance ? 'yellow' : 'green');
+        let statusLabel = isMaintenance ? 'Under Maintenance' : (room.status || 'Active');
+        let borderTopColor = isBlocked ? '#ef4444' : (isMaintenance ? '#f59e0b' : '#10b981');
 
         const amenitiesList = Array.isArray(room.amenities) ? room.amenities : [];
         const amenitiesHtml = amenitiesList.slice(0, 3).map(a => `<span class="amenity-chip">${a}</span>`).join('') +
@@ -1794,12 +1800,15 @@
       catBadgeBg = '#fff7ed'; catBadgeColor = '#ea580c'; catBadgeBorder = '#fed7aa';
     }
 
-    const isActive = (room.status || 'Active') === 'Active';
-    const statusBg = isActive ? '#ecfdf5' : '#fef2f2';
-    const statusColor = isActive ? '#059669' : '#dc2626';
-    const statusBorder = isActive ? '#a7f3d0' : '#fecaca';
-    const statusDot = isActive ? '#10b981' : '#ef4444';
-    const statusText = room.status || 'Active';
+    const isMaintenance = room.status && room.status.toLowerCase().includes('maintenance');
+    const isBlocked = room.status && (room.status === 'Inactive' || room.status === 'Blocked');
+    const isActive = !isMaintenance && !isBlocked && (room.status === 'Active' || !room.status);
+
+    const statusBg = isMaintenance ? '#fef3c7' : (isBlocked ? '#fef2f2' : '#ecfdf5');
+    const statusColor = isMaintenance ? '#b45309' : (isBlocked ? '#dc2626' : '#059669');
+    const statusBorder = isMaintenance ? '#fde68a' : (isBlocked ? '#fecaca' : '#a7f3d0');
+    const statusDot = isMaintenance ? '#f59e0b' : (isBlocked ? '#ef4444' : '#10b981');
+    const statusText = isMaintenance ? 'Under Maintenance' : (room.status || 'Active');
 
     const amenitiesList = Array.isArray(room.amenities) ? room.amenities : [];
     const amenitiesHtml = amenitiesList.length > 0

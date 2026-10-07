@@ -570,6 +570,66 @@
     renderFaGrid();
   }
 
+  function updateUrlParams() {
+    const params = new URLSearchParams();
+    if (searchQuery) params.set('search', searchQuery);
+    if (statusFilter && statusFilter !== 'all') params.set('status', statusFilter);
+    if (currentPage > 1) params.set('page', currentPage);
+    if (pageSize !== '10') params.set('per_page', pageSize);
+
+    const newUrl = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
+    window.history.replaceState(null, '', newUrl);
+  }
+
+  async function loadTableData() {
+    updateUrlParams();
+    try {
+      const params = new URLSearchParams();
+      if (searchQuery) params.set('search', searchQuery);
+      if (statusFilter && statusFilter !== 'all') params.set('status', statusFilter);
+
+      const res = await fetch(`${baseUrl}?${params.toString()}`, {
+        headers: { 'Accept': 'application/json' }
+      });
+      const data = await res.json();
+      if (data.success) {
+        tableRecords = data.data;
+        renderTable();
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  let searchDebounceTimer = null;
+  function handleSearch(val) {
+    searchQuery = (val || '').toLowerCase().trim();
+    currentPage = 1;
+    clearTimeout(searchDebounceTimer);
+    searchDebounceTimer = setTimeout(() => {
+      loadTableData();
+    }, 250);
+  }
+
+  function handleStatusFilter(val) {
+    statusFilter = val;
+    currentPage = 1;
+    loadTableData();
+  }
+
+  function handlePageSizeChange(val) {
+    pageSize = val === 'all' ? 'all' : parseInt(val, 10);
+    currentPage = 1;
+    updateUrlParams();
+    renderTable();
+  }
+
+  function goToPage(page) {
+    currentPage = page;
+    updateUrlParams();
+    renderTable();
+  }
+
   function openAddModal() {
     document.getElementById('modal-title').textContent = 'Add Amenity';
     document.getElementById('item-id').value = '';

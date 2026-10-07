@@ -578,7 +578,8 @@
           <tr>
             <th style="width: 40px; text-align: center;"><input type="checkbox" id="select-all-rooms-check" onchange="toggleSelectAllRooms(this)" style="cursor: pointer;"></th>
             <th style="width: 50px;">#</th>
-            <th>Room & Floor</th>
+            <th>Room</th>
+            <th>Floor</th>
             <th>Category</th>
             <th>Bedding & Pax</th>
             <th>Base Tariff</th>
@@ -881,16 +882,19 @@
 
 <!-- MODAL 3: View Room Details Modal -->
 <div class="modal-backdrop" id="view-room-modal">
-  <div class="modal-window large" style="width: 720px; max-width: 95vw;">
-    <div class="modal-top">
-      <h3 style="margin: 0;"><i class="fa-solid fa-circle-info"></i> Room Asset Operational File</h3>
-      <button class="modal-close" onclick="closeModal('view-room-modal')">&times;</button>
+  <div class="modal-window large" style="width: 700px; max-width: 95vw; border-radius: 16px; overflow: hidden; box-shadow: 0 25px 60px rgba(0,0,0,0.2); border: none;">
+    <div class="modal-top" style="background: linear-gradient(135deg, #6366f1, #8b5cf6); padding: 16px 24px; color: #ffffff; display: flex; justify-content: space-between; align-items: center;">
+      <h3 style="margin: 0; font-size: 16px; font-weight: 800; color: #ffffff; display: flex; align-items: center; gap: 8px;">
+        <i class="fa-solid fa-door-open"></i> Room Asset Details
+      </h3>
+      <button class="modal-close" onclick="closeModal('view-room-modal')" style="background: rgba(255,255,255,0.2); color: #ffffff; border: none; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 16px;">&times;</button>
     </div>
-    <div id="view-room-body" style="padding: 22px; max-height: 80vh; overflow-y: auto; background: #f8fafc;">
+    <div id="view-room-body" style="padding: 22px 24px; max-height: 80vh; overflow-y: auto; background: #f8fafc;">
       <!-- Populated dynamically via JavaScript -->
     </div>
-    <div class="modal-bot" style="padding: 14px 22px; background: #fff; border-top: 1px solid var(--border-medium); display: flex; justify-content: flex-end;">
-      <button type="button" class="btn-ui-secondary" onclick="closeModal('view-room-modal')" style="height: 38px; padding: 0 20px;">Close</button>
+    <div class="modal-bot" style="padding: 14px 24px; background: #ffffff; border-top: 1px solid var(--border-medium); display: flex; justify-content: space-between; align-items: center;">
+      <div id="view-room-bot-left"></div>
+      <button type="button" class="btn-ui-secondary" onclick="closeModal('view-room-modal')" style="height: 38px; padding: 0 24px; font-weight: 700; border-radius: 8px;">Close</button>
     </div>
   </div>
 </div>
@@ -1616,10 +1620,10 @@
             </td>
             <td style="font-family: var(--font-mono); font-weight: 700; color: var(--text-muted); font-size: 11px;">${startIdx + idx + 1}</td>
             <td>
-              <div style="display: flex; align-items: baseline; gap: 8px;">
-                <span style="font-family: var(--font-mono); font-size: 15px; font-weight: 900; color: var(--text-primary);">#${room.room_number}</span>
-                <span style="font-size: 11px; font-weight: 700; color: var(--text-muted);">Fl. ${room.floor}</span>
-              </div>
+              <span style="font-family: var(--font-mono); font-size: 15px; font-weight: 900; color: var(--text-primary);">#${room.room_number}</span>
+            </td>
+            <td>
+              <span class="badge-tag" style="background: #f1f5f9; color: var(--text-secondary); font-weight: 700; font-size: 11px;">Floor ${room.floor}</span>
             </td>
             <td><span class="badge-tag ${catBadgeClass}">${room.category}</span></td>
             <td>
@@ -1641,7 +1645,7 @@
             </td>
             <td style="text-align: right;">
               <div style="display: flex; align-items: center; justify-content: flex-end; gap: 6px;">
-                <button class="btn-action-view" onclick="openViewRoomModal(${room.id})" title="View Operational File"><i class="fa-solid fa-eye"></i></button>
+                <button class="btn-action-view" onclick="openViewRoomModal(${room.id})" title="View Details"><i class="fa-solid fa-eye"></i></button>
                 <button class="btn-action-edit" onclick="openEditRoomModal(${room.id})" title="Edit Room Asset"><i class="fa-solid fa-pen"></i></button>
                 <button class="btn-action-maint" onclick="toggleRoomMaintenance(${room.id})" title="${room.status === 'Maintenance' ? 'Mark In-Service' : 'Mark Maintenance'}">
                   <i class="fa-solid ${room.status === 'Maintenance' ? 'fa-check' : 'fa-wrench'}"></i>
@@ -1781,96 +1785,127 @@
     const room = roomsData.find(r => r.id === id);
     if (!room) return;
 
-    let catBadgeClass = 'blue';
-    if (room.category && room.category.includes('SUPER')) catBadgeClass = 'purple';
-    else if (room.category && room.category.includes('SUITE')) catBadgeClass = 'yellow';
-    else if (room.category && room.category.includes('EXEC')) catBadgeClass = 'green';
-
-    let statusBadgeClass = 'green';
-    let statusLabel = room.status || 'Active';
-    if (room.status === 'Maintenance') statusBadgeClass = 'yellow';
-    else if (room.status === 'Blocked') statusBadgeClass = 'red';
-
-    let hkBadgeClass = 'green';
-    let hkLabel = room.housekeeping_status || 'Cleaned';
-    if (room.housekeeping_status === 'Dirty') hkBadgeClass = 'red';
-    else if (room.housekeeping_status === 'Inspecting') hkBadgeClass = 'yellow';
-
-    let liveStatusBlock = '';
-    if (room.status === 'Maintenance') {
-      liveStatusBlock = `
-        <div style="background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.25); border-radius: var(--radius-md); padding: 14px 16px; margin-bottom: 14px;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-            <span class="badge-tag yellow" style="font-size: 11px;"><i class="fa-solid fa-wrench"></i> Under Maintenance</span>
-            <button class="btn-ui-secondary" style="padding: 4px 12px; font-size: 11px; background: #fff;" onclick="closeModal('view-room-modal'); toggleRoomMaintenance(${room.id});"><i class="fa-solid fa-check"></i> Mark as In-Service</button>
-          </div>
-          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; background: #fff; padding: 10px 12px; border-radius: 6px; border: 1px solid #fef3c7;">
-            <div>
-              <div style="font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Issue</div>
-              <div style="font-size: 12px; font-weight: 700; color: var(--text-primary); margin-top: 2px;">${room.maintenance_reason || 'HVAC & General Service'}</div>
-            </div>
-            <div>
-              <div style="font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Technician</div>
-              <div style="font-size: 12px; font-weight: 700; color: var(--text-primary); margin-top: 2px;">${room.assigned_engineer || 'Engineering Team'}</div>
-            </div>
-            <div>
-              <div style="font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Ready By</div>
-              <div style="font-size: 12px; font-weight: 700; color: #b45309; margin-top: 2px;">${room.expected_completion || 'Scheduled Soon'}</div>
-            </div>
-          </div>
-        </div>
-      `;
+    let catBadgeBg = '#eff6ff';
+    let catBadgeColor = '#2563eb';
+    let catBadgeBorder = '#bfdbfe';
+    if (room.category && room.category.toUpperCase().includes('SUPER')) {
+      catBadgeBg = '#faf5ff'; catBadgeColor = '#7c3aed'; catBadgeBorder = '#e9d5ff';
+    } else if (room.category && (room.category.toUpperCase().includes('SUITE') || room.category.toUpperCase().includes('DELUXE'))) {
+      catBadgeBg = '#f0fdf4'; catBadgeColor = '#16a34a'; catBadgeBorder = '#bbf7d0';
+    } else if (room.category && room.category.toUpperCase().includes('EXEC')) {
+      catBadgeBg = '#fff7ed'; catBadgeColor = '#ea580c'; catBadgeBorder = '#fed7aa';
     }
+
+    const isActive = (room.status || 'Active') === 'Active';
+    const statusBg = isActive ? '#ecfdf5' : '#fef2f2';
+    const statusColor = isActive ? '#059669' : '#dc2626';
+    const statusBorder = isActive ? '#a7f3d0' : '#fecaca';
+    const statusDot = isActive ? '#10b981' : '#ef4444';
+    const statusText = room.status || 'Active';
 
     const amenitiesList = Array.isArray(room.amenities) ? room.amenities : [];
     const amenitiesHtml = amenitiesList.length > 0
-      ? amenitiesList.map(a => `<span class="amenity-chip" style="font-size: 11px; padding: 4px 10px;"><i class="fa-solid fa-check" style="color: var(--accent-emerald); margin-right: 4px;"></i>${a}</span>`).join('')
-      : '<span style="font-size: 12px; color: var(--text-muted);">None configured</span>';
+      ? amenitiesList.map(a => `
+          <div style="display: inline-flex; align-items: center; gap: 7px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 7px 12px; font-size: 12px; font-weight: 600; color: #334155; box-shadow: 0 1px 2px rgba(0,0,0,0.03);">
+            <i class="fa-solid fa-circle-check" style="color: #10b981; font-size: 13px;"></i>
+            <span>${a}</span>
+          </div>
+        `).join('')
+      : `<div style="font-size: 12px; color: #94a3b8; font-style: italic; padding: 6px 0;">No amenities assigned to this room.</div>`;
 
     const content = `
-      <div style="background: #fff; padding: 18px 20px; border: 1px solid var(--border-medium); border-radius: var(--radius-md); box-shadow: 0 2px 8px rgba(0,0,0,0.02); margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center;">
-        <div>
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <span style="font-family: var(--font-mono); font-size: 24px; font-weight: 900; color: var(--text-primary);">Room #${room.room_number}</span>
-            <span class="badge-tag ${catBadgeClass}" style="font-size: 11px;">${room.category}</span>
-            <span class="badge-tag" style="background: #f1f5f9; color: var(--text-secondary); font-size: 11px;">Floor ${room.floor}</span>
+      <!-- Hero Header Card with Equal Priority Highlights -->
+      <div style="background: #ffffff; border-radius: 14px; border: 1px solid #e2e8f0; padding: 18px 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
+        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+          <!-- Room Highlight -->
+          <div style="background: #f8fafc; border: 1.5px solid #cbd5e1; padding: 7px 14px; border-radius: 10px; display: inline-flex; align-items: center; gap: 7px;">
+            <i class="fa-solid fa-door-closed" style="color: #6366f1; font-size: 14px;"></i>
+            <span style="font-family: var(--font-mono, monospace); font-size: 16px; font-weight: 900; color: #0f172a;">Room #${room.room_number}</span>
           </div>
-          <div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px; font-weight: 600;">
-            ${room.bedding_config || 'Standard Bed'} • Max ${room.pax_capacity || '2 Adults'}
+
+          <!-- Category Highlight -->
+          <div style="background: ${catBadgeBg}; border: 1.5px solid ${catBadgeBorder}; padding: 7px 14px; border-radius: 10px; display: inline-flex; align-items: center; gap: 7px;">
+            <i class="fa-solid fa-crown" style="color: ${catBadgeColor}; font-size: 14px;"></i>
+            <span style="font-size: 14px; font-weight: 800; color: ${catBadgeColor};">${room.category}</span>
+          </div>
+
+          <!-- Floor Highlight -->
+          <div style="background: #f1f5f9; border: 1.5px solid #cbd5e1; padding: 7px 14px; border-radius: 10px; display: inline-flex; align-items: center; gap: 7px;">
+            <i class="fa-solid fa-layer-group" style="color: #475569; font-size: 14px;"></i>
+            <span style="font-size: 14px; font-weight: 800; color: #334155;">Floor ${room.floor}</span>
           </div>
         </div>
-        <div style="text-align: right;">
-          <div style="font-family: var(--font-mono); font-size: 20px; font-weight: 900; color: var(--accent-primary);">₹ ${Number(room.rate).toLocaleString()} <span style="font-size: 11px; font-weight: 500; color: var(--text-muted);">/ night</span></div>
-          <div style="display: flex; gap: 6px; justify-content: flex-end; margin-top: 6px;">
-            <span class="badge-tag ${statusBadgeClass}">${statusLabel}</span>
-            <span class="badge-tag ${hkBadgeClass}">${hkLabel}</span>
+
+        <!-- Tariff & Status Box -->
+        <div style="text-align: right; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 8px 16px; min-width: 150px;">
+          <div style="font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Base Tariff</div>
+          <div style="font-family: var(--font-mono, monospace); font-size: 20px; font-weight: 900; color: #4f46e5; margin: 2px 0;">
+            ₹ ${Number(room.rate).toLocaleString()}
+            <span style="font-size: 11px; font-weight: 600; color: #94a3b8;">/ night</span>
+          </div>
+          <div style="display: inline-flex; align-items: center; gap: 5px; background: ${statusBg}; color: ${statusColor}; border: 1px solid ${statusBorder}; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 700;">
+            <span style="width: 6px; height: 6px; border-radius: 50%; background: ${statusDot}; display: inline-block;"></span>
+            ${statusText}
           </div>
         </div>
       </div>
 
-      ${liveStatusBlock}
-
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
-        <div style="background: #fff; border: 1px solid var(--border-medium); border-radius: var(--radius-md); padding: 14px 16px;">
-          <div style="font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px;">Housekeeping Readiness</div>
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <span class="badge-tag ${hkBadgeClass}">${hkLabel}</span>
-            <span style="font-size: 12px; color: var(--text-secondary); font-weight: 600;">
-              ${room.housekeeping_status === 'Cleaned' ? 'Clean & Inspected for Check-in' : (room.housekeeping_status === 'Dirty' ? 'Cleaning Due by Housekeeping' : 'Under Touch-up / Inspection')}
-            </span>
+      <!-- Quick Info Tiles -->
+      <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 16px;">
+        <!-- Bedding Tile -->
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px 16px; box-shadow: 0 2px 6px rgba(0,0,0,0.02); display: flex; align-items: center; gap: 14px;">
+          <div style="width: 44px; height: 44px; border-radius: 10px; background: #eff6ff; color: #3b82f6; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;">
+            <i class="fa-solid fa-bed"></i>
+          </div>
+          <div>
+            <div style="font-size: 11px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">Bedding Configuration</div>
+            <div style="font-size: 13px; font-weight: 700; color: #1e293b; margin-top: 2px;">
+              ${room.bedding_config || 'Standard Configuration'}
+            </div>
           </div>
         </div>
 
-        <div style="background: #fff; border: 1px solid var(--border-medium); border-radius: var(--radius-md); padding: 14px 16px;">
-          <div style="font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px;">Configured Amenities</div>
-          <div style="display: flex; flex-wrap: wrap; gap: 6px;">
-            ${amenitiesHtml}
+        <!-- Pax Capacity Tile -->
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px 16px; box-shadow: 0 2px 6px rgba(0,0,0,0.02); display: flex; align-items: center; gap: 14px;">
+          <div style="width: 44px; height: 44px; border-radius: 10px; background: #fdf4ff; color: #c026d3; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;">
+            <i class="fa-solid fa-users"></i>
           </div>
+          <div>
+            <div style="font-size: 11px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">Pax / Guest Capacity</div>
+            <div style="font-size: 13px; font-weight: 700; color: #1e293b; margin-top: 2px;">
+              ${room.pax_capacity || 'Max 2 Adults'}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Configured Amenities Card -->
+      <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px 18px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <div style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px;">
+            <i class="fa-solid fa-wand-magic-sparkles" style="color: #6366f1;"></i> Configured Amenities
+          </div>
+          <span style="font-size: 11px; font-weight: 700; background: #f1f5f9; color: #475569; padding: 2px 8px; border-radius: 10px;">
+            ${amenitiesList.length} Total
+          </span>
+        </div>
+        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+          ${amenitiesHtml}
         </div>
       </div>
     `;
 
     document.getElementById('view-room-body').innerHTML = content;
+
+    const botLeft = document.getElementById('view-room-bot-left');
+    if (botLeft) {
+      botLeft.innerHTML = `
+        <button type="button" class="btn-ui-primary" onclick="closeModal('view-room-modal'); openEditRoomModal(${room.id});" style="height: 38px; padding: 0 16px; border-radius: 8px; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
+          <i class="fa-solid fa-pen-to-square"></i> Edit Room Asset
+        </button>
+      `;
+    }
+
     openModal('view-room-modal');
   }
 

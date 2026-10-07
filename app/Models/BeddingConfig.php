@@ -15,6 +15,15 @@ class BeddingConfig extends Model
         'name',
         'code',
         'dimensions',
+        'max_adults',
+        'max_children',
+        'max_total',
         'status',
+    ];
+
+    protected $casts = [
+        'max_adults' => 'integer',
+        'max_children' => 'integer',
+        'max_total' => 'integer',
     ];
 }

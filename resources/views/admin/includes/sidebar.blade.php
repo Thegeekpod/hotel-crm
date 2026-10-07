@@ -48,23 +48,8 @@
         </a>
       </li>
       <li>
-        <a href="{{ route('admin.utilities.roommanage.pax-capacity.index') }}" class="admin-sub-item {{ request()->routeIs('admin.utilities.roommanage.pax-capacity.*') ? 'active' : '' }}">
-          <i class="fa-solid fa-user-group"></i> Pax Capacity
-        </a>
-      </li>
-      <li>
         <a href="{{ route('admin.utilities.roommanage.amenity.index') }}" class="admin-sub-item {{ request()->routeIs('admin.utilities.roommanage.amenity.*') ? 'active' : '' }}">
           <i class="fa-solid fa-wifi"></i> Amenities Master
-        </a>
-      </li>
-      <li>
-        <a href="{{ route('admin.utilities.roommanage.maintenance-reason.index') }}" class="admin-sub-item {{ request()->routeIs('admin.utilities.roommanage.maintenance-reason.*') ? 'active' : '' }}">
-          <i class="fa-solid fa-wrench"></i> Maintenance Reasons
-        </a>
-      </li>
-      <li>
-        <a href="{{ route('admin.utilities.roommanage.engineer.index') }}" class="admin-sub-item {{ request()->routeIs('admin.utilities.roommanage.engineer.*') ? 'active' : '' }}">
-          <i class="fa-solid fa-user-gear"></i> Maintain Engineer
         </a>
       </li>
     </ul>
@@ -76,7 +61,7 @@
     <span>POS Sales</span>
   </div>
 
-  <!-- Group 3: House Keeping Master -->
+  <!-- Group 4: House Keeping Master -->
   <div class="admin-nav-group">
     <div class="admin-nav-header {{ request()->routeIs('admin.utilities.housekeeping.*') ? 'active' : '' }}" onclick="toggleNavGroup(this)">
       <span><i class="fa-solid fa-broom" style="margin-right: 6px; color: #f59e0b;"></i> HOUSE KEEPING</span>

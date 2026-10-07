@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin\Utilities;
 
 use App\Http\Controllers\Controller;
 use App\Models\Floor;
+use App\Models\Room;
 use Illuminate\Http\Request;
 
 class FloorController extends Controller
@@ -16,8 +17,7 @@ class FloorController extends Controller
             $search = $request->input('search');
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('floor', 'like', "%{$search}%")
-                  ->orWhere('rooms', 'like', "%{$search}%");
+                  ->orWhere('floor', 'like', "%{$search}%");
             });
         }
 
@@ -25,7 +25,14 @@ class FloorController extends Controller
             $query->where('status', $request->input('status'));
         }
 
-        $items = $query->get();
+        $items = $query->get()->map(function ($floor) {
+            $roomCount = Room::where('floor_id', $floor->id)
+                ->orWhere('floor', $floor->floor)
+                ->orWhere('floor', $floor->name)
+                ->count();
+            $floor->rooms = $roomCount;
+            return $floor;
+        });
 
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
@@ -43,11 +50,23 @@ class FloorController extends Controller
         $validated = $request->validate([
             'floor' => 'required|string|max:50',
             'name' => 'required|string|max:255',
-            'rooms' => 'nullable|string|max:255',
             'status' => 'required|string|in:Active,Maintenance,Inactive',
         ]);
 
-        $item = Floor::create($validated);
+        $item = Floor::create([
+            'floor' => $validated['floor'],
+            'name' => $validated['name'],
+            'rooms' => 0,
+            'status' => $validated['status'],
+        ]);
+
+        // Auto count if any existing rooms match this floor
+        $roomCount = Room::where('floor_id', $item->id)
+            ->orWhere('floor', $item->floor)
+            ->orWhere('floor', $item->name)
+            ->count();
+        $item->rooms = $roomCount;
+        $item->save();
 
         return response()->json([
             'success' => true,
@@ -63,11 +82,21 @@ class FloorController extends Controller
         $validated = $request->validate([
             'floor' => 'required|string|max:50',
             'name' => 'required|string|max:255',
-            'rooms' => 'nullable|string|max:255',
             'status' => 'required|string|in:Active,Maintenance,Inactive',
         ]);
 
-        $item->update($validated);
+        $item->update([
+            'floor' => $validated['floor'],
+            'name' => $validated['name'],
+            'status' => $validated['status'],
+        ]);
+
+        $roomCount = Room::where('floor_id', $item->id)
+            ->orWhere('floor', $item->floor)
+            ->orWhere('floor', $item->name)
+            ->count();
+        $item->rooms = $roomCount;
+        $item->save();
 
         return response()->json([
             'success' => true,

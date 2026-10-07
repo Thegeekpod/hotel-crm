@@ -4,8 +4,6 @@ namespace App\Http\Controllers\Admin\Utilities;
 
 use App\Http\Controllers\Controller;
 use App\Models\RoomCategory;
-use App\Models\BeddingConfig;
-use App\Models\PaxCapacity;
 use Illuminate\Http\Request;
 
 class RoomCategoryController extends Controller
@@ -17,11 +15,7 @@ class RoomCategoryController extends Controller
         if ($request->filled('search')) {
             $search = $request->input('search');
             $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('code', 'like', "%{$search}%")
-                  ->orWhere('bedding_config', 'like', "%{$search}%")
-                  ->orWhere('pax_capacity', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%");
+                $q->where('name', 'like', "%{$search}%");
             });
         }
 
@@ -30,8 +24,6 @@ class RoomCategoryController extends Controller
         }
 
         $items = $query->get();
-        $beddingConfigs = BeddingConfig::where('status', 'Active')->get();
-        $paxCapacities = PaxCapacity::where('status', 'Active')->get();
 
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
@@ -41,20 +33,20 @@ class RoomCategoryController extends Controller
             ]);
         }
 
-        return view('admin.utilities.roommanage.category', compact('items', 'beddingConfigs', 'paxCapacities'));
+        return view('admin.utilities.roommanage.category', compact('items'));
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'code' => 'nullable|string|max:100',
-            'bedding_config' => 'nullable|string|max:255',
-            'pax_capacity' => 'nullable|string|max:255',
             'status' => 'required|string|in:Active,Inactive',
         ]);
 
-        $item = RoomCategory::create($validated);
+        $item = RoomCategory::create([
+            'name' => $validated['name'],
+            'status' => $validated['status'],
+        ]);
 
         return response()->json([
             'success' => true,
@@ -69,13 +61,13 @@ class RoomCategoryController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'code' => 'nullable|string|max:100',
-            'bedding_config' => 'nullable|string|max:255',
-            'pax_capacity' => 'nullable|string|max:255',
             'status' => 'required|string|in:Active,Inactive',
         ]);
 
-        $item->update($validated);
+        $item->update([
+            'name' => $validated['name'],
+            'status' => $validated['status'],
+        ]);
 
         return response()->json([
             'success' => true,

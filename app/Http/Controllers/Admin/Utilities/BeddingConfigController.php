@@ -40,10 +40,23 @@ class BeddingConfigController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
+            'max_adults' => 'required|integer|min:1',
+            'max_children' => 'nullable|integer|min:0',
+            'max_total' => 'nullable|integer|min:1',
             'status' => 'required|string|in:Active,Inactive',
         ]);
 
-        $item = BeddingConfig::create($validated);
+        $maxAdults = (int) $validated['max_adults'];
+        $maxChildren = (int) ($validated['max_children'] ?? 0);
+        $maxTotal = $maxAdults + $maxChildren;
+
+        $item = BeddingConfig::create([
+            'name' => $validated['name'],
+            'max_adults' => $maxAdults,
+            'max_children' => $maxChildren,
+            'max_total' => $maxTotal,
+            'status' => $validated['status'],
+        ]);
 
         return response()->json([
             'success' => true,
@@ -58,10 +71,23 @@ class BeddingConfigController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
+            'max_adults' => 'required|integer|min:1',
+            'max_children' => 'nullable|integer|min:0',
+            'max_total' => 'nullable|integer|min:1',
             'status' => 'required|string|in:Active,Inactive',
         ]);
 
-        $item->update($validated);
+        $maxAdults = (int) $validated['max_adults'];
+        $maxChildren = (int) ($validated['max_children'] ?? 0);
+        $maxTotal = $maxAdults + $maxChildren;
+
+        $item->update([
+            'name' => $validated['name'],
+            'max_adults' => $maxAdults,
+            'max_children' => $maxChildren,
+            'max_total' => $maxTotal,
+            'status' => $validated['status'],
+        ]);
 
         return response()->json([
             'success' => true,

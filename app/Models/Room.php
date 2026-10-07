@@ -18,13 +18,11 @@ class Room extends Model
         'category_id',
         'rate',
         'bedding_config_id',
-        'pax_capacity_id',
         'operational_status_id',
         'housekeeping_state_id',
         'floor',
         'category',
         'bedding_config',
-        'pax_capacity',
         'status',
         'housekeeping_status',
         'amenities',
@@ -52,11 +50,6 @@ class Room extends Model
     public function beddingConfigRelation(): BelongsTo
     {
         return $this->belongsTo(BeddingConfig::class, 'bedding_config_id');
-    }
-
-    public function paxCapacityRelation(): BelongsTo
-    {
-        return $this->belongsTo(PaxCapacity::class, 'pax_capacity_id');
     }
 
     public function operationalStatusRelation(): BelongsTo

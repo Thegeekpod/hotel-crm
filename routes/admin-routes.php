@@ -7,10 +7,7 @@ use App\Http\Controllers\Admin\Utilities\PaymentModeController;
 use App\Http\Controllers\Admin\Utilities\RoomCategoryController;
 use App\Http\Controllers\Admin\Utilities\FloorController;
 use App\Http\Controllers\Admin\Utilities\BeddingConfigController;
-use App\Http\Controllers\Admin\Utilities\PaxCapacityController;
 use App\Http\Controllers\Admin\Utilities\AmenityController;
-use App\Http\Controllers\Admin\Utilities\MaintenanceReasonController;
-use App\Http\Controllers\Admin\Utilities\MaintenanceEngineerController;
 use App\Http\Controllers\Admin\Utilities\HousekeepingStateController;
 use App\Http\Controllers\Admin\Utilities\OperationalStatusController;
 use App\Http\Controllers\Admin\RoomManagementController;
@@ -52,10 +49,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::resource('category', RoomCategoryController::class)->except(['create', 'edit', 'show']);
             Route::resource('floor', FloorController::class)->except(['create', 'edit', 'show']);
             Route::resource('bedding-config', BeddingConfigController::class)->except(['create', 'edit', 'show']);
-            Route::resource('pax-capacity', PaxCapacityController::class)->except(['create', 'edit', 'show']);
             Route::resource('amenity', AmenityController::class)->except(['create', 'edit', 'show']);
-            Route::resource('maintenance-reason', MaintenanceReasonController::class)->except(['create', 'edit', 'show']);
-            Route::resource('engineer', MaintenanceEngineerController::class)->except(['create', 'edit', 'show']);
         });
 
         // Housekeeping Utilities

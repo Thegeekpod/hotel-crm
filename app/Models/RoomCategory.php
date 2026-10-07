@@ -13,9 +13,6 @@ class RoomCategory extends Model
 
     protected $fillable = [
         'name',
-        'code',
-        'bedding_config',
-        'pax_capacity',
         'status',
     ];
 }

@@ -669,33 +669,21 @@
           </div>
         </div>
 
-        <!-- Section 2: Bedding & Capacity Setup -->
+        <!-- Section 2: Bedding Setup & Capacity -->
         <div style="display: flex; flex-direction: column; background: #fff; padding: 22px 24px; border: 1px solid var(--border-medium); border-radius: var(--radius-md); box-shadow: 0 4px 12px rgba(0,0,0,0.02); margin-bottom: 20px;">
           <h4 style="font-size: 12px; color: var(--accent-primary); margin: 0 0 16px 0; text-transform: uppercase; font-weight: 900; letter-spacing: 1px; display: flex; align-items: center; gap: 8px;">
-            <i class="fa-solid fa-bed"></i> Bedding & Capacity Setup
+            <i class="fa-solid fa-bed"></i> Bedding Setup & Capacity
           </h4>
           
-          <div style="display: flex; gap: 16px; flex-wrap: wrap;">
-            <div style="flex: 1; min-width: 220px;">
-              <label style="display:block; font-size: 11px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.6px;">
-                Bedding Config <span style="color: red;">*</span>
-              </label>
-              <select id="new-room-bed" class="select2-field" style="width:100%;">
-                @foreach($beddingConfigs as $bed)
-                  <option value="{{ $bed->name }}">{{ $bed->name }}</option>
-                @endforeach
-              </select>
-            </div>
-            <div style="flex: 1; min-width: 220px;">
-              <label style="display:block; font-size: 11px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.6px;">
-                Pax Capacity <span style="color: red;">*</span>
-              </label>
-              <select id="new-room-pax" class="select2-field" style="width:100%;">
-                @foreach($paxCapacities as $pax)
-                  <option value="{{ $pax->name }}">{{ $pax->name }}</option>
-                @endforeach
-              </select>
-            </div>
+          <div>
+            <label style="display:block; font-size: 11px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.6px;">
+              Bedding Configuration <span style="color: red;">*</span>
+            </label>
+            <select id="new-room-bed" class="select2-field" style="width:100%;">
+              @foreach($beddingConfigs as $bed)
+                <option value="{{ $bed->name }}">{{ $bed->name }} ({{ $bed->max_adults ?? 2 }} Adults + {{ $bed->max_children ?? 0 }} Child - Total {{ $bed->max_total ?? 2 }} Pax)</option>
+              @endforeach
+            </select>
           </div>
         </div>
 
@@ -812,33 +800,21 @@
           </div>
         </div>
 
-        <!-- Section 2: Bedding & Capacity Setup -->
+        <!-- Section 2: Bedding Setup & Capacity -->
         <div style="display: flex; flex-direction: column; background: #fff; padding: 22px 24px; border: 1px solid var(--border-medium); border-radius: var(--radius-md); box-shadow: 0 4px 12px rgba(0,0,0,0.02); margin-bottom: 20px;">
           <h4 style="font-size: 12px; color: var(--accent-primary); margin: 0 0 16px 0; text-transform: uppercase; font-weight: 900; letter-spacing: 1px; display: flex; align-items: center; gap: 8px;">
-            <i class="fa-solid fa-bed"></i> Bedding & Capacity Setup
+            <i class="fa-solid fa-bed"></i> Bedding Setup & Capacity
           </h4>
           
-          <div style="display: flex; gap: 16px; flex-wrap: wrap;">
-            <div style="flex: 1; min-width: 220px;">
-              <label style="display:block; font-size: 11px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.6px;">
-                Bedding Config
-              </label>
-              <select id="edit-room-bed" class="select2-field" style="width:100%;">
-                @foreach($beddingConfigs as $bed)
-                  <option value="{{ $bed->name }}">{{ $bed->name }}</option>
-                @endforeach
-              </select>
-            </div>
-            <div style="flex: 1; min-width: 220px;">
-              <label style="display:block; font-size: 11px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.6px;">
-                Pax Capacity
-              </label>
-              <select id="edit-room-pax" class="select2-field" style="width:100%;">
-                @foreach($paxCapacities as $pax)
-                  <option value="{{ $pax->name }}">{{ $pax->name }}</option>
-                @endforeach
-              </select>
-            </div>
+          <div>
+            <label style="display:block; font-size: 11px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.6px;">
+              Bedding Configuration
+            </label>
+            <select id="edit-room-bed" class="select2-field" style="width:100%;">
+              @foreach($beddingConfigs as $bed)
+                <option value="{{ $bed->name }}">{{ $bed->name }} ({{ $bed->max_adults ?? 2 }} Adults + {{ $bed->max_children ?? 0 }} Child - Total {{ $bed->max_total ?? 2 }} Pax)</option>
+              @endforeach
+            </select>
           </div>
         </div>
 
@@ -959,26 +935,26 @@
         <!-- Row 2: Maintenance Reason -->
         <div style="margin-bottom: 16px;">
           <label style="display:block; font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px;">
-            MAINTENANCE REASON <span style="color: red;">*</span>
+            MAINTENANCE REASON / WORK DESCRIPTION <span style="color: red;">*</span>
           </label>
           <select id="maint-reason" class="select2-field" style="width: 100%;" required>
-            @foreach($maintenanceReasons as $reason)
-              <option value="{{ $reason->name }}">{{ $reason->name }} ({{ $reason->dept }})</option>
-            @endforeach
+            <option value="HVAC Air Conditioning & Compressor Service">HVAC Air Conditioning & Compressor Service</option>
+            <option value="Bathroom Plumbing & Water Pressure">Bathroom Plumbing & Water Pressure</option>
+            <option value="Deep Steam Cleaning & Sanitization">Deep Steam Cleaning & Sanitization</option>
+            <option value="Interior Painting & Wall Touch-up">Interior Painting & Wall Touch-up</option>
+            <option value="Electrical & Lighting Repair">Electrical & Lighting Repair</option>
+            <option value="RFID Smart Lock & Reader Repair">RFID Smart Lock & Reader Repair</option>
+            <option value="General Preventive Maintenance">General Preventive Maintenance</option>
           </select>
         </div>
 
-        <!-- Row 3: Assigned Engineer & Expected Completion (Date & Time) -->
+        <!-- Row 3: Assigned Personnel & Expected Completion (Date & Time) -->
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 18px;">
           <div>
             <label style="display:block; font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px;">
-              ASSIGNED ENGINEER <span style="color: red;">*</span>
+              ASSIGNED PERSONNEL / TEAM
             </label>
-            <select id="maint-engineer" class="select2-field" style="width: 100%;" required>
-              @foreach($maintenanceEngineers as $eng)
-                <option value="{{ $eng->name }} ({{ $eng->department }})">{{ $eng->name }} ({{ $eng->department }})</option>
-              @endforeach
-            </select>
+            <input type="text" id="maint-engineer" class="crud-search-input" value="Duty Maintenance Technician" style="width: 100%; height: 38px; font-weight: 600; color: var(--text-primary);">
           </div>
           <div>
             <label style="display:block; font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px;">
@@ -1068,13 +1044,13 @@
         handleHkFilter(this.value);
       });
 
-      $('#new-room-floor, #new-room-cat, #new-room-bed, #new-room-pax, #new-room-operational-status, #new-room-hk-state').select2({
+      $('#new-room-floor, #new-room-cat, #new-room-bed, #new-room-operational-status, #new-room-hk-state').select2({
         dropdownParent: $('#add-room-modal')
       });
-      $('#edit-room-floor, #edit-room-cat, #edit-room-bed, #edit-room-pax, #edit-room-operational-status, #edit-room-hk-state').select2({
+      $('#edit-room-floor, #edit-room-cat, #edit-room-bed, #edit-room-operational-status, #edit-room-hk-state').select2({
         dropdownParent: $('#edit-room-modal')
       });
-      $('#maint-reason, #maint-engineer').select2({
+      $('#maint-reason').select2({
         dropdownParent: $('#maint-workorder-modal')
       });
     }
@@ -1089,7 +1065,6 @@
       $('#new-room-floor').val($('#new-room-floor option:eq(1)').val()).trigger('change');
       $('#new-room-cat').val($('#new-room-cat option:eq(1)').val()).trigger('change');
       $('#new-room-bed').val($('#new-room-bed option:eq(0)').val()).trigger('change');
-      $('#new-room-pax').val($('#new-room-pax option:eq(0)').val()).trigger('change');
       $('#new-room-operational-status').val($('#new-room-operational-status option:eq(0)').val()).trigger('change');
       $('#new-room-hk-state').val($('#new-room-hk-state option:eq(0)').val()).trigger('change');
     }
@@ -1143,7 +1118,6 @@
       $('#edit-room-floor').val(room.floor).trigger('change');
       $('#edit-room-cat').val(room.category).trigger('change');
       $('#edit-room-bed').val(room.bedding_config).trigger('change');
-      $('#edit-room-pax').val(room.pax_capacity).trigger('change');
 
       // Match dynamic operational status
       let opVal = room.status;
@@ -1178,7 +1152,6 @@
     const category = document.getElementById('new-room-cat').value;
     const rate = document.getElementById('new-room-rate').value;
     const bedding_config = document.getElementById('new-room-bed').value;
-    const pax_capacity = document.getElementById('new-room-pax').value;
     const operational_status = document.getElementById('new-room-operational-status').value;
     const housekeeping_state = document.getElementById('new-room-hk-state').value;
 
@@ -1198,7 +1171,6 @@
       category,
       rate,
       bedding_config,
-      pax_capacity,
       operational_status,
       housekeeping_state,
       amenities: checkedAmenities
@@ -1236,7 +1208,6 @@
     const category = document.getElementById('edit-room-cat').value;
     const rate = document.getElementById('edit-room-rate').value;
     const bedding_config = document.getElementById('edit-room-bed').value;
-    const pax_capacity = document.getElementById('edit-room-pax').value;
     const operational_status = document.getElementById('edit-room-operational-status').value;
     const housekeeping_state = document.getElementById('edit-room-hk-state').value;
 
@@ -1256,7 +1227,6 @@
       category,
       rate,
       bedding_config,
-      pax_capacity,
       operational_status,
       housekeeping_state,
       amenities: checkedAmenities
@@ -1359,8 +1329,8 @@
 
     if (typeof $ !== 'undefined' && $.fn.select2) {
       $('#maint-reason').val($('#maint-reason option:eq(0)').val()).trigger('change');
-      $('#maint-engineer').val($('#maint-engineer option:eq(0)').val()).trigger('change');
     }
+    document.getElementById('maint-engineer').value = 'Duty Maintenance Technician';
 
     openModal('maint-workorder-modal');
   }

@@ -1,6 +1,6 @@
 @extends('admin.layouts.app')
 
-@section('title', 'Floors & Wings Master - Hotel Sagar Sonnet PMS')
+@section('title', 'Floor Management Master - Hotel Sagar Sonnet PMS')
 
 @push('styles')
 <style>
@@ -247,7 +247,7 @@
                 <span class="badge-tag cyan" id="view-count">{{ count($items) }} Records</span>
               </div>
               <div style="font-size: 12px; color: var(--text-secondary); margin-top: 3px;">
-                Configure floor distributions, room wings, and building blocks.
+                Configure floor distributions and wings. Room counts are automatically calculated.
               </div>
             </div>
             <button class="btn-ui-primary" onclick="openAddModal()"><i class="fa-solid fa-plus"></i> Add Entry</button>
@@ -257,7 +257,7 @@
             <div class="crud-toolbar-left">
               <div class="crud-search-wrap">
                 <i class="fa-solid fa-magnifying-glass"></i>
-                <input type="text" id="table-search" class="crud-search-input" placeholder="Search active records..." value="{{ request('search') }}" oninput="handleSearch(this.value)">
+                <input type="text" id="table-search" class="crud-search-input" placeholder="Search floors & wings..." value="{{ request('search') }}" oninput="handleSearch(this.value)">
               </div>
               <select id="status-filter" class="crud-filter-select" onchange="handleStatusFilter(this.value)">
                 <option value="all" {{ request('status', 'all') === 'all' ? 'selected' : '' }}>All Statuses</option>
@@ -276,10 +276,10 @@
             <table class="crud-table" id="crud-table">
               <thead>
                 <tr>
-                  <th style="width: 50px;">Floor</th>
+                  <th style="width: 100px;">Floor</th>
                   <th>Wing / Floor Name</th>
-                  <th>Room Range / Count</th>
-                  <th>Status</th>
+                  <th style="width: 140px;">Room Count</th>
+                  <th style="width: 130px;">Status</th>
                   <th style="text-align: right; width: 120px;">Actions</th>
                 </tr>
               </thead>
@@ -293,7 +293,11 @@
                     <i class="fa-solid fa-layer-group" style="color: var(--accent-cyan); margin-right: 6px; font-size: 12px;"></i>
                     {{ $item->name }}
                   </td>
-                  <td style="font-size: 12px; color: var(--text-secondary);">{{ $item->rooms ?? '-' }}</td>
+                  <td>
+                    <span class="badge-tag cyan" style="font-weight: 700;">
+                      <i class="fa-solid fa-door-closed" style="margin-right: 4px;"></i>{{ (int) $item->rooms }} Rooms
+                    </span>
+                  </td>
                   <td>
                     <span class="badge-tag {{ $item->status === 'Active' ? 'green' : ($item->status === 'Maintenance' ? 'yellow' : 'blue') }}">
                       <i class="fa-solid fa-circle-check" style="font-size: 6px; margin-right: 4px;"></i>{{ $item->status }}
@@ -346,7 +350,7 @@
 </main>
 
 <div class="modal-backdrop" id="crud-modal">
-  <div class="modal-window" style="width: 520px; max-width: 95vw;">
+  <div class="modal-window" style="width: 500px; max-width: 95vw;">
     <div class="modal-top" style="display: flex; justify-content: space-between; align-items: center;">
       <h3 style="margin: 0;"><i class="fa-solid fa-pen-to-square"></i> <span id="modal-title">Add Floor & Wing</span></h3>
       <button class="modal-close" onclick="closeModal('crud-modal')">&times;</button>
@@ -361,10 +365,6 @@
         <div class="admin-form-group">
           <label class="admin-form-label">Wing / Floor Name <span style="color: var(--accent-rose);">*</span></label>
           <input type="text" id="form-name" class="admin-form-input" placeholder="e.g. First Floor Sea Deck, East Wing" required>
-        </div>
-        <div class="admin-form-group">
-          <label class="admin-form-label">Room Range / Count</label>
-          <input type="text" id="form-rooms" class="admin-form-input" placeholder="e.g. 12 Rooms (101 - 112)">
         </div>
         <div class="admin-form-group">
           <label class="admin-form-label">Status <span style="color: var(--accent-rose);">*</span></label>
@@ -461,7 +461,6 @@
     document.getElementById('item-id').value = '';
     document.getElementById('form-floor').value = '';
     document.getElementById('form-name').value = '';
-    document.getElementById('form-rooms').value = '';
     document.getElementById('form-status').value = 'Active';
     openModal('crud-modal');
   }
@@ -477,7 +476,6 @@
     document.getElementById('item-id').value = item.id;
     document.getElementById('form-floor').value = item.floor;
     document.getElementById('form-name').value = item.name;
-    document.getElementById('form-rooms').value = item.rooms || '';
     document.getElementById('form-status').value = item.status;
     openModal('crud-modal');
   }
@@ -487,7 +485,6 @@
     const id = document.getElementById('item-id').value;
     const floor = document.getElementById('form-floor').value.trim();
     const name = document.getElementById('form-name').value.trim();
-    const rooms = document.getElementById('form-rooms').value.trim();
     const status = document.getElementById('form-status').value;
 
     if (!floor || !name) {
@@ -495,7 +492,7 @@
       return;
     }
 
-    const payload = { floor, name, rooms, status };
+    const payload = { floor, name, status };
     const url = id ? `${baseUrl}/${id}` : baseUrl;
     const method = id ? 'PUT' : 'POST';
 
@@ -524,7 +521,7 @@
   }
 
   async function deleteItem(id) {
-    const result = await PmsAlert.confirmDelete('Delete Floor & Wing?', 'This floor configuration will be deleted.');
+    const result = await PmsAlert.confirmDelete('Delete Floor?', 'This floor configuration will be removed.');
     if (result.isConfirmed) {
       try {
         const res = await fetch(`${baseUrl}/${id}`, {
@@ -550,147 +547,163 @@
   function getFilteredRecords() {
     return tableRecords.filter(item => {
       const matchSearch = !searchQuery ||
-        (item.floor && item.floor.toLowerCase().includes(searchQuery)) ||
         (item.name && item.name.toLowerCase().includes(searchQuery)) ||
-        (item.rooms && item.rooms.toLowerCase().includes(searchQuery)) ||
+        (item.floor && String(item.floor).toLowerCase().includes(searchQuery)) ||
         (item.status && item.status.toLowerCase().includes(searchQuery));
 
-      const matchStatus = statusFilter === 'all' || item.status === statusFilter;
+      const matchStatus = (statusFilter === 'all') || (item.status === statusFilter);
+
       return matchSearch && matchStatus;
     });
   }
 
   function renderTable() {
     const filtered = getFilteredRecords();
-    const totalCount = filtered.length;
-    const totalPages = pageSize === 'all' ? 1 : Math.max(1, Math.ceil(totalCount / pageSize));
-
-    if (currentPage > totalPages) currentPage = totalPages;
-    if (currentPage < 1) currentPage = 1;
-
-    const startIdx = pageSize === 'all' ? 0 : (currentPage - 1) * pageSize;
-    const endIdx = pageSize === 'all' ? totalCount : Math.min(startIdx + pageSize, totalCount);
-    const pageItems = filtered.slice(startIdx, endIdx);
-
-    document.getElementById('view-count').textContent = `${tableRecords.length} Record${tableRecords.length === 1 ? '' : 's'}`;
-
     const tbody = document.getElementById('table-body');
-    if (!pageItems.length) {
-      tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 40px; color: var(--text-muted);"><i class="fa-solid fa-inbox" style="font-size: 28px; margin-bottom: 10px; display: block;"></i>No matching records found.</td></tr>`;
-    } else {
-      let html = '';
-      pageItems.forEach(item => {
-        const badgeClass = item.status === 'Active' ? 'green' : (item.status === 'Maintenance' ? 'yellow' : 'blue');
-        html += `
-          <tr data-id="${item.id}">
-            <td style="font-family: var(--font-mono); font-weight: 800; color: var(--accent-primary); font-size: 13px;">
-              Floor ${item.floor}
-            </td>
-            <td style="font-weight: 700; color: var(--text-primary);">
-              <i class="fa-solid fa-layer-group" style="color: var(--accent-cyan); margin-right: 6px; font-size: 12px;"></i>
-              ${item.name}
-            </td>
-            <td style="font-size: 12px; color: var(--text-secondary);">${item.rooms || '-'}</td>
-            <td>
-              <span class="badge-tag ${badgeClass}">
-                <i class="fa-solid fa-circle-check" style="font-size: 6px; margin-right: 4px;"></i>${item.status}
-              </span>
-            </td>
-            <td style="text-align: right;">
-              <div class="crud-actions">
-                <button class="btn-action-edit" onclick="openEditModal(${item.id})" title="Edit Record"><i class="fa-solid fa-pen"></i></button>
-                <button class="btn-action-del" onclick="deleteItem(${item.id})" title="Delete Record"><i class="fa-solid fa-trash"></i></button>
-              </div>
-            </td>
-          </tr>
-        `;
-      });
-      tbody.innerHTML = html;
+    const viewCount = document.getElementById('view-count');
+
+    if (viewCount) {
+      viewCount.textContent = `${filtered.length} Records`;
     }
 
-    const infoEl = document.getElementById('pagination-info');
-    if (totalCount === 0) {
-      infoEl.textContent = 'Showing 0 to 0 of 0 records';
-    } else {
-      infoEl.innerHTML = `Showing <strong style="color: var(--text-primary);">${startIdx + 1}</strong> to <strong style="color: var(--text-primary);">${endIdx}</strong> of <strong style="color: var(--text-primary);">${totalCount}</strong> records${totalCount !== tableRecords.length ? ' (filtered from ' + tableRecords.length + ' total)' : ''}`;
+    const totalRecords = filtered.length;
+    let paginatedRecords = filtered;
+    let totalPages = 1;
+
+    if (pageSize !== 'all') {
+      const limit = parseInt(pageSize, 10);
+      totalPages = Math.ceil(totalRecords / limit) || 1;
+      if (currentPage > totalPages) currentPage = totalPages;
+      const startIdx = (currentPage - 1) * limit;
+      paginatedRecords = filtered.slice(startIdx, startIdx + limit);
     }
 
-    renderPaginationNav(totalPages);
+    if (paginatedRecords.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="5" style="text-align: center; padding: 40px; color: var(--text-muted);">
+            <i class="fa-solid fa-inbox" style="font-size: 28px; margin-bottom: 10px; display: block;"></i>
+            No matching floors found.
+          </td>
+        </tr>
+      `;
+      renderPagination(totalRecords, totalPages, 0, 0);
+      return;
+    }
+
+    const startIndex = pageSize === 'all' ? 0 : (currentPage - 1) * parseInt(pageSize, 10);
+
+    tbody.innerHTML = paginatedRecords.map((item, idx) => `
+      <tr data-id="${item.id}">
+        <td style="font-family: var(--font-mono); font-weight: 800; color: var(--accent-primary); font-size: 13px;">
+          Floor ${escapeHtml(item.floor)}
+        </td>
+        <td style="font-weight: 700; color: var(--text-primary);">
+          <i class="fa-solid fa-layer-group" style="color: var(--accent-cyan); margin-right: 6px; font-size: 12px;"></i>
+          ${escapeHtml(item.name)}
+        </td>
+        <td>
+          <span class="badge-tag cyan" style="font-weight: 700;">
+            <i class="fa-solid fa-door-closed" style="margin-right: 4px;"></i>${parseInt(item.rooms, 10) || 0} Rooms
+          </span>
+        </td>
+        <td>
+          <span class="badge-tag ${item.status === 'Active' ? 'green' : (item.status === 'Maintenance' ? 'yellow' : 'blue')}">
+            <i class="fa-solid fa-circle-check" style="font-size: 6px; margin-right: 4px;"></i>${escapeHtml(item.status)}
+          </span>
+        </td>
+        <td style="text-align: right;">
+          <div class="crud-actions">
+            <button class="btn-action-edit" onclick="openEditModal(${item.id})" title="Edit Record"><i class="fa-solid fa-pen"></i></button>
+            <button class="btn-action-del" onclick="deleteItem(${item.id})" title="Delete Record"><i class="fa-solid fa-trash"></i></button>
+          </div>
+        </td>
+      </tr>
+    `).join('');
+
+    const fromItem = totalRecords === 0 ? 0 : startIndex + 1;
+    const toItem = pageSize === 'all' ? totalRecords : Math.min(startIndex + parseInt(pageSize, 10), totalRecords);
+    renderPagination(totalRecords, totalPages, fromItem, toItem);
   }
 
-  function renderPaginationNav(totalPages) {
+  function renderPagination(total, pages, from, to) {
+    const info = document.getElementById('pagination-info');
+    if (info) {
+      info.textContent = total === 0 ? 'Showing 0 records' : `Showing ${from} to ${to} of ${total} records`;
+    }
+
     const nav = document.getElementById('pagination-nav');
     if (!nav) return;
 
-    if (totalPages <= 1) {
-      nav.innerHTML = `
-        <button class="pms-page-btn" disabled><i class="fa-solid fa-chevron-left"></i></button>
-        <button class="pms-page-btn active">1</button>
-        <button class="pms-page-btn" disabled><i class="fa-solid fa-chevron-right"></i></button>
-      `;
+    if (pages <= 1) {
+      nav.innerHTML = '';
       return;
     }
 
-    let html = '';
-    html += `<button class="pms-page-btn" onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''} title="Previous Page"><i class="fa-solid fa-chevron-left"></i></button>`;
+    let buttons = `
+      <button class="pms-page-btn" ${currentPage === 1 ? 'disabled' : ''} onclick="goToPage(${currentPage - 1})">
+        <i class="fa-solid fa-chevron-left"></i>
+      </button>
+    `;
 
-    const delta = 1;
-    const range = [];
-    const rangeWithDots = [];
-
-    for (let i = 1; i <= totalPages; i++) {
-      if (i === 1 || i === totalPages || (i >= currentPage - delta && i <= currentPage + delta)) {
-        range.push(i);
+    for (let p = 1; p <= pages; p++) {
+      if (p === 1 || p === pages || (p >= currentPage - 1 && p <= currentPage + 1)) {
+        buttons += `
+          <button class="pms-page-btn ${p === currentPage ? 'active' : ''}" onclick="goToPage(${p})">
+            ${p}
+          </button>
+        `;
+      } else if (p === currentPage - 2 || p === currentPage + 2) {
+        buttons += `<span class="pms-page-btn" style="border:none; cursor:default;">...</span>`;
       }
     }
 
-    let prev = 0;
-    for (const i of range) {
-      if (prev) {
-        if (i - prev === 2) {
-          rangeWithDots.push(prev + 1);
-        } else if (i - prev !== 1) {
-          rangeWithDots.push('...');
-        }
-      }
-      rangeWithDots.push(i);
-      prev = i;
-    }
+    buttons += `
+      <button class="pms-page-btn" ${currentPage === pages ? 'disabled' : ''} onclick="goToPage(${currentPage + 1})">
+        <i class="fa-solid fa-chevron-right"></i>
+      </button>
+    `;
 
-    rangeWithDots.forEach(page => {
-      if (page === '...') {
-        html += `<span class="pms-page-dots">...</span>`;
-      } else {
-        html += `<button class="pms-page-btn ${page === currentPage ? 'active' : ''}" onclick="goToPage(${page})">${page}</button>`;
-      }
-    });
-
-    html += `<button class="pms-page-btn" onclick="goToPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''} title="Next Page"><i class="fa-solid fa-chevron-right"></i></button>`;
-
-    nav.innerHTML = html;
+    nav.innerHTML = buttons;
   }
 
   function exportDataCSV() {
-    const filtered = getFilteredRecords();
-    if (!filtered.length) {
-      PmsAlert.toast('No records to export', 'info');
+    const records = getFilteredRecords();
+    if (!records.length) {
+      PmsAlert.warning('Export CSV', 'No records to export.');
       return;
     }
-    let csv = '"ID","Floor","Wing Name","Rooms","Status"\n';
-    filtered.forEach(r => {
-      csv += `"${r.id}","${r.floor}","${r.name}","${r.rooms || ''}","${r.status}"\n`;
-    });
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `Floors_Wings_${Date.now()}.csv`;
-    a.click();
+
+    const headers = ['Floor', 'Wing / Floor Name', 'Room Count', 'Status'];
+    const rows = records.map(r => [
+      `"${r.floor}"`,
+      `"${(r.name || '').replace(/"/g, '""')}"`,
+      parseInt(r.rooms, 10) || 0,
+      `"${(r.status || '').replace(/"/g, '""')}"`
+    ]);
+
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `floors_${new Date().toISOString().slice(0,10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
     PmsAlert.toast('CSV exported successfully!');
   }
 
-  // Initialize table on load
-  window.addEventListener('DOMContentLoaded', () => {
+  function escapeHtml(str) {
+    if (!str && str !== 0) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
     renderTable();
   });
 </script>

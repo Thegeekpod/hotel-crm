@@ -42,6 +42,16 @@
           <i class="fa-solid fa-cash-register"></i> Payment Modes
         </a>
       </li>
+      <li>
+        <a href="{{ route('admin.utilities.frontoffice.gst-percentage.index') }}" class="admin-sub-item {{ request()->routeIs('admin.utilities.frontoffice.gst-percentage.*') ? 'active' : '' }}">
+          <i class="fa-solid fa-percent"></i> GST %
+        </a>
+      </li>
+      <li>
+        <a href="{{ route('admin.utilities.frontoffice.company.index') }}" class="admin-sub-item {{ request()->routeIs('admin.utilities.frontoffice.company.*') ? 'active' : '' }}">
+          <i class="fa-solid fa-building"></i> Company Manage
+        </a>
+      </li>
     </ul>
   </div>
 

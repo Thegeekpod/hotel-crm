@@ -171,5 +171,45 @@ class MasterUtilitiesSeeder extends Seeder
         foreach ($operationalStatuses as $item) {
             OperationalStatus::firstOrCreate(['name' => $item['name']], $item);
         }
+
+        // 10. GST % Slabs
+        $gstSlabs = [
+            ['gst_percentage' => 0.00, 'status' => 'Active'],
+            ['gst_percentage' => 5.00, 'status' => 'Active'],
+            ['gst_percentage' => 12.00, 'status' => 'Active'],
+            ['gst_percentage' => 18.00, 'status' => 'Active'],
+            ['gst_percentage' => 28.00, 'status' => 'Active'],
+        ];
+        foreach ($gstSlabs as $item) {
+            \App\Models\GstPercentage::firstOrCreate(['gst_percentage' => $item['gst_percentage']], $item);
+        }
+
+        // 11. Sample Companies
+        $companies = [
+            [
+                'name' => 'Tata Consultancy Services Ltd.',
+                'address' => 'TCS House, Raveline Street, Fort, Mumbai - 400001',
+                'gstin' => '27AAACT2727Q1ZW',
+                'phone' => '+91 22 6778 9999',
+                'status' => 'Active',
+            ],
+            [
+                'name' => 'Infosys Technologies Pvt. Ltd.',
+                'address' => 'Electronics City, Hosur Road, Bengaluru - 560100',
+                'gstin' => '29AAACI4567M1ZX',
+                'phone' => '+91 80 2852 0261',
+                'status' => 'Active',
+            ],
+            [
+                'name' => 'Reliance Industries Corporate',
+                'address' => 'Maker Chambers IV, 222 Nariman Point, Mumbai - 400021',
+                'gstin' => '27AAACR1234A1ZP',
+                'phone' => '+91 22 3555 5000',
+                'status' => 'Active',
+            ],
+        ];
+        foreach ($companies as $item) {
+            \App\Models\Company::firstOrCreate(['name' => $item['name']], $item);
+        }
     }
 }

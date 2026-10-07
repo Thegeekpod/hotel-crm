@@ -364,7 +364,7 @@
           </div>
         </div>
 
-        <!-- <div id="crud-view-container">
+        <div id="crud-view-container">
           <div class="crud-header-card">
             <div>
               <div style="display: flex; align-items: center; gap: 8px;">
@@ -376,7 +376,7 @@
               </div>
             </div>
             <button class="btn-ui-primary" onclick="openAddModal()"><i class="fa-solid fa-plus"></i> Schedule Maintenance</button>
-          </div> -->
+          </div>
 
           <div class="crud-toolbar">
             <div class="crud-toolbar-left">
@@ -1058,7 +1058,10 @@
     const endIdx = pageSize === 'all' ? totalCount : Math.min(startIdx + pageSize, totalCount);
     const pageItems = filtered.slice(startIdx, endIdx);
 
-    document.getElementById('view-count').textContent = `${tableRecords.length} Log${tableRecords.length === 1 ? '' : 's'}`;
+    const viewCountEl = document.getElementById('view-count');
+    if (viewCountEl) {
+      viewCountEl.textContent = `${tableRecords.length} Log${tableRecords.length === 1 ? '' : 's'}`;
+    }
 
     const tbody = document.getElementById('table-body');
     if (!pageItems.length) {

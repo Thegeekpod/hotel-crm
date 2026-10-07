@@ -7,6 +7,8 @@ use App\Http\Controllers\Admin\Utilities\TitleController;
 use App\Http\Controllers\Admin\Utilities\NationalityController;
 use App\Http\Controllers\Admin\Utilities\IdCardTypeController;
 use App\Http\Controllers\Admin\Utilities\PaymentModeController;
+use App\Http\Controllers\Admin\Utilities\GstPercentageController;
+use App\Http\Controllers\Admin\Utilities\CompanyController;
 use App\Http\Controllers\Admin\Utilities\RoomCategoryController;
 use App\Http\Controllers\Admin\Utilities\FloorController;
 use App\Http\Controllers\Admin\Utilities\BeddingConfigController;
@@ -71,6 +73,12 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
             Route::post('payment-mode/bulk-delete', [PaymentModeController::class, 'bulkDestroy'])->name('payment-mode.bulk-destroy');
             Route::resource('payment-mode', PaymentModeController::class)->except(['create', 'edit', 'show']);
+
+            Route::post('gst-percentage/bulk-delete', [GstPercentageController::class, 'bulkDestroy'])->name('gst-percentage.bulk-destroy');
+            Route::resource('gst-percentage', GstPercentageController::class)->except(['create', 'edit', 'show']);
+
+            Route::post('company/bulk-delete', [CompanyController::class, 'bulkDestroy'])->name('company.bulk-delete');
+            Route::resource('company', CompanyController::class)->except(['create', 'edit', 'show']);
         });
 
         // Room Management Utilities

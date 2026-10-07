@@ -363,6 +363,7 @@
               </select>
             </div>
             <div class="crud-toolbar-right">
+              <button class="btn-ui-danger" id="btn-bulk-delete" style="display: none; height: 38px; padding: 0 16px; border-radius: var(--radius-md); font-weight: 700; background: #ef4444; color: #fff; border: none; align-items: center; gap: 6px; cursor: pointer;" onclick="handleBulkDelete()"><i class="fa-solid fa-trash-can"></i> Delete Selected (<span id="bulk-selected-count">0</span>)</button>
               <button class="btn-ui-secondary" onclick="exportDataCSV()"><i class="fa-solid fa-file-csv"></i> Export CSV</button>
               <button class="btn-ui-secondary" onclick="loadTableData()"><i class="fa-solid fa-rotate"></i> Refresh</button>
             </div>
@@ -372,6 +373,7 @@
             <table class="crud-table" id="crud-table">
               <thead>
                 <tr>
+                  <th style="width: 40px; text-align: center;"><input type="checkbox" id="select-all-check" onchange="toggleSelectAll(this)" style="cursor: pointer; width: 16px; height: 16px; accent-color: var(--accent-primary);"></th>
                   <th style="width: 50px;">#</th>
                   <th style="width: 90px;">Icon</th>
                   <th>Facility / Amenity Name</th>
@@ -389,6 +391,9 @@
                   }
                 @endphp
                 <tr data-id="{{ $item->id }}">
+                  <td style="text-align: center;">
+                    <input type="checkbox" class="row-select-check" value="{{ $item->id }}" onchange="handleRowSelect(this, '{{ $item->id }}')" style="cursor: pointer; width: 16px; height: 16px; accent-color: var(--accent-primary);">
+                  </td>
                   <td style="font-family: var(--font-mono); font-weight: 700; color: var(--text-muted); font-size: 11px;">{{ $idx + 1 }}</td>
                   <td>
                     <div style="width: 34px; height: 34px; border-radius: 8px; background: rgba(99, 102, 241, 0.1); color: var(--accent-primary); display: flex; align-items: center; justify-content: center; font-size: 15px;">
@@ -417,7 +422,7 @@
                 </tr>
                 @empty
                 <tr>
-                  <td colspan="6" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                  <td colspan="7" style="text-align: center; padding: 40px; color: var(--text-muted);">
                     <i class="fa-solid fa-inbox" style="font-size: 28px; margin-bottom: 10px; display: block;"></i>
                     No records found. Click "+ Add Entry" to create one.
                   </td>
@@ -729,6 +734,76 @@
     }
   }
 
+  let selectedIds = new Set();
+
+  function updateBulkActionUI() {
+    const countEl = document.getElementById('bulk-selected-count');
+    const btn = document.getElementById('btn-bulk-delete');
+    const selectAll = document.getElementById('select-all-check');
+
+    if (countEl) countEl.textContent = selectedIds.size;
+    if (btn) {
+      btn.style.display = selectedIds.size > 0 ? 'inline-flex' : 'none';
+    }
+
+    const currentVisible = getFilteredRecords();
+    const allVisibleSelected = currentVisible.length > 0 && currentVisible.every(r => selectedIds.has(String(r.id)));
+    if (selectAll) {
+      selectAll.checked = allVisibleSelected;
+      selectAll.indeterminate = selectedIds.size > 0 && !allVisibleSelected;
+    }
+  }
+
+  function handleRowSelect(checkbox, id) {
+    if (checkbox.checked) {
+      selectedIds.add(String(id));
+    } else {
+      selectedIds.delete(String(id));
+    }
+    updateBulkActionUI();
+  }
+
+  function toggleSelectAll(masterCheckbox) {
+    const visible = getFilteredRecords();
+    if (masterCheckbox.checked) {
+      visible.forEach(r => selectedIds.add(String(r.id)));
+    } else {
+      visible.forEach(r => selectedIds.delete(String(r.id)));
+    }
+    renderTable();
+  }
+
+  async function handleBulkDelete() {
+    if (selectedIds.size === 0) return;
+    const count = selectedIds.size;
+    const result = await PmsAlert.confirmDelete(`Delete ${count} Selected Amenities?`, 'All selected amenities will be permanently removed.');
+    if (result && (result.isConfirmed || result === true)) {
+      try {
+        const res = await fetch(`${baseUrl}/bulk-delete`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': csrfToken
+          },
+          body: JSON.stringify({ ids: Array.from(selectedIds) })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok && data.success !== false) {
+          PmsAlert.toast(data.message || `${count} amenity(ies) deleted successfully!`);
+          selectedIds.clear();
+          await loadTableData();
+        } else {
+          PmsAlert.error('Bulk Delete Failed', data.message || 'Could not delete selected records.');
+          await loadTableData();
+        }
+      } catch (err) {
+        console.error(err);
+        PmsAlert.error('Server Error', 'Failed to communicate with the server.');
+      }
+    }
+  }
+
   function getFilteredRecords() {
     return tableRecords.filter(item => {
       const matchSearch = !searchQuery ||
@@ -766,13 +841,14 @@
     if (paginatedRecords.length === 0) {
       tbody.innerHTML = `
         <tr>
-          <td colspan="6" style="text-align: center; padding: 40px; color: var(--text-muted);">
+          <td colspan="7" style="text-align: center; padding: 40px; color: var(--text-muted);">
             <i class="fa-solid fa-inbox" style="font-size: 28px; margin-bottom: 10px; display: block;"></i>
             No matching amenities found.
           </td>
         </tr>
       `;
       renderPagination(totalRecords, totalPages, 0, 0);
+      updateBulkActionUI();
       return;
     }
 
@@ -786,6 +862,9 @@
 
       return `
         <tr data-id="${item.id}">
+          <td style="text-align: center;">
+            <input type="checkbox" class="row-select-check" value="${item.id}" ${selectedIds.has(String(item.id)) ? 'checked' : ''} onchange="handleRowSelect(this, '${item.id}')" style="cursor: pointer; width: 16px; height: 16px; accent-color: var(--accent-primary);">
+          </td>
           <td style="font-family: var(--font-mono); font-weight: 700; color: var(--text-muted); font-size: 11px;">
             ${startIndex + idx + 1}
           </td>
@@ -817,6 +896,7 @@
       `;
     }).join('');
 
+    updateBulkActionUI();
     const fromItem = totalRecords === 0 ? 0 : startIndex + 1;
     const toItem = pageSize === 'all' ? totalRecords : Math.min(startIndex + parseInt(pageSize, 10), totalRecords);
     renderPagination(totalRecords, totalPages, fromItem, toItem);

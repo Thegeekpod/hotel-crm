@@ -119,4 +119,19 @@ class BeddingConfigController extends Controller
             'message' => 'Bedding configuration deleted successfully.',
         ]);
     }
+
+    public function bulkDestroy(Request $request)
+    {
+        $ids = $request->input('ids', []);
+        if (!is_array($ids) || empty($ids)) {
+            return response()->json(['success' => false, 'message' => 'No records selected for deletion.'], 422);
+        }
+
+        $count = BeddingConfig::whereIn('id', $ids)->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => "{$count} bedding configuration(s) deleted successfully.",
+        ]);
+    }
 }

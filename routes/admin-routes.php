@@ -29,6 +29,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::prefix('room-management')->name('roommanagement.')->group(function () {
         Route::get('/', [RoomManagementController::class, 'index'])->name('index');
         Route::post('/', [RoomManagementController::class, 'store'])->name('store');
+        Route::post('/bulk-delete', [RoomManagementController::class, 'bulkDestroy'])->name('bulk-destroy');
         Route::get('/{id}', [RoomManagementController::class, 'show'])->name('show');
         Route::put('/{id}', [RoomManagementController::class, 'update'])->name('update');
         Route::delete('/{id}', [RoomManagementController::class, 'destroy'])->name('destroy');
@@ -39,22 +40,37 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::prefix('utilities')->name('utilities.')->group(function () {
         // Front Office Utilities
         Route::prefix('front-office')->name('frontoffice.')->group(function () {
+            Route::post('reservation-mode/bulk-delete', [ReservationModeController::class, 'bulkDestroy'])->name('reservation-mode.bulk-destroy');
             Route::resource('reservation-mode', ReservationModeController::class)->except(['create', 'edit', 'show']);
+
+            Route::post('idcard-type/bulk-delete', [IdCardTypeController::class, 'bulkDestroy'])->name('idcard-type.bulk-destroy');
             Route::resource('idcard-type', IdCardTypeController::class)->except(['create', 'edit', 'show']);
+
+            Route::post('payment-mode/bulk-delete', [PaymentModeController::class, 'bulkDestroy'])->name('payment-mode.bulk-destroy');
             Route::resource('payment-mode', PaymentModeController::class)->except(['create', 'edit', 'show']);
         });
 
         // Room Management Utilities
         Route::prefix('room-management')->name('roommanage.')->group(function () {
+            Route::post('category/bulk-delete', [RoomCategoryController::class, 'bulkDestroy'])->name('category.bulk-destroy');
             Route::resource('category', RoomCategoryController::class)->except(['create', 'edit', 'show']);
+
+            Route::post('floor/bulk-delete', [FloorController::class, 'bulkDestroy'])->name('floor.bulk-destroy');
             Route::resource('floor', FloorController::class)->except(['create', 'edit', 'show']);
+
+            Route::post('bedding-config/bulk-delete', [BeddingConfigController::class, 'bulkDestroy'])->name('bedding-config.bulk-destroy');
             Route::resource('bedding-config', BeddingConfigController::class)->except(['create', 'edit', 'show']);
+
+            Route::post('amenity/bulk-delete', [AmenityController::class, 'bulkDestroy'])->name('amenity.bulk-destroy');
             Route::resource('amenity', AmenityController::class)->except(['create', 'edit', 'show']);
         });
 
         // Housekeeping Utilities
         Route::prefix('housekeeping')->name('housekeeping.')->group(function () {
+            Route::post('state/bulk-delete', [HousekeepingStateController::class, 'bulkDestroy'])->name('state.bulk-destroy');
             Route::resource('state', HousekeepingStateController::class)->except(['create', 'edit', 'show']);
+
+            Route::post('operational/bulk-delete', [OperationalStatusController::class, 'bulkDestroy'])->name('operational.bulk-destroy');
             Route::resource('operational', OperationalStatusController::class)->except(['create', 'edit', 'show']);
         });
     });

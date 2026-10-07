@@ -382,6 +382,9 @@
                 <option value="Active" {{ request('status') === 'Active' ? 'selected' : '' }}>Active</option>
                 <option value="Inactive" {{ request('status') === 'Inactive' ? 'selected' : '' }}>Inactive</option>
               </select>
+              <button id="btn-bulk-delete" class="btn-action-del" style="display: none; height: 38px; padding: 0 14px; font-size: 12px; align-items: center; gap: 6px;" onclick="handleBulkDelete()">
+                <i class="fa-solid fa-trash-can"></i> Delete Selected (<span id="bulk-selected-count">0</span>)
+              </button>
             </div>
             <div class="crud-toolbar-right">
               <div style="display: flex; align-items: center; gap: 6px;">
@@ -402,6 +405,7 @@
             <table class="crud-table" id="crud-table" style="border: none;">
               <thead>
                 <tr>
+                  <th style="width: 40px; text-align: center;"><input type="checkbox" id="select-all-check" onchange="toggleSelectAll(this)" style="cursor: pointer;"></th>
                   <th style="width: 50px;">#</th>
                   <th>Status Name</th>
                   <th>Code / Short Tag</th>
@@ -491,9 +495,82 @@
   let currentPage = parseInt(urlParams.get('page') || '1', 10);
   let pageSize = urlParams.get('per_page') || "{{ request('per_page', '10') }}" || '10';
   let tableRecords = @json($items);
+  let selectedIds = new Set();
 
   const baseUrl = "{{ route('admin.utilities.housekeeping.operational.index') }}";
   const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+  function updateBulkActionUI() {
+    const btn = document.getElementById('btn-bulk-delete');
+    const countSpan = document.getElementById('bulk-selected-count');
+    const selectAllCheck = document.getElementById('select-all-check');
+
+    if (btn && countSpan) {
+      countSpan.textContent = selectedIds.size;
+      btn.style.display = selectedIds.size > 0 ? 'inline-flex' : 'none';
+    }
+
+    if (selectAllCheck) {
+      const filtered = getFilteredRecords();
+      if (filtered.length === 0) {
+        selectAllCheck.checked = false;
+        selectAllCheck.indeterminate = false;
+      } else {
+        const allSelected = filtered.every(r => selectedIds.has(r.id));
+        const someSelected = filtered.some(r => selectedIds.has(r.id));
+        selectAllCheck.checked = allSelected;
+        selectAllCheck.indeterminate = someSelected && !allSelected;
+      }
+    }
+  }
+
+  function handleRowSelect(checkbox, id) {
+    if (checkbox.checked) {
+      selectedIds.add(id);
+    } else {
+      selectedIds.delete(id);
+    }
+    updateBulkActionUI();
+  }
+
+  function toggleSelectAll(masterCheckbox) {
+    const filtered = getFilteredRecords();
+    if (masterCheckbox.checked) {
+      filtered.forEach(r => selectedIds.add(r.id));
+    } else {
+      filtered.forEach(r => selectedIds.delete(r.id));
+    }
+    renderTable();
+  }
+
+  async function handleBulkDelete() {
+    if (selectedIds.size === 0) return;
+    const count = selectedIds.size;
+    const result = await PmsAlert.confirmDelete(`Delete ${count} Operational Status${count > 1 ? 'es' : ''}?`, 'Selected operational statuses will be permanently deleted.');
+    if (result.isConfirmed) {
+      try {
+        const res = await fetch(`${baseUrl}/bulk-delete`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': csrfToken
+          },
+          body: JSON.stringify({ ids: Array.from(selectedIds) })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          PmsAlert.toast(data.message || 'Records deleted successfully!');
+          selectedIds.clear();
+          await loadTableData();
+        } else {
+          PmsAlert.error('Delete Failed', data.message || 'Could not delete selected records.');
+        }
+      } catch (err) {
+        PmsAlert.error('Server Error', 'An error occurred during bulk deletion.');
+      }
+    }
+  }
 
   function updateUrlParams() {
     const params = new URLSearchParams();
@@ -633,6 +710,7 @@
         const data = await res.json();
         if (res.ok && data.success) {
           PmsAlert.toast('Record deleted successfully!');
+          selectedIds.delete(id);
           await loadTableData();
         } else {
           PmsAlert.error('Delete Failed', data.message || 'Could not delete record.');
@@ -672,15 +750,19 @@
 
     const tbody = document.getElementById('table-body');
     if (!pageItems.length) {
-      tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 40px; color: var(--text-muted);"><i class="fa-solid fa-inbox" style="font-size: 28px; margin-bottom: 10px; display: block;"></i>No matching records found.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 40px; color: var(--text-muted);"><i class="fa-solid fa-inbox" style="font-size: 28px; margin-bottom: 10px; display: block;"></i>No matching records found.</td></tr>`;
     } else {
       let html = '';
       pageItems.forEach((item, idx) => {
         const badgeColor = item.badge_color || 'blue';
         const statusBadgeClass = item.status === 'Active' ? 'green' : 'yellow';
+        const isSelected = selectedIds.has(item.id);
 
         html += `
-          <tr data-id="${item.id}">
+          <tr data-id="${item.id}" class="${isSelected ? 'row-selected' : ''}">
+            <td style="text-align: center;">
+              <input type="checkbox" class="row-select-check" value="${item.id}" ${isSelected ? 'checked' : ''} onchange="handleRowSelect(this, ${item.id})" style="cursor: pointer;">
+            </td>
             <td style="font-family: var(--font-mono); font-weight: 700; color: var(--text-muted); font-size: 11px;">${startIdx + idx + 1}</td>
             <td style="font-weight: 800; color: var(--text-primary);">
               <span class="badge-tag ${badgeColor}" style="margin-right: 6px;"><i class="fa-solid fa-circle-nodes" style="font-size: 9px;"></i>${item.name}</span>
@@ -720,6 +802,7 @@
     }
 
     renderPaginationNav(totalPages);
+    updateBulkActionUI();
   }
 
   function renderPaginationNav(totalPages) {
@@ -795,6 +878,5 @@
 
   window.addEventListener('DOMContentLoaded', () => {
     renderTable();
-  });
 </script>
 @endpush

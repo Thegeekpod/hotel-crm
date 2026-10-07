@@ -62,7 +62,10 @@ class HousekeepingStateController extends Controller
 
     public function update(Request $request, $id)
     {
-        $item = HousekeepingState::findOrFail($id);
+        $item = HousekeepingState::find($id);
+        if (!$item) {
+            return response()->json(['success' => false, 'message' => 'Housekeeping state not found.'], 404);
+        }
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -86,12 +89,34 @@ class HousekeepingStateController extends Controller
 
     public function destroy($id)
     {
-        $item = HousekeepingState::findOrFail($id);
+        $item = HousekeepingState::find($id);
+        if (!$item) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Housekeeping state already removed or does not exist.',
+            ]);
+        }
+
         $item->delete();
 
         return response()->json([
             'success' => true,
             'message' => 'Housekeeping state deleted successfully.',
+        ]);
+    }
+
+    public function bulkDestroy(Request $request)
+    {
+        $ids = $request->input('ids', []);
+        if (!is_array($ids) || empty($ids)) {
+            return response()->json(['success' => false, 'message' => 'No records selected for deletion.'], 422);
+        }
+
+        $count = HousekeepingState::whereIn('id', $ids)->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => "{$count} housekeeping state(s) deleted successfully.",
         ]);
     }
 }

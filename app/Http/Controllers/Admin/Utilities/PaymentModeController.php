@@ -54,7 +54,10 @@ class PaymentModeController extends Controller
 
     public function update(Request $request, $id)
     {
-        $item = PaymentMode::findOrFail($id);
+        $item = PaymentMode::find($id);
+        if (!$item) {
+            return response()->json(['success' => false, 'message' => 'Payment mode not found.'], 404);
+        }
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -72,12 +75,34 @@ class PaymentModeController extends Controller
 
     public function destroy($id)
     {
-        $item = PaymentMode::findOrFail($id);
+        $item = PaymentMode::find($id);
+        if (!$item) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Payment mode already removed or does not exist.',
+            ]);
+        }
+
         $item->delete();
 
         return response()->json([
             'success' => true,
             'message' => 'Payment mode deleted successfully.',
+        ]);
+    }
+
+    public function bulkDestroy(Request $request)
+    {
+        $ids = $request->input('ids', []);
+        if (!is_array($ids) || empty($ids)) {
+            return response()->json(['success' => false, 'message' => 'No records selected for deletion.'], 422);
+        }
+
+        $count = PaymentMode::whereIn('id', $ids)->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => "{$count} payment mode(s) deleted successfully.",
         ]);
     }
 }

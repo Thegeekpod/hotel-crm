@@ -254,6 +254,28 @@ class RoomManagementController extends Controller
         ]);
     }
 
+    public function bulkDestroy(Request $request)
+    {
+        $ids = $request->input('ids', []);
+        if (!is_array($ids) || empty($ids)) {
+            return response()->json(['success' => false, 'message' => 'No rooms selected for deletion.'], 422);
+        }
+
+        $count = Room::whereIn('id', $ids)->delete();
+
+        // Recalculate room counts across all floors
+        $floors = Floor::all();
+        foreach ($floors as $fl) {
+            $fl->rooms = Room::where('floor_id', $fl->id)->orWhere('floor', $fl->floor)->orWhere('floor', $fl->name)->count();
+            $fl->save();
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => "{$count} room asset(s) deleted successfully.",
+        ]);
+    }
+
     public function toggleMaintenance(Request $request, $id)
     {
         $room = Room::findOrFail($id);

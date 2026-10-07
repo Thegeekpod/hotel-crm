@@ -62,7 +62,10 @@ class OperationalStatusController extends Controller
 
     public function update(Request $request, $id)
     {
-        $item = OperationalStatus::findOrFail($id);
+        $item = OperationalStatus::find($id);
+        if (!$item) {
+            return response()->json(['success' => false, 'message' => 'Operational status not found.'], 404);
+        }
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -86,12 +89,34 @@ class OperationalStatusController extends Controller
 
     public function destroy($id)
     {
-        $item = OperationalStatus::findOrFail($id);
+        $item = OperationalStatus::find($id);
+        if (!$item) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Operational status already removed or does not exist.',
+            ]);
+        }
+
         $item->delete();
 
         return response()->json([
             'success' => true,
             'message' => 'Operational status deleted successfully.',
+        ]);
+    }
+
+    public function bulkDestroy(Request $request)
+    {
+        $ids = $request->input('ids', []);
+        if (!is_array($ids) || empty($ids)) {
+            return response()->json(['success' => false, 'message' => 'No records selected for deletion.'], 422);
+        }
+
+        $count = OperationalStatus::whereIn('id', $ids)->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => "{$count} operational status(es) deleted successfully.",
         ]);
     }
 }

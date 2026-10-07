@@ -560,8 +560,8 @@
         </select>
       </div>
 
-      <button class="btn-ui-secondary" onclick="exportRoomsCSV()" style="height: 38px; font-size: 12px;">
-        <i class="fa-solid fa-file-arrow-down"></i> Export CSV
+      <button id="btn-bulk-delete-rooms" class="btn-action-del" style="display: none; height: 38px; padding: 0 14px; font-size: 12px; align-items: center; gap: 6px;" onclick="handleBulkDeleteRooms()">
+        <i class="fa-solid fa-trash-can"></i> Delete Selected (<span id="bulk-selected-rooms-count">0</span>)
       </button>
 
       <button class="btn-ui-primary" onclick="openAddRoomModal()" style="height: 38px; font-size: 12px; font-weight: 800;">
@@ -576,6 +576,7 @@
       <table class="room-table">
         <thead>
           <tr>
+            <th style="width: 40px; text-align: center;"><input type="checkbox" id="select-all-rooms-check" onchange="toggleSelectAllRooms(this)" style="cursor: pointer;"></th>
             <th style="width: 50px;">#</th>
             <th>Room & Floor</th>
             <th>Category</th>
@@ -1035,6 +1036,7 @@
 @push('scripts')
 <script>
   let roomsData = @json($rooms);
+  let selectedRoomIds = new Set();
   const beddingConfigsData = @json($beddingConfigs);
   const baseUrl = "{{ route('admin.roommanagement.index') }}";
   const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
@@ -1350,6 +1352,78 @@
     }
   }
 
+  function updateRoomsBulkActionUI() {
+    const btn = document.getElementById('btn-bulk-delete-rooms');
+    const countSpan = document.getElementById('bulk-selected-rooms-count');
+    const selectAllCheck = document.getElementById('select-all-rooms-check');
+
+    if (btn && countSpan) {
+      countSpan.textContent = selectedRoomIds.size;
+      btn.style.display = selectedRoomIds.size > 0 ? 'inline-flex' : 'none';
+    }
+
+    if (selectAllCheck) {
+      const filtered = getFilteredRooms();
+      if (filtered.length === 0) {
+        selectAllCheck.checked = false;
+        selectAllCheck.indeterminate = false;
+      } else {
+        const allSelected = filtered.every(r => selectedRoomIds.has(r.id));
+        const someSelected = filtered.some(r => selectedRoomIds.has(r.id));
+        selectAllCheck.checked = allSelected;
+        selectAllCheck.indeterminate = someSelected && !allSelected;
+      }
+    }
+  }
+
+  function handleRoomSelect(checkbox, id) {
+    if (checkbox.checked) {
+      selectedRoomIds.add(id);
+    } else {
+      selectedRoomIds.delete(id);
+    }
+    updateRoomsBulkActionUI();
+  }
+
+  function toggleSelectAllRooms(masterCheckbox) {
+    const filtered = getFilteredRooms();
+    if (masterCheckbox.checked) {
+      filtered.forEach(r => selectedRoomIds.add(r.id));
+    } else {
+      filtered.forEach(r => selectedRoomIds.delete(r.id));
+    }
+    renderView();
+  }
+
+  async function handleBulkDeleteRooms() {
+    if (selectedRoomIds.size === 0) return;
+    const count = selectedRoomIds.size;
+    const result = await PmsAlert.confirmDelete(`Delete ${count} Room Asset${count > 1 ? 's' : ''}?`, 'Selected rooms will be permanently removed from inventory.');
+    if (result.isConfirmed) {
+      try {
+        const res = await fetch(`${baseUrl}/bulk-delete`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': csrfToken
+          },
+          body: JSON.stringify({ ids: Array.from(selectedRoomIds) })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          PmsAlert.toast(data.message || 'Rooms deleted successfully!');
+          selectedRoomIds.clear();
+          await loadRoomsData();
+        } else {
+          PmsAlert.error('Delete Failed', data.message || 'Could not delete selected rooms.');
+        }
+      } catch (err) {
+        PmsAlert.error('Server Error', 'An error occurred during bulk deletion.');
+      }
+    }
+  }
+
   async function deleteRoom(id) {
     const room = roomsData.find(r => r.id === id);
     const result = await PmsAlert.confirmDelete(`Delete Room #${room ? room.room_number : id}?`, 'This room asset will be permanently removed from inventory.');
@@ -1365,6 +1439,7 @@
         const data = await res.json();
         if (res.ok && data.success) {
           PmsAlert.toast('Room deleted successfully!');
+          selectedRoomIds.delete(id);
           loadRoomsData();
         } else {
           PmsAlert.error('Delete Failed', data.message || 'Could not delete room.');
@@ -1580,10 +1655,11 @@
     // Render Table
     const tbody = document.getElementById('rooms-tbody');
     if (!pageItems.length) {
-      tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; padding: 40px; color: var(--text-muted);"><i class="fa-solid fa-inbox" style="font-size: 28px; margin-bottom: 10px; display: block;"></i>No matching room assets found.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="10" style="text-align: center; padding: 40px; color: var(--text-muted);"><i class="fa-solid fa-inbox" style="font-size: 28px; margin-bottom: 10px; display: block;"></i>No matching room assets found.</td></tr>`;
     } else {
       let tableHtml = '';
       pageItems.forEach((room, idx) => {
+        const isSelected = selectedRoomIds.has(room.id);
         let catBadgeClass = 'blue';
         if (room.category && room.category.includes('SUPER')) catBadgeClass = 'purple';
         else if (room.category && room.category.includes('SUITE')) catBadgeClass = 'yellow';
@@ -1609,7 +1685,10 @@
           (amenitiesList.length > 3 ? `<span class="amenity-chip">+${amenitiesList.length - 3}</span>` : '');
 
         tableHtml += `
-          <tr data-id="${room.id}">
+          <tr data-id="${room.id}" class="${isSelected ? 'row-selected' : ''}">
+            <td style="text-align: center;">
+              <input type="checkbox" class="row-select-check" value="${room.id}" ${isSelected ? 'checked' : ''} onchange="handleRoomSelect(this, ${room.id})" style="cursor: pointer;">
+            </td>
             <td style="font-family: var(--font-mono); font-weight: 700; color: var(--text-muted); font-size: 11px;">${startIdx + idx + 1}</td>
             <td>
               <div style="display: flex; align-items: baseline; gap: 8px;">
@@ -1738,6 +1817,7 @@
     }
 
     renderPaginationNav(totalPages);
+    updateRoomsBulkActionUI();
   }
 
   function renderPaginationNav(totalPages) {

@@ -56,7 +56,10 @@ class IdCardTypeController extends Controller
 
     public function update(Request $request, $id)
     {
-        $item = IdCardType::findOrFail($id);
+        $item = IdCardType::find($id);
+        if (!$item) {
+            return response()->json(['success' => false, 'message' => 'ID Card type not found.'], 404);
+        }
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -75,12 +78,34 @@ class IdCardTypeController extends Controller
 
     public function destroy($id)
     {
-        $item = IdCardType::findOrFail($id);
+        $item = IdCardType::find($id);
+        if (!$item) {
+            return response()->json([
+                'success' => true,
+                'message' => 'ID Card type already removed or does not exist.',
+            ]);
+        }
+
         $item->delete();
 
         return response()->json([
             'success' => true,
             'message' => 'ID Card type deleted successfully.',
+        ]);
+    }
+
+    public function bulkDestroy(Request $request)
+    {
+        $ids = $request->input('ids', []);
+        if (!is_array($ids) || empty($ids)) {
+            return response()->json(['success' => false, 'message' => 'No records selected for deletion.'], 422);
+        }
+
+        $count = IdCardType::whereIn('id', $ids)->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => "{$count} ID Card type(s) deleted successfully.",
         ]);
     }
 }

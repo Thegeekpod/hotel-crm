@@ -54,7 +54,10 @@ class ReservationModeController extends Controller
 
     public function update(Request $request, $id)
     {
-        $item = ReservationMode::findOrFail($id);
+        $item = ReservationMode::find($id);
+        if (!$item) {
+            return response()->json(['success' => false, 'message' => 'Reservation mode not found.'], 404);
+        }
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -72,12 +75,34 @@ class ReservationModeController extends Controller
 
     public function destroy($id)
     {
-        $item = ReservationMode::findOrFail($id);
+        $item = ReservationMode::find($id);
+        if (!$item) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Reservation mode already removed or does not exist.',
+            ]);
+        }
+
         $item->delete();
 
         return response()->json([
             'success' => true,
             'message' => 'Reservation mode deleted successfully.',
+        ]);
+    }
+
+    public function bulkDestroy(Request $request)
+    {
+        $ids = $request->input('ids', []);
+        if (!is_array($ids) || empty($ids)) {
+            return response()->json(['success' => false, 'message' => 'No records selected for deletion.'], 422);
+        }
+
+        $count = ReservationMode::whereIn('id', $ids)->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => "{$count} reservation mode(s) deleted successfully.",
         ]);
     }
 }

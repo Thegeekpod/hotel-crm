@@ -216,156 +216,176 @@
     box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
   }
 
-  /* Custom Searchable FontAwesome Dropdown */
-  .fa-search-select-wrap {
-    position: relative;
-    width: 100%;
-  }
-  .fa-select-trigger {
-    width: 100%;
-    height: 42px;
-    padding: 8px 14px;
+  /* Custom Inline Searchable FontAwesome Picker UI */
+  .fa-picker-card {
     background: #ffffff;
     border: 1px solid var(--border-medium);
     border-radius: var(--radius-md);
+    overflow: hidden;
+    transition: all 0.2s ease;
+  }
+  .fa-picker-trigger {
+    padding: 10px 14px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     cursor: pointer;
+    background: #ffffff;
     user-select: none;
-    transition: all 0.2s ease;
   }
-  .fa-select-trigger:hover {
-    border-color: var(--accent-primary);
+  .fa-picker-trigger:hover {
+    background: #f8fafc;
   }
-  .fa-select-trigger.active {
-    border-color: var(--accent-primary);
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
-  }
-  .fa-trigger-content {
+  .fa-picker-active-item {
     display: flex;
     align-items: center;
-    gap: 10px;
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--text-primary);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    gap: 12px;
   }
-  .fa-trigger-icon {
-    width: 26px;
-    height: 26px;
-    background: rgba(99, 102, 241, 0.1);
+  .fa-picker-icon-badge {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(168, 85, 247, 0.12));
+    border: 1px solid rgba(99, 102, 241, 0.2);
     color: var(--accent-primary);
-    border-radius: 6px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 13px;
+    font-size: 16px;
     flex-shrink: 0;
   }
-  .fa-dropdown-panel {
-    position: absolute;
-    top: calc(100% + 6px);
-    left: 0;
-    right: 0;
-    background: #ffffff;
-    border: 1px solid var(--border-medium);
-    border-radius: var(--radius-md);
-    box-shadow: 0 10px 30px rgba(0,0,0,0.12);
-    z-index: 1050;
-    display: none;
-    flex-direction: column;
-    overflow: hidden;
-    animation: fadeInDown 0.15s ease-out;
+  .fa-picker-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-primary);
   }
-  .fa-dropdown-panel.open {
-    display: flex;
+  .fa-picker-subtitle {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
   }
-  @keyframes fadeInDown {
-    from { opacity: 0; transform: translateY(-6px); }
-    to { opacity: 1; transform: translateY(0); }
+  .fa-picker-btn {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 5px 10px;
+    border-radius: 6px;
+    background: #f1f5f9;
+    color: var(--accent-primary);
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
   }
-  .fa-search-box-wrap {
-    padding: 10px;
+  .fa-picker-drawer {
+    border-top: 1px solid var(--border-medium);
     background: #f8fafc;
-    border-bottom: 1px solid var(--border-medium);
-    position: relative;
+    padding: 12px;
+    display: block;
   }
-  .fa-search-box-wrap i {
+  .fa-picker-drawer.collapsed {
+    display: none;
+  }
+  .fa-picker-search-bar {
+    position: relative;
+    margin-bottom: 10px;
+  }
+  .fa-picker-search-bar i {
     position: absolute;
-    left: 20px;
+    left: 12px;
     top: 50%;
     transform: translateY(-50%);
     color: var(--text-muted);
     font-size: 12px;
   }
-  .fa-search-input {
+  .fa-picker-search-input {
     width: 100%;
     height: 36px;
     padding: 6px 12px 6px 32px;
     font-size: 12px;
     border: 1px solid var(--border-medium);
-    border-radius: 6px;
+    border-radius: 8px;
+    background: #ffffff;
+    color: var(--text-primary);
     outline: none;
-    background: #fff;
+    box-sizing: border-box;
   }
-  .fa-search-input:focus {
+  .fa-picker-search-input:focus {
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+  }
+  .fa-picker-chips {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding-bottom: 8px;
+    margin-bottom: 8px;
+  }
+  .fa-chip-btn {
+    padding: 4px 8px;
+    font-size: 10px;
+    font-weight: 700;
+    border-radius: 12px;
+    border: 1px solid var(--border-medium);
+    background: #ffffff;
+    color: var(--text-secondary);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s;
+  }
+  .fa-chip-btn:hover, .fa-chip-btn.active {
+    background: var(--accent-primary);
+    color: #ffffff;
     border-color: var(--accent-primary);
   }
-  .fa-options-list {
-    max-height: 230px;
+  .fa-picker-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+    max-height: 180px;
     overflow-y: auto;
-    padding: 6px;
-    list-style: none;
-    margin: 0;
+    padding-right: 4px;
   }
-  .fa-option-item {
+  .fa-picker-option {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    padding: 8px 10px;
-    border-radius: 6px;
+    gap: 8px;
+    padding: 6px 8px;
+    background: #ffffff;
+    border: 1px solid var(--border-medium);
+    border-radius: 8px;
     cursor: pointer;
     transition: all 0.15s ease;
-    gap: 8px;
   }
-  .fa-option-item:hover, .fa-option-item.selected {
+  .fa-picker-option:hover {
+    border-color: var(--accent-primary);
+    background: rgba(99, 102, 241, 0.04);
+  }
+  .fa-picker-option.selected {
+    border-color: var(--accent-primary);
     background: rgba(99, 102, 241, 0.08);
   }
-  .fa-option-left {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 12.5px;
-    font-weight: 600;
-    color: var(--text-primary);
-  }
-  .fa-option-icon {
-    width: 28px;
-    height: 28px;
+  .fa-option-mini-icon {
+    width: 26px;
+    height: 26px;
     border-radius: 6px;
     background: #f1f5f9;
     color: var(--accent-primary);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 13px;
+    font-size: 12px;
     flex-shrink: 0;
   }
-  .fa-option-item:hover .fa-option-icon, .fa-option-item.selected .fa-option-icon {
+  .fa-picker-option.selected .fa-option-mini-icon, .fa-picker-option:hover .fa-option-mini-icon {
     background: var(--accent-primary);
-    color: #fff;
+    color: #ffffff;
   }
-  .fa-option-badge {
-    font-size: 10px;
-    font-weight: 700;
-    background: #f1f5f9;
-    color: var(--text-secondary);
-    padding: 2px 6px;
-    border-radius: 4px;
-    text-transform: uppercase;
+  .fa-option-text {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--text-primary);
   }
 </style>
 @endpush
@@ -510,38 +530,62 @@
 </main>
 
 <div class="modal-backdrop" id="crud-modal">
-  <div class="modal-window" style="width: 520px; max-width: 95vw;">
-    <div class="modal-top" style="display: flex; justify-content: space-between; align-items: center;">
-      <h3 style="margin: 0;"><i class="fa-solid fa-pen-to-square"></i> <span id="modal-title">Add Amenity</span></h3>
-      <button class="modal-close" onclick="closeModal('crud-modal')">&times;</button>
+  <div class="modal-window" style="width: 560px; max-width: 95vw; max-height: 90vh; display: flex; flex-direction: column; border-radius: 16px; overflow: hidden; box-shadow: 0 25px 50px rgba(0,0,0,0.25);">
+    <div class="modal-top" style="background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: none;">
+      <h3 style="margin: 0; font-size: 16px; font-weight: 800; display: flex; align-items: center; gap: 8px; color: #fff;">
+        <i class="fa-solid fa-wand-magic-sparkles"></i> <span id="modal-title">Add Amenity</span>
+      </h3>
+      <button class="modal-close" onclick="closeModal('crud-modal')" style="background: rgba(255,255,255,0.2); color: #fff; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border: none; font-size: 16px; cursor: pointer;">&times;</button>
     </div>
-    <form id="crud-form" onsubmit="handleFormSubmit(event)">
+
+    <form id="crud-form" onsubmit="handleFormSubmit(event)" style="display: flex; flex-direction: column; flex: 1; min-height: 0;">
       <input type="hidden" id="item-id">
       <input type="hidden" id="form-icon" value="fa-solid fa-wifi">
-      <div class="modal-content-area" style="padding: 20px; background: #f8fafc;">
+      
+      <div class="modal-content-area" style="padding: 22px; background: #f8fafc; overflow-y: auto; flex: 1;">
         
-        <!-- Searchable FontAwesome Dropdown -->
+        <!-- Searchable FontAwesome Icon Picker -->
         <div class="admin-form-group">
-          <label class="admin-form-label">FontAwesome Icon <span style="color: var(--accent-rose);">*</span></label>
-          <div class="fa-search-select-wrap" id="fa-search-select-wrap">
-            <div class="fa-select-trigger" id="fa-select-trigger" onclick="toggleFaDropdown()">
-              <div class="fa-trigger-content">
-                <div class="fa-trigger-icon" id="fa-trigger-icon-box">
+          <label class="admin-form-label">FontAwesome Icon Class <span style="color: var(--accent-rose);">*</span></label>
+          <div class="fa-picker-card">
+            <div class="fa-picker-trigger" onclick="toggleFaDrawer()">
+              <div class="fa-picker-active-item">
+                <div class="fa-picker-icon-badge" id="fa-trigger-icon-box">
                   <i class="fa-solid fa-wifi" id="fa-trigger-icon-el"></i>
                 </div>
-                <span id="fa-trigger-name">Free Wi-Fi / High-Speed Internet</span>
+                <div>
+                  <div class="fa-picker-title" id="fa-trigger-name">Free Wi-Fi / High-Speed Internet</div>
+                  <div class="fa-picker-subtitle" id="fa-trigger-class">fa-solid fa-wifi</div>
+                </div>
               </div>
-              <i class="fa-solid fa-chevron-down" style="font-size: 11px; color: var(--text-muted);"></i>
+              <div class="fa-picker-btn">
+                <span id="fa-toggle-text">Change Icon</span>
+                <i class="fa-solid fa-chevron-down" id="fa-toggle-icon" style="font-size: 10px;"></i>
+              </div>
             </div>
-            
-            <div class="fa-dropdown-panel" id="fa-dropdown-panel">
-              <div class="fa-search-box-wrap">
+
+            <div class="fa-picker-drawer" id="fa-picker-drawer">
+              <div class="fa-picker-search-bar">
                 <i class="fa-solid fa-magnifying-glass"></i>
-                <input type="text" id="fa-search-input" class="fa-search-input" placeholder="Type icon name (e.g. wifi, tv, ac, pool, bath)..." oninput="filterFaIcons(this.value)">
+                <input type="text" id="fa-search-input" class="fa-picker-search-input" placeholder="Search icons (e.g. wifi, tv, ac, pool, coffee, bath, key)..." oninput="filterFaIcons(this.value)">
               </div>
-              <ul class="fa-options-list" id="fa-options-list">
-                <!-- Injected via JavaScript from data.js -->
-              </ul>
+              
+              <div class="fa-picker-chips" id="fa-category-chips">
+                <button type="button" class="fa-chip-btn active" onclick="filterFaCategory('all', this)">All</button>
+                <button type="button" class="fa-chip-btn" onclick="filterFaCategory('Connectivity', this)">Connectivity</button>
+                <button type="button" class="fa-chip-btn" onclick="filterFaCategory('Technology', this)">Tech</button>
+                <button type="button" class="fa-chip-btn" onclick="filterFaCategory('Climate', this)">Climate</button>
+                <button type="button" class="fa-chip-btn" onclick="filterFaCategory('Bathroom', this)">Bathroom</button>
+                <button type="button" class="fa-chip-btn" onclick="filterFaCategory('Wellness', this)">Wellness</button>
+                <button type="button" class="fa-chip-btn" onclick="filterFaCategory('Food & Drink', this)">Dining</button>
+                <button type="button" class="fa-chip-btn" onclick="filterFaCategory('Views', this)">Views</button>
+                <button type="button" class="fa-chip-btn" onclick="filterFaCategory('Security', this)">Security</button>
+                <button type="button" class="fa-chip-btn" onclick="filterFaCategory('Services', this)">Services</button>
+              </div>
+
+              <div class="fa-picker-grid" id="fa-options-grid">
+                <!-- Populated dynamically via JS -->
+              </div>
             </div>
           </div>
         </div>
@@ -551,7 +595,7 @@
           <input type="text" id="form-name" class="admin-form-input" placeholder="e.g. Free Wi-Fi, Balcony, Safe Locker" required>
         </div>
 
-        <div class="admin-form-group">
+        <div class="admin-form-group" style="margin-bottom: 0;">
           <label class="admin-form-label">Status <span style="color: var(--accent-rose);">*</span></label>
           <select id="form-status" class="admin-form-input" required>
             <option value="Active">Active</option>
@@ -559,9 +603,12 @@
           </select>
         </div>
       </div>
+
       <div class="modal-bot" style="padding: 14px 20px; background: #fff; border-top: 1px solid var(--border-medium); display: flex; justify-content: flex-end; gap: 10px;">
-        <button type="button" class="btn-ui-secondary" onclick="closeModal('crud-modal')">Cancel</button>
-        <button type="submit" class="btn-ui-primary" id="btn-save"><i class="fa-solid fa-floppy-disk"></i> Save Entry</button>
+        <button type="button" class="btn-ui-secondary" onclick="closeModal('crud-modal')" style="height: 38px; padding: 0 18px; border-radius: 8px;">Cancel</button>
+        <button type="submit" class="btn-ui-primary" id="btn-save" style="height: 38px; padding: 0 20px; border-radius: 8px; background: linear-gradient(135deg, #6366f1, #8b5cf6); font-weight: 700;">
+          <i class="fa-solid fa-floppy-disk"></i> Save Entry
+        </button>
       </div>
     </form>
   </div>
@@ -581,16 +628,20 @@
   const baseUrl = "{{ url('admin/utilities/room-management/amenity') }}";
   const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
-  // FontAwesome Icons Search Dropdown Logic
+  // FontAwesome Icons Data & Logic
   const iconsData = window.FONTAWESOME_ICONS || [];
   let selectedIconClass = 'fa-solid fa-wifi';
+  let currentCategory = 'all';
+  let currentSearchQuery = '';
 
-  function renderFaDropdownOptions(filter = '') {
-    const list = document.getElementById('fa-options-list');
-    if (!list) return;
+  function renderFaGrid() {
+    const grid = document.getElementById('fa-options-grid');
+    if (!grid) return;
 
-    const query = filter.toLowerCase().trim();
+    const query = currentSearchQuery.toLowerCase().trim();
     const filtered = iconsData.filter(item => {
+      const matchCat = (currentCategory === 'all') || (item.category === currentCategory);
+      if (!matchCat) return false;
       if (!query) return true;
       return item.name.toLowerCase().includes(query) ||
              item.class.toLowerCase().includes(query) ||
@@ -598,51 +649,55 @@
     });
 
     if (filtered.length === 0) {
-      list.innerHTML = `<li style="padding: 14px; text-align: center; color: var(--text-muted); font-size: 12px;">No matching icons found.</li>`;
+      grid.innerHTML = `<div style="grid-column: span 2; padding: 16px; text-align: center; color: var(--text-muted); font-size: 12px;">No matching icons found.</div>`;
       return;
     }
 
-    list.innerHTML = filtered.map(item => `
-      <li class="fa-option-item ${item.class === selectedIconClass ? 'selected' : ''}" onclick="selectFaIcon('${item.class}', '${escapeJs(item.name)}')">
-        <div class="fa-option-left">
-          <div class="fa-option-icon">
-            <i class="${item.class}"></i>
-          </div>
-          <div>
-            <div style="font-weight: 700;">${escapeHtml(item.name)}</div>
-            <div style="font-size: 11px; color: var(--text-muted);">${item.class}</div>
-          </div>
+    grid.innerHTML = filtered.map(item => `
+      <div class="fa-picker-option ${item.class === selectedIconClass ? 'selected' : ''}" onclick="selectFaIcon('${item.class}', '${escapeJs(item.name)}')">
+        <div class="fa-option-mini-icon">
+          <i class="${item.class}"></i>
         </div>
-        <span class="fa-option-badge">${escapeHtml(item.category || 'General')}</span>
-      </li>
+        <div class="fa-option-text" title="${escapeHtml(item.name)} (${item.class})">
+          ${escapeHtml(item.name)}
+        </div>
+      </div>
     `).join('');
   }
 
-  function toggleFaDropdown(forceOpen = null) {
-    const panel = document.getElementById('fa-dropdown-panel');
-    const trigger = document.getElementById('fa-select-trigger');
-    const isOpen = panel.classList.contains('open');
-    const shouldOpen = forceOpen !== null ? forceOpen : !isOpen;
+  function toggleFaDrawer(force = null) {
+    const drawer = document.getElementById('fa-picker-drawer');
+    const isHidden = drawer.classList.contains('collapsed');
+    const shouldOpen = force !== null ? force : isHidden;
 
     if (shouldOpen) {
-      panel.classList.add('open');
-      trigger.classList.add('active');
+      drawer.classList.remove('collapsed');
+      document.getElementById('fa-toggle-text').textContent = 'Hide Picker';
+      document.getElementById('fa-toggle-icon').className = 'fa-solid fa-chevron-up';
       document.getElementById('fa-search-input').focus();
     } else {
-      panel.classList.remove('open');
-      trigger.classList.remove('active');
+      drawer.classList.add('collapsed');
+      document.getElementById('fa-toggle-text').textContent = 'Change Icon';
+      document.getElementById('fa-toggle-icon').className = 'fa-solid fa-chevron-down';
     }
   }
 
   function filterFaIcons(val) {
-    renderFaDropdownOptions(val);
+    currentSearchQuery = val;
+    renderFaGrid();
+  }
+
+  function filterFaCategory(cat, btn) {
+    currentCategory = cat;
+    document.querySelectorAll('.fa-chip-btn').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    renderFaGrid();
   }
 
   function selectFaIcon(iconClass, iconName) {
     selectedIconClass = iconClass;
     document.getElementById('form-icon').value = iconClass;
-    
-    // Normalize fontawesome class if needed
+
     let fullClass = iconClass;
     if (!fullClass.includes('fa-solid') && !fullClass.includes('fa-regular') && !fullClass.includes('fa-brands')) {
       fullClass = 'fa-solid ' + fullClass;
@@ -650,8 +705,17 @@
 
     document.getElementById('fa-trigger-icon-el').className = fullClass;
     document.getElementById('fa-trigger-name').textContent = iconName;
-    
-    toggleFaDropdown(false);
+    document.getElementById('fa-trigger-class').textContent = iconClass;
+
+    // Auto-fill Amenity name if currently empty
+    const nameInput = document.getElementById('form-name');
+    if (!nameInput.value.trim()) {
+      // Clean name (remove extra descriptions like "/ High-Speed Internet")
+      const cleanName = iconName.split('/')[0].replace(/\(.*?\)/g, '').trim();
+      nameInput.value = cleanName;
+    }
+
+    renderFaGrid();
   }
 
   function setDropdownIcon(iconClass) {
@@ -669,16 +733,9 @@
     document.getElementById('form-icon').value = finalClass;
     document.getElementById('fa-trigger-icon-el').className = finalClass;
     document.getElementById('fa-trigger-name').textContent = name;
-    renderFaDropdownOptions();
+    document.getElementById('fa-trigger-class').textContent = finalClass;
+    renderFaGrid();
   }
-
-  // Close dropdown on clicking outside
-  document.addEventListener('click', (e) => {
-    const wrap = document.getElementById('fa-search-select-wrap');
-    if (wrap && !wrap.contains(e.target)) {
-      toggleFaDropdown(false);
-    }
-  });
 
   function updateUrlParams() {
     const params = new URLSearchParams();
@@ -746,6 +803,7 @@
     document.getElementById('form-name').value = '';
     document.getElementById('form-status').value = 'Active';
     setDropdownIcon('fa-solid fa-wifi');
+    toggleFaDrawer(true);
     openModal('crud-modal');
   }
 
@@ -761,6 +819,7 @@
     document.getElementById('form-name').value = item.name;
     document.getElementById('form-status').value = item.status;
     setDropdownIcon(item.icon);
+    toggleFaDrawer(false);
     openModal('crud-modal');
   }
 
@@ -1004,7 +1063,7 @@
   }
 
   document.addEventListener('DOMContentLoaded', () => {
-    renderFaDropdownOptions();
+    renderFaGrid();
     renderTable();
   });
 </script>

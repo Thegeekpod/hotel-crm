@@ -675,15 +675,38 @@
             <i class="fa-solid fa-bed"></i> Bedding Setup & Capacity
           </h4>
           
-          <div>
-            <label style="display:block; font-size: 11px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.6px;">
-              Bedding Configuration <span style="color: red;">*</span>
-            </label>
-            <select id="new-room-bed" class="select2-field" style="width:100%;">
-              @foreach($beddingConfigs as $bed)
-                <option value="{{ $bed->name }}">{{ $bed->name }} ({{ $bed->max_adults ?? 2 }} Adults + {{ $bed->max_children ?? 0 }} Child - Total {{ $bed->max_total ?? 2 }} Pax)</option>
-              @endforeach
-            </select>
+          <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+            <!-- Column 1: Bedding Configuration -->
+            <div style="flex: 1; min-width: 240px;">
+              <label style="display:block; font-size: 11px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.6px;">
+                Bedding Configuration <span style="color: red;">*</span>
+              </label>
+              <select id="new-room-bed" class="select2-field" style="width:100%;">
+                @foreach($beddingConfigs as $bed)
+                  <option value="{{ $bed->name }}">{{ $bed->name }}</option>
+                @endforeach
+              </select>
+            </div>
+
+            <!-- Column 2: Separate Pax Capacity (Auto Linked) -->
+            <div style="flex: 1; min-width: 240px;">
+              <label style="display:block; font-size: 11px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.6px;">
+                Pax Capacity <span style="font-size: 10px; color: var(--accent-primary); font-weight: 700; text-transform: none;">(Auto-linked)</span>
+              </label>
+              <div style="height: 42px; padding: 6px 12px; background: #f8fafc; border: 1px solid var(--border-medium); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                <div style="display: flex; align-items: center; gap: 6px;">
+                  <span class="badge-tag blue" style="font-size: 11px; font-weight: 700;">
+                    <i class="fa-solid fa-user"></i> <span id="new-pax-adults-text">2 Adults</span>
+                  </span>
+                  <span class="badge-tag yellow" style="font-size: 11px; font-weight: 700;">
+                    <i class="fa-solid fa-child"></i> <span id="new-pax-children-text">1 Child</span>
+                  </span>
+                </div>
+                <span class="badge-tag purple" style="font-size: 11px; font-weight: 800;">
+                  <i class="fa-solid fa-users"></i> <span id="new-pax-total-text">Total 3 Pax</span>
+                </span>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -806,15 +829,38 @@
             <i class="fa-solid fa-bed"></i> Bedding Setup & Capacity
           </h4>
           
-          <div>
-            <label style="display:block; font-size: 11px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.6px;">
-              Bedding Configuration
-            </label>
-            <select id="edit-room-bed" class="select2-field" style="width:100%;">
-              @foreach($beddingConfigs as $bed)
-                <option value="{{ $bed->name }}">{{ $bed->name }} ({{ $bed->max_adults ?? 2 }} Adults + {{ $bed->max_children ?? 0 }} Child - Total {{ $bed->max_total ?? 2 }} Pax)</option>
-              @endforeach
-            </select>
+          <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+            <!-- Column 1: Bedding Configuration -->
+            <div style="flex: 1; min-width: 240px;">
+              <label style="display:block; font-size: 11px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.6px;">
+                Bedding Configuration <span style="color: red;">*</span>
+              </label>
+              <select id="edit-room-bed" class="select2-field" style="width:100%;">
+                @foreach($beddingConfigs as $bed)
+                  <option value="{{ $bed->name }}">{{ $bed->name }}</option>
+                @endforeach
+              </select>
+            </div>
+
+            <!-- Column 2: Separate Pax Capacity (Auto Linked) -->
+            <div style="flex: 1; min-width: 240px;">
+              <label style="display:block; font-size: 11px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.6px;">
+                Pax Capacity <span style="font-size: 10px; color: var(--accent-primary); font-weight: 700; text-transform: none;">(Auto-linked)</span>
+              </label>
+              <div style="height: 42px; padding: 6px 12px; background: #f8fafc; border: 1px solid var(--border-medium); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                <div style="display: flex; align-items: center; gap: 6px;">
+                  <span class="badge-tag blue" style="font-size: 11px; font-weight: 700;">
+                    <i class="fa-solid fa-user"></i> <span id="edit-pax-adults-text">2 Adults</span>
+                  </span>
+                  <span class="badge-tag yellow" style="font-size: 11px; font-weight: 700;">
+                    <i class="fa-solid fa-child"></i> <span id="edit-pax-children-text">1 Child</span>
+                  </span>
+                </div>
+                <span class="badge-tag purple" style="font-size: 11px; font-weight: 800;">
+                  <i class="fa-solid fa-users"></i> <span id="edit-pax-total-text">Total 3 Pax</span>
+                </span>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -989,8 +1035,45 @@
 @push('scripts')
 <script>
   let roomsData = @json($rooms);
+  const beddingConfigsData = @json($beddingConfigs);
   const baseUrl = "{{ route('admin.roommanagement.index') }}";
   const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+  function getPaxDataForBedding(beddingName) {
+    const config = beddingConfigsData.find(b => b.name === beddingName);
+    if (!config) {
+      return { adults: 2, children: 0, total: 2, display: '2 Adults (2 Pax)' };
+    }
+    const adults = config.max_adults ?? 2;
+    const children = config.max_children ?? 0;
+    const total = config.max_total ?? (adults + children);
+    const display = `${adults} Adult${adults > 1 ? 's' : ''}${children > 0 ? ' + ' + children + ' Child' : ''} (Max ${total} Pax)`;
+    return { adults, children, total, display };
+  }
+
+  function updateNewRoomPaxCapacity(bedName) {
+    const name = bedName || $('#new-room-bed').val();
+    const data = getPaxDataForBedding(name);
+    const adultsEl = document.getElementById('new-pax-adults-text');
+    const childrenEl = document.getElementById('new-pax-children-text');
+    const totalEl = document.getElementById('new-pax-total-text');
+
+    if (adultsEl) adultsEl.textContent = `${data.adults} Adult${data.adults > 1 ? 's' : ''}`;
+    if (childrenEl) childrenEl.textContent = `${data.children} Child${data.children === 1 ? '' : 'ren'}`;
+    if (totalEl) totalEl.textContent = `Total ${data.total} Pax`;
+  }
+
+  function updateEditRoomPaxCapacity(bedName) {
+    const name = bedName || $('#edit-room-bed').val();
+    const data = getPaxDataForBedding(name);
+    const adultsEl = document.getElementById('edit-pax-adults-text');
+    const childrenEl = document.getElementById('edit-pax-children-text');
+    const totalEl = document.getElementById('edit-pax-total-text');
+
+    if (adultsEl) adultsEl.textContent = `${data.adults} Adult${data.adults > 1 ? 's' : ''}`;
+    if (childrenEl) childrenEl.textContent = `${data.children} Child${data.children === 1 ? '' : 'ren'}`;
+    if (totalEl) totalEl.textContent = `Total ${data.total} Pax`;
+  }
 
   const urlParams = new URLSearchParams(window.location.search);
   let searchQuery = urlParams.get('search') || '{{ request('search') }}' || '';
@@ -1053,6 +1136,14 @@
       $('#maint-reason').select2({
         dropdownParent: $('#maint-workorder-modal')
       });
+
+      // Auto update pax capacity on bedding config change
+      $('#new-room-bed').on('change', function() {
+        updateNewRoomPaxCapacity(this.value);
+      });
+      $('#edit-room-bed').on('change', function() {
+        updateEditRoomPaxCapacity(this.value);
+      });
     }
   }
 
@@ -1064,7 +1155,9 @@
     if (typeof $ !== 'undefined' && $.fn.select2) {
       $('#new-room-floor').val($('#new-room-floor option:eq(1)').val()).trigger('change');
       $('#new-room-cat').val($('#new-room-cat option:eq(1)').val()).trigger('change');
-      $('#new-room-bed').val($('#new-room-bed option:eq(0)').val()).trigger('change');
+      const defaultBed = $('#new-room-bed option:eq(0)').val();
+      $('#new-room-bed').val(defaultBed).trigger('change');
+      updateNewRoomPaxCapacity(defaultBed);
       $('#new-room-operational-status').val($('#new-room-operational-status option:eq(0)').val()).trigger('change');
       $('#new-room-hk-state').val($('#new-room-hk-state option:eq(0)').val()).trigger('change');
     }
@@ -1118,6 +1211,7 @@
       $('#edit-room-floor').val(room.floor).trigger('change');
       $('#edit-room-cat').val(room.category).trigger('change');
       $('#edit-room-bed').val(room.bedding_config).trigger('change');
+      updateEditRoomPaxCapacity(room.bedding_config);
 
       // Match dynamic operational status
       let opVal = room.status;

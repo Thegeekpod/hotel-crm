@@ -180,20 +180,50 @@
       : (guestObj ? [guestObj] : []);
 
     let guestSectionHtml = '';
+    let topReservationBadgeHtml = '';
     if (isOccupied && guestsList.length > 0) {
       const primaryGuest = guestsList[0];
       const reservationId = primaryGuest.reserve_id || ('RES-2026-00' + roomNo);
-      const folioNumber = primaryGuest.folio || ('FOL-' + roomNo + '-100');
       const totalBalance = primaryGuest.balance !== undefined ? Number(primaryGuest.balance) : 0;
       const advancePaid = primaryGuest.advance !== undefined ? Number(primaryGuest.advance) : 0;
       const overallState = primaryGuest.state || 'Confirmed';
+
+      topReservationBadgeHtml = `
+        <span style="background: #eef2ff; color: #4338ca; border: 1px solid #c7d2fe; padding: 2px 8px; border-radius: 6px; font-family: var(--font-mono, monospace); font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; gap: 4px;" title="Reservation ID">
+          <i class="fa-solid fa-receipt" style="color: #6366f1;"></i> ${escapeHtml(reservationId)}
+        </span>
+      `;
+
+      const topReservationSummaryBar = `
+        <div style="background: linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%); border: 1px solid #c7d2fe; border-radius: 10px; padding: 10px 14px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; box-shadow: 0 1px 3px rgba(99,102,241,0.06);">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="width: 32px; height: 32px; border-radius: 8px; background: #4f46e5; color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 13px; box-shadow: 0 2px 5px rgba(79, 70, 229, 0.25);">
+              <i class="fa-solid fa-receipt"></i>
+            </div>
+            <div>
+              <div style="font-size: 9px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.6px;">Reservation ID</div>
+              <div style="font-family: var(--font-mono, monospace); font-size: 15px; font-weight: 900; color: #1e1b4b; letter-spacing: 0.5px;">${escapeHtml(reservationId)}</div>
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 14px;">
+            <div style="text-align: right;">
+              <div style="font-size: 9px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Outstanding Balance</div>
+              <div style="font-family: var(--font-mono, monospace); font-size: 16px; font-weight: 900; color: #e11d48; line-height: 1.1;">₹ ${totalBalance.toLocaleString()}</div>
+            </div>
+            <div style="text-align: right; border-left: 1px solid #cbd5e1; padding-left: 12px;">
+              <div style="font-size: 9px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Advance Paid</div>
+              <div style="font-family: var(--font-mono, monospace); font-size: 13px; font-weight: 800; color: #059669; line-height: 1.1;">₹ ${advancePaid.toLocaleString()}</div>
+            </div>
+          </div>
+        </div>
+      `;
 
       if (guestsList.length === 1) {
         // Single Guest Layout
         const g = primaryGuest;
         guestSectionHtml = `
-          <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px 18px; margin-bottom: 14px; box-shadow: 0 2px 6px rgba(0,0,0,0.03);">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px;">
+          <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px 16px; margin-bottom: 14px; box-shadow: 0 2px 6px rgba(0,0,0,0.03);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px;">
               <h4 style="margin: 0; font-size: 12px; font-weight: 800; color: #e11d48; text-transform: uppercase; letter-spacing: 0.6px; display: flex; align-items: center; gap: 7px;">
                 <i class="fa-solid fa-user-check"></i> Residing Guest Information
               </h4>
@@ -202,27 +232,19 @@
               </div>
             </div>
             
-            <div style="display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 16px; align-items: stretch;">
-              <div style="display: flex; flex-direction: column; justify-content: space-between; gap: 8px;">
-                <div>
-                  <div style="display: flex; align-items: center; gap: 8px;">
-                    <div style="font-size: 16px; font-weight: 800; color: #0f172a;">${escapeHtml(g.name)}</div>
-                    <span class="badge-tag blue" style="font-size: 9px; padding: 1px 6px; font-weight: 700;">Primary Guest</span>
-                  </div>
-                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; margin-top: 8px; font-size: 11px; color: #64748b;">
-                    <div><strong>Reservation ID:</strong> <span style="font-family: var(--font-mono); color: #6366f1; font-weight: 700;">${escapeHtml(reservationId)}</span></div>
-                    <div><strong>Folio:</strong> <span style="font-family: var(--font-mono); color: #0284c7; font-weight: 700;">${escapeHtml(folioNumber)}</span></div>
-                    ${g.mobile ? `<div><strong style="color: #475569;"><i class="fa-solid fa-phone" style="color: #6366f1; width: 14px;"></i> Mobile:</strong> <span style="color: #1e293b; font-weight: 600;">${escapeHtml(g.mobile)}</span></div>` : ''}
-                    ${g.email ? `<div><strong style="color: #475569;"><i class="fa-solid fa-envelope" style="color: #6366f1; width: 14px;"></i> Email:</strong> <span style="color: #1e293b; font-weight: 600;">${escapeHtml(g.email)}</span></div>` : ''}
-                    ${g.id_card_number ? `<div><strong style="color: #475569;"><i class="fa-solid fa-id-card" style="color: #6366f1; width: 14px;"></i> ${escapeHtml(g.id_card_type || 'ID Card')}:</strong> <span style="font-family: var(--font-mono); font-weight: 700; color: #0f172a;">${escapeHtml(g.id_card_number)}</span></div>` : ''}
-                    ${g.city || g.address ? `<div><strong style="color: #475569;"><i class="fa-solid fa-location-dot" style="color: #6366f1; width: 14px;"></i> City / Address:</strong> <span style="color: #1e293b; font-weight: 600;">${escapeHtml(g.city || g.address)}</span></div>` : ''}
-                  </div>
-                </div>
+            ${topReservationSummaryBar}
+
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 14px;">
+              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                <div style="font-size: 15px; font-weight: 800; color: #0f172a;">${escapeHtml(g.name)}</div>
+                <span class="badge-tag blue" style="font-size: 9px; padding: 1px 6px; font-weight: 700;">Primary Guest</span>
               </div>
-              <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 14px; text-align: right; display: flex; flex-direction: column; justify-content: center;">
-                <div style="font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Outstanding Folio Balance</div>
-                <div style="font-size: 22px; font-weight: 900; color: #e11d48; font-family: var(--font-mono); margin: 2px 0;">₹ ${totalBalance.toLocaleString()}</div>
-                <div style="font-size: 11px; color: #059669; font-weight: 700;"><i class="fa-solid fa-check"></i> Advance Paid: ₹ ${advancePaid.toLocaleString()}</div>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 6px 14px; font-size: 11px; color: #64748b;">
+                ${g.mobile ? `<div><strong style="color: #475569;"><i class="fa-solid fa-phone" style="color: #6366f1; width: 14px;"></i> Mobile:</strong> <span style="color: #1e293b; font-weight: 600;">${escapeHtml(g.mobile)}</span></div>` : ''}
+                ${g.email ? `<div><strong style="color: #475569;"><i class="fa-solid fa-envelope" style="color: #6366f1; width: 14px;"></i> Email:</strong> <span style="color: #1e293b; font-weight: 600;">${escapeHtml(g.email)}</span></div>` : ''}
+                ${g.id_card_number ? `<div><strong style="color: #475569;"><i class="fa-solid fa-id-card" style="color: #6366f1; width: 14px;"></i> ${escapeHtml(g.id_card_type || 'ID Card')}:</strong> <span style="font-family: var(--font-mono); font-weight: 700; color: #0f172a;">${escapeHtml(g.id_card_number)}</span></div>` : ''}
+                ${g.city || g.address ? `<div><strong style="color: #475569;"><i class="fa-solid fa-location-dot" style="color: #6366f1; width: 14px;"></i> City / Address:</strong> <span style="color: #1e293b; font-weight: 600;">${escapeHtml(g.city || g.address)}</span></div>` : ''}
+                ${g.has_privilege_card && g.privilege_card_no ? `<div><strong style="color: #475569;"><i class="fa-solid fa-star" style="color: #f59e0b; width: 14px;"></i> Privilege:</strong> <span style="color: #d97706; font-weight: 700;">${escapeHtml(g.privilege_card_no)}</span></div>` : ''}
               </div>
             </div>
           </div>
@@ -255,10 +277,10 @@
         `).join('');
 
         guestSectionHtml = `
-          <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px 18px; margin-bottom: 14px; box-shadow: 0 2px 6px rgba(0,0,0,0.03);">
+          <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px 16px; margin-bottom: 14px; box-shadow: 0 2px 6px rgba(0,0,0,0.03);">
             
             <!-- Header with Guest Count Badge -->
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px;">
               <h4 style="margin: 0; font-size: 12px; font-weight: 800; color: #e11d48; text-transform: uppercase; letter-spacing: 0.6px; display: flex; align-items: center; gap: 7px;">
                 <i class="fa-solid fa-users"></i> Residing Guests (${guestsList.length} Guests)
               </h4>
@@ -270,29 +292,8 @@
               </div>
             </div>
 
-            <!-- Shared Reservation & Folio Balance Bar -->
-            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 14px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-              <div style="display: flex; gap: 16px; align-items: center; flex-wrap: wrap;">
-                <div>
-                  <span style="font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase;">Reservation ID:</span>
-                  <span style="font-family: var(--font-mono); color: #6366f1; font-weight: 800; font-size: 12px; margin-left: 4px;">${escapeHtml(reservationId)}</span>
-                </div>
-                <div>
-                  <span style="font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase;">Folio:</span>
-                  <span style="font-family: var(--font-mono); color: #0284c7; font-weight: 800; font-size: 12px; margin-left: 4px;">${escapeHtml(folioNumber)}</span>
-                </div>
-              </div>
-              <div style="display: flex; align-items: center; gap: 14px;">
-                <div style="text-align: right;">
-                  <span style="font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase;">Balance:</span>
-                  <span style="font-family: var(--font-mono); color: #e11d48; font-weight: 900; font-size: 15px; margin-left: 4px;">₹ ${totalBalance.toLocaleString()}</span>
-                </div>
-                <div style="text-align: right; border-left: 1px solid #e2e8f0; padding-left: 12px;">
-                  <span style="font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase;">Advance:</span>
-                  <span style="font-family: var(--font-mono); color: #059669; font-weight: 800; font-size: 12px; margin-left: 4px;">₹ ${advancePaid.toLocaleString()}</span>
-                </div>
-              </div>
-            </div>
+            <!-- Prominent Top Reservation & Financials Bar -->
+            ${topReservationSummaryBar}
 
             <!-- List of All Guests One by One -->
             <div style="display: flex; flex-direction: column; gap: 8px;">
@@ -313,9 +314,10 @@
             <span style="line-height: 1.1;">${escapeHtml(roomNo)}</span>
           </div>
           <div>
-            <div style="font-size: 16px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+            <div style="font-size: 16px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
               ${escapeHtml(category)}
               <span class="badge-tag ${statusBadgeClass}" style="font-size: 10px; font-weight: 800; text-transform: uppercase;">${escapeHtml(statusBadgeText)}</span>
+              ${topReservationBadgeHtml}
             </div>
             <div style="font-size: 12px; color: #64748b; font-weight: 600; margin-top: 4px; display: flex; align-items: center; gap: 6px;">
               <i class="fa-solid fa-layer-group" style="color: #6366f1;"></i> ${escapeHtml(floorName)}

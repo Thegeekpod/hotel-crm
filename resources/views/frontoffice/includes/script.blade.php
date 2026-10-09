@@ -225,10 +225,11 @@
             </div>
           </div>
         </div>
-        <div style="text-align: right;">
-          <div style="font-size: 11px; color: #64748b; font-weight: 600;">Status State</div>
-          <div style="font-size: 12px; font-weight: 800; margin-top: 2px;">
-            <span style="color: ${isBlocked ? '#e11d48' : '#6366f1'};">${escapeHtml(opDisplay)}</span>
+        <div style="display: flex; flex-direction: column; align-items: flex-end; justify-content: center; gap: 4px;">
+          <div style="font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.6px;">Operational State</div>
+          <div style="display: inline-flex; align-items: center; gap: 6px; background: ${isBlocked ? '#fef2f2' : (isOccupied ? '#eff6ff' : '#ecfdf5')}; color: ${isBlocked ? '#dc2626' : (isOccupied ? '#2563eb' : '#059669')}; border: 1px solid ${isBlocked ? '#fecaca' : (isOccupied ? '#bfdbfe' : '#a7f3d0')}; padding: 5px 14px; border-radius: 20px; font-size: 12px; font-weight: 800; box-shadow: 0 2px 4px rgba(0,0,0,0.03);">
+            <span style="width: 7px; height: 7px; border-radius: 50%; background: ${isBlocked ? '#ef4444' : (isOccupied ? '#3b82f6' : '#10b981')}; display: inline-block;"></span>
+            ${escapeHtml(opDisplay)}
           </div>
         </div>
       </div>

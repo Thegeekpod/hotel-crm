@@ -1203,6 +1203,28 @@ a {
   box-shadow: 0 8px 24px rgba(5, 150, 105, 0.35);
 }
 
+.btn-ui-warning {
+  background: linear-gradient(135deg, #d97706, #f59e0b);
+  color: #ffffff;
+  border: none;
+  padding: 8px 20px;
+  border-radius: 22px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: var(--font-main);
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  box-shadow: 0 3px 12px rgba(217, 119, 6, 0.25);
+}
+
+.btn-ui-warning:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(217, 119, 6, 0.35);
+}
+
 .btn-ui-secondary {
   background: var(--glass-white);
   color: var(--text-secondary);

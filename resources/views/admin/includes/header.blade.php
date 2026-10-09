@@ -44,7 +44,12 @@
   </a>
 </nav>
 
-<!-- Dynamic Action Sub-Ribbon -->
+<!-- Dynamic Action Sub-Ribbon (Hidden when Administrator tab is active) -->
+@php
+  $isAdminTabActive = request()->routeIs('admin.utilities.*') || request()->routeIs('admin.roommanagement.*') || request()->routeIs('admin.roommaintain.*') || request()->routeIs('admin.dashboard');
+@endphp
+
+@if(!$isAdminTabActive)
 <div class="pms-sub-ribbon">
   <div class="ribbon-left-section">
     <div class="ribbon-nav-links">
@@ -92,3 +97,4 @@
     @endif
   </div>
 </div>
+@endif

@@ -240,6 +240,149 @@
     window.print();
   }
 
+  // Master Rooms & Floors JSON Data for Dynamic Cascading Selection
+  window.allPmsRooms = @json($rackRooms ?? $allRoomsData ?? []);
+  window.allPmsFloors = @json($floors ?? []);
+  window.allPmsCategories = @json($categories ?? []);
+
+  function onCategoryChange(catSelect) {
+    const block = catSelect.closest('.section-guest-details') || catSelect.closest('.guest-block');
+    if (!block) return;
+    const floorSelect = block.querySelector('.select-room-floor');
+    const roomSelect = block.querySelector('.select-room-no');
+    const selectedCatId = catSelect.value;
+    const selectedCatName = catSelect.options[catSelect.selectedIndex]?.dataset?.categoryName || catSelect.options[catSelect.selectedIndex]?.text;
+
+    if (floorSelect) floorSelect.innerHTML = '<option value="">Select Floor</option>';
+    if (roomSelect) roomSelect.innerHTML = '<option value="">Select Room No.</option>';
+
+    if (!selectedCatId) return;
+
+    const matchingRooms = window.allPmsRooms.filter(r => {
+      return String(r.category_id) === String(selectedCatId) || 
+             (r.category && String(r.category).toLowerCase() === String(selectedCatName).toLowerCase()) ||
+             (r.type && String(r.type).toLowerCase() === String(selectedCatName).toLowerCase());
+    });
+
+    const floorMap = new Map();
+    matchingRooms.forEach(r => {
+      const flId = r.floor_id || r.floor;
+      if (!floorMap.has(String(flId))) {
+        floorMap.set(String(flId), {
+          id: flId,
+          floor: r.floor,
+          name: r.floor_name || ('Floor ' + r.floor)
+        });
+      }
+    });
+
+    if (floorSelect) {
+      floorMap.forEach(fl => {
+        const opt = document.createElement('option');
+        opt.value = fl.id;
+        opt.dataset.floorNo = fl.floor;
+        opt.textContent = `Floor ${fl.floor} (${fl.name})`;
+        floorSelect.appendChild(opt);
+      });
+    }
+  }
+
+  function onFloorChange(floorSelect) {
+    const block = floorSelect.closest('.section-guest-details') || floorSelect.closest('.guest-block');
+    if (!block) return;
+    const catSelect = block.querySelector('.select-room-category');
+    const roomSelect = block.querySelector('.select-room-no');
+    
+    const selectedCatId = catSelect ? catSelect.value : '';
+    const selectedCatName = catSelect ? (catSelect.options[catSelect.selectedIndex]?.dataset?.categoryName || catSelect.options[catSelect.selectedIndex]?.text) : '';
+    const selectedFloorVal = floorSelect.value;
+    const selectedFloorNo = floorSelect.options[floorSelect.selectedIndex]?.dataset?.floorNo;
+
+    if (roomSelect) roomSelect.innerHTML = '<option value="">Select Room No.</option>';
+
+    if (!selectedFloorVal) return;
+
+    const matchingRooms = window.allPmsRooms.filter(r => {
+      const matchCat = !selectedCatId || 
+                       String(r.category_id) === String(selectedCatId) || 
+                       (r.category && String(r.category).toLowerCase() === String(selectedCatName).toLowerCase()) ||
+                       (r.type && String(r.type).toLowerCase() === String(selectedCatName).toLowerCase());
+      
+      const matchFloor = String(r.floor_id) === String(selectedFloorVal) || 
+                         String(r.floor) === String(selectedFloorVal) || 
+                         (selectedFloorNo && String(r.floor) === String(selectedFloorNo));
+      
+      return matchCat && matchFloor;
+    });
+
+    if (roomSelect) {
+      matchingRooms.forEach(r => {
+        const opt = document.createElement('option');
+        opt.value = r.id || r.room;
+        opt.dataset.roomNo = r.room;
+        opt.dataset.rate = r.rate;
+        const isAvail = (r.status === 'available');
+        opt.textContent = `Room #${r.room} (₹${r.rate}) • ${r.status.toUpperCase()}`;
+        if (!isAvail) {
+          opt.style.color = '#ef4444';
+        } else {
+          opt.style.color = '#059669';
+          opt.style.fontWeight = 'bold';
+        }
+        roomSelect.appendChild(opt);
+      });
+    }
+  }
+
+  function searchRegularGuest(btnElem) {
+    const block = btnElem.closest('.guest-block') || btnElem.closest('.section-guest-details');
+    if (!block) return;
+    const phoneInput = block.querySelector('.regular-search-input');
+    const phone = phoneInput ? phoneInput.value.trim() : '';
+    if (!phone) {
+      if (typeof PmsAlert !== 'undefined') {
+        PmsAlert.toast('Please enter a mobile number to lookup regular guest!', 'error');
+      } else {
+        alert('Please enter a mobile number to lookup regular guest!');
+      }
+      return;
+    }
+
+    // Sample database guest profile matching
+    const sampleProfiles = {
+      '9876543210': { name: 'Debabrata Mukherjee', address: 'Flat 4B, Salt Lake Sector 2', city: 'Kolkata', email: 'debabrata@gmail.com', idCard: '1982-4421-9981' },
+      '9830012345': { name: 'Priyabrata Sengupta', address: '12/1 Southern Avenue', city: 'Kolkata', email: 'priyabrata@gmail.com', idCard: 'ABCDP1234F' }
+    };
+
+    const profile = sampleProfiles[phone] || {
+      name: 'Regular Guest (Phone ' + phone + ')',
+      address: 'Park Street Extension, Floor 3',
+      city: 'Kolkata',
+      email: 'guest.' + phone.slice(-4) + '@hotelcrm.com',
+      idCard: 'REG-' + phone.slice(-6)
+    };
+
+    const nameInp = block.querySelector('.guest-name-input');
+    const addrInp = block.querySelector('.guest-address-input');
+    const cityInp = block.querySelector('.guest-city-input');
+    const mobInp = block.querySelector('.guest-mobile-input');
+    const emailInp = block.querySelector('.guest-email-input');
+    const idInp = block.querySelector('.guest-id-number');
+
+    if (nameInp) nameInp.value = profile.name;
+    if (addrInp) addrInp.value = profile.address;
+    if (cityInp) cityInp.value = profile.city;
+    if (mobInp) mobInp.value = phone;
+    if (emailInp) emailInp.value = profile.email;
+    if (idInp) idInp.value = profile.idCard;
+
+    if (typeof PmsAlert !== 'undefined') {
+      PmsAlert.toast('Regular guest profile loaded for ' + profile.name, 'success');
+    } else {
+      alert('Regular guest profile loaded for ' + profile.name);
+    }
+  }
+
   function toggleResType() {
     const checkedRadio = document.querySelector('input[name="res_type"]:checked');
     if (!checkedRadio) return;
@@ -316,6 +459,14 @@
     
     newBlock.querySelectorAll('input:not([type="radio"]):not([type="checkbox"])').forEach(inp => inp.value = '');
     
+    // Reset room selects in cloned block
+    const catSel = newBlock.querySelector('.select-room-category');
+    const flSel = newBlock.querySelector('.select-room-floor');
+    const rmSel = newBlock.querySelector('.select-room-no');
+    if (catSel) catSel.value = '';
+    if (flSel) flSel.innerHTML = '<option value="">Select Floor</option>';
+    if (rmSel) rmSel.innerHTML = '<option value="">Select Room No.</option>';
+
     const headerDiv = newBlock.querySelector('.guest-heading')?.parentElement;
     if (headerDiv && !newBlock.querySelector('.btn-remove-guest')) {
       let removeBtn = document.createElement('button');

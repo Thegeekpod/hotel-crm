@@ -10,6 +10,10 @@ use App\Models\Company;
 use App\Models\IdCardType;
 use App\Models\ReservationMode;
 use App\Models\PaymentMode;
+use App\Models\RegistrationType;
+use App\Models\Title;
+use App\Models\Nationality;
+use App\Models\Amenity;
 use Illuminate\Http\Request;
 
 class DashboardController extends Controller
@@ -30,6 +34,10 @@ class DashboardController extends Controller
         $idCardTypes = IdCardType::where('status', 'Active')->get();
         $reservationModes = ReservationMode::where('status', 'Active')->get();
         $paymentModes = PaymentMode::where('status', 'Active')->get();
+        $registrationTypes = RegistrationType::where('status', 'Active')->get();
+        $titles = Title::where('status', 'Active')->get();
+        $nationalities = Nationality::where('status', 'Active')->get();
+        $amenityMap = Amenity::pluck('name', 'id')->toArray();
 
         // Sample in-house residing guests mapping for active rooms
         $occupiedSampleGuests = [
@@ -54,8 +62,8 @@ class DashboardController extends Controller
         if ($dbRooms->isNotEmpty()) {
             foreach ($dbRooms as $r) {
                 $roomNum = (string)$r->room_number;
-                $floor = $r->floor ?? ($r->floorRelation?->floor ?? '1');
-                $type = strtoupper($r->category ?? ($r->categoryRelation?->name ?? 'DELUXE'));
+                $floor = (string)($r->floorRelation?->floor ?? $r->floor ?? '1');
+                $type = strtoupper($r->categoryRelation?->name ?? $r->category ?? 'DELUXE');
                 $rate = (float)($r->rate > 0 ? $r->rate : 4500);
 
                 $latestOp = $r->operationalHistories->sortByDesc('id')->first();
@@ -82,10 +90,25 @@ class DashboardController extends Controller
                     $cleaning = 'Cleaned';
                 }
 
+                $roomAmenitiesNames = [];
+                if (is_array($r->amenities)) {
+                    foreach ($r->amenities as $amnId) {
+                        if (isset($amenityMap[$amnId])) {
+                            $roomAmenitiesNames[] = $amenityMap[$amnId];
+                        } elseif (is_string($amnId)) {
+                            $roomAmenitiesNames[] = $amnId;
+                        }
+                    }
+                }
+
                 $rackRooms[] = [
                     'id' => $r->id,
                     'room' => $roomNum,
+                    'floor_id' => $r->floor_id ?? ($r->floorRelation?->id),
                     'floor' => (string)$floor,
+                    'floor_name' => $r->floorRelation?->name ?? ('Floor ' . $floor),
+                    'category_id' => $r->category_id ?? ($r->categoryRelation?->id),
+                    'category' => $r->categoryRelation?->name ?? $r->category ?? 'Deluxe',
                     'type' => $type,
                     'cleaning' => $cleaning,
                     'status' => $status,
@@ -93,8 +116,8 @@ class DashboardController extends Controller
                     'housekeeping_status' => $hkName ?: ($status === 'dirty' ? 'Dirty / Cleaning Due' : 'Cleaned & Inspected'),
                     'rate' => $rate,
                     'guest' => $guest,
-                    'bedding' => $r->bedding_config ?? ($r->beddingConfigRelation?->name ?? 'King Size'),
-                    'amenities' => $r->amenities ?? [],
+                    'bedding' => $r->beddingConfigRelation?->name ?? $r->bedding_config ?? 'King Size',
+                    'amenities' => $roomAmenitiesNames,
                 ];
             }
         }
@@ -146,6 +169,9 @@ class DashboardController extends Controller
             'idCardTypes',
             'reservationModes',
             'paymentModes',
+            'registrationTypes',
+            'titles',
+            'nationalities',
             'stats'
         ));
     }

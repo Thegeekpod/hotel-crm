@@ -99,20 +99,31 @@
       </div>
       <div class="modal-content-area" style="max-height: 75vh; overflow-y: auto; padding: 24px; background: #f8fafc;">
         <form onsubmit="handleReserve(event)">
-          <!-- Radio Buttons -->
-          <div style="display: flex; gap: 24px; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid var(--border-medium);">
-            <label style="display: flex; align-items: center; gap: 8px; font-weight: 800; cursor: pointer; font-size: 13px; color: var(--accent-primary);">
-              <input type="radio" name="res_type" value="new" checked onchange="toggleResType()" style="accent-color: var(--accent-primary); transform: scale(1.2);"> New
-            </label>
-            <label style="display: flex; align-items: center; gap: 8px; font-weight: 800; cursor: pointer; font-size: 13px; color: var(--text-secondary);">
-              <input type="radio" name="res_type" value="regular" onchange="toggleResType()" style="accent-color: var(--accent-primary); transform: scale(1.2);"> Regular
-            </label>
-            <label style="display: flex; align-items: center; gap: 8px; font-weight: 800; cursor: pointer; font-size: 13px; color: var(--text-secondary);">
-              <input type="radio" name="res_type" value="company" onchange="toggleResType()" style="accent-color: var(--accent-primary); transform: scale(1.2);"> Company
-            </label>
-            <label style="display: flex; align-items: center; gap: 8px; font-weight: 800; cursor: pointer; font-size: 13px; color: var(--text-secondary);">
-              <input type="radio" name="res_type" value="privilege" onchange="toggleResType()" style="accent-color: var(--accent-primary); transform: scale(1.2);"> Privilege
-            </label>
+          <!-- Dynamic Registration Type Radio Buttons -->
+          <div style="display: flex; flex-wrap: wrap; gap: 20px; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid var(--border-medium);">
+            @php
+              $regTypesList = $registrationTypes ?? \App\Models\RegistrationType::where('status', 'Active')->get();
+            @endphp
+            @forelse($regTypesList as $idx => $rt)
+              @php
+                $rtName = $rt->name;
+                $slug = 'new';
+                if (stripos($rtName, 'company') !== false || stripos($rtName, 'corporate') !== false) {
+                  $slug = 'company';
+                } elseif (stripos($rtName, 'regular') !== false) {
+                  $slug = 'regular';
+                } elseif (stripos($rtName, 'privilege') !== false || stripos($rtName, 'vip') !== false) {
+                  $slug = 'privilege';
+                }
+              @endphp
+              <label style="display: flex; align-items: center; gap: 8px; font-weight: 800; cursor: pointer; font-size: 13px; color: {{ $idx === 0 ? 'var(--accent-primary)' : 'var(--text-secondary)' }};">
+                <input type="radio" name="res_type" value="{{ $slug }}" data-registration-id="{{ $rt->id }}" data-type-name="{{ $rtName }}" {{ $idx === 0 ? 'checked' : '' }} onchange="toggleResType()" style="accent-color: var(--accent-primary); transform: scale(1.2);"> {{ $rtName }}
+              </label>
+            @empty
+              <label style="display: flex; align-items: center; gap: 8px; font-weight: 800; cursor: pointer; font-size: 13px; color: var(--accent-primary);">
+                <input type="radio" name="res_type" value="new" checked onchange="toggleResType()" style="accent-color: var(--accent-primary); transform: scale(1.2);"> New
+              </label>
+            @endforelse
           </div>
 
           <div style="display: grid; grid-template-columns: 1fr 280px; gap: 28px;">
@@ -137,16 +148,10 @@
                 </div>
                 <div style="margin-bottom: 20px;">
                   <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Mode of Reserve</label>
-                  <select class="pms-input-field" style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff; color: var(--text-primary);">
-                    @foreach($reservationModes as $rm)
-                      <option value="{{ $rm->name }}">{{ $rm->name }}</option>
+                  <select name="reservation_mode_id" class="pms-input-field" style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff; color: var(--text-primary); font-weight: 600;">
+                    @foreach($reservationModes ?? \App\Models\ReservationMode::where('status', 'Active')->get() as $rm)
+                      <option value="{{ $rm->id }}">{{ $rm->name }}</option>
                     @endforeach
-                    @if($reservationModes->isEmpty())
-                      <option>Phone</option>
-                      <option>Physical</option>
-                      <option>Website</option>
-                      <option>Enquiry</option>
-                    @endif
                   </select>
                 </div>
 
@@ -154,9 +159,9 @@
                 <div id="section-company-fields" style="display: none; padding: 20px; background: rgba(16, 185, 129, 0.05); border: 1px dashed var(--accent-emerald); border-radius: var(--radius-md); margin-bottom: 20px;">
                   <div style="margin-bottom: 16px;">
                     <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--accent-emerald); text-transform: uppercase; letter-spacing: 1px;"><i class="fa-solid fa-building"></i> Company Name</label>
-                    <select style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--accent-emerald); border-radius: var(--radius-md); background: #fff; color: var(--text-primary); font-weight: 700;" onchange="toggleNewCompany(this)">
+                    <select name="company_id" id="company-select" style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--accent-emerald); border-radius: var(--radius-md); background: #fff; color: var(--text-primary); font-weight: 700;" onchange="toggleNewCompany(this)">
                       <option value="">-- Select Corporate Account --</option>
-                      @foreach($companies as $cmp)
+                      @foreach($companies ?? \App\Models\Company::where('status', 'Active')->get() as $cmp)
                         <option value="{{ $cmp->id }}">{{ $cmp->name }}</option>
                       @endforeach
                       <option value="new" style="color: var(--accent-primary); font-weight: 900;">+ Register New Company</option>
@@ -165,20 +170,20 @@
                   <div id="new-company-details" style="display: none; border-top: 1px solid rgba(16, 185, 129, 0.2); padding-top: 16px;">
                     <div style="margin-bottom: 16px;">
                       <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">New Company Name</label>
-                      <input type="text" style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff;" placeholder="Full Corporate Entity Name">
+                      <input type="text" name="new_company_name" style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff;" placeholder="Full Corporate Entity Name">
                     </div>
                     <div style="margin-bottom: 16px;">
                       <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Company Address</label>
-                      <input type="text" style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff;" placeholder="Billing Address">
+                      <input type="text" name="new_company_address" style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff;" placeholder="Billing Address">
                     </div>
                     <div style="display: flex; gap: 16px;">
                       <div style="flex: 1;">
                         <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">GSTIN</label>
-                        <input type="text" style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff; font-family: monospace;" placeholder="29ABCDE1234F1Z5">
+                        <input type="text" name="new_company_gstin" style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff; font-family: monospace;" placeholder="29ABCDE1234F1Z5">
                       </div>
                       <div style="flex: 1;">
                         <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Corporate Phone</label>
-                        <input type="text" style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff;" placeholder="Office / Mobile">
+                        <input type="text" name="new_company_phone" style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff;" placeholder="Office / Mobile">
                       </div>
                     </div>
                   </div>
@@ -197,74 +202,72 @@
                     <div class="section-regular-search" style="display: none; margin-bottom: 20px; padding: 16px; background: rgba(99, 102, 241, 0.03); border: 1px dashed var(--accent-primary); border-radius: var(--radius-md);">
                       <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 8px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Search Regular Guest</label>
                       <div style="display: flex; gap: 12px;">
-                        <input type="text" style="flex: 1; height:42px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff; color: var(--text-primary);" placeholder="Enter Mobile Number">
-                        <button type="button" class="btn-ui-primary" style="height: 42px; padding: 0 24px;" onclick="alert('Searching guest directory...')"><i class="fa-solid fa-magnifying-glass"></i> Search</button>
+                        <input type="text" class="regular-search-input" style="flex: 1; height:42px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff; color: var(--text-primary);" placeholder="Enter Mobile Number">
+                        <button type="button" class="btn-ui-primary" style="height: 42px; padding: 0 24px;" onclick="searchRegularGuest(this)"><i class="fa-solid fa-magnifying-glass"></i> Search</button>
                       </div>
                     </div>
 
                     <div style="display: flex; gap: 16px; margin-bottom: 16px;">
-                      <div style="width: 100px;">
+                      <div style="width: 110px;">
                         <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Title</label>
-                        <select style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff; color: var(--text-primary);">
-                          <option>Mr.</option>
-                          <option>Mrs.</option>
-                          <option>Ms.</option>
-                          <option>Dr.</option>
-                          <option>Prof.</option>
+                        <select name="title_id" class="pms-select-title" style="width:100%; height:40px; padding:8px 10px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff; color: var(--text-primary); font-weight: 600;">
+                          @foreach($titles ?? \App\Models\Title::where('status', 'Active')->get() as $t)
+                            <option value="{{ $t->id }}">{{ $t->name }}</option>
+                          @endforeach
                         </select>
                       </div>
                       <div style="flex: 1;">
                         <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Guest Name</label>
-                        <input type="text" style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff;" placeholder="First and Last Name" required>
+                        <input type="text" name="guest_name" class="guest-name-input" style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff;" placeholder="First and Last Name" required>
                       </div>
                     </div>
 
                     <div style="margin-bottom: 16px;">
                       <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Guest Address</label>
-                      <input type="text" style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff;" placeholder="House No, Street, Landmark">
+                      <input type="text" name="guest_address" class="guest-address-input" style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff;" placeholder="House No, Street, Landmark">
                     </div>
 
                     <div style="display: flex; gap: 16px; margin-bottom: 16px;">
                       <div style="flex: 1;">
                         <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Nationality</label>
-                        <select style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff;">
-                          <option>Indian</option>
-                          <option>Foreign National</option>
-                          <option>NRI</option>
+                        <select name="nationality_id" class="pms-select-nationality" style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff; color: var(--text-primary); font-weight: 600;">
+                          @foreach($nationalities ?? \App\Models\Nationality::where('status', 'Active')->get() as $nat)
+                            <option value="{{ $nat->id }}" {{ strtolower($nat->name) === 'indian' ? 'selected' : '' }}>{{ $nat->name }}</option>
+                          @endforeach
                         </select>
                       </div>
                       <div style="flex: 1;">
                         <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">City</label>
-                        <input type="text" style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff;" placeholder="e.g. Kolkata">
+                        <input type="text" name="city" class="guest-city-input" style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff;" placeholder="e.g. Kolkata">
                       </div>
                     </div>
 
                     <div style="display: flex; gap: 16px; margin-bottom: 16px;">
                       <div style="flex: 1;">
                         <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Telephone / Mobile</label>
-                        <input type="text" style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff;" placeholder="+91" required>
+                        <input type="text" name="mobile" class="guest-mobile-input" style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff;" placeholder="+91" required>
                       </div>
                       <div style="flex: 1;">
                         <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Email ID</label>
-                        <input type="email" style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff;" placeholder="guest@email.com">
+                        <input type="email" name="email" class="guest-email-input" style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff;" placeholder="guest@email.com">
                       </div>
                     </div>
 
                     <div style="display: flex; gap: 16px; margin-bottom: 16px;">
                       <div style="flex: 1;">
                         <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Date of Birth</label>
-                        <input type="date" style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff;">
+                        <input type="date" name="dob" class="guest-dob-input" style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff;">
                       </div>
                       <div style="flex: 1;">
                         <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Anniversary</label>
-                        <input type="date" style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff;">
+                        <input type="date" name="anniversary" class="guest-anniversary-input" style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff;">
                       </div>
                       <div style="flex: 1;">
                         <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Status</label>
-                        <select style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff; font-weight: 700; color: var(--accent-emerald);">
-                          <option>Confirmed</option>
-                          <option>Tentative</option>
-                          <option>Waitlisted</option>
+                        <select name="status" class="pms-select-status" style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff; font-weight: 700; color: var(--accent-emerald);">
+                          <option value="Confirmed">Confirmed</option>
+                          <option value="Tentative">Tentative</option>
+                          <option value="Waitlisted">Waitlisted</option>
                         </select>
                       </div>
                     </div>
@@ -278,36 +281,37 @@
                         </label>
                       </div>
                       <div class="privilege-input-container" style="display: none; width: 100%;">
-                        <input type="text" style="width:100%; max-width: 250px; height:36px; padding:6px 12px; font-size:13px; border:1px solid #059669; border-radius: var(--radius-sm); background: #fff; color: var(--text-primary); font-weight: 600;" placeholder="Privilege Card No.">
+                        <input type="text" name="privilege_card_no" style="width:100%; max-width: 250px; height:36px; padding:6px 12px; font-size:13px; border:1px solid #059669; border-radius: var(--radius-sm); background: #fff; color: var(--text-primary); font-weight: 600;" placeholder="Privilege Card No.">
                       </div>
                     </div>
 
+                    <!-- Dynamic Cascading Room Assign: Category -> Floor -> Room No -->
                     <h4 style="font-size: 12px; color: var(--accent-primary); margin-bottom: 16px; text-transform: uppercase; font-weight: 900; letter-spacing: 1px;"><i class="fa-solid fa-hotel"></i> Room Assign</h4>
                     <div style="display: flex; gap: 16px; margin-bottom: 20px;">
                       <div style="flex: 1;">
                         <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Room Category</label>
-                        <select style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff; color: var(--text-primary);">
+                        <select name="category_id" class="select-room-category" onchange="onCategoryChange(this)" style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff; color: var(--text-primary); font-weight: 600;">
                           <option value="">Select Category</option>
-                          @foreach($categories as $cat)
-                            <option value="{{ $cat->name }}">{{ $cat->name }}</option>
+                          @foreach($categories ?? \App\Models\RoomCategory::where('status', 'Active')->get() as $cat)
+                            <option value="{{ $cat->id }}" data-category-name="{{ $cat->name }}">{{ $cat->name }}</option>
                           @endforeach
                         </select>
                       </div>
                       <div style="flex: 1;">
                         <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Floor</label>
-                        <select style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff; color: var(--text-primary);">
+                        <select name="floor_id" class="select-room-floor" onchange="onFloorChange(this)" style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff; color: var(--text-primary); font-weight: 600;">
                           <option value="">Select Floor</option>
-                          @foreach($floors as $fl)
-                            <option value="{{ $fl->floor }}">Floor {{ $fl->floor }}</option>
+                          @foreach($floors ?? \App\Models\Floor::where('status', 'Active')->orderBy('floor', 'asc')->get() as $fl)
+                            <option value="{{ $fl->id }}" data-floor-no="{{ $fl->floor }}">Floor {{ $fl->floor }}</option>
                           @endforeach
                         </select>
                       </div>
                       <div style="flex: 1;">
                         <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Room No.</label>
-                        <select style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff; color: var(--text-primary);">
+                        <select name="room_id" class="select-room-no" style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff; color: var(--text-primary); font-weight: 700;">
                           <option value="">Select Room No.</option>
-                          @foreach($rackRooms as $rm)
-                            <option value="{{ $rm['room'] }}">{{ $rm['room'] }} ({{ $rm['type'] }})</option>
+                          @foreach($rackRooms ?? [] as $rm)
+                            <option value="{{ $rm['id'] ?? $rm['room'] }}" data-room-no="{{ $rm['room'] }}" data-rate="{{ $rm['rate'] }}">{{ $rm['room'] }} ({{ $rm['type'] }})</option>
                           @endforeach
                         </select>
                       </div>
@@ -317,21 +321,16 @@
                     <div style="display: flex; gap: 16px; margin-bottom: 16px;">
                       <div style="flex: 1;">
                         <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Identity Card Type</label>
-                        <select style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff;">
-                          @foreach($idCardTypes as $idc)
-                            <option value="{{ $idc->name }}">{{ $idc->name }}</option>
+                        <select name="id_card_type_id" class="pms-select-idtype" style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff; color: var(--text-primary); font-weight: 600;">
+                          <option value="">Select ID Type</option>
+                          @foreach($idCardTypes ?? \App\Models\IdCardType::where('status', 'Active')->get() as $idc)
+                            <option value="{{ $idc->id }}">{{ $idc->name }}</option>
                           @endforeach
-                          @if($idCardTypes->isEmpty())
-                            <option>Aadhar Card</option>
-                            <option>PAN Card</option>
-                            <option>Passport</option>
-                            <option>Driving License</option>
-                          @endif
                         </select>
                       </div>
                       <div style="flex: 1;">
                         <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Card Number</label>
-                        <input type="text" style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff; font-family: monospace;" placeholder="ID Number">
+                        <input type="text" name="id_card_number" class="guest-id-number" style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff; font-family: monospace;" placeholder="ID Card Number">
                       </div>
                     </div>
 
@@ -389,17 +388,11 @@
                 
                 <div style="margin-bottom: 12px;">
                   <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Payment Type</label>
-                  <select id="payment-type-select" onchange="togglePaymentFields(this)" style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff; color: var(--text-primary); font-weight: 700;">
+                  <select name="payment_mode_id" id="payment-type-select" onchange="togglePaymentFields(this)" style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff; color: var(--text-primary); font-weight: 700;">
                     <option value="None" selected>None</option>
-                    @foreach($paymentModes as $pm)
-                      <option value="{{ $pm->name }}">{{ $pm->name }}</option>
+                    @foreach($paymentModes ?? \App\Models\PaymentMode::where('status', 'Active')->get() as $pm)
+                      <option value="{{ $pm->id }}">{{ $pm->name }}</option>
                     @endforeach
-                    @if($paymentModes->isEmpty())
-                      <option value="Cash">Cash</option>
-                      <option value="UPI">UPI</option>
-                      <option value="Scanner">Scanner</option>
-                      <option value="Bank Transfer">Bank Transfer</option>
-                    @endif
                   </select>
                 </div>
 
@@ -407,11 +400,11 @@
                 <div id="payment-details-container" style="display: none; flex-direction: column; gap: 12px; margin-bottom: 4px;">
                   <div>
                     <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Advance Amount (₹)</label>
-                    <input type="number" id="payment-advance-amount" style="width:100%; height:40px; padding:8px 14px; font-size:13px; font-weight: 700; font-family: var(--font-mono); border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff; color: var(--text-primary);" placeholder="Enter Advance Amount">
+                    <input type="number" name="advance_amount" id="payment-advance-amount" style="width:100%; height:40px; padding:8px 14px; font-size:13px; font-weight: 700; font-family: var(--font-mono); border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff; color: var(--text-primary);" placeholder="Enter Advance Amount">
                   </div>
                   <div>
                     <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Remarks</label>
-                    <input type="text" id="payment-remarks" style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff; color: var(--text-primary);" placeholder="Transaction ID, UPI Ref, or Notes">
+                    <input type="text" name="payment_remarks" id="payment-remarks" style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff; color: var(--text-primary);" placeholder="Transaction ID, UPI Ref, or Notes">
                   </div>
                 </div>
 

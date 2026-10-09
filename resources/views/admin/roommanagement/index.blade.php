@@ -1198,6 +1198,15 @@
   const baseUrl = "{{ route('admin.roommanagement.index') }}";
   const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
+  function getAmenityName(val) {
+    if (!val) return '';
+    if (typeof masterAmenities !== 'undefined' && Array.isArray(masterAmenities)) {
+      const found = masterAmenities.find(m => String(m.id) === String(val) || m.name === val);
+      if (found) return found.name;
+    }
+    return String(val);
+  }
+
   function getPaxDataForBedding(beddingName) {
     const config = beddingConfigsData.find(b => b.name === beddingName);
     if (!config) {
@@ -1370,7 +1379,7 @@
     // Check amenities
     const currentAmenities = Array.isArray(room.amenities) ? room.amenities : [];
     document.querySelectorAll('#edit-amenities-container input[type="checkbox"]').forEach(cb => {
-      cb.checked = currentAmenities.includes(cb.value);
+      cb.checked = currentAmenities.some(a => String(a) === String(cb.value) || String(a) === String(cb.dataset.name));
     });
 
     openModal('edit-room-modal');
@@ -1914,7 +1923,7 @@
         let statusLabel = isInactive ? 'Inactive' : 'Active';
 
         const amenitiesList = Array.isArray(room.amenities) ? room.amenities : [];
-        const amenitiesHtml = amenitiesList.slice(0, 3).map(a => `<span class="amenity-chip">${a}</span>`).join('') +
+        const amenitiesHtml = amenitiesList.slice(0, 3).map(a => `<span class="amenity-chip">${getAmenityName(a)}</span>`).join('') +
           (amenitiesList.length > 3 ? `<span class="amenity-chip">+${amenitiesList.length - 3}</span>` : '');
 
         tableHtml += `
@@ -1978,7 +1987,7 @@
         let borderTopColor = isInactive ? '#ef4444' : '#10b981';
 
         const amenitiesList = Array.isArray(room.amenities) ? room.amenities : [];
-        const amenitiesHtml = amenitiesList.slice(0, 3).map(a => `<span class="amenity-chip">${a}</span>`).join('') +
+        const amenitiesHtml = amenitiesList.slice(0, 3).map(a => `<span class="amenity-chip">${getAmenityName(a)}</span>`).join('') +
           (amenitiesList.length > 3 ? `<span class="amenity-chip">+${amenitiesList.length - 3}</span>` : '');
 
         gridHtml += `

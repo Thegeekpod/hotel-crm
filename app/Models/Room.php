@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Room extends Model
 {
@@ -16,11 +18,8 @@ class Room extends Model
         'room_number',
         'floor_id',
         'category_id',
-        'rate',
         'bedding_config_id',
-        'floor',
-        'category',
-        'bedding_config',
+        'rate',
         'status',
         'amenities',
         'notes',
@@ -31,8 +30,44 @@ class Room extends Model
         'rate' => 'decimal:2',
     ];
 
+    protected $appends = [
+        'floor',
+        'category',
+        'bedding_config',
+    ];
+
     /**
-     * Relationships matching Add Room Modal foreign keys
+     * Dynamic Accessors for legacy compatibility & view bindings
+     */
+    public function getFloorAttribute(): ?string
+    {
+        return $this->floorRelation?->floor ? (string)$this->floorRelation->floor : null;
+    }
+
+    public function getCategoryAttribute(): ?string
+    {
+        return $this->categoryRelation?->name ?? null;
+    }
+
+    public function getBeddingConfigAttribute(): ?string
+    {
+        return $this->beddingConfigRelation?->name ?? null;
+    }
+
+    public function getAmenitiesDataAttribute(): \Illuminate\Database\Eloquent\Collection
+    {
+        $ids = is_array($this->amenities) ? $this->amenities : [];
+        return Amenity::whereIn('id', $ids)->get();
+    }
+
+    public function getAmenitiesNamesAttribute(): array
+    {
+        $ids = is_array($this->amenities) ? $this->amenities : [];
+        return Amenity::whereIn('id', $ids)->pluck('name')->toArray();
+    }
+
+    /**
+     * Relationships matching foreign keys
      */
     public function floorRelation(): BelongsTo
     {
@@ -49,22 +84,22 @@ class Room extends Model
         return $this->belongsTo(BeddingConfig::class, 'bedding_config_id');
     }
 
-    public function maintenances(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function maintenances(): HasMany
     {
         return $this->hasMany(RoomMaintenance::class, 'room_id');
     }
 
-    public function latestMaintenance(): \Illuminate\Database\Eloquent\Relations\HasOne
+    public function latestMaintenance(): HasOne
     {
         return $this->hasOne(RoomMaintenance::class, 'room_id')->latestOfMany();
     }
 
-    public function housekeepingHistories(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function housekeepingHistories(): HasMany
     {
         return $this->hasMany(RoomHousekeepingHistory::class, 'room_id');
     }
 
-    public function operationalHistories(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function operationalHistories(): HasMany
     {
         return $this->hasMany(RoomOperationalHistory::class, 'room_id');
     }

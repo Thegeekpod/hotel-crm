@@ -263,7 +263,8 @@ class MasterUtilitiesSeeder extends Seeder
         }
 
         // Clean up legacy/orphan rooms if any
-        Room::whereNotIn('floor', ['1', '2', '3', '4', '5'])
+        $validFloorIds = array_filter(array_map(fn($f) => $f?->id, $floorModels));
+        Room::whereNotIn('floor_id', $validFloorIds)
             ->orWhereIn('room_number', ['1', '100'])
             ->delete();
 
@@ -282,8 +283,17 @@ class MasterUtilitiesSeeder extends Seeder
             ['icon' => 'fa-solid fa-wind', 'name' => 'Hair Dryer', 'status' => 'Active'],
             ['icon' => 'fa-solid fa-bell-concierge', 'name' => '24/7 Room Service', 'status' => 'Active'],
         ];
+        $amenityModels = [];
         foreach ($amenities as $item) {
-            Amenity::firstOrCreate(['name' => $item['name']], $item);
+            $amenityModels[$item['name']] = Amenity::firstOrCreate(['name' => $item['name']], $item);
+        }
+
+        $defaultAmenityNames = ['Free Wi-Fi', 'Smart 55" 4K TV', 'Dual Climate AC', '24h Hot & Cold Water'];
+        $defaultAmenityIds = [];
+        foreach ($defaultAmenityNames as $aname) {
+            if (isset($amenityModels[$aname])) {
+                $defaultAmenityIds[] = (int)$amenityModels[$aname]->id;
+            }
         }
 
         // 15. Housekeeping States
@@ -387,11 +397,8 @@ class MasterUtilitiesSeeder extends Seeder
                     'category_id' => $catModel?->id,
                     'bedding_config_id' => $bedModel?->id,
                     'rate' => $r['rate'],
-                    'floor' => $r['floor'],
-                    'category' => $r['category'],
-                    'bedding_config' => $r['bedding'],
                     'status' => 'Active',
-                    'amenities' => ['Free Wi-Fi', 'Smart 55" 4K TV', 'Dual Climate AC', '24h Hot & Cold Water'],
+                    'amenities' => $defaultAmenityIds,
                     'notes' => 'Luxury view room in ' . ($floorModel?->name ?? 'Main Wing'),
                 ]
             );

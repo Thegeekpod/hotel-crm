@@ -40,9 +40,12 @@ class OperationalStatusController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
+            'name' => 'required|string|max:255|unique:operational_statuses,name',
             'badge_color' => 'nullable|string|max:50',
             'status' => 'required|string|in:Active,Inactive',
+        ], [
+            'name.unique' => 'This operational status already exists. Duplicates are not allowed.',
+            'name.required' => 'Operational status name is required.',
         ]);
 
         if (empty($validated['badge_color'])) {
@@ -66,9 +69,12 @@ class OperationalStatusController extends Controller
         }
 
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
+            'name' => 'required|string|max:255|unique:operational_statuses,name,' . $id,
             'badge_color' => 'nullable|string|max:50',
             'status' => 'required|string|in:Active,Inactive',
+        ], [
+            'name.unique' => 'This operational status already exists. Duplicates are not allowed.',
+            'name.required' => 'Operational status name is required.',
         ]);
 
         if (empty($validated['badge_color'])) {

@@ -659,6 +659,18 @@
       return;
     }
 
+    // Client-side duplicate check
+    const isDuplicate = tableRecords.some(r => {
+      const isSameName = r.name && r.name.toLowerCase() === name.toLowerCase();
+      const isDifferentId = !id || String(r.id) !== String(id);
+      return isSameName && isDifferentId;
+    });
+
+    if (isDuplicate) {
+      PmsAlert.error('Duplicate Entry', `The housekeeping state "${name}" already exists. Please use a unique name.`);
+      return;
+    }
+
     const payload = { name, badge_color, status };
     const url = id ? `${baseUrl}/${id}` : baseUrl;
     const method = id ? 'PUT' : 'POST';
@@ -680,7 +692,8 @@
         PmsAlert.toast(data.message || 'Saved successfully!');
         await loadTableData();
       } else {
-        PmsAlert.error('Error', data.message || 'Failed to save record.');
+        const errorMsg = data.errors?.name?.[0] || data.message || 'Failed to save record.';
+        PmsAlert.error('Error', errorMsg);
       }
     } catch (err) {
       PmsAlert.error('Server Error', 'Failed to communicate with the server.');

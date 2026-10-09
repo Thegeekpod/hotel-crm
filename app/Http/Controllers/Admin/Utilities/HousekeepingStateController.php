@@ -40,9 +40,12 @@ class HousekeepingStateController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
+            'name' => 'required|string|max:255|unique:housekeeping_states,name',
             'badge_color' => 'nullable|string|max:50',
             'status' => 'required|string|in:Active,Inactive',
+        ], [
+            'name.unique' => 'This housekeeping state already exists. Duplicates are not allowed.',
+            'name.required' => 'Housekeeping state name is required.',
         ]);
 
         if (empty($validated['badge_color'])) {
@@ -66,9 +69,12 @@ class HousekeepingStateController extends Controller
         }
 
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
+            'name' => 'required|string|max:255|unique:housekeeping_states,name,' . $id,
             'badge_color' => 'nullable|string|max:50',
             'status' => 'required|string|in:Active,Inactive',
+        ], [
+            'name.unique' => 'This housekeeping state already exists. Duplicates are not allowed.',
+            'name.required' => 'Housekeeping state name is required.',
         ]);
 
         if (empty($validated['badge_color'])) {

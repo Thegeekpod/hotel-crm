@@ -425,8 +425,20 @@
     const gst_percentage = parseFloat(document.getElementById('form-percentage').value);
     const status = document.getElementById('form-status').value;
 
-    if (isNaN(gst_percentage) || gst_percentage < 0) {
+    if (isNaN(gst_percentage) || gst_percentage < 0 || gst_percentage > 100) {
       PmsAlert.error('Validation Error', 'Please enter a valid GST percentage (0 to 100).');
+      return;
+    }
+
+    // Client-side duplicate check
+    const isDuplicate = tableRecords.some(r => {
+      const isSamePercentage = Math.abs(parseFloat(r.gst_percentage) - gst_percentage) < 0.001;
+      const isDifferentId = !id || String(r.id) !== String(id);
+      return isSamePercentage && isDifferentId;
+    });
+
+    if (isDuplicate) {
+      PmsAlert.error('Duplicate Entry', `A GST rate of ${gst_percentage.toFixed(2)}% already exists. Please choose a different percentage.`);
       return;
     }
 
@@ -451,7 +463,8 @@
         PmsAlert.toast(data.message || 'Saved successfully!');
         await loadTableData();
       } else {
-        PmsAlert.error('Error', data.message || 'Failed to save GST slab.');
+        const errorMsg = data.errors?.gst_percentage?.[0] || data.message || 'Failed to save GST slab.';
+        PmsAlert.error('Error', errorMsg);
       }
     } catch (err) {
       PmsAlert.error('Server Error', 'Failed to communicate with the server.');

@@ -40,8 +40,12 @@ class GstPercentageController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'gst_percentage' => 'required|numeric|min:0|max:100',
+            'gst_percentage' => 'required|numeric|min:0|max:100|unique:gst_percentages,gst_percentage',
             'status' => 'required|string|in:Active,Inactive',
+        ], [
+            'gst_percentage.unique' => 'This GST percentage rate already exists. Duplicates are not allowed.',
+            'gst_percentage.required' => 'GST percentage is required.',
+            'gst_percentage.numeric' => 'GST percentage must be a valid number.',
         ]);
 
         $item = GstPercentage::create($validated);
@@ -61,8 +65,12 @@ class GstPercentageController extends Controller
         }
 
         $validated = $request->validate([
-            'gst_percentage' => 'required|numeric|min:0|max:100',
+            'gst_percentage' => 'required|numeric|min:0|max:100|unique:gst_percentages,gst_percentage,' . $id,
             'status' => 'required|string|in:Active,Inactive',
+        ], [
+            'gst_percentage.unique' => 'This GST percentage rate already exists. Duplicates are not allowed.',
+            'gst_percentage.required' => 'GST percentage is required.',
+            'gst_percentage.numeric' => 'GST percentage must be a valid number.',
         ]);
 
         $item->update($validated);

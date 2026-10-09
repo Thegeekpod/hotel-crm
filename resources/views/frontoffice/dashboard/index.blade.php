@@ -33,11 +33,12 @@
               $cardClass = 'c-cleaned';
               $badgeText = 'Cleaned';
             }
-            $guestJson = !empty($rm['guest']) ? htmlspecialchars(json_encode($rm['guest']), ENT_QUOTES, 'UTF-8') : 'null';
+            $roomJsonData = htmlspecialchars(json_encode($rm), ENT_QUOTES, 'UTF-8');
           @endphp
 
           <div class="rack-card {{ $cardClass }}" 
-               onclick="openRoomDetails('{{ $rm['room'] }}', '{{ $rm['type'] }}', '{{ $rm['cleaning'] }}', '{{ ucfirst($rm['status']) }}', {{ $rm['rate'] }}, {{ $guestJson }}, '{{ $rm['operational_status'] ?? '' }}', '{{ $rm['housekeeping_status'] ?? '' }}')" 
+               onclick="openRoomDetailsModal(this)" 
+               data-room-json="{{ $roomJsonData }}"
                data-room="{{ $rm['room'] }}" 
                data-floor="{{ $rm['floor'] }}" 
                data-type="{{ $rm['type'] }}" 

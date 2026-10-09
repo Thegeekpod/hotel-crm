@@ -21,7 +21,15 @@
       const mType = (type === 'ALL' || cType === type);
       const mFloor = (floor === 'ALL' || cFloor === floor);
       const mSearch = (!search || cRoom.includes(search) || gName.includes(search));
-      const mStatus = (currentStatusFilter === 'ALL' || cStatus === currentStatusFilter);
+      
+      let mStatus = false;
+      if (currentStatusFilter === 'ALL') {
+        mStatus = true;
+      } else if (currentStatusFilter === 'vacant') {
+        mStatus = (cStatus === 'available' || cStatus === 'dirty');
+      } else {
+        mStatus = (cStatus === currentStatusFilter);
+      }
 
       card.style.display = (mType && mFloor && mSearch && mStatus) ? 'flex' : 'none';
     });
@@ -64,7 +72,7 @@
     openModal('reserve-modal');
   }
 
-  function openRoomDetails(roomNo, category, cleaningStatus, pmsStatus, rate, guestObj) {
+  function openRoomDetails(roomNo, category, cleaningStatus, pmsStatus, rate, guestObj, opStatus, hkStatus) {
     const titleEl = document.getElementById('m-title');
     const bodyEl = document.getElementById('m-body');
     const footerEl = document.getElementById('m-footer');
@@ -72,6 +80,9 @@
     if (!titleEl || !bodyEl || !footerEl) return;
 
     titleEl.innerHTML = `<i class="fa-solid fa-door-open"></i> Room ${roomNo} - ${category} (₹ ${Number(rate).toLocaleString()}/night)`;
+
+    const opDisplay = opStatus || (pmsStatus === 'Blocked' ? 'Out of Order / Blocked' : 'Active In-Service');
+    const hkDisplay = hkStatus || (cleaningStatus || 'Cleaned & Inspected');
 
     if (guestObj) {
       bodyEl.innerHTML = `
@@ -81,11 +92,13 @@
             <div style="font-size: 15px; font-weight: 800; color: var(--text-primary, #0f172a);">${escapeHtml(guestObj.name)}</div>
             <div style="font-size: 11px; color: var(--text-secondary, #64748b); margin-top: 6px;">Status: <span class="badge-tag green">${escapeHtml(guestObj.state)}</span></div>
             <div style="font-size: 11px; color: var(--text-muted, #94a3b8); margin-top: 4px;">Folio: <strong style="color: var(--accent-cyan, #06b6d4); font-family: var(--font-mono);">${escapeHtml(guestObj.folio)}</strong></div>
+            <div style="font-size: 11px; color: var(--text-muted, #94a3b8); margin-top: 4px;">Housekeeping: <strong style="color: var(--accent-emerald, #10b981);">${escapeHtml(hkDisplay)}</strong></div>
           </div>
           <div style="background: var(--bg-surface, #f8fafc); padding: 16px; border: 1px solid var(--border-subtle, #e2e8f0); border-radius: var(--radius-md, 8px);">
             <h4 style="font-size: 11px; color: var(--accent-primary, #6366f1); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px;"><i class="fa-solid fa-wallet"></i> Folio Outstanding</h4>
             <div style="font-size: 24px; font-weight: 900; color: var(--accent-rose, #f43f5e); font-family: var(--font-mono);">₹ ${Number(guestObj.balance).toLocaleString()}</div>
             <div style="font-size: 11px; color: var(--accent-emerald, #10b981); margin-top: 6px;"><i class="fa-solid fa-check"></i> Advance: ₹ 5,000</div>
+            <div style="font-size: 11px; color: var(--text-muted, #94a3b8); margin-top: 4px;">Operational: <strong style="color: var(--accent-primary, #6366f1);">${escapeHtml(opDisplay)}</strong></div>
           </div>
         </div>
         <div class="pms-table-box" style="border: 1px solid var(--border-medium, #e2e8f0); border-radius: var(--radius-md, 8px); overflow: hidden;">
@@ -108,19 +121,28 @@
         <button class="btn-ui-secondary" onclick="closeModal('room-modal')">Close</button>
       `;
     } else {
-      const isDirty = (cleaningStatus === 'Dirty');
+      const isDirty = (cleaningStatus === 'Dirty' || (hkDisplay && hkDisplay.toLowerCase().includes('dirty')));
+      const isBlocked = (pmsStatus === 'Blocked' || (opDisplay && (opDisplay.toLowerCase().includes('blocked') || opDisplay.toLowerCase().includes('maintenance'))));
+
       bodyEl.innerHTML = `
         <div style="background: var(--bg-surface, #f8fafc); padding: 18px; border: 1px solid var(--border-subtle, #e2e8f0); border-radius: var(--radius-md, 8px); margin-bottom: 14px;">
           <div style="display:flex; justify-content:space-between; align-items:center;">
             <div>
               <div style="font-size: 16px; font-weight: 800; color: var(--text-primary, #0f172a);">Room ${roomNo} Status: ${escapeHtml(pmsStatus)}</div>
-              <div style="font-size: 12px; color: var(--text-secondary, #64748b); margin-top: 6px;">Housekeeping: <strong>${escapeHtml(cleaningStatus)}</strong></div>
+              <div style="font-size: 12px; color: var(--text-secondary, #64748b); margin-top: 6px;">
+                Housekeeping: <strong style="color: ${isDirty ? '#d97706' : '#059669'};">${escapeHtml(hkDisplay)}</strong>
+              </div>
+              <div style="font-size: 12px; color: var(--text-secondary, #64748b); margin-top: 3px;">
+                Operational: <strong style="color: ${isBlocked ? '#e11d48' : '#6366f1'};">${escapeHtml(opDisplay)}</strong>
+              </div>
             </div>
-            <span class="badge-tag ${isDirty ? 'yellow' : 'green'}" style="font-size: 12px; padding: 6px 14px;">${escapeHtml(cleaningStatus)}</span>
+            <span class="badge-tag ${isBlocked ? 'blue' : (isDirty ? 'yellow' : 'green')}" style="font-size: 12px; padding: 6px 14px;">
+              ${escapeHtml(isBlocked ? opDisplay : hkDisplay)}
+            </span>
           </div>
         </div>
         <div style="font-size: 12px; font-weight: 600; color: var(--text-secondary, #64748b);">
-          <i class="fa-solid fa-sparkles" style="color: var(--accent-gold, #fbc531);"></i> Room Features: King Bed, Free Wi-Fi, Climate Control AC, Smart 55" TV, Ocean/Garden View.
+          <i class="fa-solid fa-sparkles" style="color: var(--accent-gold, #fbc531);"></i> Room Features: Luxury Bedding, Free Wi-Fi, Climate Control AC, Smart TV, 24h Hot Water.
         </div>
       `;
       footerEl.innerHTML = `

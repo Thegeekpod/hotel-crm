@@ -251,15 +251,21 @@ class MasterUtilitiesSeeder extends Seeder
 
         // 13. Floors
         $floors = [
-            ['floor' => '1', 'name' => 'Floor 1 (Ground / Wing A)', 'rooms' => 4, 'status' => 'Active'],
+            ['floor' => '1', 'name' => 'Floor 1 (Ground / Wing A)', 'rooms' => 10, 'status' => 'Active'],
             ['floor' => '2', 'name' => 'Floor 2 (Sea Wing)', 'rooms' => 10, 'status' => 'Active'],
             ['floor' => '3', 'name' => 'Floor 3 (Club Wing)', 'rooms' => 10, 'status' => 'Active'],
-            ['floor' => '4', 'name' => 'Floor 4 (Royal Penthouse)', 'rooms' => 8, 'status' => 'Active'],
+            ['floor' => '4', 'name' => 'Floor 4 (Executive Wing)', 'rooms' => 10, 'status' => 'Active'],
+            ['floor' => '5', 'name' => 'Floor 5 (Royal Penthouse)', 'rooms' => 10, 'status' => 'Active'],
         ];
         $floorModels = [];
         foreach ($floors as $item) {
             $floorModels[$item['floor']] = Floor::updateOrCreate(['floor' => $item['floor']], $item);
         }
+
+        // Clean up legacy/orphan rooms if any
+        Room::whereNotIn('floor', ['1', '2', '3', '4', '5'])
+            ->orWhereIn('room_number', ['1', '100'])
+            ->delete();
 
         // 14. Amenities Master
         $amenities = [
@@ -305,15 +311,21 @@ class MasterUtilitiesSeeder extends Seeder
             $opStatusModels[$item['name']] = OperationalStatus::firstOrCreate(['name' => $item['name']], $item);
         }
 
-        // 17. Seed Full 32 Rooms (Hotel Sagar Sonnet PMS)
+        // 17. Seed 50 Rooms (5 Floors x 10 Rooms)
         $roomsData = [
-            // Floor 1
+            // Floor 1 (101 - 110)
             ['room_number' => '101', 'floor' => '1', 'category' => 'Super Deluxe', 'bedding' => 'King Size Master (72x78)', 'rate' => 5200.00],
             ['room_number' => '102', 'floor' => '1', 'category' => 'Deluxe', 'bedding' => 'Queen Size Double (60x78)', 'rate' => 3500.00],
             ['room_number' => '103', 'floor' => '1', 'category' => 'Super Deluxe', 'bedding' => 'Twin Single Beds (36x78 x 2)', 'rate' => 5200.00],
             ['room_number' => '104', 'floor' => '1', 'category' => 'Super Deluxe', 'bedding' => 'King Size Master (72x78)', 'rate' => 5200.00],
+            ['room_number' => '105', 'floor' => '1', 'category' => 'Deluxe', 'bedding' => 'Queen Size Double (60x78)', 'rate' => 3500.00],
+            ['room_number' => '106', 'floor' => '1', 'category' => 'Deluxe', 'bedding' => 'Twin Single Beds (36x78 x 2)', 'rate' => 3500.00],
+            ['room_number' => '107', 'floor' => '1', 'category' => 'Super Deluxe', 'bedding' => 'King Size Master (72x78)', 'rate' => 5200.00],
+            ['room_number' => '108', 'floor' => '1', 'category' => 'Super Deluxe', 'bedding' => 'King Size Master (72x78)', 'rate' => 5200.00],
+            ['room_number' => '109', 'floor' => '1', 'category' => 'Deluxe', 'bedding' => 'Queen Size Double (60x78)', 'rate' => 3500.00],
+            ['room_number' => '110', 'floor' => '1', 'category' => 'Suite', 'bedding' => 'Family Suite 4 Pax', 'rate' => 8500.00],
 
-            // Floor 2
+            // Floor 2 (201 - 210)
             ['room_number' => '201', 'floor' => '2', 'category' => 'Suite', 'bedding' => 'Family Suite 4 Pax', 'rate' => 8500.00],
             ['room_number' => '202', 'floor' => '2', 'category' => 'Deluxe', 'bedding' => 'Queen Size Double (60x78)', 'rate' => 3500.00],
             ['room_number' => '203', 'floor' => '2', 'category' => 'Super Deluxe', 'bedding' => 'King Size Master (72x78)', 'rate' => 5200.00],
@@ -325,7 +337,7 @@ class MasterUtilitiesSeeder extends Seeder
             ['room_number' => '209', 'floor' => '2', 'category' => 'Super Deluxe', 'bedding' => 'Twin Single Beds (36x78 x 2)', 'rate' => 5200.00],
             ['room_number' => '210', 'floor' => '2', 'category' => 'Suite', 'bedding' => 'Suite Triple / Extra Bed', 'rate' => 8500.00],
 
-            // Floor 3
+            // Floor 3 (301 - 310)
             ['room_number' => '301', 'floor' => '3', 'category' => 'Suite', 'bedding' => 'Suite Triple / Extra Bed', 'rate' => 8500.00],
             ['room_number' => '302', 'floor' => '3', 'category' => 'Deluxe', 'bedding' => 'Queen Size Double (60x78)', 'rate' => 3500.00],
             ['room_number' => '303', 'floor' => '3', 'category' => 'Super Deluxe', 'bedding' => 'King Size Master (72x78)', 'rate' => 5200.00],
@@ -337,7 +349,7 @@ class MasterUtilitiesSeeder extends Seeder
             ['room_number' => '309', 'floor' => '3', 'category' => 'Deluxe', 'bedding' => 'Single Bed (36x78)', 'rate' => 3500.00],
             ['room_number' => '310', 'floor' => '3', 'category' => 'Suite', 'bedding' => 'Family Suite 4 Pax', 'rate' => 8500.00],
 
-            // Floor 4
+            // Floor 4 (401 - 410)
             ['room_number' => '401', 'floor' => '4', 'category' => 'Executive', 'bedding' => 'King Size Master (72x78)', 'rate' => 11000.00],
             ['room_number' => '402', 'floor' => '4', 'category' => 'Executive', 'bedding' => 'King Size Master (72x78)', 'rate' => 11000.00],
             ['room_number' => '403', 'floor' => '4', 'category' => 'Super Deluxe', 'bedding' => 'King Size Master (72x78)', 'rate' => 5200.00],
@@ -346,6 +358,20 @@ class MasterUtilitiesSeeder extends Seeder
             ['room_number' => '406', 'floor' => '4', 'category' => 'Deluxe', 'bedding' => 'Queen Size Double (60x78)', 'rate' => 3500.00],
             ['room_number' => '407', 'floor' => '4', 'category' => 'Super Deluxe', 'bedding' => 'Twin Single Beds (36x78 x 2)', 'rate' => 5200.00],
             ['room_number' => '408', 'floor' => '4', 'category' => 'Suite', 'bedding' => 'Suite Triple / Extra Bed', 'rate' => 8500.00],
+            ['room_number' => '409', 'floor' => '4', 'category' => 'Executive', 'bedding' => 'King Size Master (72x78)', 'rate' => 11000.00],
+            ['room_number' => '410', 'floor' => '4', 'category' => 'Suite', 'bedding' => 'Family Suite 4 Pax', 'rate' => 8500.00],
+
+            // Floor 5 (501 - 510)
+            ['room_number' => '501', 'floor' => '5', 'category' => 'Executive', 'bedding' => 'King Size Master (72x78)', 'rate' => 11000.00],
+            ['room_number' => '502', 'floor' => '5', 'category' => 'Executive', 'bedding' => 'King Size Master (72x78)', 'rate' => 11000.00],
+            ['room_number' => '503', 'floor' => '5', 'category' => 'Suite', 'bedding' => 'Suite Triple / Extra Bed', 'rate' => 8500.00],
+            ['room_number' => '504', 'floor' => '5', 'category' => 'Suite', 'bedding' => 'Family Suite 4 Pax', 'rate' => 8500.00],
+            ['room_number' => '505', 'floor' => '5', 'category' => 'Super Deluxe', 'bedding' => 'King Size Master (72x78)', 'rate' => 5200.00],
+            ['room_number' => '506', 'floor' => '5', 'category' => 'Super Deluxe', 'bedding' => 'King Size Master (72x78)', 'rate' => 5200.00],
+            ['room_number' => '507', 'floor' => '5', 'category' => 'Super Deluxe', 'bedding' => 'Twin Single Beds (36x78 x 2)', 'rate' => 5200.00],
+            ['room_number' => '508', 'floor' => '5', 'category' => 'Executive', 'bedding' => 'King Size Master (72x78)', 'rate' => 11000.00],
+            ['room_number' => '509', 'floor' => '5', 'category' => 'Executive', 'bedding' => 'King Size Master (72x78)', 'rate' => 11000.00],
+            ['room_number' => '510', 'floor' => '5', 'category' => 'Suite', 'bedding' => 'Family Suite 4 Pax', 'rate' => 8500.00],
         ];
 
         $createdRooms = [];
@@ -373,62 +399,55 @@ class MasterUtilitiesSeeder extends Seeder
             $createdRooms[$r['room_number']] = $room;
         }
 
-        // 18. Sample Room Housekeeping Histories
+        // 18. Housekeeping Histories for All Rooms
         $cleanedHk = HousekeepingState::where('name', 'like', '%Cleaned%')->first();
         $dirtyHk = HousekeepingState::where('name', 'like', '%Dirty%')->first();
 
-        if ($cleanedHk && !empty($createdRooms['101'])) {
-            RoomHousekeepingHistory::firstOrCreate(
-                [
-                    'room_id' => $createdRooms['101']->id,
-                    'housekeeping_status_id' => $cleanedHk->id,
-                    'start_time' => now()->subHours(3),
-                ],
-                [
-                    'completion_time' => now()->subHours(2),
-                    'status' => 'complete',
-                ]
-            );
+        $dirtyRoomNumbers = ['103', '107', '201', '203', '204', '207', '301', '309', '407', '503', '507'];
+
+        foreach ($createdRooms as $rNum => $roomObj) {
+            $isDirty = in_array($rNum, $dirtyRoomNumbers);
+            $hkId = $isDirty ? $dirtyHk?->id : $cleanedHk?->id;
+            $hkStatus = $isDirty ? 'pending' : 'complete';
+
+            if ($hkId) {
+                RoomHousekeepingHistory::updateOrCreate(
+                    [
+                        'room_id' => $roomObj->id,
+                    ],
+                    [
+                        'housekeeping_status_id' => $hkId,
+                        'start_time' => now()->subHours($isDirty ? 1 : 4),
+                        'completion_time' => $isDirty ? null : now()->subHours(2),
+                        'status' => $hkStatus,
+                    ]
+                );
+            }
         }
 
-        if ($dirtyHk && !empty($createdRooms['103'])) {
-            RoomHousekeepingHistory::firstOrCreate(
-                [
-                    'room_id' => $createdRooms['103']->id,
-                    'housekeeping_status_id' => $dirtyHk->id,
-                    'start_time' => now()->subHour(),
-                ],
-                [
-                    'completion_time' => null,
-                    'status' => 'pending',
-                ]
-            );
-        }
-
-        // 19. Sample Room Operational Histories
+        // 19. Operational Histories for All Rooms
         $activeOp = OperationalStatus::where('name', 'like', '%Active%')->first();
         $maintOp = OperationalStatus::where('name', 'like', '%Maintenance%')->first();
         $blockedOp = OperationalStatus::where('name', 'like', '%Blocked%')->orWhere('name', 'like', '%Order%')->first();
 
-        if ($activeOp && !empty($createdRooms['101'])) {
-            RoomOperationalHistory::firstOrCreate([
-                'room_id' => $createdRooms['101']->id,
-                'operational_status_id' => $activeOp->id,
-            ]);
-        }
+        foreach ($createdRooms as $rNum => $roomObj) {
+            $opId = $activeOp?->id;
+            if (in_array($rNum, ['104', '504']) && $blockedOp) {
+                $opId = $blockedOp->id;
+            } elseif (in_array($rNum, ['404', '508']) && $maintOp) {
+                $opId = $maintOp->id;
+            }
 
-        if ($blockedOp && !empty($createdRooms['104'])) {
-            RoomOperationalHistory::firstOrCreate([
-                'room_id' => $createdRooms['104']->id,
-                'operational_status_id' => $blockedOp->id,
-            ]);
-        }
-
-        if ($maintOp && !empty($createdRooms['404'])) {
-            RoomOperationalHistory::firstOrCreate([
-                'room_id' => $createdRooms['404']->id,
-                'operational_status_id' => $maintOp->id,
-            ]);
+            if ($opId) {
+                RoomOperationalHistory::updateOrCreate(
+                    [
+                        'room_id' => $roomObj->id,
+                    ],
+                    [
+                        'operational_status_id' => $opId,
+                    ]
+                );
+            }
         }
 
         // 20. Sample Room Maintenances

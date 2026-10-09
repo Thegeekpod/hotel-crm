@@ -16,7 +16,14 @@ class DashboardController extends Controller
 {
     public function index(Request $request)
     {
-        $dbRooms = Room::orderBy('room_number', 'asc')->get();
+        $dbRooms = Room::with([
+            'floorRelation',
+            'categoryRelation',
+            'beddingConfigRelation',
+            'housekeepingHistories.housekeepingStatus',
+            'operationalHistories.operationalStatus'
+        ])->orderByRaw('CAST(room_number AS UNSIGNED) ASC, room_number ASC')->get();
+
         $floors = Floor::where('status', 'Active')->orderBy('floor', 'asc')->get();
         $categories = RoomCategory::where('status', 'Active')->get();
         $companies = Company::where('status', 'Active')->get();
@@ -24,58 +31,90 @@ class DashboardController extends Controller
         $reservationModes = ReservationMode::where('status', 'Active')->get();
         $paymentModes = PaymentMode::where('status', 'Active')->get();
 
-        // Sample / Live Front Office Room Rack list
-        $staticSampleRooms = [
-            // Floor 1
-            ['room' => '101', 'floor' => '1', 'type' => 'SUPER DELUXE', 'cleaning' => 'Cleaned', 'status' => 'available', 'rate' => 5200, 'guest' => null],
-            ['room' => '102', 'floor' => '1', 'type' => 'DELUXE', 'cleaning' => 'Cleaned', 'status' => 'occupied', 'rate' => 3500, 'guest' => ['name' => 'Sanjeev Kumar Singh', 'state' => 'Arrived', 'folio' => 'FOL-102-882', 'balance' => 10400]],
-            ['room' => '103', 'floor' => '1', 'type' => 'SUPER DELUXE', 'cleaning' => 'Dirty', 'status' => 'dirty', 'rate' => 5200, 'guest' => null],
-            ['room' => '104', 'floor' => '1', 'type' => 'SUPER DELUXE', 'cleaning' => 'Blocked', 'status' => 'blocked', 'rate' => 5200, 'guest' => null],
-            
-            // Floor 2
-            ['room' => '201', 'floor' => '2', 'type' => 'SUITE', 'cleaning' => 'Dirty', 'status' => 'dirty', 'rate' => 8500, 'guest' => null],
-            ['room' => '202', 'floor' => '2', 'type' => 'DELUXE', 'cleaning' => 'Cleaned', 'status' => 'occupied', 'rate' => 3500, 'guest' => ['name' => 'AJEET BHENGRA', 'state' => 'Stay Over', 'folio' => 'FOL-202-710', 'balance' => 7800]],
-            ['room' => '203', 'floor' => '2', 'type' => 'SUPER DELUXE', 'cleaning' => 'Dirty', 'status' => 'dirty', 'rate' => 5200, 'guest' => null],
-            ['room' => '204', 'floor' => '2', 'type' => 'SUPER DELUXE', 'cleaning' => 'Dirty', 'status' => 'dirty', 'rate' => 5200, 'guest' => null],
-            ['room' => '205', 'floor' => '2', 'type' => 'SUPER DELUXE', 'cleaning' => 'Cleaned', 'status' => 'occupied', 'rate' => 5200, 'guest' => ['name' => 'KHAGESWAR ROUT', 'state' => 'Stay Over', 'folio' => 'FOL-205-551', 'balance' => 14200]],
-            ['room' => '206', 'floor' => '2', 'type' => 'DELUXE', 'cleaning' => 'Cleaned', 'status' => 'occupied', 'rate' => 3500, 'guest' => ['name' => 'Raj kumar Bhunia', 'state' => 'Arrived', 'folio' => 'FOL-206-339', 'balance' => 3920]],
-            ['room' => '207', 'floor' => '2', 'type' => 'SUPER DELUXE', 'cleaning' => 'Dirty', 'status' => 'dirty', 'rate' => 5200, 'guest' => null],
-            ['room' => '208', 'floor' => '2', 'type' => 'SUPER DELUXE', 'cleaning' => 'Cleaned', 'status' => 'available', 'rate' => 5200, 'guest' => null],
-            ['room' => '209', 'floor' => '2', 'type' => 'SUPER DELUXE', 'cleaning' => 'Cleaned', 'status' => 'available', 'rate' => 5200, 'guest' => null],
-            ['room' => '210', 'floor' => '2', 'type' => 'SUITE', 'cleaning' => 'Cleaned', 'status' => 'available', 'rate' => 8500, 'guest' => null],
-            
-            // Floor 3
-            ['room' => '301', 'floor' => '3', 'type' => 'SUITE', 'cleaning' => 'Dirty', 'status' => 'dirty', 'rate' => 8500, 'guest' => null],
-            ['room' => '302', 'floor' => '3', 'type' => 'DELUXE', 'cleaning' => 'Cleaned', 'status' => 'occupied', 'rate' => 3500, 'guest' => ['name' => 'SANGADA RAJUBHAI NAL', 'state' => 'Stay Over', 'folio' => 'FOL-302-991', 'balance' => 8100]],
-            ['room' => '303', 'floor' => '3', 'type' => 'SUPER DELUXE', 'cleaning' => 'Cleaned', 'status' => 'available', 'rate' => 5200, 'guest' => null],
-            ['room' => '304', 'floor' => '3', 'type' => 'SUPER DELUXE', 'cleaning' => 'Cleaned', 'status' => 'occupied', 'rate' => 5200, 'guest' => ['name' => 'HITENDRA NINAWE', 'state' => 'Stay Over', 'folio' => 'FOL-304-102', 'balance' => 11900]],
-            ['room' => '305', 'floor' => '3', 'type' => 'SUPER DELUXE', 'cleaning' => 'Cleaned', 'status' => 'occupied', 'rate' => 5200, 'guest' => ['name' => 'ADVAIT CHAVAN', 'state' => 'Stay Over', 'folio' => 'FOL-305-673', 'balance' => 12400]],
-            ['room' => '306', 'floor' => '3', 'type' => 'DELUXE', 'cleaning' => 'Cleaned', 'status' => 'available', 'rate' => 3500, 'guest' => null],
-            ['room' => '307', 'floor' => '3', 'type' => 'SUPER DELUXE', 'cleaning' => 'Cleaned', 'status' => 'occupied', 'rate' => 5200, 'guest' => ['name' => 'BIKRAM KR SAHOO', 'state' => 'Stay Over', 'folio' => 'FOL-307-889', 'balance' => 16500]],
-            ['room' => '308', 'floor' => '3', 'type' => 'SUPER DELUXE', 'cleaning' => 'Cleaned', 'status' => 'available', 'rate' => 5200, 'guest' => null],
-            ['room' => '309', 'floor' => '3', 'type' => 'DELUXE', 'cleaning' => 'Dirty', 'status' => 'dirty', 'rate' => 3500, 'guest' => null],
-            ['room' => '310', 'floor' => '3', 'type' => 'SUITE', 'cleaning' => 'Cleaned', 'status' => 'available', 'rate' => 8500, 'guest' => null],
-
-            // Floor 4
-            ['room' => '401', 'floor' => '4', 'type' => 'EXECUTIVE', 'cleaning' => 'Cleaned', 'status' => 'occupied', 'rate' => 11000, 'guest' => ['name' => 'Vikramaditya Roy', 'state' => 'Arrived', 'folio' => 'FOL-401-440', 'balance' => 14500]],
-            ['room' => '402', 'floor' => '4', 'type' => 'EXECUTIVE', 'cleaning' => 'Cleaned', 'status' => 'available', 'rate' => 11000, 'guest' => null],
-            ['room' => '403', 'floor' => '4', 'type' => 'SUPER DELUXE', 'cleaning' => 'Cleaned', 'status' => 'occupied', 'rate' => 5200, 'guest' => ['name' => 'Priyanka Mukherjee', 'state' => 'Stay Over', 'folio' => 'FOL-403-109', 'balance' => 6200]],
-            ['room' => '404', 'floor' => '4', 'type' => 'SUPER DELUXE', 'cleaning' => 'Blocked', 'status' => 'blocked', 'rate' => 5200, 'guest' => null],
-            ['room' => '405', 'floor' => '4', 'type' => 'DELUXE', 'cleaning' => 'Cleaned', 'status' => 'occupied', 'rate' => 3500, 'guest' => ['name' => 'Rahul Verma', 'state' => 'Arrived', 'folio' => 'FOL-405-772', 'balance' => 4100]],
-            ['room' => '406', 'floor' => '4', 'type' => 'DELUXE', 'cleaning' => 'Cleaned', 'status' => 'available', 'rate' => 3500, 'guest' => null],
-            ['room' => '407', 'floor' => '4', 'type' => 'SUPER DELUXE', 'cleaning' => 'Dirty', 'status' => 'dirty', 'rate' => 5200, 'guest' => null],
-            ['room' => '408', 'floor' => '4', 'type' => 'SUITE', 'cleaning' => 'Cleaned', 'status' => 'occupied', 'rate' => 8500, 'guest' => ['name' => 'Dr. Ananya Sen', 'state' => 'Stay Over', 'folio' => 'FOL-408-204', 'balance' => 19500]],
+        // Sample in-house residing guests mapping for active rooms
+        $occupiedSampleGuests = [
+            '102' => ['name' => 'Sanjeev Kumar Singh', 'state' => 'Arrived', 'folio' => 'FOL-102-882', 'balance' => 10400],
+            '202' => ['name' => 'AJEET BHENGRA', 'state' => 'Stay Over', 'folio' => 'FOL-202-710', 'balance' => 7800],
+            '205' => ['name' => 'KHAGESWAR ROUT', 'state' => 'Stay Over', 'folio' => 'FOL-205-551', 'balance' => 14200],
+            '206' => ['name' => 'Raj kumar Bhunia', 'state' => 'Arrived', 'folio' => 'FOL-206-339', 'balance' => 3920],
+            '302' => ['name' => 'SANGADA RAJUBHAI NAL', 'state' => 'Stay Over', 'folio' => 'FOL-302-991', 'balance' => 8100],
+            '304' => ['name' => 'HITENDRA NINAWE', 'state' => 'Stay Over', 'folio' => 'FOL-304-102', 'balance' => 11900],
+            '305' => ['name' => 'ADVAIT CHAVAN', 'state' => 'Stay Over', 'folio' => 'FOL-305-673', 'balance' => 12400],
+            '307' => ['name' => 'BIKRAM KR SAHOO', 'state' => 'Stay Over', 'folio' => 'FOL-307-889', 'balance' => 16500],
+            '401' => ['name' => 'Vikramaditya Roy', 'state' => 'Arrived', 'folio' => 'FOL-401-440', 'balance' => 14500],
+            '403' => ['name' => 'Priyanka Mukherjee', 'state' => 'Stay Over', 'folio' => 'FOL-403-109', 'balance' => 6200],
+            '405' => ['name' => 'Rahul Verma', 'state' => 'Arrived', 'folio' => 'FOL-405-772', 'balance' => 4100],
+            '408' => ['name' => 'Dr. Ananya Sen', 'state' => 'Stay Over', 'folio' => 'FOL-408-204', 'balance' => 19500],
+            '502' => ['name' => 'Rajendra Narayan Malhotra', 'state' => 'Arrived', 'folio' => 'FOL-502-301', 'balance' => 22000],
+            '506' => ['name' => 'Sourav Ganguly', 'state' => 'Stay Over', 'folio' => 'FOL-506-440', 'balance' => 17800],
+            '509' => ['name' => 'Meera Nambiar', 'state' => 'Arrived', 'folio' => 'FOL-509-912', 'balance' => 24500],
         ];
 
-        // Merge DB rooms or use static rack if DB has few entries
-        $rackRooms = $staticSampleRooms;
+        $rackRooms = [];
+        if ($dbRooms->isNotEmpty()) {
+            foreach ($dbRooms as $r) {
+                $roomNum = (string)$r->room_number;
+                $floor = $r->floor ?? ($r->floorRelation?->floor ?? '1');
+                $type = strtoupper($r->category ?? ($r->categoryRelation?->name ?? 'DELUXE'));
+                $rate = (float)($r->rate > 0 ? $r->rate : 4500);
+
+                $latestOp = $r->operationalHistories->sortByDesc('id')->first();
+                $latestHk = $r->housekeepingHistories->sortByDesc('id')->first();
+                $guest = $occupiedSampleGuests[$roomNum] ?? null;
+
+                $opName = $latestOp?->operationalStatus?->name ?? '';
+                $hkName = $latestHk?->housekeepingStatus?->name ?? '';
+
+                if (stripos($opName, 'Blocked') !== false || stripos($opName, 'Maintenance') !== false || stripos($opName, 'Order') !== false) {
+                    $status = 'blocked';
+                    $cleaning = 'Blocked';
+                } elseif ($guest) {
+                    $status = 'occupied';
+                    $cleaning = 'Cleaned';
+                } elseif (stripos($hkName, 'Dirty') !== false || ($latestHk && $latestHk->status === 'pending')) {
+                    $status = 'dirty';
+                    $cleaning = 'Dirty';
+                } elseif ($r->status === 'Inactive') {
+                    $status = 'blocked';
+                    $cleaning = 'Blocked';
+                } else {
+                    $status = 'available';
+                    $cleaning = 'Cleaned';
+                }
+
+                $rackRooms[] = [
+                    'id' => $r->id,
+                    'room' => $roomNum,
+                    'floor' => (string)$floor,
+                    'type' => $type,
+                    'cleaning' => $cleaning,
+                    'status' => $status,
+                    'operational_status' => $opName ?: ($status === 'blocked' ? 'Out of Order / Blocked' : 'Active In-Service'),
+                    'housekeeping_status' => $hkName ?: ($status === 'dirty' ? 'Dirty / Cleaning Due' : 'Cleaned & Inspected'),
+                    'rate' => $rate,
+                    'guest' => $guest,
+                    'bedding' => $r->bedding_config ?? ($r->beddingConfigRelation?->name ?? 'King Size'),
+                    'amenities' => $r->amenities ?? [],
+                ];
+            }
+        }
 
         $totalRooms = count($rackRooms);
-        $occupiedCount = count(array_filter($rackRooms, fn($r) => $r['status'] === 'occupied'));
-        $blockedCount = count(array_filter($rackRooms, fn($r) => $r['status'] === 'blocked'));
-        $dirtyCount = count(array_filter($rackRooms, fn($r) => $r['status'] === 'dirty'));
-        $availableCount = count(array_filter($rackRooms, fn($r) => $r['status'] === 'available'));
+        $occupiedCount = count(array_filter($rackRooms, fn($rm) => $rm['status'] === 'occupied'));
+        $blockedCount = count(array_filter($rackRooms, fn($rm) => $rm['status'] === 'blocked'));
+        $dirtyCount = count(array_filter($rackRooms, fn($rm) => $rm['status'] === 'dirty'));
+        $availableCount = count(array_filter($rackRooms, fn($rm) => $rm['status'] === 'available'));
         $vacantCount = $availableCount + $dirtyCount;
+
+        $totalPax = 0;
+        foreach ($rackRooms as $rm) {
+            if ($rm['status'] === 'occupied') {
+                $totalPax += !empty($rm['guest']) ? 2 : 1;
+            }
+        }
+
+        $cleanedCount = $availableCount + $occupiedCount;
+        $cleanRatio = ($dirtyCount + $cleanedCount > 0) ? ($cleanedCount . '/' . ($dirtyCount + $cleanedCount)) : '0/0';
 
         $stats = [
             'total' => $totalRooms,
@@ -86,16 +125,16 @@ class DashboardController extends Controller
             'vacant' => $vacantCount,
             'expected_arrival' => 1,
             'expected_departure' => 5,
-            'rooms_to_sale' => 36,
+            'rooms_to_sale' => $vacantCount,
             'checked_in' => 3,
             'checked_out' => 6,
-            'total_pax' => 18,
-            'cleaned_ratio' => '2/9',
+            'total_pax' => $totalPax > 0 ? $totalPax : 18,
+            'cleaned_ratio' => $cleanRatio,
             'percentages' => [
-                'occupied' => round(($occupiedCount / $totalRooms) * 100, 2),
-                'available' => round(($availableCount / $totalRooms) * 100, 2),
-                'blocked' => round(($blockedCount / $totalRooms) * 100, 2),
-                'dirty' => round(($dirtyCount / $totalRooms) * 100, 2),
+                'occupied' => $totalRooms > 0 ? round(($occupiedCount / $totalRooms) * 100, 2) : 0,
+                'available' => $totalRooms > 0 ? round(($availableCount / $totalRooms) * 100, 2) : 0,
+                'blocked' => $totalRooms > 0 ? round(($blockedCount / $totalRooms) * 100, 2) : 0,
+                'dirty' => $totalRooms > 0 ? round(($dirtyCount / $totalRooms) * 100, 2) : 0,
             ],
         ];
 

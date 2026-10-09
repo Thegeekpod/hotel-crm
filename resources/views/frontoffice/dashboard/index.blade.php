@@ -37,11 +37,14 @@
           @endphp
 
           <div class="rack-card {{ $cardClass }}" 
-               onclick="openRoomDetails('{{ $rm['room'] }}', '{{ $rm['type'] }}', '{{ $rm['cleaning'] }}', '{{ ucfirst($rm['status']) }}', {{ $rm['rate'] }}, {{ $guestJson }})" 
+               onclick="openRoomDetails('{{ $rm['room'] }}', '{{ $rm['type'] }}', '{{ $rm['cleaning'] }}', '{{ ucfirst($rm['status']) }}', {{ $rm['rate'] }}, {{ $guestJson }}, '{{ $rm['operational_status'] ?? '' }}', '{{ $rm['housekeeping_status'] ?? '' }}')" 
                data-room="{{ $rm['room'] }}" 
                data-floor="{{ $rm['floor'] }}" 
                data-type="{{ $rm['type'] }}" 
-               data-status="{{ $rm['status'] }}">
+               data-status="{{ $rm['status'] }}"
+               data-cleaning="{{ $rm['cleaning'] }}"
+               data-operational="{{ $rm['operational_status'] ?? '' }}"
+               data-housekeeping="{{ $rm['housekeeping_status'] ?? '' }}">
             <div class="rack-card-top">
               <div class="rack-room-num">{{ $rm['room'] }}</div>
               <div class="rack-room-type">{{ $rm['type'] }}</div>
@@ -185,6 +188,7 @@
         <option value="2">Floor 2</option>
         <option value="3">Floor 3</option>
         <option value="4">Floor 4</option>
+        <option value="5">Floor 5</option>
       @endif
     </select>
 

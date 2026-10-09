@@ -279,7 +279,6 @@
                   <th style="width: 40px; text-align: center;"><input type="checkbox" id="select-all-check" onchange="toggleSelectAll(this)" style="cursor: pointer; width: 16px; height: 16px; accent-color: var(--accent-primary);"></th>
                   <th style="width: 50px;">#</th>
                   <th>ID Card Type</th>
-                  <th>Code</th>
                   <th>Status</th>
                   <th style="text-align: right; width: 120px;">Actions</th>
                 </tr>
@@ -292,7 +291,6 @@
                   </td>
                   <td style="font-family: var(--font-mono); font-weight: 700; color: var(--text-muted); font-size: 11px;">{{ $idx + 1 }}</td>
                   <td style="font-weight: 600; color: var(--text-primary);">{{ $item->name }}</td>
-                  <td><span class="badge-tag blue">{{ $item->code ?? '-' }}</span></td>
                   <td>
                     <span class="badge-tag {{ $item->status === 'Active' ? 'green' : 'yellow' }}">
                       <i class="fa-solid fa-circle-check" style="font-size: 6px; margin-right: 4px;"></i>{{ $item->status }}
@@ -307,7 +305,7 @@
                 </tr>
                 @empty
                 <tr>
-                  <td colspan="6" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                  <td colspan="5" style="text-align: center; padding: 40px; color: var(--text-muted);">
                     <i class="fa-solid fa-inbox" style="font-size: 28px; margin-bottom: 10px; display: block;"></i>
                     No records found. Click "+ Add Entry" to create one.
                   </td>
@@ -358,10 +356,6 @@
           <input type="text" id="form-name" class="admin-form-input" placeholder="e.g. Aadhaar Card (UIDAI), Passport" required>
         </div>
         <div class="admin-form-group">
-          <label class="admin-form-label">Identifier Code</label>
-          <input type="text" id="form-code" class="admin-form-input" placeholder="e.g. AADHAAR, PASSPORT, DL">
-        </div>
-        <div class="admin-form-group">
           <label class="admin-form-label">Status <span style="color: var(--accent-rose);">*</span></label>
           <select id="form-status" class="admin-form-input" required>
             <option value="Active">Active</option>
@@ -405,7 +399,6 @@
     document.getElementById('modal-title').textContent = 'Add ID Card Type';
     document.getElementById('item-id').value = '';
     document.getElementById('form-name').value = '';
-    document.getElementById('form-code').value = '';
     document.getElementById('form-status').value = 'Active';
     openModal('crud-modal');
   }
@@ -420,7 +413,6 @@
     document.getElementById('modal-title').textContent = 'Edit ID Card Type';
     document.getElementById('item-id').value = item.id;
     document.getElementById('form-name').value = item.name;
-    document.getElementById('form-code').value = item.code || '';
     document.getElementById('form-status').value = item.status;
     openModal('crud-modal');
   }
@@ -429,7 +421,6 @@
     e.preventDefault();
     const id = document.getElementById('item-id').value;
     const name = document.getElementById('form-name').value.trim();
-    const code = document.getElementById('form-code').value.trim();
     const status = document.getElementById('form-status').value;
 
     if (!name) {
@@ -437,7 +428,7 @@
       return;
     }
 
-    const payload = { name, code, status };
+    const payload = { name, status };
     const url = id ? `${baseUrl}/${id}` : baseUrl;
     const method = id ? 'PUT' : 'POST';
 
@@ -612,7 +603,6 @@
     return tableRecords.filter(item => {
       const matchSearch = !searchQuery ||
         (item.name && item.name.toLowerCase().includes(searchQuery)) ||
-        (item.code && item.code.toLowerCase().includes(searchQuery)) ||
         (item.status && item.status.toLowerCase().includes(searchQuery));
 
       const matchStatus = statusFilter === 'all' || item.status === statusFilter;
@@ -636,7 +626,7 @@
 
     const tbody = document.getElementById('table-body');
     if (!pageItems.length) {
-      tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 40px; color: var(--text-muted);"><i class="fa-solid fa-inbox" style="font-size: 28px; margin-bottom: 10px; display: block;"></i>No matching records found.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 40px; color: var(--text-muted);"><i class="fa-solid fa-inbox" style="font-size: 28px; margin-bottom: 10px; display: block;"></i>No matching records found.</td></tr>`;
       updateBulkActionUI();
     } else {
       let html = '';
@@ -650,7 +640,6 @@
             </td>
             <td style="font-family: var(--font-mono); font-weight: 700; color: var(--text-muted); font-size: 11px;">${rowNumber}</td>
             <td style="font-weight: 600; color: var(--text-primary);">${escapeHtml(item.name)}</td>
-            <td><span class="badge-tag blue">${escapeHtml(item.code || '-')}</span></td>
             <td>
               <span class="badge-tag ${badgeClass}">
                 <i class="fa-solid fa-circle-check" style="font-size: 6px; margin-right: 4px;"></i>${escapeHtml(item.status)}
@@ -737,9 +726,9 @@
       PmsAlert.toast('No records to export', 'info');
       return;
     }
-    let csv = '"ID","ID Card Type","Code","Status"\n';
+    let csv = '"ID","ID Card Type","Status"\n';
     filtered.forEach(r => {
-      csv += `"${r.id}","${r.name}","${r.code || ''}","${r.status}"\n`;
+      csv += `"${r.id}","${r.name}","${r.status}"\n`;
     });
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);

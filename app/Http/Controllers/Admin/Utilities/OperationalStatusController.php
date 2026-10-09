@@ -16,7 +16,6 @@ class OperationalStatusController extends Controller
             $search = $request->input('search');
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('code', 'like', "%{$search}%")
                   ->orWhere('badge_color', 'like', "%{$search}%");
             });
         }
@@ -42,7 +41,6 @@ class OperationalStatusController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'code' => 'nullable|string|max:100',
             'badge_color' => 'nullable|string|max:50',
             'status' => 'required|string|in:Active,Inactive',
         ]);
@@ -69,7 +67,6 @@ class OperationalStatusController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'code' => 'nullable|string|max:100',
             'badge_color' => 'nullable|string|max:50',
             'status' => 'required|string|in:Active,Inactive',
         ]);

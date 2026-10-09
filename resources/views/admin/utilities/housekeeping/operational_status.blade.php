@@ -408,7 +408,6 @@
                   <th style="width: 40px; text-align: center;"><input type="checkbox" id="select-all-check" onchange="toggleSelectAll(this)" style="cursor: pointer;"></th>
                   <th style="width: 50px;">#</th>
                   <th>Status Name</th>
-                  <th>Code / Short Tag</th>
                   <th>Color Indicator</th>
                   <th>System Status</th>
                   <th style="text-align: right; width: 120px;">Actions</th>
@@ -454,10 +453,6 @@
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
           <div class="admin-form-group">
-            <label class="admin-form-label">Code / Identifier</label>
-            <input type="text" id="form-code" class="admin-form-input" placeholder="e.g. ACTIVE" style="font-family: var(--font-mono); text-transform: uppercase;">
-          </div>
-          <div class="admin-form-group">
             <label class="admin-form-label">Badge Theme</label>
             <select id="form-badge" class="admin-form-input">
               <option value="blue">Blue (Standard Operation)</option>
@@ -467,14 +462,13 @@
               <option value="purple">Purple (Special / Reserved)</option>
             </select>
           </div>
-        </div>
-
-        <div class="admin-form-group" style="margin-bottom: 0;">
-          <label class="admin-form-label">Status <span style="color: red;">*</span></label>
-          <select id="form-status" class="admin-form-input" required>
-            <option value="Active">Active</option>
-            <option value="Inactive">Inactive</option>
-          </select>
+          <div class="admin-form-group">
+            <label class="admin-form-label">Status <span style="color: red;">*</span></label>
+            <select id="form-status" class="admin-form-input" required>
+              <option value="Active">Active</option>
+              <option value="Inactive">Inactive</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -636,7 +630,6 @@
     document.getElementById('modal-title').innerHTML = '<i class="fa-solid fa-plus-circle"></i> Add Operational Status';
     document.getElementById('item-id').value = '';
     document.getElementById('form-name').value = '';
-    document.getElementById('form-code').value = '';
     document.getElementById('form-badge').value = 'blue';
     document.getElementById('form-status').value = 'Active';
     openModal('crud-modal');
@@ -649,7 +642,6 @@
     document.getElementById('modal-title').innerHTML = '<i class="fa-solid fa-pen-to-square"></i> Edit Operational Status';
     document.getElementById('item-id').value = item.id;
     document.getElementById('form-name').value = item.name;
-    document.getElementById('form-code').value = item.code || '';
     document.getElementById('form-badge').value = item.badge_color || 'blue';
     document.getElementById('form-status').value = item.status;
     openModal('crud-modal');
@@ -659,7 +651,6 @@
     e.preventDefault();
     const id = document.getElementById('item-id').value;
     const name = document.getElementById('form-name').value.trim();
-    const code = document.getElementById('form-code').value.trim().toUpperCase();
     const badge_color = document.getElementById('form-badge').value;
     const status = document.getElementById('form-status').value;
 
@@ -668,7 +659,7 @@
       return;
     }
 
-    const payload = { name, code, badge_color, status };
+    const payload = { name, badge_color, status };
     const url = id ? `${baseUrl}/${id}` : baseUrl;
     const method = id ? 'PUT' : 'POST';
 
@@ -725,7 +716,6 @@
     return tableRecords.filter(item => {
       const matchSearch = !searchQuery ||
         (item.name && item.name.toLowerCase().includes(searchQuery)) ||
-        (item.code && item.code.toLowerCase().includes(searchQuery)) ||
         (item.badge_color && item.badge_color.toLowerCase().includes(searchQuery)) ||
         (item.status && item.status.toLowerCase().includes(searchQuery));
 
@@ -750,7 +740,7 @@
 
     const tbody = document.getElementById('table-body');
     if (!pageItems.length) {
-      tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 40px; color: var(--text-muted);"><i class="fa-solid fa-inbox" style="font-size: 28px; margin-bottom: 10px; display: block;"></i>No matching records found.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 40px; color: var(--text-muted);"><i class="fa-solid fa-inbox" style="font-size: 28px; margin-bottom: 10px; display: block;"></i>No matching records found.</td></tr>`;
     } else {
       let html = '';
       pageItems.forEach((item, idx) => {
@@ -766,11 +756,6 @@
             <td style="font-family: var(--font-mono); font-weight: 700; color: var(--text-muted); font-size: 11px;">${startIdx + idx + 1}</td>
             <td style="font-weight: 800; color: var(--text-primary);">
               <span class="badge-tag ${badgeColor}" style="margin-right: 6px;"><i class="fa-solid fa-circle-nodes" style="font-size: 9px;"></i>${item.name}</span>
-            </td>
-            <td>
-              <span style="font-family: var(--font-mono); font-size: 11px; font-weight: 700; background: #f1f5f9; padding: 3px 8px; border-radius: 4px; color: #475569;">
-                ${item.code || '-'}
-              </span>
             </td>
             <td>
               <span class="badge-tag ${badgeColor}">
@@ -863,9 +848,9 @@
       PmsAlert.toast('No records to export', 'info');
       return;
     }
-    let csv = '"ID","Status Name","Code","Badge Color","Status"\n';
+    let csv = '"ID","Status Name","Badge Color","Status"\n';
     filtered.forEach(r => {
-      csv += `"${r.id}","${r.name}","${r.code || ''}","${r.badge_color || ''}","${r.status}"\n`;
+      csv += `"${r.id}","${r.name}","${r.badge_color || ''}","${r.status}"\n`;
     });
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);

@@ -15,8 +15,7 @@ class IdCardTypeController extends Controller
         if ($request->filled('search')) {
             $search = $request->input('search');
             $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('code', 'like', "%{$search}%");
+                $q->where('name', 'like', "%{$search}%");
             });
         }
 
@@ -41,7 +40,6 @@ class IdCardTypeController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'code' => 'nullable|string|max:100',
             'status' => 'required|string|in:Active,Inactive',
         ]);
 
@@ -63,7 +61,6 @@ class IdCardTypeController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'code' => 'nullable|string|max:100',
             'status' => 'required|string|in:Active,Inactive',
         ]);
 

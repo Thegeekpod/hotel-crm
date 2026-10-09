@@ -74,11 +74,11 @@ class MasterUtilitiesSeeder extends Seeder
 
         // 2. ID Card Types
         $idCardTypes = [
-            ['name' => 'Aadhaar Card (UIDAI)', 'code' => 'AADHAAR', 'status' => 'Active'],
-            ['name' => 'Passport (International)', 'code' => 'PASSPORT', 'status' => 'Active'],
-            ['name' => 'Driving License', 'code' => 'DL', 'status' => 'Active'],
-            ['name' => 'Voter ID Card', 'code' => 'VOTER', 'status' => 'Active'],
-            ['name' => 'PAN Card (Income Tax)', 'code' => 'PAN', 'status' => 'Active'],
+            ['name' => 'Aadhaar Card (UIDAI)', 'status' => 'Active'],
+            ['name' => 'Passport (International)', 'status' => 'Active'],
+            ['name' => 'Driving License', 'status' => 'Active'],
+            ['name' => 'Voter ID Card', 'status' => 'Active'],
+            ['name' => 'PAN Card (Income Tax)', 'status' => 'Active'],
         ];
         foreach ($idCardTypes as $item) {
             IdCardType::firstOrCreate(['name' => $item['name']], $item);
@@ -152,10 +152,10 @@ class MasterUtilitiesSeeder extends Seeder
 
         // 8. Housekeeping States
         $housekeepingStates = [
-            ['name' => 'Cleaned & Inspected', 'code' => 'CLEANED', 'badge_color' => 'green', 'status' => 'Active'],
-            ['name' => 'Dirty / Cleaning Due', 'code' => 'DIRTY', 'badge_color' => 'red', 'status' => 'Active'],
-            ['name' => 'Inspecting / Touch-up', 'code' => 'INSPECTING', 'badge_color' => 'yellow', 'status' => 'Active'],
-            ['name' => 'Touch-up Required', 'code' => 'TOUCHUP', 'badge_color' => 'purple', 'status' => 'Active'],
+            ['name' => 'Cleaned & Inspected', 'badge_color' => 'green', 'status' => 'Active'],
+            ['name' => 'Dirty / Cleaning Due', 'badge_color' => 'red', 'status' => 'Active'],
+            ['name' => 'Inspecting / Touch-up', 'badge_color' => 'yellow', 'status' => 'Active'],
+            ['name' => 'Touch-up Required', 'badge_color' => 'purple', 'status' => 'Active'],
         ];
         foreach ($housekeepingStates as $item) {
             HousekeepingState::firstOrCreate(['name' => $item['name']], $item);
@@ -163,10 +163,10 @@ class MasterUtilitiesSeeder extends Seeder
 
         // 9. Operational Statuses
         $operationalStatuses = [
-            ['name' => 'Active In-Service', 'code' => 'ACTIVE', 'badge_color' => 'green', 'status' => 'Active'],
-            ['name' => 'Under Maintenance', 'code' => 'MAINTENANCE', 'badge_color' => 'yellow', 'status' => 'Active'],
-            ['name' => 'Out of Order / Blocked', 'code' => 'BLOCKED', 'badge_color' => 'red', 'status' => 'Active'],
-            ['name' => 'Management Reserved', 'code' => 'RESERVED', 'badge_color' => 'blue', 'status' => 'Active'],
+            ['name' => 'Active In-Service', 'badge_color' => 'green', 'status' => 'Active'],
+            ['name' => 'Under Maintenance', 'badge_color' => 'yellow', 'status' => 'Active'],
+            ['name' => 'Out of Order / Blocked', 'badge_color' => 'red', 'status' => 'Active'],
+            ['name' => 'Management Reserved', 'badge_color' => 'blue', 'status' => 'Active'],
         ];
         foreach ($operationalStatuses as $item) {
             OperationalStatus::firstOrCreate(['name' => $item['name']], $item);

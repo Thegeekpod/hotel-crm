@@ -13,7 +13,6 @@ class IdCardType extends Model
 
     protected $fillable = [
         'name',
-        'code',
         'status',
     ];
 }

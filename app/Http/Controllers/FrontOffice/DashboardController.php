@@ -34,6 +34,9 @@ class DashboardController extends Controller
             'beddingConfigRelation',
             'housekeepingHistories.housekeepingStatus',
             'operationalHistories.operationalStatus',
+            'activeGuests.title',
+            'activeGuests.nationality',
+            'activeGuests.idCardType',
             'currentGuest.title',
             'currentGuest.nationality',
             'currentGuest.idCardType',
@@ -64,20 +67,49 @@ class DashboardController extends Controller
                 $latestOp = $r->operationalHistories->sortByDesc('id')->first();
                 $latestHk = $r->housekeepingHistories->sortByDesc('id')->first();
                 
-                $guestModel = $r->currentGuest;
-                $guest = null;
-                if ($guestModel) {
-                    $guest = [
-                        'name' => ($guestModel->title?->name ? $guestModel->title->name . ' ' : '') . $guestModel->guest_name,
-                        'state' => $guestModel->status ?: 'Arrived',
-                        'folio' => $guestModel->folio_number ?: ('FOL-' . $roomNum . '-100'),
-                        'balance' => (float)$guestModel->balance,
-                        'mobile' => $guestModel->mobile,
-                        'email' => $guestModel->email,
-                        'reserve_id' => $guestModel->reserve_id,
-                        'advance' => (float)$guestModel->advance_amount,
+                $activeGuests = $r->activeGuests ?? collect();
+                if ($activeGuests->isEmpty() && $r->currentGuest) {
+                    $activeGuests = collect([$r->currentGuest]);
+                }
+
+                // If current guest has reserve_id, also find any other guests with same reserve_id
+                if ($r->currentGuest && $r->currentGuest->reserve_id) {
+                    $resId = $r->currentGuest->reserve_id;
+                    $linkedGuests = Guest::where('reserve_id', $resId)
+                        ->whereIn('status', ['Confirmed', 'Arrived', 'Stay Over'])
+                        ->with(['title', 'nationality', 'idCardType'])
+                        ->get();
+                    if ($linkedGuests->isNotEmpty()) {
+                        $activeGuests = $linkedGuests;
+                    }
+                }
+
+                $guestsList = [];
+                foreach ($activeGuests as $idx => $gModel) {
+                    $fullName = ($gModel->title?->name ? $gModel->title->name . ' ' : '') . $gModel->guest_name;
+                    $guestsList[] = [
+                        'id' => $gModel->id,
+                        'name' => $fullName,
+                        'raw_name' => $gModel->guest_name,
+                        'title' => $gModel->title?->name ?? '',
+                        'state' => $gModel->status ?: 'Confirmed',
+                        'folio' => $gModel->folio_number ?: ('FOL-' . $roomNum . '-100'),
+                        'balance' => (float)$gModel->balance,
+                        'mobile' => $gModel->mobile,
+                        'email' => $gModel->email,
+                        'city' => $gModel->city,
+                        'address' => $gModel->guest_address,
+                        'id_card_type' => $gModel->idCardType?->name,
+                        'id_card_number' => $gModel->id_card_number,
+                        'has_privilege_card' => (bool)$gModel->has_privilege_card,
+                        'privilege_card_no' => $gModel->privilege_card_no,
+                        'reserve_id' => $gModel->reserve_id,
+                        'advance' => (float)$gModel->advance_amount,
+                        'is_primary' => empty($gModel->primary_guest_id) || $idx === 0,
                     ];
                 }
+
+                $guest = !empty($guestsList) ? $guestsList[0] : null;
 
                 $opName = $latestOp?->operationalStatus?->name ?? '';
                 $hkName = $latestHk?->housekeepingStatus?->name ?? '';
@@ -125,6 +157,7 @@ class DashboardController extends Controller
                     'housekeeping_status' => $hkName ?: ($status === 'dirty' ? 'Dirty / Cleaning Due' : 'Cleaned & Inspected'),
                     'rate' => $rate,
                     'guest' => $guest,
+                    'guests' => $guestsList,
                     'bedding' => $r->beddingConfigRelation?->name ?? $r->bedding_config ?? 'King Size Master (72x78)',
                     'bedding_id' => $r->bedding_config_id,
                     'max_adults' => (int)($r->beddingConfigRelation?->max_adults ?? 2),

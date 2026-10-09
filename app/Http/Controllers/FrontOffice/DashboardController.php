@@ -98,6 +98,14 @@ class DashboardController extends Controller
                     $regName = $gModel->registrationType?->name ?? 'New';
                     $compName = $gModel->company?->name ?? $gModel->new_company_name ?? '';
 
+                    $resDateStr = $gModel->reserve_date ? (is_string($gModel->reserve_date) ? date('d M, Y', strtotime($gModel->reserve_date)) : $gModel->reserve_date->format('d M, Y')) : null;
+                    $resTimeStr = $gModel->reserve_time ? date('h:i A', strtotime($gModel->reserve_time)) : null;
+                    $outDateStr = $gModel->checkout_date ? (is_string($gModel->checkout_date) ? date('d M, Y', strtotime($gModel->checkout_date)) : $gModel->checkout_date->format('d M, Y')) : null;
+                    $outTimeStr = $gModel->checkout_time ? date('h:i A', strtotime($gModel->checkout_time)) : null;
+
+                    $checkinDisplay = $resDateStr ? ($resDateStr . ($resTimeStr ? ' • ' . $resTimeStr : '')) : null;
+                    $checkoutDisplay = $outDateStr ? ($outDateStr . ($outTimeStr ? ' • ' . $outTimeStr : '')) : null;
+
                     $guestsList[] = [
                         'id' => $gModel->id,
                         'name' => $fullName,
@@ -120,6 +128,13 @@ class DashboardController extends Controller
                         'registration_type_id' => $gModel->registration_type_id,
                         'registration_type' => $regName,
                         'company' => $compName,
+                        'reserve_date' => $resDateStr,
+                        'reserve_time' => $resTimeStr,
+                        'checkout_date' => $outDateStr,
+                        'checkout_time' => $outTimeStr,
+                        'checkin_display' => $checkinDisplay,
+                        'checkout_display' => $checkoutDisplay,
+                        'total_nights' => $gModel->total_nights,
                     ];
                 }
 
@@ -177,6 +192,13 @@ class DashboardController extends Controller
                     'registration_type' => $guest ? ($guest['registration_type'] ?? 'New') : null,
                     'registration_type_id' => $guest ? ($guest['registration_type_id'] ?? null) : null,
                     'company' => $guest ? ($guest['company'] ?? null) : null,
+                    'checkin_display' => $guest ? ($guest['checkin_display'] ?? null) : null,
+                    'checkout_display' => $guest ? ($guest['checkout_display'] ?? null) : null,
+                    'reserve_date' => $guest ? ($guest['reserve_date'] ?? null) : null,
+                    'reserve_time' => $guest ? ($guest['reserve_time'] ?? null) : null,
+                    'checkout_date' => $guest ? ($guest['checkout_date'] ?? null) : null,
+                    'checkout_time' => $guest ? ($guest['checkout_time'] ?? null) : null,
+                    'total_nights' => $guest ? ($guest['total_nights'] ?? null) : null,
                     'bedding' => $r->beddingConfigRelation?->name ?? $r->bedding_config ?? 'King Size Master (72x78)',
                     'bedding_id' => $r->bedding_config_id,
                     'max_adults' => (int)($r->beddingConfigRelation?->max_adults ?? 2),

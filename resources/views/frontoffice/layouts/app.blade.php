@@ -14,6 +14,14 @@
       transform: translateY(-2px);
       box-shadow: 0 4px 12px rgba(0,0,0,0.08);
     }
+    body.swal2-shown, html.swal2-shown {
+      height: 100vh !important;
+      overflow: hidden !important;
+      padding-right: 0 !important;
+    }
+    body.swal2-height-auto, html.swal2-height-auto {
+      height: 100vh !important;
+    }
   </style>
   @stack('styles')
 </head>
@@ -77,11 +85,11 @@
   <!-- ROOM ACTION MODAL -->
   <div class="modal-backdrop" id="room-modal">
     <div class="modal-window large" style="width: 820px; max-width: 95vw; border-radius: 16px; overflow: hidden; box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.3); border: none;">
-      <div class="modal-top" style="background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); color: #ffffff; padding: 14px 22px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.15);">
-        <h3 id="m-title" style="margin: 0; font-size: 15px; font-weight: 800; display: flex; align-items: center; gap: 10px; color: #ffffff;">
+      <div class="modal-top" style="background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); color: #ffffff; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.15);">
+        <div id="m-title" style="margin: 0; font-size: 15px; font-weight: 800; display: flex; align-items: center; gap: 10px; color: #ffffff; flex: 1; min-width: 0;">
           <i class="fa-solid fa-door-open"></i> Room Details
-        </h3>
-        <button type="button" class="modal-close" onclick="closeModal('room-modal')" style="background: rgba(255,255,255,0.2); border: none; color: #ffffff; width: 30px; height: 30px; border-radius: 50%; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s;">&times;</button>
+        </div>
+        <button type="button" class="modal-close" onclick="closeModal('room-modal')" style="background: rgba(255,255,255,0.2); border: none; color: #ffffff; width: 30px; height: 30px; border-radius: 50%; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s; margin-left: 10px; flex-shrink: 0;">&times;</button>
       </div>
       <div class="modal-content-area" id="m-body" style="padding: 18px 20px; background: #f8fafc; max-height: calc(90vh - 65px); overflow-y: auto;"></div>
       <div class="modal-bot" id="m-footer" style="padding: 12px 20px; background: #ffffff; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; gap: 8px;">

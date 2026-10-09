@@ -268,19 +268,36 @@
       : (guestObj ? [guestObj] : []);
 
     const guestRegType = (guestsList.length > 0 ? guestsList[0].registration_type : null) || roomData.registration_type || 'New';
+    const primaryGuest = (isOccupied && guestsList.length > 0) ? guestsList[0] : null;
+
+    const checkInDisplay = primaryGuest?.checkin_display || roomData.checkin_display || (primaryGuest?.reserve_date ? `${primaryGuest.reserve_date}${primaryGuest.reserve_time ? ' • ' + primaryGuest.reserve_time : ''}` : '');
+    const checkOutDisplay = primaryGuest?.checkout_display || roomData.checkout_display || (primaryGuest?.checkout_date ? `${primaryGuest.checkout_date}${primaryGuest.checkout_time ? ' • ' + primaryGuest.checkout_time : ''}` : '');
+    const totalNights = primaryGuest?.total_nights || roomData.total_nights || '';
 
     if (isOccupied) {
       const headerBadge = getRegistrationTypeRosetteBadgeHtml(guestRegType, 34);
       titleEl.innerHTML = `
-        ${headerBadge}
-        <span>Room Details • Room ${escapeHtml(roomNo)}</span>
+        <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; flex-wrap: wrap; gap: 8px;">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            ${headerBadge}
+            <span style="font-size: 15px; font-weight: 800; color: #ffffff;">Room Details • Room ${escapeHtml(roomNo)}</span>
+          </div>
+          ${(checkInDisplay || checkOutDisplay) ? `
+            <div style="display: flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 700; margin-right: 8px; background: rgba(0, 0, 0, 0.2); padding: 4px 12px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.25);">
+              ${checkInDisplay ? `<span style="display: inline-flex; align-items: center; gap: 5px; color: #ffffff;"><i class="fa-solid fa-plane-arrival" style="color: #4ade80;"></i> In: <span style="font-weight: 800;">${escapeHtml(checkInDisplay)}</span></span>` : ''}
+              ${checkInDisplay && checkOutDisplay ? `<span style="color: rgba(255,255,255,0.4);">|</span>` : ''}
+              ${checkOutDisplay ? `<span style="display: inline-flex; align-items: center; gap: 5px; color: #ffffff;"><i class="fa-solid fa-plane-departure" style="color: #f87171;"></i> Out: <span style="font-weight: 800;">${escapeHtml(checkOutDisplay)}</span></span>` : ''}
+              ${totalNights ? `<span style="background: #fbbf24; color: #78350f; padding: 1px 7px; border-radius: 10px; font-size: 10px; font-weight: 900; margin-left: 2px;"><i class="fa-solid fa-moon"></i> ${totalNights}N</span>` : ''}
+            </div>
+          ` : ''}
+        </div>
       `;
     } else {
       titleEl.innerHTML = `
         <div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 14px;">
           <i class="fa-solid fa-door-open"></i>
         </div>
-        <span>Room Details • Room ${escapeHtml(roomNo)}</span>
+        <span style="font-size: 15px; font-weight: 800; color: #ffffff;">Room Details • Room ${escapeHtml(roomNo)}</span>
       `;
     }
 
@@ -1489,6 +1506,8 @@
           const resId = data.reserve_id;
           const nextId = data.next_reserve_id;
 
+          closeModal('reserve-modal');
+
           if (typeof Swal !== 'undefined') {
             Swal.fire({
               icon: 'success',
@@ -1496,14 +1515,20 @@
               html: `<b>Reserve ID:</b> <code style="font-size: 16px; color: #6366f1; font-weight: bold;">${escapeHtml(resId)}</code><br><br>${escapeHtml(data.message)}`,
               confirmButtonColor: '#10b981',
               confirmButtonText: '<i class="fa-solid fa-check"></i> Great',
+              heightAuto: false,
+              scrollbarPadding: false,
+              allowOutsideClick: false,
+              allowEscapeKey: false,
+            }).then((result) => {
+              window.location.reload();
             });
           } else if (typeof PmsAlert !== 'undefined') {
             PmsAlert.toast(`Reservation #${resId} confirmed successfully!`, 'success');
+            setTimeout(() => window.location.reload(), 800);
           } else {
             alert(`Reservation #${resId} confirmed successfully!`);
+            window.location.reload();
           }
-
-          closeModal('reserve-modal');
           form.reset();
           setInitialDateTime();
 

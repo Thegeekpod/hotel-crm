@@ -43,8 +43,9 @@
     fetchNextReserveId();
     
     if (preselectRoomNo || preselectCatId || preselectFloorId) {
+      let match = null;
       if (preselectRoomNo && window.allPmsRooms) {
-        const match = window.allPmsRooms.find(r => String(r.room) === String(preselectRoomNo) || String(r.id) === String(preselectRoomNo));
+        match = window.allPmsRooms.find(r => String(r.room) === String(preselectRoomNo) || String(r.id) === String(preselectRoomNo));
         if (match) {
           preselectCatId = preselectCatId || match.category_id;
           preselectFloorId = preselectFloorId || match.floor_id || match.floor;
@@ -59,14 +60,62 @@
 
         if (catSel && preselectCatId) {
           catSel.value = preselectCatId;
+          if (!catSel.value && match) {
+            for (let opt of catSel.options) {
+              if (opt.value == match.category_id || 
+                  (match.category && opt.text.trim().toLowerCase() === match.category.toLowerCase()) ||
+                  (match.type && opt.text.trim().toLowerCase() === match.type.toLowerCase())) {
+                catSel.value = opt.value;
+                break;
+              }
+            }
+          }
           onCategoryChange(catSel);
         }
-        if (flSel && preselectFloorId) {
-          flSel.value = preselectFloorId;
+
+        if (flSel && (preselectFloorId || match)) {
+          const targetFloorId = preselectFloorId || (match ? (match.floor_id || match.floor) : '');
+          flSel.value = targetFloorId;
+          if (!flSel.value && match) {
+            for (let opt of flSel.options) {
+              if (opt.value == match.floor_id || opt.value == match.floor || opt.dataset.floorNo == match.floor) {
+                flSel.value = opt.value;
+                break;
+              }
+            }
+          }
           onFloorChange(flSel);
         }
-        if (rmSel && preselectRoomNo) {
-          rmSel.value = preselectRoomNo;
+
+        if (rmSel && (preselectRoomNo || match)) {
+          const targetRoomNo = match ? String(match.room) : String(preselectRoomNo);
+          const targetRoomId = match ? String(match.id) : String(preselectRoomNo);
+
+          let foundOpt = false;
+          for (let opt of rmSel.options) {
+            if (opt.value === targetRoomId || opt.value === targetRoomNo || opt.dataset.roomNo === targetRoomNo) {
+              rmSel.value = opt.value;
+              foundOpt = true;
+              break;
+            }
+          }
+
+          if (!foundOpt && match) {
+            const opt = document.createElement('option');
+            opt.value = match.id || match.room;
+            opt.dataset.roomNo = match.room;
+            opt.dataset.rate = match.rate;
+            opt.dataset.bedding = match.bedding || 'King Size Master (72x78)';
+            opt.dataset.maxAdults = match.max_adults || 2;
+            opt.dataset.maxChildren = match.max_children || 1;
+            opt.dataset.maxPax = match.max_pax || 3;
+            opt.textContent = `Room #${match.room} (₹${Number(match.rate).toLocaleString()}) • ${(match.status || 'available').toUpperCase()}`;
+            opt.style.fontWeight = 'bold';
+            opt.style.color = (match.status === 'available') ? '#059669' : '#ef4444';
+            rmSel.appendChild(opt);
+            rmSel.value = opt.value;
+          }
+
           onRoomChange(rmSel);
         }
       }
@@ -515,9 +564,20 @@
     if (floorSelect) floorSelect.innerHTML = '<option value="">Select Floor</option>';
     if (roomSelect) roomSelect.innerHTML = '<option value="">Select Room No.</option>';
 
-    if (!selectedCatId) return;
+    if (!selectedCatId) {
+      if (floorSelect && Array.isArray(window.allPmsFloors)) {
+        window.allPmsFloors.forEach(fl => {
+          const opt = document.createElement('option');
+          opt.value = fl.id;
+          opt.dataset.floorNo = fl.floor;
+          opt.textContent = fl.name?.toLowerCase().includes('floor') ? fl.name : `Floor ${fl.floor} (${fl.name})`;
+          floorSelect.appendChild(opt);
+        });
+      }
+      return;
+    }
 
-    const matchingRooms = window.allPmsRooms.filter(r => {
+    const matchingRooms = (window.allPmsRooms || []).filter(r => {
       return String(r.category_id) === String(selectedCatId) || 
              (r.category && String(r.category).toLowerCase() === String(selectedCatName).toLowerCase()) ||
              (r.type && String(r.type).toLowerCase() === String(selectedCatName).toLowerCase());
@@ -527,10 +587,16 @@
     matchingRooms.forEach(r => {
       const flId = r.floor_id || r.floor;
       if (!floorMap.has(String(flId))) {
+        let fName = r.floor_name || ('Floor ' + r.floor);
+        if (fName.toLowerCase().startsWith('floor ' + r.floor)) {
+          // Keep as is e.g. Floor 5 (Royal Penthouse)
+        } else {
+          fName = `Floor ${r.floor} (${fName})`;
+        }
         floorMap.set(String(flId), {
           id: flId,
           floor: r.floor,
-          name: r.floor_name || ('Floor ' + r.floor)
+          name: fName
         });
       }
     });
@@ -540,7 +606,7 @@
         const opt = document.createElement('option');
         opt.value = fl.id;
         opt.dataset.floorNo = fl.floor;
-        opt.textContent = `Floor ${fl.floor} (${fl.name})`;
+        opt.textContent = fl.name;
         floorSelect.appendChild(opt);
       });
     }
@@ -563,7 +629,7 @@
 
     if (!selectedFloorVal) return;
 
-    const matchingRooms = window.allPmsRooms.filter(r => {
+    const matchingRooms = (window.allPmsRooms || []).filter(r => {
       const matchCat = !selectedCatId || 
                        String(r.category_id) === String(selectedCatId) || 
                        (r.category && String(r.category).toLowerCase() === String(selectedCatName).toLowerCase()) ||
@@ -588,7 +654,7 @@
         opt.dataset.maxPax = r.max_pax || 3;
 
         const isAvail = (r.status === 'available');
-        opt.textContent = `Room #${r.room} (₹${r.rate}) • ${r.status.toUpperCase()}`;
+        opt.textContent = `Room #${r.room} (₹${Number(r.rate).toLocaleString()}) • ${r.status.toUpperCase()}`;
         if (!isAvail) {
           opt.style.color = '#ef4444';
         } else {
@@ -606,7 +672,7 @@
     const banner = block.querySelector('.room-capacity-banner');
     const selectedOpt = roomSelect.options[roomSelect.selectedIndex];
 
-    if (!roomSelect.value || !selectedOpt || !banner) {
+    if (!roomSelect.value || !selectedOpt || selectedOpt.value === '') {
       if (banner) banner.style.display = 'none';
       return;
     }
@@ -617,11 +683,11 @@
     const maxPax = selectedOpt.dataset.maxPax || '3';
     const rate = selectedOpt.dataset.rate || '4500';
 
-    const beddingEl = banner.querySelector('.bedding-name-text');
-    const paxEl = banner.querySelector('.max-pax-count');
-    const adultsEl = banner.querySelector('.max-adults-count');
-    const kidsEl = banner.querySelector('.max-children-count');
-    const rateEl = banner.querySelector('.room-rate-text');
+    const beddingEl = banner?.querySelector('.bedding-name-text');
+    const paxEl = banner?.querySelector('.max-pax-count');
+    const adultsEl = banner?.querySelector('.max-adults-count');
+    const kidsEl = banner?.querySelector('.max-children-count');
+    const rateEl = banner?.querySelector('.room-rate-text');
 
     if (beddingEl) beddingEl.textContent = beddingName;
     if (paxEl) paxEl.textContent = maxPax + ' Pax';
@@ -629,7 +695,22 @@
     if (kidsEl) kidsEl.textContent = maxChildren;
     if (rateEl) rateEl.textContent = '₹ ' + Number(rate).toLocaleString() + '/night';
 
-    banner.style.display = 'block';
+    if (banner) banner.style.display = 'block';
+
+    // Auto-sync category and floor if they are currently unselected
+    const roomVal = roomSelect.value;
+    const roomNo = selectedOpt.dataset.roomNo;
+    const match = (window.allPmsRooms || []).find(r => String(r.id) === String(roomVal) || String(r.room) === String(roomVal) || String(r.room) === String(roomNo));
+    if (match) {
+      const catSel = block.querySelector('.select-room-category');
+      const flSel = block.querySelector('.select-room-floor');
+      if (catSel && !catSel.value && match.category_id) {
+        catSel.value = match.category_id;
+      }
+      if (flSel && !flSel.value && (match.floor_id || match.floor)) {
+        flSel.value = match.floor_id || match.floor;
+      }
+    }
   }
 
   function searchRegularGuest(btnElem) {

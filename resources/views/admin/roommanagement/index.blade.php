@@ -931,7 +931,7 @@
           <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px;" id="add-amenities-container">
             @foreach($amenities as $amn)
               <label class="amenity-checkbox-item">
-                <input type="checkbox" name="add_amenities[]" value="{{ $amn->name }}" {{ in_array($amn->name, ['Free Wi-Fi', 'Balcony', 'Smart 55" TV', 'AC']) ? 'checked' : '' }}>
+                <input type="checkbox" name="add_amenities[]" value="{{ $amn->id }}" data-name="{{ $amn->name }}" {{ in_array($amn->name, ['Free Wi-Fi', 'Balcony', 'Smart 55" TV', 'AC']) ? 'checked' : '' }}>
                 <i class="fa-solid {{ $amn->icon ?: 'fa-check' }}" style="color: var(--accent-primary); font-size: 13px; width: 16px;"></i>
                 <span>{{ $amn->name }}</span>
               </label>
@@ -1064,7 +1064,7 @@
           <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px;" id="edit-amenities-container">
             @foreach($amenities as $amn)
               <label class="amenity-checkbox-item">
-                <input type="checkbox" name="edit_amenities[]" value="{{ $amn->name }}">
+                <input type="checkbox" name="edit_amenities[]" value="{{ $amn->id }}" data-name="{{ $amn->name }}">
                 <i class="fa-solid {{ $amn->icon ?: 'fa-check' }}" style="color: var(--accent-primary); font-size: 13px; width: 16px;"></i>
                 <span>{{ $amn->name }}</span>
               </label>
@@ -1201,7 +1201,7 @@
   function getAmenityName(val) {
     if (!val) return '';
     if (typeof masterAmenities !== 'undefined' && Array.isArray(masterAmenities)) {
-      const found = masterAmenities.find(m => String(m.id) === String(val) || m.name === val);
+      const found = masterAmenities.find(m => String(m.id) === String(val) || String(m.name).toLowerCase() === String(val).toLowerCase());
       if (found) return found.name;
     }
     return String(val);
@@ -2096,14 +2096,21 @@
     const room = roomsData.find(r => r.id === id);
     if (!room) return;
 
+    const catName = room.category || (room.categoryRelation ? room.categoryRelation.name : 'Deluxe');
+    const floorName = room.floorRelation && (room.floorRelation.name || room.floorRelation.floor)
+      ? (room.floorRelation.name || ('Floor ' + room.floorRelation.floor))
+      : (room.floor ? ('Floor ' + room.floor) : 'Floor 1');
+    const beddingName = room.bedding_config || (room.beddingConfigRelation ? room.beddingConfigRelation.name : 'Standard Configuration');
+    const paxCapacityText = room.pax_capacity || (room.beddingConfigRelation ? 'Max ' + (room.beddingConfigRelation.max_adults || 2) + ' Adults' : 'Max 2 Adults (3 Pax)');
+
     let catBadgeBg = '#eff6ff';
     let catBadgeColor = '#2563eb';
     let catBadgeBorder = '#bfdbfe';
-    if (room.category && room.category.toUpperCase().includes('SUPER')) {
+    if (catName && catName.toUpperCase().includes('SUPER')) {
       catBadgeBg = '#faf5ff'; catBadgeColor = '#7c3aed'; catBadgeBorder = '#e9d5ff';
-    } else if (room.category && (room.category.toUpperCase().includes('SUITE') || room.category.toUpperCase().includes('DELUXE'))) {
+    } else if (catName && (catName.toUpperCase().includes('SUITE') || catName.toUpperCase().includes('DELUXE'))) {
       catBadgeBg = '#f0fdf4'; catBadgeColor = '#16a34a'; catBadgeBorder = '#bbf7d0';
-    } else if (room.category && room.category.toUpperCase().includes('EXEC')) {
+    } else if (catName && catName.toUpperCase().includes('EXEC')) {
       catBadgeBg = '#fff7ed'; catBadgeColor = '#ea580c'; catBadgeBorder = '#fed7aa';
     }
 
@@ -2114,9 +2121,12 @@
     const statusDot = isInactive ? '#ef4444' : '#10b981';
     const statusText = isInactive ? 'Inactive' : 'Active';
 
-    const amenitiesList = Array.isArray(room.amenities) ? room.amenities : [];
-    const amenitiesHtml = amenitiesList.length > 0
-      ? amenitiesList.map(a => `
+    const rawAmenitiesList = Array.isArray(room.amenities_names) && room.amenities_names.length > 0
+      ? room.amenities_names
+      : (Array.isArray(room.amenities) ? room.amenities.map(a => getAmenityName(a)) : []);
+
+    const amenitiesHtml = rawAmenitiesList.length > 0
+      ? rawAmenitiesList.map(a => `
           <div style="display: inline-flex; align-items: center; gap: 7px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 7px 12px; font-size: 12px; font-weight: 600; color: #334155; box-shadow: 0 1px 2px rgba(0,0,0,0.03);">
             <i class="fa-solid fa-circle-check" style="color: #10b981; font-size: 13px;"></i>
             <span>${a}</span>
@@ -2136,7 +2146,7 @@
             <span style="font-size: 11px; font-weight: 700; color: #64748b; display: flex; align-items: center; gap: 6px;">
               <i class="fa-solid fa-layer-group" style="color: #6366f1; font-size: 12px; width: 14px;"></i> Floor
             </span>
-            <span style="font-size: 12px; font-weight: 800; color: #1e293b;">Floor ${room.floor}</span>
+            <span style="font-size: 12px; font-weight: 800; color: #1e293b;">${floorName}</span>
           </div>
 
           <!-- Item 2: Room Number -->
@@ -2152,7 +2162,7 @@
             <span style="font-size: 11px; font-weight: 700; color: #64748b; display: flex; align-items: center; gap: 6px;">
               <i class="fa-solid fa-crown" style="color: #6366f1; font-size: 12px; width: 14px;"></i> Category
             </span>
-            <span style="font-size: 12px; font-weight: 800; color: #1e293b;">${room.category}</span>
+            <span style="font-size: 12px; font-weight: 800; color: #1e293b;">${catName}</span>
           </div>
 
         </div>
@@ -2184,7 +2194,7 @@
           <div>
             <div style="font-size: 11px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">Bedding Configuration</div>
             <div style="font-size: 13px; font-weight: 700; color: #1e293b; margin-top: 2px;">
-              ${room.bedding_config || 'Standard Configuration'}
+              ${beddingName}
             </div>
           </div>
         </div>
@@ -2197,7 +2207,7 @@
           <div>
             <div style="font-size: 11px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">Pax / Guest Capacity</div>
             <div style="font-size: 13px; font-weight: 700; color: #1e293b; margin-top: 2px;">
-              ${room.pax_capacity || 'Max 2 Adults'}
+              ${paxCapacityText}
             </div>
           </div>
         </div>
@@ -2210,7 +2220,7 @@
             <i class="fa-solid fa-wand-magic-sparkles" style="color: #6366f1;"></i> Configured Amenities
           </div>
           <span style="font-size: 11px; font-weight: 700; background: #f1f5f9; color: #475569; padding: 2px 8px; border-radius: 10px;">
-            ${amenitiesList.length} Total
+            ${rawAmenitiesList.length} Total
           </span>
         </div>
         <div style="display: flex; flex-wrap: wrap; gap: 8px;">

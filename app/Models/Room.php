@@ -34,6 +34,8 @@ class Room extends Model
         'floor',
         'category',
         'bedding_config',
+        'amenities_names',
+        'pax_capacity',
     ];
 
     /**
@@ -52,6 +54,17 @@ class Room extends Model
     public function getBeddingConfigAttribute(): ?string
     {
         return $this->beddingConfigRelation?->name ?? null;
+    }
+
+    public function getPaxCapacityAttribute(): string
+    {
+        if ($this->beddingConfigRelation) {
+            $adults = $this->beddingConfigRelation->max_adults ?? 2;
+            $children = $this->beddingConfigRelation->max_children ?? 0;
+            $total = $this->beddingConfigRelation->max_total ?? ($adults + $children);
+            return "Max {$adults} Adults" . ($children > 0 ? ", {$children} Child" : "") . " ({$total} Pax)";
+        }
+        return 'Max 2 Adults (3 Pax)';
     }
 
     public function getAmenitiesDataAttribute(): \Illuminate\Database\Eloquent\Collection

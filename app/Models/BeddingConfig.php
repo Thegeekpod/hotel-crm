@@ -13,8 +13,6 @@ class BeddingConfig extends Model
 
     protected $fillable = [
         'name',
-        'code',
-        'dimensions',
         'max_adults',
         'max_children',
         'max_total',

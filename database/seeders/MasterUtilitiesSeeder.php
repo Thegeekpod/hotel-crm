@@ -100,12 +100,12 @@ class MasterUtilitiesSeeder extends Seeder
 
         // 4. Bedding Configurations (with pax capacity)
         $beddingConfigs = [
-            ['name' => 'King Size Master (72x78)', 'code' => 'KING-7278', 'dimensions' => '72 x 78 inches', 'max_adults' => 2, 'max_children' => 1, 'max_total' => 3, 'status' => 'Active'],
-            ['name' => 'Queen Size Double (60x78)', 'code' => 'QUEEN-6078', 'dimensions' => '60 x 78 inches', 'max_adults' => 2, 'max_children' => 0, 'max_total' => 2, 'status' => 'Active'],
-            ['name' => 'Twin Single Beds (36x78 x 2)', 'code' => 'TWIN-3678', 'dimensions' => '36 x 78 inches (2 Beds)', 'max_adults' => 2, 'max_children' => 0, 'max_total' => 2, 'status' => 'Active'],
-            ['name' => 'Single Bed (36x78)', 'code' => 'SINGLE-3678', 'dimensions' => '36 x 78 inches', 'max_adults' => 1, 'max_children' => 0, 'max_total' => 1, 'status' => 'Active'],
-            ['name' => 'Suite Triple / Extra Bed', 'code' => 'TRIPLE-SUITE', 'dimensions' => '72x78 + Extra Bed', 'max_adults' => 3, 'max_children' => 1, 'max_total' => 4, 'status' => 'Active'],
-            ['name' => 'Family Suite 4 Pax', 'code' => 'FAMILY-4', 'dimensions' => 'Two King Beds', 'max_adults' => 4, 'max_children' => 2, 'max_total' => 6, 'status' => 'Active'],
+            ['name' => 'King Size Master (72x78)', 'max_adults' => 2, 'max_children' => 1, 'max_total' => 3, 'status' => 'Active'],
+            ['name' => 'Queen Size Double (60x78)', 'max_adults' => 2, 'max_children' => 0, 'max_total' => 2, 'status' => 'Active'],
+            ['name' => 'Twin Single Beds (36x78 x 2)', 'max_adults' => 2, 'max_children' => 0, 'max_total' => 2, 'status' => 'Active'],
+            ['name' => 'Single Bed (36x78)', 'max_adults' => 1, 'max_children' => 0, 'max_total' => 1, 'status' => 'Active'],
+            ['name' => 'Suite Triple / Extra Bed', 'max_adults' => 3, 'max_children' => 1, 'max_total' => 4, 'status' => 'Active'],
+            ['name' => 'Family Suite 4 Pax', 'max_adults' => 4, 'max_children' => 2, 'max_total' => 6, 'status' => 'Active'],
         ];
         foreach ($beddingConfigs as $item) {
             BeddingConfig::updateOrCreate(['name' => $item['name']], $item);

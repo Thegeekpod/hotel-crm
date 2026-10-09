@@ -89,7 +89,7 @@ class RoomManagementController extends Controller
             ]);
         }
 
-        return view('admin.roommanagement.index', compact(
+        return view('admin.utilities.roommanage.room_add', compact(
             'rooms',
             'floors',
             'categories',

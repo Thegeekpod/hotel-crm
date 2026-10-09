@@ -58,4 +58,15 @@ class Room extends Model
     {
         return $this->hasOne(RoomMaintenance::class, 'room_id')->latestOfMany();
     }
+
+    public function housekeepingHistories(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(RoomHousekeepingHistory::class, 'room_id');
+    }
+
+    public function operationalHistories(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(RoomOperationalHistory::class, 'room_id');
+    }
 }
+

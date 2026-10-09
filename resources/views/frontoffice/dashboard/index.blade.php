@@ -110,21 +110,74 @@
       </div>
     </div>
 
-    <!-- Pie Chart Section -->
+    <!-- Occupancy & Status Pie Chart Section -->
     <div class="stats-pie-section">
-      <div class="pie-svg-box">
-        <svg viewBox="0 0 36 36" class="pie-svg">
-          <circle cx="18" cy="18" r="15.91549430918954" fill="transparent" stroke="#10b981" stroke-width="14" stroke-dasharray="{{ $stats['percentages']['available'] }} {{ 100 - $stats['percentages']['available'] }}" stroke-dashoffset="0"></circle>
-          <circle cx="18" cy="18" r="15.91549430918954" fill="transparent" stroke="#f43f5e" stroke-width="14" stroke-dasharray="{{ $stats['percentages']['occupied'] }} {{ 100 - $stats['percentages']['occupied'] }}" stroke-dashoffset="-{{ $stats['percentages']['available'] }}"></circle>
-          <circle cx="18" cy="18" r="15.91549430918954" fill="transparent" stroke="#f59e0b" stroke-width="14" stroke-dasharray="{{ $stats['percentages']['dirty'] }} {{ 100 - $stats['percentages']['dirty'] }}" stroke-dashoffset="-{{ $stats['percentages']['available'] + $stats['percentages']['occupied'] }}"></circle>
-          <circle cx="18" cy="18" r="15.91549430918954" fill="transparent" stroke="#6366f1" stroke-width="14" stroke-dasharray="{{ $stats['percentages']['blocked'] }} {{ 100 - $stats['percentages']['blocked'] }}" stroke-dashoffset="-{{ $stats['percentages']['available'] + $stats['percentages']['occupied'] + $stats['percentages']['dirty'] }}"></circle>
-        </svg>
+      <div style="width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid var(--border-subtle);">
+        <span style="font-size: 11px; font-weight: 800; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px;">
+          <i class="fa-solid fa-chart-pie" style="color: var(--accent-primary); margin-right: 4px;"></i> Room Occupancy
+        </span>
+        <span style="font-size: 11px; font-weight: 800; color: var(--accent-primary); font-family: var(--font-mono);">
+          {{ $stats['occupied'] }}/{{ $stats['total'] }}
+        </span>
       </div>
-      <div class="pie-legend-bar">
-        <div class="p-red">{{ $stats['percentages']['occupied'] }}%</div>
-        <div class="p-green">{{ $stats['percentages']['available'] }}%</div>
-        <div class="p-navy">{{ $stats['percentages']['blocked'] }}%</div>
-        <div class="p-yellow">{{ $stats['percentages']['dirty'] }}%</div>
+
+      <!-- Perfect Circular Donut Pie Chart -->
+      <div class="pie-donut-container" style="position: relative; width: 112px; height: 112px; margin: 2px auto 10px; display: flex; align-items: center; justify-content: center;">
+        <div style="width: 100%; height: 100%; border-radius: 50%; background: conic-gradient(
+            #e11d48 0% {{ $stats['percentages']['occupied'] }}%,
+            #10b981 {{ $stats['percentages']['occupied'] }}% {{ $stats['percentages']['occupied'] + $stats['percentages']['available'] }}%,
+            #f59e0b {{ $stats['percentages']['occupied'] + $stats['percentages']['available'] }}% {{ $stats['percentages']['occupied'] + $stats['percentages']['available'] + $stats['percentages']['dirty'] }}%,
+            #6366f1 {{ $stats['percentages']['occupied'] + $stats['percentages']['available'] + $stats['percentages']['dirty'] }}% 100%
+          ); box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);">
+        </div>
+        <!-- Center Hole for Donut Style -->
+        <div style="position: absolute; width: 58px; height: 58px; border-radius: 50%; background: #ffffff; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: inset 0 2px 4px rgba(0,0,0,0.06);">
+          <span style="font-size: 14px; font-weight: 900; color: #0f172a; font-family: var(--font-mono); line-height: 1;">{{ $stats['percentages']['occupied'] }}%</span>
+          <span style="font-size: 8px; font-weight: 800; color: #64748b; text-transform: uppercase; margin-top: 2px;">Occupied</span>
+        </div>
+      </div>
+
+      <!-- Status Breakdown Grid (2x2 Clean Stacked Design) -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; width: 100%;">
+        <div style="background: rgba(225, 29, 72, 0.05); border: 1px solid rgba(225, 29, 72, 0.2); border-radius: 6px; padding: 5px 8px; display: flex; flex-direction: column; gap: 1px;">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <span style="display: flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 700; color: #9f1239;">
+              <span style="width: 6px; height: 6px; border-radius: 50%; background: #e11d48; display: inline-block;"></span> Occupied
+            </span>
+            <span style="font-size: 11px; font-weight: 900; color: #e11d48; font-family: var(--font-mono);">{{ $stats['occupied'] }}</span>
+          </div>
+          <div style="font-size: 9px; font-weight: 700; color: #e11d48; text-align: right; opacity: 0.85;">{{ $stats['percentages']['occupied'] }}%</div>
+        </div>
+
+        <div style="background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 6px; padding: 5px 8px; display: flex; flex-direction: column; gap: 1px;">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <span style="display: flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 700; color: #065f46;">
+              <span style="width: 6px; height: 6px; border-radius: 50%; background: #10b981; display: inline-block;"></span> Cleaned
+            </span>
+            <span style="font-size: 11px; font-weight: 900; color: #059669; font-family: var(--font-mono);">{{ $stats['available'] }}</span>
+          </div>
+          <div style="font-size: 9px; font-weight: 700; color: #059669; text-align: right; opacity: 0.85;">{{ $stats['percentages']['available'] }}%</div>
+        </div>
+
+        <div style="background: rgba(245, 158, 11, 0.05); border: 1px solid rgba(245, 158, 11, 0.2); border-radius: 6px; padding: 5px 8px; display: flex; flex-direction: column; gap: 1px;">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <span style="display: flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 700; color: #92400e;">
+              <span style="width: 6px; height: 6px; border-radius: 50%; background: #f59e0b; display: inline-block;"></span> Dirty
+            </span>
+            <span style="font-size: 11px; font-weight: 900; color: #d97706; font-family: var(--font-mono);">{{ $stats['dirty'] }}</span>
+          </div>
+          <div style="font-size: 9px; font-weight: 700; color: #d97706; text-align: right; opacity: 0.85;">{{ $stats['percentages']['dirty'] }}%</div>
+        </div>
+
+        <div style="background: rgba(99, 102, 241, 0.05); border: 1px solid rgba(99, 102, 241, 0.2); border-radius: 6px; padding: 5px 8px; display: flex; flex-direction: column; gap: 1px;">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <span style="display: flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 700; color: #3730a3;">
+              <span style="width: 6px; height: 6px; border-radius: 50%; background: #6366f1; display: inline-block;"></span> Blocked
+            </span>
+            <span style="font-size: 11px; font-weight: 900; color: #4f46e5; font-family: var(--font-mono);">{{ $stats['blocked'] }}</span>
+          </div>
+          <div style="font-size: 9px; font-weight: 700; color: #4f46e5; text-align: right; opacity: 0.85;">{{ $stats['percentages']['blocked'] }}%</div>
+        </div>
       </div>
     </div>
   </aside>

@@ -810,62 +810,21 @@ a {
 }
 
 .stats-pie-section {
-  padding: 16px;
+  padding: 14px 16px 16px;
   border-top: 1px solid var(--border-subtle);
   display: flex;
   flex-direction: column;
   align-items: center;
-  background: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
 }
 
-.pie-svg-box {
-  width: 120px;
-  height: 120px;
-  margin-bottom: 12px;
-  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.08));
+.pie-donut-container {
+  transition: transform 0.25s ease;
 }
 
-.pie-svg {
-  width: 100%;
-  height: 100%;
-  transform: rotate(-90deg);
-}
-
-.pie-legend-bar {
-  display: flex;
-  width: 100%;
-  height: 24px;
-  border: 1px solid var(--border-medium);
-  font-size: 9px;
-  font-weight: 800;
-  text-align: center;
-  line-height: 24px;
-  border-radius: 20px;
-  overflow: hidden;
-}
-
-.p-red {
-  background: linear-gradient(135deg, #e11d48, #f43f5e);
-  color: #ffffff;
-  width: 33.33%;
-}
-
-.p-green {
-  background: linear-gradient(135deg, #059669, #10b981);
-  color: #ffffff;
-  width: 43.75%;
-}
-
-.p-navy {
-  background: linear-gradient(135deg, #6366f1, #818cf8);
-  color: #ffffff;
-  width: 4.17%;
-}
-
-.p-yellow {
-  background: linear-gradient(135deg, #d97706, #f59e0b);
-  color: #ffffff;
-  width: 18.75%;
+.pie-donut-container:hover {
+  transform: scale(1.03);
 }
 
 /* ==========================================================================

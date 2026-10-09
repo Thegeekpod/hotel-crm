@@ -18,7 +18,7 @@
 
 <!-- Module Navigation Tabs Ribbon -->
 <nav class="pms-tabs-ribbon">
-  <a href="#" class="pms-tab-link {{ request()->routeIs('admin.frontoffice.operations.*') ? 'active' : '' }}" onclick="if(typeof PmsAlert !== 'undefined') PmsAlert.toast('Front Office operations module queued for live operations.', 'info')">
+  <a href="{{ route('frontoffice.dashboard') }}" class="pms-tab-link {{ request()->routeIs('frontoffice.*') ? 'active' : '' }}">
     <i class="fa-solid fa-desktop tab-ico" style="color: #6366f1;"></i> Front Office
   </a>
     <!-- <a href="{{ route('admin.roommanagement.index') }}" class="pms-tab-link {{ request()->routeIs('admin.roommanagement.*') ? 'active' : '' }}">

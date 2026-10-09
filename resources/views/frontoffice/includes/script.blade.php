@@ -1,82 +1,19 @@
 <script>
-  let currentStatusFilter = 'ALL';
-
-  function filterByStatus(status, elem) {
-    currentStatusFilter = (status || 'ALL').toUpperCase();
-    document.querySelectorAll('.legend-chip').forEach(c => c.classList.remove('active-chip'));
-    if (elem) elem.classList.add('active-chip');
-    applyFilters();
+  function applyBackendFilter(status) {
+    const statusInput = document.getElementById('filter-status-val');
+    if (statusInput) statusInput.value = status;
+    submitBackendFilter();
   }
 
-  function setActiveFilter(btn, status) {
-    filterByStatus(status, btn);
-  }
-
-  function resetFilters() {
-    currentStatusFilter = 'ALL';
-    document.querySelectorAll('.legend-chip').forEach(c => c.classList.remove('active-chip'));
-    const allChip = document.querySelector('.legend-chip.chip-all');
-    if (allChip) allChip.classList.add('active-chip');
-
-    const searchInp = document.getElementById('filter-search') || document.getElementById('pms-room-search');
-    if (searchInp) searchInp.value = '';
-
-    const typeSel = document.getElementById('filter-type');
-    if (typeSel) typeSel.value = 'ALL';
-
-    const floorSel = document.getElementById('filter-floor');
-    if (floorSel) floorSel.value = 'ALL';
-
-    applyFilters();
-  }
-
-  function applyFilters() {
-    const searchVal = (document.getElementById('filter-search')?.value || document.getElementById('pms-room-search')?.value || '').toLowerCase().trim();
-    const typeVal = (document.getElementById('filter-type')?.value || 'ALL').toUpperCase();
-    const floorVal = (document.getElementById('filter-floor')?.value || 'ALL');
-
-    const cards = document.querySelectorAll('.rack-card');
-    cards.forEach(card => {
-      const roomNum = (card.getAttribute('data-room') || '').toLowerCase();
-      const cardType = (card.getAttribute('data-type') || '').toUpperCase();
-      const cardCat = (card.getAttribute('data-category') || '').toUpperCase();
-      const cardFloor = String(card.getAttribute('data-floor') || '');
-      const cardGuest = (card.getAttribute('data-guest') || '').toLowerCase();
-      const cardStatus = (card.getAttribute('data-status') || '').toUpperCase();
-
-      // Search match
-      const matchesSearch = !searchVal || roomNum.includes(searchVal) || cardType.toLowerCase().includes(searchVal) || cardGuest.includes(searchVal);
-
-      // Type match
-      const matchesType = (typeVal === 'ALL') || (cardType === typeVal) || (cardCat === typeVal);
-
-      // Floor match
-      const matchesFloor = (floorVal === 'ALL') || (cardFloor === String(floorVal));
-
-      // Status match (ALL, OCCUPIED, BLOCKED, VACANT, DIRTY, AVAILABLE)
-      let matchesStatus = false;
-      if (currentStatusFilter === 'ALL') {
-        matchesStatus = true;
-      } else if (currentStatusFilter === 'VACANT') {
-        matchesStatus = (cardStatus === 'AVAILABLE' || cardStatus === 'DIRTY');
-      } else {
-        matchesStatus = (cardStatus === currentStatusFilter);
-      }
-
-      if (matchesSearch && matchesType && matchesFloor && matchesStatus) {
-        card.style.display = 'flex';
-      } else {
-        card.style.display = 'none';
-      }
-    });
+  function submitBackendFilter() {
+    const form = document.getElementById('backend-filter-form');
+    if (form) {
+      form.submit();
+    }
   }
 
   function printRack() {
     window.print();
-  }
-
-  function triggerSearch() {
-    applyFilters();
   }
 
   function openModal(id) {
@@ -805,6 +742,5 @@
 
   window.addEventListener('DOMContentLoaded', () => {
     setInitialDateTime();
-    applyFilters();
   });
 </script>

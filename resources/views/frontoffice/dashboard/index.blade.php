@@ -133,71 +133,73 @@
 <!-- Bottom Toolbar -->
 <footer class="pms-bottom-bar">
   <div class="legend-chips">
-    <div class="legend-chip chip-occ" onclick="filterByStatus('occupied', this)" style="cursor: pointer;">
+    <div class="legend-chip chip-occ {{ $selectedStatus === 'occupied' ? 'active-chip' : '' }}" onclick="applyBackendFilter('occupied')" style="cursor: pointer;">
       <div class="chip-lbl">Occupied</div>
       <div class="chip-cnt">{{ $stats['occupied'] }}</div>
     </div>
-    <div class="legend-chip chip-blk" onclick="filterByStatus('blocked', this)" style="cursor: pointer;">
+    <div class="legend-chip chip-blk {{ $selectedStatus === 'blocked' ? 'active-chip' : '' }}" onclick="applyBackendFilter('blocked')" style="cursor: pointer;">
       <div class="chip-lbl">Blocked</div>
       <div class="chip-cnt">{{ $stats['blocked'] }}</div>
     </div>
-    <div class="legend-chip chip-vac" onclick="filterByStatus('vacant', this)" style="cursor: pointer;">
+    <div class="legend-chip chip-vac {{ $selectedStatus === 'vacant' ? 'active-chip' : '' }}" onclick="applyBackendFilter('vacant')" style="cursor: pointer;">
       <div class="chip-lbl">Vacant</div>
       <div class="chip-cnt">{{ $stats['vacant'] }}</div>
     </div>
-    <div class="legend-chip chip-drt" onclick="filterByStatus('dirty', this)" style="cursor: pointer;">
+    <div class="legend-chip chip-drt {{ $selectedStatus === 'dirty' ? 'active-chip' : '' }}" onclick="applyBackendFilter('dirty')" style="cursor: pointer;">
       <div class="chip-lbl">Dirty</div>
       <div class="chip-cnt">{{ $stats['dirty'] }}</div>
     </div>
-    <div class="legend-chip chip-avl" onclick="filterByStatus('available', this)" style="cursor: pointer;">
+    <div class="legend-chip chip-avl {{ $selectedStatus === 'available' ? 'active-chip' : '' }}" onclick="applyBackendFilter('available')" style="cursor: pointer;">
       <div class="chip-lbl">Available</div>
       <div class="chip-cnt">{{ $stats['available'] }}</div>
     </div>
-    <div class="legend-chip chip-all active-chip" onclick="filterByStatus('ALL', this)" style="cursor: pointer;">
+    <div class="legend-chip chip-all {{ in_array($selectedStatus, ['all', '']) ? 'active-chip' : '' }}" onclick="applyBackendFilter('all')" style="cursor: pointer;">
       <div class="chip-lbl">All</div>
       <div class="chip-cnt">{{ $stats['total'] }}</div>
     </div>
   </div>
 
-  <div class="bottom-actions">
+  <form method="GET" action="{{ route('frontoffice.dashboard') }}" id="backend-filter-form" class="bottom-actions">
+    <input type="hidden" name="status" id="filter-status-val" value="{{ $selectedStatus ?? 'all' }}">
+
     <button type="button" class="pms-btn-action" onclick="if(typeof PmsAlert !== 'undefined') PmsAlert.toast('Notification sent to floor supervisors!', 'info'); else alert('Notification sent to floor supervisors!');">
       <i class="fa-solid fa-bell" style="color: var(--accent-primary);"></i> Notify
     </button>
-    <button type="button" class="pms-btn-action" onclick="resetFilters()">
+    <a href="{{ route('frontoffice.dashboard') }}" class="pms-btn-action" style="text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
       <i class="fa-solid fa-rotate" style="color: var(--accent-cyan);"></i> Refresh
-    </button>
+    </a>
     
-    <select class="pms-select" id="filter-type" onchange="applyFilters()">
-      <option value="ALL">All Types</option>
+    <select name="type" class="pms-select" id="filter-type" onchange="submitBackendFilter()">
+      <option value="ALL" {{ ($selectedType ?? 'ALL') === 'ALL' ? 'selected' : '' }}>All Types</option>
       @foreach($categories as $cat)
-        <option value="{{ strtoupper($cat->name) }}">{{ $cat->name }}</option>
+        <option value="{{ strtoupper($cat->name) }}" {{ ($selectedType ?? '') === strtoupper($cat->name) ? 'selected' : '' }}>{{ $cat->name }}</option>
       @endforeach
       @if($categories->isEmpty())
-        <option value="DELUXE">Deluxe</option>
-        <option value="SUPER DELUXE">Super Deluxe</option>
-        <option value="SUITE">Suite</option>
-        <option value="EXECUTIVE">Executive</option>
+        <option value="DELUXE" {{ ($selectedType ?? '') === 'DELUXE' ? 'selected' : '' }}>Deluxe</option>
+        <option value="SUPER DELUXE" {{ ($selectedType ?? '') === 'SUPER DELUXE' ? 'selected' : '' }}>Super Deluxe</option>
+        <option value="SUITE" {{ ($selectedType ?? '') === 'SUITE' ? 'selected' : '' }}>Suite</option>
+        <option value="EXECUTIVE" {{ ($selectedType ?? '') === 'EXECUTIVE' ? 'selected' : '' }}>Executive</option>
       @endif
     </select>
 
-    <select class="pms-select" id="filter-floor" onchange="applyFilters()">
-      <option value="ALL">All Floor</option>
+    <select name="floor" class="pms-select" id="filter-floor" onchange="submitBackendFilter()">
+      <option value="ALL" {{ ($selectedFloor ?? 'ALL') === 'ALL' ? 'selected' : '' }}>All Floor</option>
       @foreach($floors as $fl)
-        <option value="{{ $fl->floor }}">Floor {{ $fl->floor }}</option>
+        <option value="{{ $fl->floor }}" {{ strval($selectedFloor ?? '') === strval($fl->floor) ? 'selected' : '' }}>Floor {{ $fl->floor }}</option>
       @endforeach
       @if($floors->isEmpty())
-        <option value="1">Floor 1</option>
-        <option value="2">Floor 2</option>
-        <option value="3">Floor 3</option>
-        <option value="4">Floor 4</option>
-        <option value="5">Floor 5</option>
+        <option value="1" {{ strval($selectedFloor ?? '') === '1' ? 'selected' : '' }}>Floor 1</option>
+        <option value="2" {{ strval($selectedFloor ?? '') === '2' ? 'selected' : '' }}>Floor 2</option>
+        <option value="3" {{ strval($selectedFloor ?? '') === '3' ? 'selected' : '' }}>Floor 3</option>
+        <option value="4" {{ strval($selectedFloor ?? '') === '4' ? 'selected' : '' }}>Floor 4</option>
+        <option value="5" {{ strval($selectedFloor ?? '') === '5' ? 'selected' : '' }}>Floor 5</option>
       @endif
     </select>
 
     <div style="display: flex; align-items: center; gap: 6px; font-weight: 700; font-size: 11px; color: var(--text-secondary);">
       <span><i class="fa-solid fa-search" style="color: var(--accent-primary);"></i></span>
-      <input type="text" class="pms-input" id="filter-search" placeholder="Room No." onkeyup="applyFilters()">
+      <input type="text" name="search" class="pms-input" id="filter-search" placeholder="Room No. / Guest" value="{{ $searchQuery ?? '' }}" onkeydown="if(event.key === 'Enter'){ event.preventDefault(); submitBackendFilter(); }">
     </div>
-  </div>
+  </form>
 </footer>
 @endsection

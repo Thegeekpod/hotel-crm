@@ -167,6 +167,57 @@ class DashboardController extends Controller
             ],
         ];
 
+        $selectedStatus = strtolower($request->query('status', 'all'));
+        $selectedType = strtoupper($request->query('type', 'ALL'));
+        $selectedFloor = $request->query('floor', 'ALL');
+        $searchQuery = trim($request->query('search', ''));
+
+        // Filter $rackRooms collection based on backend request parameters
+        $filteredRooms = array_filter($rackRooms, function($rm) use ($selectedStatus, $selectedType, $selectedFloor, $searchQuery) {
+            // Status Filter
+            if ($selectedStatus !== 'all' && $selectedStatus !== '') {
+                if ($selectedStatus === 'vacant') {
+                    if ($rm['status'] !== 'available' && $rm['status'] !== 'dirty') {
+                        return false;
+                    }
+                } elseif ($rm['status'] !== $selectedStatus) {
+                    return false;
+                }
+            }
+
+            // Type / Category Filter
+            if ($selectedType !== 'ALL' && $selectedType !== '') {
+                $rmType = strtoupper($rm['type']);
+                $rmCat = strtoupper($rm['category']);
+                if ($rmType !== $selectedType && $rmCat !== $selectedType) {
+                    return false;
+                }
+            }
+
+            // Floor Filter
+            if ($selectedFloor !== 'ALL' && $selectedFloor !== '') {
+                if (strval($rm['floor']) !== strval($selectedFloor) && strval($rm['floor_id']) !== strval($selectedFloor)) {
+                    return false;
+                }
+            }
+
+            // Search Query (Room Number, Type, Guest Name)
+            if ($searchQuery !== '') {
+                $q = strtolower($searchQuery);
+                $matchRoom = str_contains(strtolower($rm['room']), $q);
+                $matchType = str_contains(strtolower($rm['type']), $q) || str_contains(strtolower($rm['category']), $q);
+                $matchGuest = !empty($rm['guest']['name']) && str_contains(strtolower($rm['guest']['name']), $q);
+
+                if (!$matchRoom && !$matchType && !$matchGuest) {
+                    return false;
+                }
+            }
+
+            return true;
+        });
+
+        $rackRooms = array_values($filteredRooms);
+
         return view('frontoffice.dashboard.index', compact(
             'rackRooms',
             'floors',
@@ -179,7 +230,11 @@ class DashboardController extends Controller
             'titles',
             'nationalities',
             'stats',
-            'nextReserveId'
+            'nextReserveId',
+            'selectedStatus',
+            'selectedType',
+            'selectedFloor',
+            'searchQuery'
         ));
     }
 

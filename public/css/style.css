@@ -554,30 +554,33 @@ a {
 
 /* ====== ROOM CARDS - WHITE GLASSMORPHISM ====== */
 .rack-card {
-  height: 128px;
+  height: 130px;
+  min-height: 130px;
+  max-height: 130px;
   border-radius: var(--radius-md);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: 10px 12px;
+  align-items: stretch;
+  padding: 8px 6px;
   cursor: pointer;
-  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   user-select: none;
   position: relative;
   overflow: hidden;
+  box-sizing: border-box;
   animation: slideUp 0.4s ease backwards;
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
 }
 
-
-
 .rack-card:hover {
-  transform: translateY(-6px) scale(1.02);
+  transform: translateY(-4px) scale(1.02);
   z-index: 5;
 }
 
 .rack-card-top {
+  width: 100%;
   text-align: center;
   position: relative;
   z-index: 1;
@@ -585,41 +588,53 @@ a {
 
 .rack-room-num {
   font-family: var(--font-mono);
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 800;
   line-height: 1.1;
-  letter-spacing: 1px;
+  letter-spacing: 0.5px;
 }
 
 .rack-room-type {
-  font-size: 9px;
+  font-size: 8.5px;
   font-weight: 800;
-  letter-spacing: 1px;
-  margin-top: 2px;
+  letter-spacing: 0.8px;
+  margin-top: 1px;
   text-transform: uppercase;
-  opacity: 0.65;
+  opacity: 0.7;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 0 2px;
 }
 
 .rack-card-mid {
-  text-align: center;
-  flex: 1;
+  width: 100%;
+  height: 32px;
+  min-height: 32px;
+  max-height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
+  text-align: center;
+  margin: 0;
+  border-radius: 6px;
+  box-sizing: border-box;
   position: relative;
   z-index: 1;
 }
 
 .rack-guest-name {
-  font-size: 10px;
-  font-weight: 700;
-  line-height: 1.2;
-  max-height: 28px;
+  font-size: 9px;
+  font-weight: 800;
+  line-height: 1.15;
+  width: 100%;
+  text-align: center;
   overflow: hidden;
-  text-overflow: ellipsis;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
+  word-break: break-word;
+  padding: 0 2px;
 }
 
 .rack-card-bot {
@@ -630,15 +645,18 @@ a {
 
 .rack-badge {
   width: 100%;
-  height: 24px;
-  border-radius: 20px;
+  height: 22px;
+  border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* CLEANED / Available Room - Soft Green Glass */
@@ -647,8 +665,6 @@ a {
   border: 1px solid rgba(5, 150, 105, 0.2);
   color: var(--room-available);
 }
-
-
 
 .rack-card.c-cleaned:hover {
   box-shadow: 0 12px 36px rgba(5, 150, 105, 0.15), inset 0 0 40px rgba(5, 150, 105, 0.03);
@@ -669,8 +685,6 @@ a {
   color: var(--text-primary);
 }
 
-
-
 .rack-card.c-occupied:hover {
   box-shadow: 0 12px 36px rgba(225, 29, 72, 0.13), inset 0 0 40px rgba(225, 29, 72, 0.03);
   border-color: rgba(225, 29, 72, 0.4);
@@ -680,15 +694,8 @@ a {
   color: #be123c;
 }
 
-.rack-card.c-occupied .rack-card-mid {
-  background: rgba(225, 29, 72, 0.06);
-  border-radius: var(--radius-sm);
-  padding: 3px;
-  margin: 10px 0;
-}
-
 .rack-card.c-occupied .rack-guest-name {
-  color: #9f1239;
+  color: #be123c;
 }
 
 .rack-card.c-occupied .rack-badge {
@@ -703,8 +710,6 @@ a {
   border: 1px solid rgba(217, 119, 6, 0.2);
   color: var(--accent-amber);
 }
-
-
 
 .rack-card.c-dirty:hover {
   box-shadow: 0 12px 36px rgba(217, 119, 6, 0.13), inset 0 0 40px rgba(217, 119, 6, 0.03);
@@ -723,7 +728,6 @@ a {
   border: 1px solid rgba(99, 102, 241, 0.2);
   color: var(--accent-primary);
 }
-
 
 .rack-card.c-blocked:hover {
   box-shadow: 0 12px 36px rgba(99, 102, 241, 0.15), inset 0 0 40px rgba(99, 102, 241, 0.03);

@@ -49,13 +49,13 @@
                data-housekeeping="{{ $rm['housekeeping_status'] ?? '' }}">
             <div class="rack-card-top">
               <div class="rack-room-num">{{ $rm['room'] }}</div>
-              <div class="rack-room-type">{{ $rm['type'] }}</div>
+              <div class="rack-room-type" title="{{ $rm['type'] }}">{{ $rm['type'] }}</div>
             </div>
             <div class="rack-card-mid">
               @if(!empty($rm['guest']['name']))
-                <div class="rack-guest-name">{{ $rm['guest']['name'] }}</div>
+                <div class="rack-guest-name" title="{{ $rm['guest']['name'] }}">{{ $rm['guest']['name'] }}</div>
               @elseif($rm['status'] === 'blocked')
-                <div class="rack-guest-name">Blocked</div>
+                <div class="rack-guest-name" title="Blocked">Blocked</div>
               @endif
             </div>
             <div class="rack-card-bot">

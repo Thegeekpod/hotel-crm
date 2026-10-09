@@ -21,9 +21,9 @@
   <a href="#" class="pms-tab-link {{ request()->routeIs('admin.frontoffice.operations.*') ? 'active' : '' }}" onclick="if(typeof PmsAlert !== 'undefined') PmsAlert.toast('Front Office operations module queued for live operations.', 'info')">
     <i class="fa-solid fa-desktop tab-ico" style="color: #6366f1;"></i> Front Office
   </a>
-  <a href="{{ route('admin.roommanagement.index') }}" class="pms-tab-link {{ request()->routeIs('admin.roommanagement.*') ? 'active' : '' }}">
+    <!-- <a href="{{ route('admin.roommanagement.index') }}" class="pms-tab-link {{ request()->routeIs('admin.roommanagement.*') ? 'active' : '' }}">
     <i class="fa-solid fa-door-open tab-ico" style="color: #ec4899;"></i> Room Management
-  </a>
+  </a> -->
   <a href="#" class="pms-tab-link" onclick="if(typeof PmsAlert !== 'undefined') PmsAlert.toast('POS Sales master module queued for client review.', 'info')">
     <i class="fa-solid fa-utensils tab-ico" style="color: #10b981;"></i> POS Sales
   </a>
@@ -39,7 +39,7 @@
   <a href="#" class="pms-tab-link" onclick="if(typeof PmsAlert !== 'undefined') PmsAlert.toast('Banquet & Services module queued for client review.', 'info')">
     <i class="fa-solid fa-champagne-glasses tab-ico" style="color: #fbbf24;"></i> Banquet & Services
   </a>
-  <a href="{{ route('admin.dashboard') }}" class="pms-tab-link {{ request()->routeIs('admin.utilities.*') || request()->routeIs('admin.roommaintain.*') || request()->routeIs('admin.dashboard') ? 'active' : '' }}">
+  <a href="{{ route('admin.dashboard') }}" class="pms-tab-link {{ request()->routeIs('admin.utilities.*') || request()->routeIs('admin.roommanagement.*') || request()->routeIs('admin.roommaintain.*') || request()->routeIs('admin.dashboard') ? 'active' : '' }}">
     <i class="fa-solid fa-user-gear tab-ico" style="color: #94a3b8;"></i> Administrator
   </a>
 </nav>
@@ -48,18 +48,7 @@
 <div class="pms-sub-ribbon">
   <div class="ribbon-left-section">
     <div class="ribbon-nav-links">
-      @if(request()->routeIs('admin.roommanagement.*'))
-        <!-- Room Management Sub-bar -->
-        <a href="{{ route('admin.roommanagement.index') }}" class="ribbon-nav-item active" style="color: #ec4899; text-decoration: none;">
-          <i class="fa-solid fa-list-check"></i> Room Master
-        </a>
-        <a href="{{ route('admin.roommanagement.index') }}" class="ribbon-nav-item" style="text-decoration: none;">
-          <i class="fa-solid fa-wrench"></i> Room Maintenance
-        </a>
-        <a href="{{ route('admin.utilities.roommanage.category.index') }}" class="ribbon-nav-item" style="text-decoration: none;">
-          <i class="fa-solid fa-tags"></i> Tariff Master
-        </a>
-      @elseif(request()->routeIs('admin.utilities.frontoffice.*'))
+      @if(request()->routeIs('admin.utilities.frontoffice.*'))
         <!-- Front Office Sub-bar -->
         <a href="{{ route('admin.utilities.frontoffice.reservation-mode.index') }}" class="ribbon-nav-item {{ request()->routeIs('admin.utilities.frontoffice.reservation-mode.*') ? 'active' : '' }}" style="color: #6366f1; text-decoration: none;">
           <i class="fa-solid fa-clipboard-check"></i> Mode of Reserve
@@ -94,9 +83,7 @@
   </div>
   <div style="font-weight: 700; color: var(--accent-primary); font-size: 12px; display: flex; align-items: center; gap: 6px;">
     <span style="width: 8px; height: 8px; background: var(--accent-emerald); border-radius: 50%; box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);"></span>
-    @if(request()->routeIs('admin.roommanagement.*'))
-      Room Management Live
-    @elseif(request()->routeIs('admin.utilities.frontoffice.*'))
+    @if(request()->routeIs('admin.utilities.frontoffice.*'))
       Front Office Online
     @elseif(request()->routeIs('admin.utilities.housekeeping.*'))
       Housekeeping Live

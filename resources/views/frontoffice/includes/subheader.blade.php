@@ -6,19 +6,19 @@
         <span class="ico-box"><i class="fa-solid fa-table-cells-large" style="color: #10b981;"></i></span>
         <span class="lbl-box">F Desk</span>
       </a>
-      <a href="{{ route('frontoffice.arrivals') }}" class="ribbon-btn {{ request()->routeIs('frontoffice.arrivals') ? 'active-btn' : '' }}">
+      <a href="#" class="ribbon-btn {{ request()->routeIs('frontoffice.arrivals') ? 'active-btn' : '' }}">
         <span class="ico-box"><i class="fa-solid fa-plane-arrival" style="color: #f43f5e;"></i></span>
         <span class="lbl-box">Arrivals</span>
       </a>
-      <a href="{{ route('frontoffice.inhouse') }}" class="ribbon-btn {{ request()->routeIs('frontoffice.inhouse') ? 'active-btn' : '' }}">
+      <a href="#" class="ribbon-btn {{ request()->routeIs('frontoffice.inhouse') ? 'active-btn' : '' }}">
         <span class="ico-box"><i class="fa-solid fa-users" style="color: #0284c7;"></i></span>
         <span class="lbl-box">Inhouse</span>
       </a>
-      <a href="{{ route('frontoffice.guest-crm') }}" class="ribbon-btn {{ request()->routeIs('frontoffice.guest-crm') || request()->routeIs('frontoffice.guest') ? 'active-btn' : '' }}">
+      <a href="#" class="ribbon-btn {{ request()->routeIs('frontoffice.guest-crm') || request()->routeIs('frontoffice.guest') ? 'active-btn' : '' }}">
         <span class="ico-box"><i class="fa-solid fa-address-card" style="color: #f59e0b;"></i></span>
         <span class="lbl-box">Guest</span>
       </a>
-      <a href="{{ route('frontoffice.reserve') }}" class="ribbon-btn {{ request()->routeIs('frontoffice.reserve') ? 'active-btn' : '' }}">
+      <a href="#" class="ribbon-btn {{ request()->routeIs('frontoffice.reserve') ? 'active-btn' : '' }}">
         <span class="ico-box"><i class="fa-solid fa-calendar-check" style="color: #a78bfa;"></i></span>
         <span class="lbl-box">Reserve</span>
       </a>

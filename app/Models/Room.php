@@ -18,13 +18,10 @@ class Room extends Model
         'category_id',
         'rate',
         'bedding_config_id',
-        'operational_status_id',
-        'housekeeping_state_id',
         'floor',
         'category',
         'bedding_config',
         'status',
-        'housekeeping_status',
         'amenities',
         'notes',
     ];
@@ -50,16 +47,6 @@ class Room extends Model
     public function beddingConfigRelation(): BelongsTo
     {
         return $this->belongsTo(BeddingConfig::class, 'bedding_config_id');
-    }
-
-    public function operationalStatusRelation(): BelongsTo
-    {
-        return $this->belongsTo(OperationalStatus::class, 'operational_status_id');
-    }
-
-    public function housekeepingStateRelation(): BelongsTo
-    {
-        return $this->belongsTo(HousekeepingState::class, 'housekeeping_state_id');
     }
 
     public function maintenances(): \Illuminate\Database\Eloquent\Relations\HasMany

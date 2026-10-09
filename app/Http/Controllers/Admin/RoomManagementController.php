@@ -160,36 +160,27 @@ class RoomManagementController extends Controller
             'category' => 'required|string|max:100',
             'rate' => 'required|numeric|min:0',
             'bedding_config' => 'nullable|string|max:255',
-            'operational_status' => 'nullable|string|max:100',
-            'housekeeping_state' => 'nullable|string|max:100',
             'amenities' => 'nullable|array',
             'status' => 'nullable|string|max:50',
             'notes' => 'nullable|string',
         ]);
 
         $status = $validated['status'] ?? 'Active';
-        $operationalStatus = $validated['operational_status'] ?? null;
-        $hkStatus = $validated['housekeeping_state'] ?? null;
 
         $fl = Floor::where('floor', $validated['floor'])->orWhere('name', 'like', '%' . $validated['floor'] . '%')->first();
         $cat = RoomCategory::where('name', $validated['category'])->first();
         $bed = BeddingConfig::where('name', $validated['bedding_config'] ?? '')->first();
-        $ops = $operationalStatus ? OperationalStatus::where('name', $operationalStatus)->first() : null;
-        $hks = $hkStatus ? HousekeepingState::where('name', $hkStatus)->first() : null;
 
         $room = Room::create([
             'room_number' => $validated['room_number'],
             'floor_id' => $fl ? $fl->id : null,
             'category_id' => $cat ? $cat->id : null,
             'bedding_config_id' => $bed ? $bed->id : null,
-            'operational_status_id' => $ops ? $ops->id : null,
-            'housekeeping_state_id' => $hks ? $hks->id : null,
             'floor' => $validated['floor'],
             'category' => $validated['category'],
             'rate' => $validated['rate'],
             'bedding_config' => $validated['bedding_config'] ?? null,
             'status' => $status,
-            'housekeeping_status' => $hkStatus,
             'amenities' => $validated['amenities'] ?? [],
             'notes' => $validated['notes'] ?? null,
         ]);
@@ -219,36 +210,27 @@ class RoomManagementController extends Controller
             'category' => 'required|string|max:100',
             'rate' => 'required|numeric|min:0',
             'bedding_config' => 'nullable|string|max:255',
-            'operational_status' => 'nullable|string|max:100',
-            'housekeeping_state' => 'nullable|string|max:100',
             'amenities' => 'nullable|array',
             'status' => 'nullable|string|max:50',
             'notes' => 'nullable|string',
         ]);
 
         $status = $validated['status'] ?? $room->status ?? 'Active';
-        $operationalStatus = $validated['operational_status'] ?? null;
-        $hkStatus = $validated['housekeeping_state'] ?? null;
 
         $fl = Floor::where('floor', $validated['floor'])->orWhere('name', 'like', '%' . $validated['floor'] . '%')->first();
         $cat = RoomCategory::where('name', $validated['category'])->first();
         $bed = BeddingConfig::where('name', $validated['bedding_config'] ?? '')->first();
-        $ops = $operationalStatus ? OperationalStatus::where('name', $operationalStatus)->first() : null;
-        $hks = $hkStatus ? HousekeepingState::where('name', $hkStatus)->first() : null;
 
         $room->update([
             'room_number' => $validated['room_number'],
             'floor_id' => $fl ? $fl->id : null,
             'category_id' => $cat ? $cat->id : null,
             'bedding_config_id' => $bed ? $bed->id : null,
-            'operational_status_id' => $ops ? $ops->id : $room->operational_status_id,
-            'housekeeping_state_id' => $hks ? $hks->id : $room->housekeeping_state_id,
             'floor' => $validated['floor'],
             'category' => $validated['category'],
             'rate' => $validated['rate'],
             'bedding_config' => $validated['bedding_config'] ?? null,
             'status' => $status,
-            'housekeeping_status' => $hkStatus ?? $room->housekeeping_status,
             'amenities' => $validated['amenities'] ?? [],
             'notes' => $validated['notes'] ?? null,
         ]);
@@ -320,13 +302,8 @@ class RoomManagementController extends Controller
     {
         $room = Room::findOrFail($id);
         if ($room->status === 'Maintenance' || $room->status === 'Under Maintenance') {
-            $ops = OperationalStatus::where('name', 'Active')->orWhere('name', 'Active In-Service')->first();
-            $hks = HousekeepingState::where('name', 'Cleaned')->orWhere('name', 'Cleaned & Inspected')->first();
             $room->update([
                 'status' => 'Active',
-                'operational_status_id' => $ops ? $ops->id : null,
-                'housekeeping_status' => 'Cleaned',
-                'housekeeping_state_id' => $hks ? $hks->id : null,
             ]);
 
             // Update active maintenance data status to Completed (preserve data, do NOT delete)
@@ -334,12 +311,10 @@ class RoomManagementController extends Controller
                 ->where('status', '!=', 'Completed')
                 ->update(['status' => 'Completed']);
 
-            $msg = 'Room #' . $room->room_number . ' marked as Active & In-Service.';
+            $msg = 'Room #' . $room->room_number . ' marked as Active.';
         } else {
-            $ops = OperationalStatus::where('name', 'Under Maintenance')->orWhere('name', 'Maintenance')->first();
             $room->update([
-                'status' => $ops ? $ops->name : 'Under Maintenance',
-                'operational_status_id' => $ops ? $ops->id : null,
+                'status' => 'Under Maintenance',
                 'notes' => $request->input('note') ?? $room->notes,
             ]);
 

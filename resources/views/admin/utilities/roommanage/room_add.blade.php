@@ -585,7 +585,7 @@
               <span class="badge-tag purple" id="view-count">{{ count($rooms) }} Records</span>
             </div>
             <div style="font-size: 12px; color: var(--text-secondary); margin-top: 3px;">
-              Manage individual room numbers, bedding setups, pax capacities, tariffs, and operational statuses.
+              Manage individual room numbers, bedding setups, pax capacities, tariffs, amenities, and room status.
             </div>
           </div>
           <button class="btn-ui-primary" onclick="openAddRoomModal()"><i class="fa-solid fa-plus-circle"></i> Add Room Asset</button>

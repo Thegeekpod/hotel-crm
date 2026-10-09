@@ -108,14 +108,12 @@ class RoomMaintainController extends Controller
 
         $item = RoomMaintenance::create($validated);
 
-        // Sync room operational status
+        // Sync room status
         $room = Room::find($validated['room_id']);
         if ($room) {
             if ($validated['status'] === 'Active' || $validated['status'] === 'Checking') {
-                $ops = OperationalStatus::where('name', 'Under Maintenance')->orWhere('name', 'Maintenance')->first();
                 $room->update([
-                    'status' => $ops ? $ops->name : 'Under Maintenance',
-                    'operational_status_id' => $ops ? $ops->id : $room->operational_status_id,
+                    'status' => 'Under Maintenance',
                 ]);
             }
         }
@@ -150,7 +148,7 @@ class RoomMaintainController extends Controller
 
         $item->update($validated);
 
-        // Sync Room operational status if maintenance marked Completed or Active
+        // Sync Room status if maintenance marked Completed or Active
         if ($item->room) {
             if ($validated['status'] === 'Completed') {
                 // Check if any other active/checking maintenance exists
@@ -160,17 +158,13 @@ class RoomMaintainController extends Controller
                     ->exists();
 
                 if (!$hasOtherActive) {
-                    $ops = OperationalStatus::where('name', 'Active')->orWhere('name', 'Active In-Service')->first();
                     $item->room->update([
                         'status' => 'Active',
-                        'operational_status_id' => $ops ? $ops->id : $item->room->operational_status_id,
                     ]);
                 }
             } elseif ($validated['status'] === 'Active' || $validated['status'] === 'Checking') {
-                $ops = OperationalStatus::where('name', 'Under Maintenance')->orWhere('name', 'Maintenance')->first();
                 $item->room->update([
-                    'status' => $ops ? $ops->name : 'Under Maintenance',
-                    'operational_status_id' => $ops ? $ops->id : $item->room->operational_status_id,
+                    'status' => 'Under Maintenance',
                 ]);
             }
         }
@@ -205,10 +199,8 @@ class RoomMaintainController extends Controller
                 ->exists();
 
             if (!$hasActive && ($room->status === 'Under Maintenance' || $room->status === 'Maintenance')) {
-                $ops = OperationalStatus::where('name', 'Active')->orWhere('name', 'Active In-Service')->first();
                 $room->update([
                     'status' => 'Active',
-                    'operational_status_id' => $ops ? $ops->id : null,
                 ]);
             }
         }
@@ -240,10 +232,8 @@ class RoomMaintainController extends Controller
                     ->exists();
 
                 if (!$hasActive && ($room->status === 'Under Maintenance' || $room->status === 'Maintenance')) {
-                    $ops = OperationalStatus::where('name', 'Active')->orWhere('name', 'Active In-Service')->first();
                     $room->update([
                         'status' => 'Active',
-                        'operational_status_id' => $ops ? $ops->id : null,
                     ]);
                 }
             }

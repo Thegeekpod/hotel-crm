@@ -2,6 +2,9 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\FrontOffice\DashboardController;
+use App\Http\Controllers\FrontOffice\ArrivalController;
+use App\Http\Controllers\FrontOffice\InhouseController;
+use App\Http\Controllers\FrontOffice\GuestController;
 
 // Front Office Module Routes (Arrivals, Guest CRM, In-House, Reservations)
 Route::prefix('front-office')->name('frontoffice.')->group(function () {
@@ -9,9 +12,10 @@ Route::prefix('front-office')->name('frontoffice.')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/fdesk', [DashboardController::class, 'index'])->name('fdesk');
 
-    // Placeholders for secondary tabs
-    Route::get('/arrivals', [DashboardController::class, 'index'])->name('arrivals');
-    Route::get('/inhouse', [DashboardController::class, 'index'])->name('inhouse');
-    Route::get('/guest-crm', [DashboardController::class, 'index'])->name('guest-crm');
+    Route::get('/arrivals', [ArrivalController::class, 'index'])->name('arrivals');
+    Route::get('/inhouse', [InhouseController::class, 'index'])->name('inhouse');
+    Route::get('/guest', [GuestController::class, 'index'])->name('guest');
+    Route::get('/guest-crm', [GuestController::class, 'index'])->name('guest-crm');
     Route::get('/reserve', [DashboardController::class, 'index'])->name('reserve');
 });
+

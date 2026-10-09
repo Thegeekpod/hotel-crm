@@ -14,7 +14,7 @@
         <span class="ico-box"><i class="fa-solid fa-users" style="color: #0284c7;"></i></span>
         <span class="lbl-box">Inhouse</span>
       </a>
-      <a href="{{ route('frontoffice.guest-crm') }}" class="ribbon-btn {{ request()->routeIs('frontoffice.guest-crm') ? 'active-btn' : '' }}">
+      <a href="{{ route('frontoffice.guest-crm') }}" class="ribbon-btn {{ request()->routeIs('frontoffice.guest-crm') || request()->routeIs('frontoffice.guest') ? 'active-btn' : '' }}">
         <span class="ico-box"><i class="fa-solid fa-address-card" style="color: #f59e0b;"></i></span>
         <span class="lbl-box">Guest</span>
       </a>

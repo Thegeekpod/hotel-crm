@@ -24,6 +24,7 @@ use App\Models\Room;
 use App\Models\RoomMaintenance;
 use App\Models\RoomHousekeepingHistory;
 use App\Models\RoomOperationalHistory;
+use App\Models\Guest;
 
 class MasterUtilitiesSeeder extends Seeder
 {
@@ -51,20 +52,7 @@ class MasterUtilitiesSeeder extends Seeder
             User::firstOrCreate(['email' => $u['email']], $u);
         }
 
-        // 2. Registration Types
-        $registrationTypes = [
-            ['name' => 'Regular Check-in', 'status' => 'Active'],
-            ['name' => 'Corporate / Business', 'status' => 'Active'],
-            ['name' => 'VIP / High Priority', 'status' => 'Active'],
-            ['name' => 'Walk-In Guest', 'status' => 'Active'],
-            ['name' => 'Complimentary Stay', 'status' => 'Active'],
-            ['name' => 'Group / Event Booking', 'status' => 'Active'],
-            ['name' => 'Long Stay Package', 'status' => 'Active'],
-        ];
-        foreach ($registrationTypes as $item) {
-            RegistrationType::firstOrCreate(['name' => $item['name']], $item);
-        }
-
+        
         // 3. Titles / Salutations
         $titles = [
             ['name' => 'Mr.', 'status' => 'Active'],
@@ -466,6 +454,81 @@ class MasterUtilitiesSeeder extends Seeder
                     'expected_date_time' => now()->addDays(2),
                     'note' => 'Scheduled inspection and refrigerant top-up for luxury wing unit.',
                     'status' => 'Active',
+                ]
+            );
+        }
+
+        // 21. Seed Initial Guests with Dynamic IDs and Auto-Generated Reserve IDs
+        $defaultRegType = RegistrationType::where('name', 'like', '%Regular%')->first() ?? RegistrationType::first();
+        $vipRegType = RegistrationType::where('name', 'like', '%VIP%')->first();
+        $corpRegType = RegistrationType::where('name', 'like', '%Corporate%')->first();
+        $phoneResMode = ReservationMode::where('name', 'like', '%Phone%')->first() ?? ReservationMode::first();
+        $otaResMode = ReservationMode::where('name', 'like', '%OTA%')->first() ?? ReservationMode::first();
+        $webResMode = ReservationMode::where('name', 'like', '%Website%')->first() ?? ReservationMode::first();
+        $indianNat = Nationality::where('name', 'like', '%Indian%')->first() ?? Nationality::first();
+        $mrTitle = Title::where('name', 'like', '%Mr%')->first() ?? Title::first();
+        $mrsTitle = Title::where('name', 'like', '%Mrs%')->first() ?? Title::first();
+        $drTitle = Title::where('name', 'like', '%Dr%')->first() ?? Title::first();
+        $aadhaarId = IdCardType::where('name', 'like', '%Aadhaar%')->first() ?? IdCardType::first();
+        $panId = IdCardType::where('name', 'like', '%PAN%')->first() ?? IdCardType::first();
+        $passportId = IdCardType::where('name', 'like', '%Passport%')->first() ?? IdCardType::first();
+        $upiPayment = PaymentMode::where('name', 'like', '%UPI%')->first() ?? PaymentMode::first();
+        $cardPayment = PaymentMode::where('name', 'like', '%Card%')->first() ?? PaymentMode::first();
+        $cashPayment = PaymentMode::where('name', 'like', '%Cash%')->first() ?? PaymentMode::first();
+        $tcsComp = Company::where('name', 'like', '%Tata%')->first();
+
+        $initialGuestsData = [
+            ['room' => '102', 'name' => 'Sanjeev Kumar Singh', 'mobile' => '+91 98112 34567', 'email' => 'sanjeev.ksingh@gmail.com', 'title' => $mrTitle, 'status' => 'Arrived', 'balance' => 10400.00, 'advance' => 5000.00, 'folio' => 'FOL-102-882', 'id_type' => $aadhaarId, 'id_no' => '9812 4567 8901', 'reg' => $defaultRegType, 'mode' => $phoneResMode, 'payment' => $upiPayment, 'seq' => 815],
+            ['room' => '202', 'name' => 'AJEET BHENGRA', 'mobile' => '+91 97712 90123', 'email' => 'ajeet.b@outlook.com', 'title' => $mrTitle, 'status' => 'Stay Over', 'balance' => 7800.00, 'advance' => 4000.00, 'folio' => 'FOL-202-710', 'id_type' => $panId, 'id_no' => 'AAEPB8765K', 'reg' => $defaultRegType, 'mode' => $otaResMode, 'payment' => $cardPayment, 'seq' => 816],
+            ['room' => '205', 'name' => 'KHAGESWAR ROUT', 'mobile' => '+91 94370 55123', 'email' => 'khageswar.rout@gmail.com', 'title' => $mrTitle, 'status' => 'Stay Over', 'balance' => 14200.00, 'advance' => 6000.00, 'folio' => 'FOL-205-551', 'id_type' => $aadhaarId, 'id_no' => '8892 1102 4432', 'reg' => $defaultRegType, 'mode' => $webResMode, 'payment' => $upiPayment, 'seq' => 817],
+            ['room' => '206', 'name' => 'Raj kumar Bhunia', 'mobile' => '+91 98321 44091', 'email' => 'raj.bhunia@gmail.com', 'title' => $mrTitle, 'status' => 'Arrived', 'balance' => 3920.00, 'advance' => 3000.00, 'folio' => 'FOL-206-339', 'id_type' => $aadhaarId, 'id_no' => '4401 2291 0032', 'reg' => $defaultRegType, 'mode' => $phoneResMode, 'payment' => $cashPayment, 'seq' => 818],
+            ['room' => '302', 'name' => 'SANGADA RAJUBHAI NAL', 'mobile' => '+91 99042 18273', 'email' => 'sangada.raju@gmail.com', 'title' => $mrTitle, 'status' => 'Stay Over', 'balance' => 8100.00, 'advance' => 4500.00, 'folio' => 'FOL-302-991', 'id_type' => $panId, 'id_no' => 'BKPSR9901M', 'reg' => $defaultRegType, 'mode' => $otaResMode, 'payment' => $upiPayment, 'seq' => 819],
+            ['room' => '304', 'name' => 'HITENDRA NINAWE', 'mobile' => '+91 98230 44910', 'email' => 'hitendra.n@gmail.com', 'title' => $mrTitle, 'status' => 'Stay Over', 'balance' => 11900.00, 'advance' => 5000.00, 'folio' => 'FOL-304-102', 'id_type' => $aadhaarId, 'id_no' => '5540 1928 3341', 'reg' => $defaultRegType, 'mode' => $phoneResMode, 'payment' => $cardPayment, 'seq' => 820],
+            ['room' => '305', 'name' => 'ADVAIT CHAVAN', 'mobile' => '+91 97654 32189', 'email' => 'advait.chavan@yahoo.com', 'title' => $mrTitle, 'status' => 'Stay Over', 'balance' => 12400.00, 'advance' => 5000.00, 'folio' => 'FOL-305-673', 'id_type' => $aadhaarId, 'id_no' => '7761 9902 1145', 'reg' => $defaultRegType, 'mode' => $webResMode, 'payment' => $upiPayment, 'seq' => 821],
+            ['room' => '307', 'name' => 'BIKRAM KR SAHOO', 'mobile' => '+91 94380 99182', 'email' => 'bikram.sahoo@rediffmail.com', 'title' => $mrTitle, 'status' => 'Stay Over', 'balance' => 16500.00, 'advance' => 6500.00, 'folio' => 'FOL-307-889', 'id_type' => $panId, 'id_no' => 'AQPRS1120K', 'reg' => $defaultRegType, 'mode' => $otaResMode, 'payment' => $upiPayment, 'seq' => 822],
+            ['room' => '401', 'name' => 'Vikramaditya Roy', 'mobile' => '+91 98300 77123', 'email' => 'vikramaditya.roy@corp.in', 'title' => $mrTitle, 'status' => 'Arrived', 'balance' => 14500.00, 'advance' => 8000.00, 'folio' => 'FOL-401-440', 'id_type' => $passportId, 'id_no' => 'Z9812345', 'reg' => $corpRegType ?? $defaultRegType, 'mode' => $phoneResMode, 'payment' => $cardPayment, 'seq' => 823, 'company' => $tcsComp],
+            ['room' => '403', 'name' => 'Priyanka Mukherjee', 'mobile' => '+91 98311 55442', 'email' => 'priyanka.m@gmail.com', 'title' => $mrsTitle, 'status' => 'Stay Over', 'balance' => 6200.00, 'advance' => 4500.00, 'folio' => 'FOL-403-109', 'id_type' => $aadhaarId, 'id_no' => '6651 8890 2231', 'reg' => $vipRegType ?? $defaultRegType, 'mode' => $webResMode, 'payment' => $upiPayment, 'seq' => 824],
+            ['room' => '405', 'name' => 'Rahul Verma', 'mobile' => '+91 98711 00921', 'email' => 'rahul.verma@techmail.com', 'title' => $mrTitle, 'status' => 'Arrived', 'balance' => 4100.00, 'advance' => 3500.00, 'folio' => 'FOL-405-772', 'id_type' => $aadhaarId, 'id_no' => '3310 9921 5542', 'reg' => $defaultRegType, 'mode' => $phoneResMode, 'payment' => $upiPayment, 'seq' => 825],
+            ['room' => '408', 'name' => 'Dr. Ananya Sen', 'mobile' => '+91 98450 11982', 'email' => 'dr.ananya.sen@hospital.org', 'title' => $drTitle, 'status' => 'Stay Over', 'balance' => 19500.00, 'advance' => 10000.00, 'folio' => 'FOL-408-204', 'id_type' => $aadhaarId, 'id_no' => '7654 3210 9876', 'reg' => $vipRegType ?? $defaultRegType, 'mode' => $phoneResMode, 'payment' => $cardPayment, 'seq' => 826],
+            ['room' => '502', 'name' => 'Rajendra Narayan Malhotra', 'mobile' => '+91 98200 44981', 'email' => 'rn.malhotra@luxurygroup.com', 'title' => $mrTitle, 'status' => 'Arrived', 'balance' => 22000.00, 'advance' => 12000.00, 'folio' => 'FOL-502-301', 'id_type' => $passportId, 'id_no' => 'K8871290', 'reg' => $corpRegType ?? $defaultRegType, 'mode' => $phoneResMode, 'payment' => $cardPayment, 'seq' => 827],
+            ['room' => '506', 'name' => 'Sourav Ganguly', 'mobile' => '+91 98300 00199', 'email' => 'sourav.ganguly@cricket.in', 'title' => $mrTitle, 'status' => 'Stay Over', 'balance' => 17800.00, 'advance' => 8500.00, 'folio' => 'FOL-506-440', 'id_type' => $aadhaarId, 'id_no' => '9900 1122 3344', 'reg' => $vipRegType ?? $defaultRegType, 'mode' => $webResMode, 'payment' => $upiPayment, 'seq' => 828],
+            ['room' => '509', 'name' => 'Meera Nambiar', 'mobile' => '+91 98470 33219', 'email' => 'meera.nambiar@heritage.com', 'title' => $mrsTitle, 'status' => 'Arrived', 'balance' => 24500.00, 'advance' => 15000.00, 'folio' => 'FOL-509-912', 'id_type' => $aadhaarId, 'id_no' => '8810 4452 9901', 'reg' => $vipRegType ?? $defaultRegType, 'mode' => $phoneResMode, 'payment' => $cardPayment, 'seq' => 829],
+        ];
+
+        $finYear = (date('n') >= 4) ? date('Y') . '-' . (date('Y') + 1) : (date('Y') - 1) . '-' . date('Y');
+
+        foreach ($initialGuestsData as $gd) {
+            $roomObj = $createdRooms[$gd['room']] ?? null;
+            if (!$roomObj) continue;
+
+            $reserveCode = "{$gd['seq']}\\{$finYear}";
+
+            Guest::updateOrCreate(
+                ['reserve_id' => $reserveCode],
+                [
+                    'registration_type_id' => $gd['reg']?->id,
+                    'reservation_mode_id' => $gd['mode']?->id,
+                    'company_id' => isset($gd['company']) ? $gd['company']?->id : null,
+                    'reserve_date' => now()->toDateString(),
+                    'reserve_time' => now()->format('H:i'),
+                    'title_id' => $gd['title']?->id,
+                    'guest_name' => $gd['name'],
+                    'guest_address' => 'Flat / Suite ' . $gd['room'] . ', Sagar Sonnet Residency',
+                    'nationality_id' => $indianNat?->id,
+                    'city' => 'Kolkata',
+                    'mobile' => $gd['mobile'],
+                    'email' => $gd['email'],
+                    'status' => $gd['status'],
+                    'has_privilege_card' => ($gd['reg']?->id === $vipRegType?->id),
+                    'privilege_card_no' => ($gd['reg']?->id === $vipRegType?->id) ? 'PRIV-' . rand(1000, 9999) : null,
+                    'room_id' => $roomObj->id,
+                    'id_card_type_id' => $gd['id_type']?->id,
+                    'id_card_number' => $gd['id_no'],
+                    'payment_mode_id' => $gd['payment']?->id,
+                    'advance_amount' => $gd['advance'],
+                    'payment_remarks' => 'Advance confirmed via ' . ($gd['payment']?->name ?? 'Online'),
+                    'folio_number' => $gd['folio'],
+                    'balance' => $gd['balance'],
                 ]
             );
         }

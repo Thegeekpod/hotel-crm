@@ -41,6 +41,8 @@
                data-room="{{ $rm['room'] }}" 
                data-floor="{{ $rm['floor'] }}" 
                data-type="{{ $rm['type'] }}" 
+               data-category="{{ $rm['category'] }}"
+               data-guest="{{ $rm['guest']['name'] ?? '' }}"
                data-status="{{ $rm['status'] }}"
                data-cleaning="{{ $rm['cleaning'] }}"
                data-operational="{{ $rm['operational_status'] ?? '' }}"

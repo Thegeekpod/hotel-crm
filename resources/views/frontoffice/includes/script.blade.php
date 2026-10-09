@@ -1,60 +1,82 @@
 <script>
   let currentStatusFilter = 'ALL';
 
-  function applyFilters() {
-    const typeElem = document.getElementById('filter-type');
-    const floorElem = document.getElementById('filter-floor');
-    const searchElem = document.getElementById('filter-search');
-
-    const type = typeElem ? typeElem.value : 'ALL';
-    const floor = floorElem ? floorElem.value : 'ALL';
-    const search = searchElem ? searchElem.value.trim().toLowerCase() : '';
-
-    document.querySelectorAll('.rack-card').forEach(card => {
-      const cType = card.getAttribute('data-type');
-      const cFloor = card.getAttribute('data-floor');
-      const cRoom = card.getAttribute('data-room').toLowerCase();
-      const cStatus = card.getAttribute('data-status');
-      const gNameElem = card.querySelector('.rack-guest-name');
-      const gName = gNameElem ? gNameElem.textContent.toLowerCase() : '';
-
-      const mType = (type === 'ALL' || cType === type);
-      const mFloor = (floor === 'ALL' || cFloor === floor);
-      const mSearch = (!search || cRoom.includes(search) || gName.includes(search));
-      
-      let mStatus = false;
-      if (currentStatusFilter === 'ALL') {
-        mStatus = true;
-      } else if (currentStatusFilter === 'vacant') {
-        mStatus = (cStatus === 'available' || cStatus === 'dirty');
-      } else {
-        mStatus = (cStatus === currentStatusFilter);
-      }
-
-      card.style.display = (mType && mFloor && mSearch && mStatus) ? 'flex' : 'none';
-    });
+  function filterByStatus(status, elem) {
+    currentStatusFilter = (status || 'ALL').toUpperCase();
+    document.querySelectorAll('.legend-chip').forEach(c => c.classList.remove('active-chip'));
+    if (elem) elem.classList.add('active-chip');
+    applyFilters();
   }
 
-  function filterByStatus(status, btnElement) {
-    currentStatusFilter = status;
-    applyFilters();
-    
-    document.querySelectorAll('.legend-chip').forEach(chip => chip.classList.remove('active-chip'));
-    if (btnElement) {
-      btnElement.classList.add('active-chip');
-    }
+  function setActiveFilter(btn, status) {
+    filterByStatus(status, btn);
   }
 
   function resetFilters() {
-    if (document.getElementById('filter-type')) document.getElementById('filter-type').value = 'ALL';
-    if (document.getElementById('filter-floor')) document.getElementById('filter-floor').value = 'ALL';
-    if (document.getElementById('filter-search')) document.getElementById('filter-search').value = '';
     currentStatusFilter = 'ALL';
-    applyFilters();
-
-    document.querySelectorAll('.legend-chip').forEach(chip => chip.classList.remove('active-chip'));
+    document.querySelectorAll('.legend-chip').forEach(c => c.classList.remove('active-chip'));
     const allChip = document.querySelector('.legend-chip.chip-all');
     if (allChip) allChip.classList.add('active-chip');
+
+    const searchInp = document.getElementById('filter-search') || document.getElementById('pms-room-search');
+    if (searchInp) searchInp.value = '';
+
+    const typeSel = document.getElementById('filter-type');
+    if (typeSel) typeSel.value = 'ALL';
+
+    const floorSel = document.getElementById('filter-floor');
+    if (floorSel) floorSel.value = 'ALL';
+
+    applyFilters();
+  }
+
+  function applyFilters() {
+    const searchVal = (document.getElementById('filter-search')?.value || document.getElementById('pms-room-search')?.value || '').toLowerCase().trim();
+    const typeVal = (document.getElementById('filter-type')?.value || 'ALL').toUpperCase();
+    const floorVal = (document.getElementById('filter-floor')?.value || 'ALL');
+
+    const cards = document.querySelectorAll('.rack-card');
+    cards.forEach(card => {
+      const roomNum = (card.getAttribute('data-room') || '').toLowerCase();
+      const cardType = (card.getAttribute('data-type') || '').toUpperCase();
+      const cardCat = (card.getAttribute('data-category') || '').toUpperCase();
+      const cardFloor = String(card.getAttribute('data-floor') || '');
+      const cardGuest = (card.getAttribute('data-guest') || '').toLowerCase();
+      const cardStatus = (card.getAttribute('data-status') || '').toUpperCase();
+
+      // Search match
+      const matchesSearch = !searchVal || roomNum.includes(searchVal) || cardType.toLowerCase().includes(searchVal) || cardGuest.includes(searchVal);
+
+      // Type match
+      const matchesType = (typeVal === 'ALL') || (cardType === typeVal) || (cardCat === typeVal);
+
+      // Floor match
+      const matchesFloor = (floorVal === 'ALL') || (cardFloor === String(floorVal));
+
+      // Status match (ALL, OCCUPIED, BLOCKED, VACANT, DIRTY, AVAILABLE)
+      let matchesStatus = false;
+      if (currentStatusFilter === 'ALL') {
+        matchesStatus = true;
+      } else if (currentStatusFilter === 'VACANT') {
+        matchesStatus = (cardStatus === 'AVAILABLE' || cardStatus === 'DIRTY');
+      } else {
+        matchesStatus = (cardStatus === currentStatusFilter);
+      }
+
+      if (matchesSearch && matchesType && matchesFloor && matchesStatus) {
+        card.style.display = 'flex';
+      } else {
+        card.style.display = 'none';
+      }
+    });
+  }
+
+  function printRack() {
+    window.print();
+  }
+
+  function triggerSearch() {
+    applyFilters();
   }
 
   function openModal(id) {
@@ -67,8 +89,42 @@
     if (el) el.classList.remove('open');
   }
 
-  function openReservationModal() {
+  function fetchNextReserveId() {
+    fetch("{{ route('frontoffice.reserve.next-id') }}")
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.reserve_id) {
+          const resIdInp = document.getElementById('reserve-id-input');
+          if (resIdInp) resIdInp.value = data.reserve_id;
+        }
+      })
+      .catch(err => console.error('Error fetching next reserve ID:', err));
+  }
+
+  function openReservationModal(preselectRoomNo = null, preselectCatId = null, preselectFloorId = null) {
     setInitialDateTime();
+    fetchNextReserveId();
+    
+    if (preselectRoomNo || preselectCatId || preselectFloorId) {
+      const firstGuest = document.querySelector('.guest-block');
+      if (firstGuest) {
+        const catSel = firstGuest.querySelector('.select-room-category');
+        const flSel = firstGuest.querySelector('.select-room-floor');
+        const rmSel = firstGuest.querySelector('.select-room-no');
+
+        if (catSel && preselectCatId) {
+          catSel.value = preselectCatId;
+          onCategoryChange(catSel);
+        }
+        if (flSel && preselectFloorId) {
+          flSel.value = preselectFloorId;
+          onFloorChange(flSel);
+        }
+        if (rmSel && preselectRoomNo) {
+          rmSel.value = preselectRoomNo;
+        }
+      }
+    }
     openModal('reserve-modal');
   }
 
@@ -97,7 +153,7 @@
           <div style="background: var(--bg-surface, #f8fafc); padding: 16px; border: 1px solid var(--border-subtle, #e2e8f0); border-radius: var(--radius-md, 8px);">
             <h4 style="font-size: 11px; color: var(--accent-primary, #6366f1); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px;"><i class="fa-solid fa-wallet"></i> Folio Outstanding</h4>
             <div style="font-size: 24px; font-weight: 900; color: var(--accent-rose, #f43f5e); font-family: var(--font-mono);">₹ ${Number(guestObj.balance).toLocaleString()}</div>
-            <div style="font-size: 11px; color: var(--accent-emerald, #10b981); margin-top: 6px;"><i class="fa-solid fa-check"></i> Advance: ₹ 5,000</div>
+            <div style="font-size: 11px; color: var(--accent-emerald, #10b981); margin-top: 6px;"><i class="fa-solid fa-check"></i> Advance: ₹ ${Number(guestObj.advance || 5000).toLocaleString()}</div>
             <div style="font-size: 11px; color: var(--text-muted, #94a3b8); margin-top: 4px;">Operational: <strong style="color: var(--accent-primary, #6366f1);">${escapeHtml(opDisplay)}</strong></div>
           </div>
         </div>
@@ -146,7 +202,7 @@
         </div>
       `;
       footerEl.innerHTML = `
-        <button class="btn-ui-success" onclick="openReservationModal()"><i class="fa-solid fa-key"></i> New Check-In</button>
+        <button class="btn-ui-success" onclick="closeModal('room-modal'); openReservationModal('${roomNo}');"><i class="fa-solid fa-key"></i> New Check-In</button>
         ${isDirty ? `<button class="btn-ui-primary" onclick="markRoomCleaned('${roomNo}')"><i class="fa-solid fa-broom"></i> Mark Cleaned</button>` : ''}
         <button class="btn-ui-secondary" onclick="closeModal('room-modal')">Close</button>
       `;
@@ -188,16 +244,6 @@
     } else {
       alert(`Room ${roomNo} marked as Cleaned!`);
     }
-  }
-
-  function handleReserve(e) {
-    e.preventDefault();
-    if (typeof PmsAlert !== 'undefined') {
-      PmsAlert.toast('Reservation confirmed successfully for Hotel Sagar Sonnet!', 'success');
-    } else {
-      alert('Reservation confirmed successfully for Hotel Sagar Sonnet!');
-    }
-    closeModal('reserve-modal');
   }
 
   function printInvoice(roomNo, guestName, folio, balance) {
@@ -348,39 +394,62 @@
       return;
     }
 
-    // Sample database guest profile matching
-    const sampleProfiles = {
-      '9876543210': { name: 'Debabrata Mukherjee', address: 'Flat 4B, Salt Lake Sector 2', city: 'Kolkata', email: 'debabrata@gmail.com', idCard: '1982-4421-9981' },
-      '9830012345': { name: 'Priyabrata Sengupta', address: '12/1 Southern Avenue', city: 'Kolkata', email: 'priyabrata@gmail.com', idCard: 'ABCDP1234F' }
-    };
+    const origBtnHtml = btnElem.innerHTML;
+    btnElem.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Searching...';
+    btnElem.disabled = true;
 
-    const profile = sampleProfiles[phone] || {
-      name: 'Regular Guest (Phone ' + phone + ')',
-      address: 'Park Street Extension, Floor 3',
-      city: 'Kolkata',
-      email: 'guest.' + phone.slice(-4) + '@hotelcrm.com',
-      idCard: 'REG-' + phone.slice(-6)
-    };
+    fetch("{{ route('frontoffice.guest.search') }}?mobile=" + encodeURIComponent(phone))
+      .then(res => res.json())
+      .then(data => {
+        btnElem.innerHTML = origBtnHtml;
+        btnElem.disabled = false;
 
-    const nameInp = block.querySelector('.guest-name-input');
-    const addrInp = block.querySelector('.guest-address-input');
-    const cityInp = block.querySelector('.guest-city-input');
-    const mobInp = block.querySelector('.guest-mobile-input');
-    const emailInp = block.querySelector('.guest-email-input');
-    const idInp = block.querySelector('.guest-id-number');
+        if (data.success && data.guest) {
+          const g = data.guest;
+          const nameInp = block.querySelector('.guest-name-input');
+          const addrInp = block.querySelector('.guest-address-input');
+          const cityInp = block.querySelector('.guest-city-input');
+          const mobInp = block.querySelector('.guest-mobile-input');
+          const emailInp = block.querySelector('.guest-email-input');
+          const idInp = block.querySelector('.guest-id-number');
+          const titleSel = block.querySelector('.pms-select-title');
+          const natSel = block.querySelector('.pms-select-nationality');
+          const idTypeSel = block.querySelector('.pms-select-idtype');
+          const dobInp = block.querySelector('.guest-dob-input');
+          const annivInp = block.querySelector('.guest-anniversary-input');
 
-    if (nameInp) nameInp.value = profile.name;
-    if (addrInp) addrInp.value = profile.address;
-    if (cityInp) cityInp.value = profile.city;
-    if (mobInp) mobInp.value = phone;
-    if (emailInp) emailInp.value = profile.email;
-    if (idInp) idInp.value = profile.idCard;
+          if (nameInp) nameInp.value = g.name || '';
+          if (addrInp) addrInp.value = g.address || '';
+          if (cityInp) cityInp.value = g.city || '';
+          if (mobInp) mobInp.value = g.mobile || phone;
+          if (emailInp) emailInp.value = g.email || '';
+          if (idInp) idInp.value = g.id_card_number || '';
+          if (titleSel && g.title_id) titleSel.value = g.title_id;
+          if (natSel && g.nationality_id) natSel.value = g.nationality_id;
+          if (idTypeSel && g.id_card_type_id) idTypeSel.value = g.id_card_type_id;
+          if (dobInp && g.dob) dobInp.value = g.dob;
+          if (annivInp && g.anniversary) annivInp.value = g.anniversary;
 
-    if (typeof PmsAlert !== 'undefined') {
-      PmsAlert.toast('Regular guest profile loaded for ' + profile.name, 'success');
-    } else {
-      alert('Regular guest profile loaded for ' + profile.name);
-    }
+          if (typeof PmsAlert !== 'undefined') {
+            PmsAlert.toast('Regular guest profile loaded for ' + g.name, 'success');
+          } else {
+            alert('Regular guest profile loaded for ' + g.name);
+          }
+        } else {
+          const mobInp = block.querySelector('.guest-mobile-input');
+          if (mobInp) mobInp.value = phone;
+          if (typeof PmsAlert !== 'undefined') {
+            PmsAlert.toast('No prior profile found. New guest details can be entered.', 'info');
+          } else {
+            alert('No prior profile found.');
+          }
+        }
+      })
+      .catch(err => {
+        btnElem.innerHTML = origBtnHtml;
+        btnElem.disabled = false;
+        console.error('Guest search error:', err);
+      });
   }
 
   function toggleResType() {
@@ -527,6 +596,201 @@
     if (container) {
       container.style.display = (selectElem.value !== 'None') ? 'flex' : 'none';
     }
+  }
+
+  function handleReserve(e) {
+    e.preventDefault();
+    const form = document.getElementById('reservation-form') || e.target;
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const origBtnHtml = submitBtn ? submitBtn.innerHTML : '';
+
+    // Collect Registration Type ID
+    const checkedRadio = form.querySelector('input[name="res_type"]:checked');
+    const registrationTypeId = checkedRadio ? checkedRadio.dataset.registrationId : null;
+    const resTypeSlug = checkedRadio ? checkedRadio.value : 'new';
+
+    // Collect Reservation Meta
+    const reserveDate = form.querySelector('input[name="reserve_date"]')?.value || '';
+    const reserveTime = form.querySelector('input[name="reserve_time"]')?.value || '';
+    const reservationModeId = form.querySelector('select[name="reservation_mode_id"]')?.value || null;
+
+    // Collect Corporate Details
+    const companySelect = form.querySelector('select[name="company_id"]');
+    const companyId = companySelect ? companySelect.value : null;
+    const newCompanyName = form.querySelector('input[name="new_company_name"]')?.value || '';
+    const newCompanyAddress = form.querySelector('input[name="new_company_address"]')?.value || '';
+    const newCompanyGstin = form.querySelector('input[name="new_company_gstin"]')?.value || '';
+    const newCompanyPhone = form.querySelector('input[name="new_company_phone"]')?.value || '';
+
+    // Collect Guests
+    const guestBlocks = form.querySelectorAll('.guest-block');
+    const guests = [];
+
+    guestBlocks.forEach(block => {
+      const titleId = block.querySelector('select[name="title_id"]')?.value;
+      const guestName = block.querySelector('input[name="guest_name"]')?.value?.trim();
+      const guestAddress = block.querySelector('input[name="guest_address"]')?.value?.trim();
+      const nationalityId = block.querySelector('select[name="nationality_id"]')?.value;
+      const city = block.querySelector('input[name="city"]')?.value?.trim();
+      const mobile = block.querySelector('input[name="mobile"]')?.value?.trim();
+      const email = block.querySelector('input[name="email"]')?.value?.trim();
+      const dob = block.querySelector('input[name="dob"]')?.value;
+      const anniversary = block.querySelector('input[name="anniversary"]')?.value;
+      const status = block.querySelector('select[name="status"]')?.value || 'Confirmed';
+      const hasPriv = block.querySelector('.chk-privilege')?.checked || false;
+      const privNo = block.querySelector('input[name="privilege_card_no"]')?.value?.trim();
+      const roomId = block.querySelector('select[name="room_id"]')?.value;
+      const idCardTypeId = block.querySelector('select[name="id_card_type_id"]')?.value;
+      const idCardNumber = block.querySelector('input[name="id_card_number"]')?.value?.trim();
+
+      if (guestName) {
+        guests.push({
+          title_id: titleId,
+          guest_name: guestName,
+          guest_address: guestAddress,
+          nationality_id: nationalityId,
+          city: city,
+          mobile: mobile,
+          email: email,
+          dob: dob,
+          anniversary: anniversary,
+          status: status,
+          has_privilege_card: hasPriv,
+          privilege_card_no: privNo,
+          room_id: roomId,
+          id_card_type_id: idCardTypeId,
+          id_card_number: idCardNumber,
+        });
+      }
+    });
+
+    if (guests.length === 0) {
+      if (typeof PmsAlert !== 'undefined') {
+        PmsAlert.toast('Please enter guest name for reservation!', 'error');
+      } else {
+        alert('Please enter guest name for reservation!');
+      }
+      return;
+    }
+
+    // Collect Payment
+    const paymentModeId = form.querySelector('select[name="payment_mode_id"]')?.value;
+    const advanceAmount = form.querySelector('input[name="advance_amount"]')?.value || 0;
+    const paymentRemarks = form.querySelector('input[name="payment_remarks"]')?.value || '';
+
+    const payload = {
+      registration_type_id: registrationTypeId,
+      res_type: resTypeSlug,
+      reserve_date: reserveDate,
+      reserve_time: reserveTime,
+      reservation_mode_id: reservationModeId,
+      company_id: companyId,
+      new_company_name: newCompanyName,
+      new_company_address: newCompanyAddress,
+      new_company_gstin: newCompanyGstin,
+      new_company_phone: newCompanyPhone,
+      guests: guests,
+      payment_mode_id: paymentModeId,
+      advance_amount: advanceAmount,
+      payment_remarks: paymentRemarks,
+    };
+
+    if (submitBtn) {
+      submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...';
+      submitBtn.disabled = true;
+    }
+
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+    fetch("{{ route('frontoffice.reserve.store') }}", {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'X-CSRF-TOKEN': csrfToken || '',
+      },
+      body: JSON.stringify(payload),
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (submitBtn) {
+          submitBtn.innerHTML = origBtnHtml;
+          submitBtn.disabled = false;
+        }
+
+        if (data.success) {
+          const resId = data.reserve_id;
+          const nextId = data.next_reserve_id;
+
+          if (typeof Swal !== 'undefined') {
+            Swal.fire({
+              icon: 'success',
+              title: 'Reservation Confirmed!',
+              html: `<b>Reserve ID:</b> <code style="font-size: 16px; color: #6366f1; font-weight: bold;">${escapeHtml(resId)}</code><br><br>${escapeHtml(data.message)}`,
+              confirmButtonColor: '#10b981',
+              confirmButtonText: '<i class="fa-solid fa-check"></i> Great',
+            });
+          } else if (typeof PmsAlert !== 'undefined') {
+            PmsAlert.toast(`Reservation #${resId} confirmed successfully!`, 'success');
+          } else {
+            alert(`Reservation #${resId} confirmed successfully!`);
+          }
+
+          closeModal('reserve-modal');
+          form.reset();
+          setInitialDateTime();
+
+          const resIdInp = document.getElementById('reserve-id-input');
+          if (resIdInp && nextId) resIdInp.value = nextId;
+
+          // Update room card in dashboard view if matched
+          guests.forEach(g => {
+            if (g.room_id) {
+              const card = document.querySelector(`.rack-card[data-room="${g.room_id}"]`) || document.querySelector(`.rack-card[data-room-id="${g.room_id}"]`);
+              if (card) {
+                card.className = 'rack-card c-occupied';
+                card.setAttribute('data-status', 'occupied');
+                card.setAttribute('data-guest', g.guest_name);
+                const mid = card.querySelector('.rack-card-mid');
+                if (mid) {
+                  mid.innerHTML = `
+                    <div class="guest-name" style="font-size: 12px; font-weight: 800; color: #fff;">${escapeHtml(g.guest_name)}</div>
+                    <div class="guest-state" style="font-size: 10px; color: rgba(255,255,255,0.85);">${escapeHtml(g.status || 'Confirmed')}</div>
+                  `;
+                }
+                const badge = card.querySelector('.rack-badge');
+                if (badge) badge.textContent = 'Occupied';
+              }
+            }
+          });
+
+          // If on other pages (arrivals, inhouse, guest), reload to display fresh DB data
+          if (window.location.pathname.includes('/arrivals') || 
+              window.location.pathname.includes('/inhouse') || 
+              window.location.pathname.includes('/guest')) {
+            setTimeout(() => window.location.reload(), 1200);
+          }
+
+        } else {
+          if (typeof Swal !== 'undefined') {
+            Swal.fire({
+              icon: 'error',
+              title: 'Reservation Failed',
+              text: data.message || 'Unable to store reservation. Please try again.',
+            });
+          } else {
+            alert('Error: ' + (data.message || 'Unable to store reservation.'));
+          }
+        }
+      })
+      .catch(err => {
+        if (submitBtn) {
+          submitBtn.innerHTML = origBtnHtml;
+          submitBtn.disabled = false;
+        }
+        console.error('Reservation error:', err);
+        alert('Network or server error while submitting reservation.');
+      });
   }
 
   function escapeHtml(str) {

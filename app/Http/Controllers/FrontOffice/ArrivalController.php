@@ -9,6 +9,7 @@ use App\Models\Company;
 use App\Models\IdCardType;
 use App\Models\ReservationMode;
 use App\Models\PaymentMode;
+use App\Models\Guest;
 use Illuminate\Http\Request;
 
 class ArrivalController extends Controller
@@ -23,41 +24,41 @@ class ArrivalController extends Controller
         $paymentModes = PaymentMode::where('status', 'Active')->get();
         $rackRooms = [];
 
-        $arrivals = [
-            [
-                'ref' => 'RES-901',
-                'guest_name' => 'Manish Khemka',
-                'category' => 'SUPER DELUXE',
-                'room' => '101',
-                'stay_dates' => '24 Sep - 26 Sep',
+        $dbGuests = Guest::with(['room.categoryRelation', 'title'])
+            ->whereIn('status', ['Confirmed', 'Guaranteed', 'Waitlisted', 'Tentative'])
+            ->latest('id')
+            ->get();
+
+        $arrivals = [];
+        foreach ($dbGuests as $g) {
+            $arrivals[] = [
+                'ref' => $g->reserve_id ?: ('RES-' . $g->id),
+                'guest_name' => ($g->title?->name ? $g->title->name . ' ' : '') . $g->guest_name,
+                'category' => strtoupper($g->room?->categoryRelation?->name ?? 'DELUXE'),
+                'room' => (string)($g->room?->room_number ?? 'Pending'),
+                'stay_dates' => ($g->reserve_date ? $g->reserve_date->format('d M') : 'Today') . ' - ' . now()->addDays(2)->format('d M'),
                 'pax' => 2,
-                'advance' => '₹ 3,000',
-                'status' => 'Confirmed',
-                'status_class' => 'green'
-            ],
-            [
-                'ref' => 'RES-902',
-                'guest_name' => 'Natasha Roy',
-                'category' => 'SUITE',
-                'room' => '210',
-                'stay_dates' => '25 Sep - 27 Sep',
-                'pax' => 2,
-                'advance' => '₹ 5,000',
-                'status' => 'Guaranteed',
-                'status_class' => 'blue'
-            ],
-            [
-                'ref' => 'RES-903',
-                'guest_name' => 'Sunil Narang',
-                'category' => 'DELUXE',
-                'room' => '106',
-                'stay_dates' => '24 Sep - 25 Sep',
-                'pax' => 1,
-                'advance' => '₹ 3,500',
-                'status' => 'Confirmed',
-                'status_class' => 'green'
-            ],
-        ];
+                'advance' => '₹ ' . number_format($g->advance_amount),
+                'status' => $g->status ?: 'Confirmed',
+                'status_class' => ($g->status === 'Guaranteed' ? 'blue' : ($g->status === 'Confirmed' ? 'green' : 'yellow')),
+            ];
+        }
+
+        if (empty($arrivals)) {
+            $arrivals = [
+                [
+                    'ref' => '830\\2026-2027',
+                    'guest_name' => 'Manish Khemka',
+                    'category' => 'SUPER DELUXE',
+                    'room' => '101',
+                    'stay_dates' => now()->format('d M') . ' - ' . now()->addDays(2)->format('d M'),
+                    'pax' => 2,
+                    'advance' => '₹ 3,000',
+                    'status' => 'Confirmed',
+                    'status_class' => 'green'
+                ],
+            ];
+        }
 
         return view('frontoffice.arrivals.index', compact(
             'arrivals',

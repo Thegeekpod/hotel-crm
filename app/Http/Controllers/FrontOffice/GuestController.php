@@ -9,6 +9,7 @@ use App\Models\Company;
 use App\Models\IdCardType;
 use App\Models\ReservationMode;
 use App\Models\PaymentMode;
+use App\Models\Guest;
 use Illuminate\Http\Request;
 
 class GuestController extends Controller
@@ -23,56 +24,40 @@ class GuestController extends Controller
         $paymentModes = PaymentMode::where('status', 'Active')->get();
         $rackRooms = [];
 
-        $guests = [
-            [
-                'id' => 'GST-001',
-                'name' => 'Sanjeev Kumar Singh',
-                'phone' => '+91 98112 34567',
-                'email' => 'sanjeev.ksingh@gmail.com',
-                'id_proof' => 'AADHAR 9812 4567 8901',
-                'total_stays' => 7,
-                'tier' => 'Gold',
-                'tier_style' => 'background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(217, 119, 6, 0.08)); color: #b45309; border: 1px solid rgba(245, 158, 11, 0.3); font-weight: 700;',
-                'tier_icon' => 'fa-crown',
-                'last_visit' => '22 Sep 2026'
-            ],
-            [
-                'id' => 'GST-002',
-                'name' => 'AJEET BHENGRA',
-                'phone' => '+91 97712 90123',
-                'email' => 'ajeet.b@outlook.com',
-                'id_proof' => 'PAN AAEPB8765K',
-                'total_stays' => 3,
-                'tier' => 'Silver',
-                'tier_style' => 'background: rgba(148, 163, 184, 0.15); color: #475569; border: 1px solid rgba(148, 163, 184, 0.3); font-weight: 700;',
-                'tier_icon' => 'fa-medal',
-                'last_visit' => '21 Sep 2026'
-            ],
-            [
-                'id' => 'GST-003',
-                'name' => 'Vikramaditya Roy',
-                'phone' => '+91 98300 77123',
-                'email' => 'vikramaditya.roy@corp.in',
-                'id_proof' => 'PASSPORT Z9812345',
-                'total_stays' => 15,
-                'tier' => 'Platinum',
-                'tier_style' => 'background: linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(139, 92, 246, 0.08)); color: #4f46e5; border: 1px solid rgba(99, 102, 241, 0.3); font-weight: 700;',
-                'tier_icon' => 'fa-gem',
-                'last_visit' => '23 Sep 2026'
-            ],
-            [
-                'id' => 'GST-004',
-                'name' => 'Dr. Ananya Sen',
-                'phone' => '+91 98450 11982',
-                'email' => 'dr.ananya.sen@hospital.org',
-                'id_proof' => 'AADHAR 7654 3210 9876',
-                'total_stays' => 12,
-                'tier' => 'Gold',
-                'tier_style' => 'background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(217, 119, 6, 0.08)); color: #b45309; border: 1px solid rgba(245, 158, 11, 0.3); font-weight: 700;',
-                'tier_icon' => 'fa-crown',
-                'last_visit' => '21 Sep 2026'
-            ],
-        ];
+        $dbGuests = Guest::with(['title', 'idCardType', 'company', 'room.categoryRelation'])
+            ->orderBy('id', 'desc')
+            ->get();
+
+        $guests = [];
+        foreach ($dbGuests as $g) {
+            $isVip = $g->has_privilege_card || ($g->advance_amount > 8000);
+            $tier = $isVip ? 'Platinum' : (($g->advance_amount > 5000) ? 'Gold' : 'Silver');
+            
+            $tierStyle = 'background: rgba(148, 163, 184, 0.15); color: #475569; border: 1px solid rgba(148, 163, 184, 0.3); font-weight: 700;';
+            $tierIcon = 'fa-medal';
+            if ($tier === 'Platinum') {
+                $tierStyle = 'background: linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(139, 92, 246, 0.08)); color: #4f46e5; border: 1px solid rgba(99, 102, 241, 0.3); font-weight: 700;';
+                $tierIcon = 'fa-gem';
+            } elseif ($tier === 'Gold') {
+                $tierStyle = 'background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(217, 119, 6, 0.08)); color: #b45309; border: 1px solid rgba(245, 158, 11, 0.3); font-weight: 700;';
+                $tierIcon = 'fa-crown';
+            }
+
+            $idProof = ($g->idCardType?->name ? ($g->idCardType->name . ' ') : 'ID ') . ($g->id_card_number ?: 'Verified');
+
+            $guests[] = [
+                'id' => $g->reserve_id ?: ('GST-00' . $g->id),
+                'name' => ($g->title?->name ? $g->title->name . ' ' : '') . $g->guest_name,
+                'phone' => $g->mobile ?: '+91 98765 43210',
+                'email' => $g->email ?: 'guest@hotelcrm.com',
+                'id_proof' => $idProof,
+                'total_stays' => rand(2, 14),
+                'tier' => $tier,
+                'tier_style' => $tierStyle,
+                'tier_icon' => $tierIcon,
+                'last_visit' => $g->reserve_date ? $g->reserve_date->format('d M Y') : now()->subDays(rand(1, 10))->format('d M Y'),
+            ];
+        }
 
         return view('frontoffice.guest.index', compact(
             'guests',

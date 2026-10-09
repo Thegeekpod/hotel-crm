@@ -14,7 +14,14 @@ use App\Models\RegistrationType;
 use App\Models\Title;
 use App\Models\Nationality;
 use App\Models\Amenity;
+use App\Models\Guest;
+use App\Models\HousekeepingState;
+use App\Models\OperationalStatus;
+use App\Models\RoomHousekeepingHistory;
+use App\Models\RoomOperationalHistory;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class DashboardController extends Controller
 {
@@ -25,7 +32,10 @@ class DashboardController extends Controller
             'categoryRelation',
             'beddingConfigRelation',
             'housekeepingHistories.housekeepingStatus',
-            'operationalHistories.operationalStatus'
+            'operationalHistories.operationalStatus',
+            'currentGuest.title',
+            'currentGuest.nationality',
+            'currentGuest.idCardType',
         ])->orderByRaw('CAST(room_number AS UNSIGNED) ASC, room_number ASC')->get();
 
         $floors = Floor::where('status', 'Active')->orderBy('floor', 'asc')->get();
@@ -38,25 +48,7 @@ class DashboardController extends Controller
         $titles = Title::where('status', 'Active')->get();
         $nationalities = Nationality::where('status', 'Active')->get();
         $amenityMap = Amenity::pluck('name', 'id')->toArray();
-
-        // Sample in-house residing guests mapping for active rooms
-        $occupiedSampleGuests = [
-            '102' => ['name' => 'Sanjeev Kumar Singh', 'state' => 'Arrived', 'folio' => 'FOL-102-882', 'balance' => 10400],
-            '202' => ['name' => 'AJEET BHENGRA', 'state' => 'Stay Over', 'folio' => 'FOL-202-710', 'balance' => 7800],
-            '205' => ['name' => 'KHAGESWAR ROUT', 'state' => 'Stay Over', 'folio' => 'FOL-205-551', 'balance' => 14200],
-            '206' => ['name' => 'Raj kumar Bhunia', 'state' => 'Arrived', 'folio' => 'FOL-206-339', 'balance' => 3920],
-            '302' => ['name' => 'SANGADA RAJUBHAI NAL', 'state' => 'Stay Over', 'folio' => 'FOL-302-991', 'balance' => 8100],
-            '304' => ['name' => 'HITENDRA NINAWE', 'state' => 'Stay Over', 'folio' => 'FOL-304-102', 'balance' => 11900],
-            '305' => ['name' => 'ADVAIT CHAVAN', 'state' => 'Stay Over', 'folio' => 'FOL-305-673', 'balance' => 12400],
-            '307' => ['name' => 'BIKRAM KR SAHOO', 'state' => 'Stay Over', 'folio' => 'FOL-307-889', 'balance' => 16500],
-            '401' => ['name' => 'Vikramaditya Roy', 'state' => 'Arrived', 'folio' => 'FOL-401-440', 'balance' => 14500],
-            '403' => ['name' => 'Priyanka Mukherjee', 'state' => 'Stay Over', 'folio' => 'FOL-403-109', 'balance' => 6200],
-            '405' => ['name' => 'Rahul Verma', 'state' => 'Arrived', 'folio' => 'FOL-405-772', 'balance' => 4100],
-            '408' => ['name' => 'Dr. Ananya Sen', 'state' => 'Stay Over', 'folio' => 'FOL-408-204', 'balance' => 19500],
-            '502' => ['name' => 'Rajendra Narayan Malhotra', 'state' => 'Arrived', 'folio' => 'FOL-502-301', 'balance' => 22000],
-            '506' => ['name' => 'Sourav Ganguly', 'state' => 'Stay Over', 'folio' => 'FOL-506-440', 'balance' => 17800],
-            '509' => ['name' => 'Meera Nambiar', 'state' => 'Arrived', 'folio' => 'FOL-509-912', 'balance' => 24500],
-        ];
+        $nextReserveId = Guest::generateNextReserveId();
 
         $rackRooms = [];
         if ($dbRooms->isNotEmpty()) {
@@ -68,7 +60,21 @@ class DashboardController extends Controller
 
                 $latestOp = $r->operationalHistories->sortByDesc('id')->first();
                 $latestHk = $r->housekeepingHistories->sortByDesc('id')->first();
-                $guest = $occupiedSampleGuests[$roomNum] ?? null;
+                
+                $guestModel = $r->currentGuest;
+                $guest = null;
+                if ($guestModel) {
+                    $guest = [
+                        'name' => ($guestModel->title?->name ? $guestModel->title->name . ' ' : '') . $guestModel->guest_name,
+                        'state' => $guestModel->status ?: 'Arrived',
+                        'folio' => $guestModel->folio_number ?: ('FOL-' . $roomNum . '-100'),
+                        'balance' => (float)$guestModel->balance,
+                        'mobile' => $guestModel->mobile,
+                        'email' => $guestModel->email,
+                        'reserve_id' => $guestModel->reserve_id,
+                        'advance' => (float)$guestModel->advance_amount,
+                    ];
+                }
 
                 $opName = $latestOp?->operationalStatus?->name ?? '';
                 $hkName = $latestHk?->housekeepingStatus?->name ?? '';
@@ -146,11 +152,11 @@ class DashboardController extends Controller
             'dirty' => $dirtyCount,
             'available' => $availableCount,
             'vacant' => $vacantCount,
-            'expected_arrival' => 1,
-            'expected_departure' => 5,
+            'expected_arrival' => Guest::where('status', 'Confirmed')->count() ?: 1,
+            'expected_departure' => Guest::where('status', 'Stay Over')->count() ?: 5,
             'rooms_to_sale' => $vacantCount,
-            'checked_in' => 3,
-            'checked_out' => 6,
+            'checked_in' => Guest::whereIn('status', ['Arrived', 'Stay Over'])->count() ?: $occupiedCount,
+            'checked_out' => Guest::where('status', 'Checked Out')->count() ?: 0,
             'total_pax' => $totalPax > 0 ? $totalPax : 18,
             'cleaned_ratio' => $cleanRatio,
             'percentages' => [
@@ -172,8 +178,238 @@ class DashboardController extends Controller
             'registrationTypes',
             'titles',
             'nationalities',
-            'stats'
+            'stats',
+            'nextReserveId'
         ));
     }
-}
 
+    /**
+     * Get dynamic next auto-generated reserve ID
+     */
+    public function getNextReserveId()
+    {
+        return response()->json([
+            'success' => true,
+            'reserve_id' => Guest::generateNextReserveId(),
+        ]);
+    }
+
+    /**
+     * Search regular guest profile by phone
+     */
+    public function searchGuest(Request $request)
+    {
+        $phone = $request->query('mobile') ?? $request->query('phone');
+        if (!$phone) {
+            return response()->json(['success' => false, 'message' => 'Please provide a valid mobile number'], 422);
+        }
+
+        $guest = Guest::where('mobile', 'like', "%{$phone}%")
+            ->with(['title', 'nationality', 'idCardType'])
+            ->latest('id')
+            ->first();
+
+        if ($guest) {
+            return response()->json([
+                'success' => true,
+                'guest' => [
+                    'name' => $guest->guest_name,
+                    'title_id' => $guest->title_id,
+                    'address' => $guest->guest_address,
+                    'city' => $guest->city,
+                    'mobile' => $guest->mobile,
+                    'email' => $guest->email,
+                    'dob' => $guest->dob?->format('Y-m-d'),
+                    'anniversary' => $guest->anniversary?->format('Y-m-d'),
+                    'nationality_id' => $guest->nationality_id,
+                    'id_card_type_id' => $guest->id_card_type_id,
+                    'id_card_number' => $guest->id_card_number,
+                    'has_privilege_card' => (bool)$guest->has_privilege_card,
+                    'privilege_card_no' => $guest->privilege_card_no,
+                ]
+            ]);
+        }
+
+        return response()->json(['success' => false, 'message' => 'No prior profile found for this mobile number.']);
+    }
+
+    /**
+     * Store new check-in / reservation dynamically into guests table
+     */
+    public function storeReservation(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+            // Auto generate reserve_id if not provided or to ensure strict sequence
+            $reserveId = Guest::generateNextReserveId();
+
+            $registrationTypeId = $request->input('registration_type_id');
+            if (!$registrationTypeId && $request->has('res_type')) {
+                $resTypeVal = $request->input('res_type');
+                if (is_numeric($resTypeVal)) {
+                    $registrationTypeId = (int)$resTypeVal;
+                } else {
+                    $foundReg = RegistrationType::where('name', 'like', "%{$resTypeVal}%")->first();
+                    $registrationTypeId = $foundReg?->id;
+                }
+            }
+            $registrationTypeId = ($registrationTypeId && RegistrationType::where('id', $registrationTypeId)->exists()) ? (int)$registrationTypeId : null;
+
+            $companyId = $request->input('company_id');
+            if ($companyId === 'new' || ($request->filled('new_company_name') && !$companyId)) {
+                $newComp = Company::create([
+                    'name' => $request->input('new_company_name'),
+                    'address' => $request->input('new_company_address'),
+                    'gstin' => $request->input('new_company_gstin'),
+                    'phone' => $request->input('new_company_phone'),
+                    'status' => 'Active',
+                ]);
+                $companyId = $newComp->id;
+            } elseif (!is_numeric($companyId) || !Company::where('id', $companyId)->exists()) {
+                $companyId = null;
+            }
+
+            $reservationModeId = $request->input('reservation_mode_id');
+            $reservationModeId = ($reservationModeId && is_numeric($reservationModeId) && ReservationMode::where('id', $reservationModeId)->exists()) ? (int)$reservationModeId : null;
+
+            $paymentModeId = $request->input('payment_mode_id');
+            $paymentModeId = ($paymentModeId && is_numeric($paymentModeId) && PaymentMode::where('id', $paymentModeId)->exists()) ? (int)$paymentModeId : null;
+
+            $advanceAmount = (float)($request->input('advance_amount', 0));
+            $paymentRemarks = $request->input('payment_remarks');
+            $reserveDate = $request->input('reserve_date', date('Y-m-d'));
+            $reserveTime = $request->input('reserve_time', date('H:i'));
+
+            // Check if guests data is passed as array or flat inputs
+            $rawGuests = $request->input('guests');
+            if (!is_array($rawGuests) || empty($rawGuests)) {
+                $rawGuests = [
+                    [
+                        'title_id' => $request->input('title_id'),
+                        'guest_name' => $request->input('guest_name'),
+                        'guest_address' => $request->input('guest_address'),
+                        'nationality_id' => $request->input('nationality_id'),
+                        'city' => $request->input('city'),
+                        'mobile' => $request->input('mobile'),
+                        'email' => $request->input('email'),
+                        'dob' => $request->input('dob'),
+                        'anniversary' => $request->input('anniversary'),
+                        'status' => $request->input('status', 'Confirmed'),
+                        'has_privilege_card' => $request->has('has_privilege_card') || $request->has('chk_privilege'),
+                        'privilege_card_no' => $request->input('privilege_card_no'),
+                        'room_id' => $request->input('room_id'),
+                        'id_card_type_id' => $request->input('id_card_type_id'),
+                        'id_card_number' => $request->input('id_card_number'),
+                    ]
+                ];
+            }
+
+            $primaryGuest = null;
+            $savedGuests = [];
+
+            foreach ($rawGuests as $idx => $gData) {
+                if (empty($gData['guest_name'])) {
+                    continue;
+                }
+
+                $roomId = $gData['room_id'] ?? null;
+                $roomObj = null;
+                if ($roomId) {
+                    $roomObj = is_numeric($roomId) 
+                        ? Room::find($roomId) 
+                        : Room::where('room_number', (string)$roomId)->first();
+                    $roomId = $roomObj?->id;
+                }
+
+                $roomRate = (float)($roomObj?->rate ?? 4500);
+                $calculatedBalance = max(0, $roomRate - ($idx === 0 ? $advanceAmount : 0));
+                $folioNo = Guest::generateFolioNumber($roomObj?->room_number ?? '100');
+
+                $titleId = (!empty($gData['title_id']) && Title::where('id', $gData['title_id'])->exists()) ? (int)$gData['title_id'] : null;
+                $nationalityId = (!empty($gData['nationality_id']) && Nationality::where('id', $gData['nationality_id'])->exists()) ? (int)$gData['nationality_id'] : null;
+                $idCardTypeId = (!empty($gData['id_card_type_id']) && IdCardType::where('id', $gData['id_card_type_id'])->exists()) ? (int)$gData['id_card_type_id'] : null;
+
+                $guestModel = Guest::create([
+                    'reserve_id' => $reserveId,
+                    'registration_type_id' => $registrationTypeId,
+                    'reservation_mode_id' => $reservationModeId,
+                    'company_id' => $companyId,
+                    'new_company_name' => $request->input('new_company_name'),
+                    'new_company_address' => $request->input('new_company_address'),
+                    'new_company_gstin' => $request->input('new_company_gstin'),
+                    'new_company_phone' => $request->input('new_company_phone'),
+                    'reserve_date' => $reserveDate,
+                    'reserve_time' => $reserveTime,
+                    'title_id' => $titleId,
+                    'guest_name' => $gData['guest_name'],
+                    'guest_address' => $gData['guest_address'] ?? null,
+                    'nationality_id' => $nationalityId,
+                    'city' => $gData['city'] ?? null,
+                    'mobile' => $gData['mobile'] ?? null,
+                    'email' => $gData['email'] ?? null,
+                    'dob' => !empty($gData['dob']) ? $gData['dob'] : null,
+                    'anniversary' => !empty($gData['anniversary']) ? $gData['anniversary'] : null,
+                    'status' => $gData['status'] ?? 'Confirmed',
+                    'has_privilege_card' => !empty($gData['has_privilege_card']),
+                    'privilege_card_no' => $gData['privilege_card_no'] ?? null,
+                    'room_id' => $roomId,
+                    'id_card_type_id' => $idCardTypeId,
+                    'id_card_number' => $gData['id_card_number'] ?? null,
+                    'payment_mode_id' => ($idx === 0) ? $paymentModeId : null,
+                    'advance_amount' => ($idx === 0) ? $advanceAmount : 0.00,
+                    'payment_remarks' => ($idx === 0) ? $paymentRemarks : null,
+                    'primary_guest_id' => $primaryGuest ? $primaryGuest->id : null,
+                    'folio_number' => $folioNo,
+                    'balance' => $calculatedBalance,
+                ]);
+
+                if ($idx === 0) {
+                    $primaryGuest = $guestModel;
+                }
+                $savedGuests[] = $guestModel;
+
+                // If room is assigned, update housekeeping & operational state to ready/in-service
+                if ($roomObj) {
+                    $cleanedState = HousekeepingState::where('name', 'like', '%Cleaned%')->first();
+                    $activeOp = OperationalStatus::where('name', 'like', '%Active%')->first();
+
+                    if ($cleanedState) {
+                        RoomHousekeepingHistory::create([
+                            'room_id' => $roomObj->id,
+                            'housekeeping_status_id' => $cleanedState->id,
+                            'start_time' => now(),
+                            'completion_time' => now(),
+                            'status' => 'complete',
+                        ]);
+                    }
+
+                    if ($activeOp) {
+                        RoomOperationalHistory::create([
+                            'room_id' => $roomObj->id,
+                            'operational_status_id' => $activeOp->id,
+                        ]);
+                    }
+                }
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Reservation #' . $reserveId . ' saved successfully for ' . count($savedGuests) . ' guest(s)!',
+                'reserve_id' => $reserveId,
+                'next_reserve_id' => Guest::generateNextReserveId(),
+                'guests' => $savedGuests,
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Reservation store error: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error saving reservation: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+}

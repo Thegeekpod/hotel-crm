@@ -98,7 +98,8 @@
         <button class="modal-close" onclick="closeModal('reserve-modal')">&times;</button>
       </div>
       <div class="modal-content-area" style="max-height: 75vh; overflow-y: auto; padding: 24px; background: #f8fafc;">
-        <form onsubmit="handleReserve(event)">
+        <form id="reservation-form" onsubmit="handleReserve(event)">
+          @csrf
           <!-- Dynamic Registration Type Radio Buttons -->
           <div style="display: flex; flex-wrap: wrap; gap: 20px; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid var(--border-medium);">
             @php
@@ -135,15 +136,15 @@
                 <div style="display: flex; gap: 16px; margin-bottom: 20px;">
                   <div style="flex: 1;">
                     <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Reserve ID</label>
-                    <input type="text" class="pms-input-field" style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #f1f5f9; color: var(--text-primary); font-weight: 700; opacity: 0.8;" value="829\2026-2027" disabled>
+                    <input type="text" id="reserve-id-input" name="reserve_id" class="pms-input-field" style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #f1f5f9; color: var(--accent-primary); font-weight: 800; font-family: var(--font-mono);" value="{{ $nextReserveId ?? \App\Models\Guest::generateNextReserveId() }}" readonly>
                   </div>
                   <div style="flex: 1;">
                     <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Reserve Date</label>
-                    <input type="date" id="reserve-date-input" class="pms-input-field" style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff; color: var(--text-primary);">
+                    <input type="date" id="reserve-date-input" name="reserve_date" class="pms-input-field" style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff; color: var(--text-primary);">
                   </div>
                   <div style="flex: 1;">
                     <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Reserve Time</label>
-                    <input type="time" id="reserve-time-input" class="pms-input-field" style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff; color: var(--text-primary);">
+                    <input type="time" id="reserve-time-input" name="reserve_time" class="pms-input-field" style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff; color: var(--text-primary);">
                   </div>
                 </div>
                 <div style="margin-bottom: 20px;">

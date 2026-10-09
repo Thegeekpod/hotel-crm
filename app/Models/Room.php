@@ -103,5 +103,17 @@ class Room extends Model
     {
         return $this->hasMany(RoomOperationalHistory::class, 'room_id');
     }
+
+    public function guests(): HasMany
+    {
+        return $this->hasMany(Guest::class, 'room_id');
+    }
+
+    public function currentGuest(): HasOne
+    {
+        return $this->hasOne(Guest::class, 'room_id')
+            ->whereIn('status', ['Confirmed', 'Arrived', 'Stay Over'])
+            ->latestOfMany();
+    }
 }
 

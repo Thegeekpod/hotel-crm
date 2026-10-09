@@ -17,5 +17,10 @@ Route::prefix('front-office')->name('frontoffice.')->group(function () {
     Route::get('/guest', [GuestController::class, 'index'])->name('guest');
     Route::get('/guest-crm', [GuestController::class, 'index'])->name('guest-crm');
     Route::get('/reserve', [DashboardController::class, 'index'])->name('reserve');
+    
+    // Dynamic Reservation & Check-in Endpoints
+    Route::post('/reserve', [DashboardController::class, 'storeReservation'])->name('reserve.store');
+    Route::get('/next-reserve-id', [DashboardController::class, 'getNextReserveId'])->name('reserve.next-id');
+    Route::get('/search-guest', [DashboardController::class, 'searchGuest'])->name('guest.search');
 });
 

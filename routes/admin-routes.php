@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\Utilities\NationalityController;
 use App\Http\Controllers\Admin\Utilities\IdCardTypeController;
 use App\Http\Controllers\Admin\Utilities\PaymentModeController;
 use App\Http\Controllers\Admin\Utilities\GstPercentageController;
+use App\Http\Controllers\Admin\Utilities\DiscountController;
 use App\Http\Controllers\Admin\Utilities\CompanyController;
 use App\Http\Controllers\Admin\Utilities\RoomCategoryController;
 use App\Http\Controllers\Admin\Utilities\FloorController;
@@ -76,6 +77,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
             Route::post('gst-percentage/bulk-delete', [GstPercentageController::class, 'bulkDestroy'])->name('gst-percentage.bulk-destroy');
             Route::resource('gst-percentage', GstPercentageController::class)->except(['create', 'edit', 'show']);
+
+            Route::post('discount/bulk-delete', [DiscountController::class, 'bulkDestroy'])->name('discount.bulk-destroy');
+            Route::resource('discount', DiscountController::class)->except(['create', 'edit', 'show']);
 
             Route::post('company/bulk-delete', [CompanyController::class, 'bulkDestroy'])->name('company.bulk-delete');
             Route::resource('company', CompanyController::class)->except(['create', 'edit', 'show']);

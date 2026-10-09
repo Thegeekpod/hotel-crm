@@ -48,6 +48,11 @@
         </a>
       </li>
       <li>
+        <a href="{{ route('admin.utilities.frontoffice.discount.index') }}" class="admin-sub-item {{ request()->routeIs('admin.utilities.frontoffice.discount.*') ? 'active' : '' }}">
+          <i class="fa-solid fa-tags"></i> Discount %
+        </a>
+      </li>
+      <li>
         <a href="{{ route('admin.utilities.frontoffice.company.index') }}" class="admin-sub-item {{ request()->routeIs('admin.utilities.frontoffice.company.*') ? 'active' : '' }}">
           <i class="fa-solid fa-building"></i> Company Manage
         </a>
@@ -70,7 +75,7 @@
       </li>
       <li>
         <a href="{{ route('admin.utilities.roommanage.floor.index') }}" class="admin-sub-item {{ request()->routeIs('admin.utilities.roommanage.floor.*') ? 'active' : '' }}">
-          <i class="fa-solid fa-layer-group"></i> Floors & Wings
+          <i class="fa-solid fa-layer-group"></i> Floors Manage
         </a>
       </li>
       <li>
@@ -85,7 +90,7 @@
       </li>
       <li>
         <a href="{{ route('admin.roommanagement.index') }}" class="admin-sub-item {{ request()->routeIs('admin.roommanagement.*') ? 'active' : '' }}">
-          <i class="fa-solid fa-door-open"></i> Room Add
+          <i class="fa-solid fa-door-open"></i> Rooms Add
         </a>
       </li>
       <li>

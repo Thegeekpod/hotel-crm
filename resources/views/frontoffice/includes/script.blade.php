@@ -43,6 +43,14 @@
     fetchNextReserveId();
     
     if (preselectRoomNo || preselectCatId || preselectFloorId) {
+      if (preselectRoomNo && window.allPmsRooms) {
+        const match = window.allPmsRooms.find(r => String(r.room) === String(preselectRoomNo) || String(r.id) === String(preselectRoomNo));
+        if (match) {
+          preselectCatId = preselectCatId || match.category_id;
+          preselectFloorId = preselectFloorId || match.floor_id || match.floor;
+        }
+      }
+
       const firstGuest = document.querySelector('.guest-block');
       if (firstGuest) {
         const catSel = firstGuest.querySelector('.select-room-category');
@@ -59,6 +67,7 @@
         }
         if (rmSel && preselectRoomNo) {
           rmSel.value = preselectRoomNo;
+          onRoomChange(rmSel);
         }
       }
     }
@@ -236,6 +245,8 @@
     const selectedCatId = catSelect.value;
     const selectedCatName = catSelect.options[catSelect.selectedIndex]?.dataset?.categoryName || catSelect.options[catSelect.selectedIndex]?.text;
 
+    const banner = block.querySelector('.room-capacity-banner');
+    if (banner) banner.style.display = 'none';
     if (floorSelect) floorSelect.innerHTML = '<option value="">Select Floor</option>';
     if (roomSelect) roomSelect.innerHTML = '<option value="">Select Room No.</option>';
 
@@ -275,6 +286,8 @@
     if (!block) return;
     const catSelect = block.querySelector('.select-room-category');
     const roomSelect = block.querySelector('.select-room-no');
+    const banner = block.querySelector('.room-capacity-banner');
+    if (banner) banner.style.display = 'none';
     
     const selectedCatId = catSelect ? catSelect.value : '';
     const selectedCatName = catSelect ? (catSelect.options[catSelect.selectedIndex]?.dataset?.categoryName || catSelect.options[catSelect.selectedIndex]?.text) : '';
@@ -304,6 +317,11 @@
         opt.value = r.id || r.room;
         opt.dataset.roomNo = r.room;
         opt.dataset.rate = r.rate;
+        opt.dataset.bedding = r.bedding || 'King Size Master (72x78)';
+        opt.dataset.maxAdults = r.max_adults || 2;
+        opt.dataset.maxChildren = r.max_children || 1;
+        opt.dataset.maxPax = r.max_pax || 3;
+
         const isAvail = (r.status === 'available');
         opt.textContent = `Room #${r.room} (₹${r.rate}) • ${r.status.toUpperCase()}`;
         if (!isAvail) {
@@ -315,6 +333,38 @@
         roomSelect.appendChild(opt);
       });
     }
+  }
+
+  function onRoomChange(roomSelect) {
+    const block = roomSelect.closest('.section-guest-details') || roomSelect.closest('.guest-block');
+    if (!block) return;
+    const banner = block.querySelector('.room-capacity-banner');
+    const selectedOpt = roomSelect.options[roomSelect.selectedIndex];
+
+    if (!roomSelect.value || !selectedOpt || !banner) {
+      if (banner) banner.style.display = 'none';
+      return;
+    }
+
+    const beddingName = selectedOpt.dataset.bedding || 'King Size Master (72x78)';
+    const maxAdults = selectedOpt.dataset.maxAdults || '2';
+    const maxChildren = selectedOpt.dataset.maxChildren || '1';
+    const maxPax = selectedOpt.dataset.maxPax || '3';
+    const rate = selectedOpt.dataset.rate || '4500';
+
+    const beddingEl = banner.querySelector('.bedding-name-text');
+    const paxEl = banner.querySelector('.max-pax-count');
+    const adultsEl = banner.querySelector('.max-adults-count');
+    const kidsEl = banner.querySelector('.max-children-count');
+    const rateEl = banner.querySelector('.room-rate-text');
+
+    if (beddingEl) beddingEl.textContent = beddingName;
+    if (paxEl) paxEl.textContent = maxPax + ' Pax';
+    if (adultsEl) adultsEl.textContent = maxAdults;
+    if (kidsEl) kidsEl.textContent = maxChildren;
+    if (rateEl) rateEl.textContent = '₹ ' + Number(rate).toLocaleString() + '/night';
+
+    banner.style.display = 'block';
   }
 
   function searchRegularGuest(btnElem) {
@@ -465,13 +515,15 @@
     
     newBlock.querySelectorAll('input:not([type="radio"]):not([type="checkbox"])').forEach(inp => inp.value = '');
     
-    // Reset room selects in cloned block
+    // Reset room selects and capacity banner in cloned block
     const catSel = newBlock.querySelector('.select-room-category');
     const flSel = newBlock.querySelector('.select-room-floor');
     const rmSel = newBlock.querySelector('.select-room-no');
+    const banner = newBlock.querySelector('.room-capacity-banner');
     if (catSel) catSel.value = '';
     if (flSel) flSel.innerHTML = '<option value="">Select Floor</option>';
     if (rmSel) rmSel.innerHTML = '<option value="">Select Room No.</option>';
+    if (banner) banner.style.display = 'none';
 
     const headerDiv = newBlock.querySelector('.guest-heading')?.parentElement;
     if (headerDiv && !newBlock.querySelector('.btn-remove-guest')) {

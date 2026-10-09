@@ -122,7 +122,11 @@ class DashboardController extends Controller
                     'housekeeping_status' => $hkName ?: ($status === 'dirty' ? 'Dirty / Cleaning Due' : 'Cleaned & Inspected'),
                     'rate' => $rate,
                     'guest' => $guest,
-                    'bedding' => $r->beddingConfigRelation?->name ?? $r->bedding_config ?? 'King Size',
+                    'bedding' => $r->beddingConfigRelation?->name ?? $r->bedding_config ?? 'King Size Master (72x78)',
+                    'bedding_id' => $r->bedding_config_id,
+                    'max_adults' => (int)($r->beddingConfigRelation?->max_adults ?? 2),
+                    'max_children' => (int)($r->beddingConfigRelation?->max_children ?? 1),
+                    'max_pax' => (int)($r->beddingConfigRelation?->max_total ?? 3),
                     'amenities' => $roomAmenitiesNames,
                 ];
             }

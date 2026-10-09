@@ -309,12 +309,46 @@
                       </div>
                       <div style="flex: 1;">
                         <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Room No.</label>
-                        <select name="room_id" class="select-room-no" style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff; color: var(--text-primary); font-weight: 700;">
+                        <select name="room_id" class="select-room-no" onchange="onRoomChange(this)" style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff; color: var(--text-primary); font-weight: 700;">
                           <option value="">Select Room No.</option>
                           @foreach($rackRooms ?? [] as $rm)
-                            <option value="{{ $rm['id'] ?? $rm['room'] }}" data-room-no="{{ $rm['room'] }}" data-rate="{{ $rm['rate'] }}">{{ $rm['room'] }} ({{ $rm['type'] }})</option>
+                            <option value="{{ $rm['id'] ?? $rm['room'] }}" data-room-no="{{ $rm['room'] }}" data-rate="{{ $rm['rate'] }}" data-bedding="{{ $rm['bedding'] ?? 'King Size Master (72x78)' }}" data-max-adults="{{ $rm['max_adults'] ?? 2 }}" data-max-children="{{ $rm['max_children'] ?? 1 }}" data-max-pax="{{ $rm['max_pax'] ?? 3 }}">{{ $rm['room'] }} ({{ $rm['type'] }})</option>
                           @endforeach
                         </select>
+                      </div>
+                    </div>
+
+                    <!-- Dynamic Bedding Configuration & Pax Capacity Info Box -->
+                    <div class="room-capacity-banner" style="display: none; background: linear-gradient(135deg, rgba(99, 102, 241, 0.05), rgba(16, 185, 129, 0.05)); border: 1px solid rgba(99, 102, 241, 0.2); border-radius: var(--radius-md); padding: 12px 16px; margin-bottom: 20px;">
+                      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                          <div style="width: 32px; height: 32px; border-radius: 8px; background: #6366f1; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 13px; box-shadow: 0 2px 6px rgba(99, 102, 241, 0.25);">
+                            <i class="fa-solid fa-bed"></i>
+                          </div>
+                          <div>
+                            <div style="font-size: 10px; font-weight: 800; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px;">Bedding Configuration</div>
+                            <div class="bedding-name-text" style="font-size: 13px; font-weight: 800; color: var(--text-primary);">-</div>
+                          </div>
+                        </div>
+                        
+                        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                          <div style="display: flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 800; color: var(--accent-primary); background: rgba(99, 102, 241, 0.1); padding: 4px 10px; border-radius: 6px;">
+                            <i class="fa-solid fa-user-group"></i>
+                            <span>Max: <strong class="max-pax-count">3 Pax</strong></span>
+                          </div>
+                          <div style="display: flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; color: #059669; background: rgba(16, 185, 129, 0.1); padding: 4px 10px; border-radius: 6px;">
+                            <i class="fa-solid fa-person"></i>
+                            <span>Adults: <strong class="max-adults-count">2</strong></span>
+                          </div>
+                          <div style="display: flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; color: #d97706; background: rgba(245, 158, 11, 0.1); padding: 4px 10px; border-radius: 6px;">
+                            <i class="fa-solid fa-child"></i>
+                            <span>Kids: <strong class="max-children-count">1</strong></span>
+                          </div>
+                          <div style="display: flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 800; color: #059669; background: #fff; border: 1px solid #10b981; padding: 4px 10px; border-radius: 6px;">
+                            <i class="fa-solid fa-tag"></i>
+                            <span class="room-rate-text">₹ 5,200/night</span>
+                          </div>
+                        </div>
                       </div>
                     </div>
 

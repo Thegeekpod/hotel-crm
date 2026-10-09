@@ -27,8 +27,7 @@ class RoomManagementController extends Controller
                   ->orWhere('floor', 'like', "%{$search}%")
                   ->orWhere('category', 'like', "%{$search}%")
                   ->orWhere('bedding_config', 'like', "%{$search}%")
-                  ->orWhere('status', 'like', "%{$search}%")
-                  ->orWhere('housekeeping_status', 'like', "%{$search}%");
+                  ->orWhere('status', 'like', "%{$search}%");
             });
         }
 
@@ -41,18 +40,12 @@ class RoomManagementController extends Controller
         }
 
         if ($request->filled('status') && $request->input('status') !== 'all') {
-            $st = $request->input('status');
-            if ($st === 'Maintenance' || $st === 'Under Maintenance') {
-                $query->where(function($q) {
-                    $q->where('status', 'Maintenance')->orWhere('status', 'Under Maintenance');
-                });
-            } else {
-                $query->where('status', $st);
-            }
+            $query->where('status', $request->input('status'));
         }
 
-        if ($request->filled('housekeeping') && $request->input('housekeeping') !== 'all') {
-            $query->where('housekeeping_status', $request->input('housekeeping'));
+        if ($request->filled('amenity') && $request->input('amenity') !== 'all') {
+            $amenity = $request->input('amenity');
+            $query->whereJsonContains('amenities', $amenity);
         }
 
         $rooms = $query->get();
@@ -65,27 +58,67 @@ class RoomManagementController extends Controller
         $operationalStatuses = OperationalStatus::where('status', 'Active')->get();
         $amenities = Amenity::where('status', 'Active')->get();
 
-        // Stats
-        $totalRooms = Room::count();
-        $activeRooms = Room::where('status', 'Active')->count();
-        $maintenanceRooms = Room::where('status', 'Maintenance')->orWhere('status', 'Under Maintenance')->count();
-        $cleanedRooms = Room::where('housekeeping_status', 'Cleaned')->count();
-        $dirtyRooms = Room::where('housekeeping_status', 'Dirty')->count();
-        $inspectingRooms = Room::where('housekeeping_status', 'Inspecting')->count();
+        // Dynamic stats computed on filtered rooms
+        $totalRooms = $rooms->count();
+        $activeRooms = $rooms->where('status', 'Active')->count();
+        $inactiveRooms = $rooms->where('status', 'Inactive')->count();
+
+        // Category wise room counts
+        $categoryWise = [];
+        foreach ($categories as $cat) {
+            $categoryWise[$cat->name] = 0;
+        }
+        foreach ($rooms as $r) {
+            if (!empty($r->category)) {
+                $categoryWise[$r->category] = ($categoryWise[$r->category] ?? 0) + 1;
+            }
+        }
+        $categoriesCount = count($categoryWise);
+
+        // Floor wise room counts
+        $floorWise = [];
+        foreach ($floors as $fl) {
+            $floorWise[$fl->floor] = 0;
+        }
+        foreach ($rooms as $r) {
+            if ($r->floor !== null && $r->floor !== '') {
+                $floorWise[$r->floor] = ($floorWise[$r->floor] ?? 0) + 1;
+            }
+        }
+        $floorsCount = count($floorWise);
+
+        // Amenities wise room counts
+        $amenityWise = [];
+        foreach ($amenities as $amn) {
+            $amenityWise[$amn->name] = 0;
+        }
+        foreach ($rooms as $r) {
+            if (is_array($r->amenities)) {
+                foreach ($r->amenities as $amn) {
+                    $amenityWise[$amn] = ($amenityWise[$amn] ?? 0) + 1;
+                }
+            }
+        }
+        $amenitiesCount = count($amenityWise);
+
+        $stats = [
+            'total' => $totalRooms,
+            'active' => $activeRooms,
+            'inactive' => $inactiveRooms,
+            'categories_count' => $categoriesCount,
+            'category_wise' => $categoryWise,
+            'floors_count' => $floorsCount,
+            'floor_wise' => $floorWise,
+            'amenities_count' => $amenitiesCount,
+            'amenity_wise' => $amenityWise,
+        ];
 
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
                 'success' => true,
                 'data' => $rooms,
-                'count' => $rooms->count(),
-                'stats' => [
-                    'total' => $totalRooms,
-                    'active' => $activeRooms,
-                    'maintenance' => $maintenanceRooms,
-                    'cleaned' => $cleanedRooms,
-                    'dirty' => $dirtyRooms,
-                    'inspecting' => $inspectingRooms,
-                ]
+                'count' => $totalRooms,
+                'stats' => $stats,
             ]);
         }
 
@@ -99,10 +132,14 @@ class RoomManagementController extends Controller
             'amenities',
             'totalRooms',
             'activeRooms',
-            'maintenanceRooms',
-            'cleanedRooms',
-            'dirtyRooms',
-            'inspectingRooms'
+            'inactiveRooms',
+            'categoriesCount',
+            'categoryWise',
+            'floorsCount',
+            'floorWise',
+            'amenitiesCount',
+            'amenityWise',
+            'stats'
         ));
     }
 

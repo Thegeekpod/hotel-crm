@@ -127,7 +127,7 @@
     gap: 16px;
     margin-bottom: 20px;
   }
-  @media (max-width: 992px) {
+  @media (max-width: 1024px) {
     .room-stats-grid {
       grid-template-columns: repeat(2, 1fr);
     }
@@ -161,6 +161,24 @@
     left: 0;
     right: 0;
     height: 4px;
+  }
+
+  .kpi-pills-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 6px;
+    flex-wrap: wrap;
+    max-height: 54px;
+    overflow-y: auto;
+  }
+  .kpi-pills-wrap::-webkit-scrollbar {
+    width: 3px;
+    height: 3px;
+  }
+  .kpi-pills-wrap::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
   }
 
   .control-toolbar {
@@ -573,62 +591,104 @@
           <button class="btn-ui-primary" onclick="openAddRoomModal()"><i class="fa-solid fa-plus-circle"></i> Add Room Asset</button>
         </div>
 
-        <!-- Top 4 KPI Metrics Row -->
+        <!-- Top 4 KPI Metrics Row (Filtered Dynamic Stats) -->
         <div class="room-stats-grid">
+          <!-- Card 1: Total Rooms & Status (Active vs Inactive) -->
           <div class="room-kpi-card">
             <div class="room-kpi-bar" style="background: linear-gradient(90deg, #6366f1, #8b5cf6);"></div>
             <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-              <div>
-                <div style="font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.6px;">Total Room Assets</div>
+              <div style="flex: 1; min-width: 0;">
+                <div style="font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.6px;">Room Status & Assets</div>
                 <div style="font-family: var(--font-mono); font-size: 26px; font-weight: 900; color: var(--text-primary); margin-top: 4px;" id="stat-total-rooms">{{ $totalRooms }}</div>
-                <div style="font-size: 11px; color: var(--accent-emerald); font-weight: 700; margin-top: 2px;">
-                  <i class="fa-solid fa-check-double"></i> 100% Configured
+                <div class="kpi-pills-wrap" id="stat-status-pills">
+                  <span class="badge-tag green" style="font-size: 10px; padding: 2px 7px;">
+                    <i class="fa-solid fa-circle-check"></i> <span id="stat-active-rooms">{{ $activeRooms }}</span> Active
+                  </span>
+                  <span class="badge-tag red" style="font-size: 10px; padding: 2px 7px;">
+                    <i class="fa-solid fa-circle-xmark"></i> <span id="stat-inactive-rooms">{{ $inactiveRooms }}</span> Inactive
+                  </span>
                 </div>
               </div>
-              <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(99, 102, 241, 0.1); display: flex; align-items: center; justify-content: center; color: var(--accent-primary);">
-                <i class="fa-solid fa-hotel" style="font-size: 18px;"></i>
+              <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(99, 102, 241, 0.1); display: flex; align-items: center; justify-content: center; color: var(--accent-primary); flex-shrink: 0;">
+                <i class="fa-solid fa-door-open" style="font-size: 18px;"></i>
               </div>
             </div>
           </div>
 
+          <!-- Card 2: Category Wise Rooms -->
           <div class="room-kpi-card">
-            <div class="room-kpi-bar" style="background: linear-gradient(90deg, #10b981, #34d399);"></div>
+            <div class="room-kpi-bar" style="background: linear-gradient(90deg, #ec4899, #f43f5e);"></div>
             <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-              <div>
-                <div style="font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.6px;">Operational Rooms</div>
-                <div style="font-family: var(--font-mono); font-size: 26px; font-weight: 900; color: var(--accent-emerald); margin-top: 4px;" id="stat-active-rooms">{{ $activeRooms }}</div>
-                <div style="font-size: 11px; color: var(--text-secondary); font-weight: 600; margin-top: 2px;">Active in guest inventory</div>
+              <div style="flex: 1; min-width: 0;">
+                <div style="font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.6px;">Category Wise Rooms</div>
+                <div style="font-family: var(--font-mono); font-size: 26px; font-weight: 900; color: #e11d48; margin-top: 4px;">
+                  <span id="stat-category-total-rooms">{{ $totalRooms }}</span>
+                  <span style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; font-family: inherit;">Rooms</span>
+                </div>
+                <div class="kpi-pills-wrap" id="stat-category-pills">
+                  @forelse($categoryWise as $cat => $cnt)
+                    <span class="badge-tag" style="background: rgba(244, 63, 94, 0.1); color: #e11d48; border: 1px solid rgba(244, 63, 94, 0.2); font-size: 10px; padding: 2px 7px; white-space: nowrap;">
+                      {{ $cat }}: <strong style="font-weight: 900; margin-left: 2px;">{{ $cnt }}</strong>
+                    </span>
+                  @empty
+                    <span style="font-size: 11px; color: var(--text-muted);">No categories</span>
+                  @endforelse
+                </div>
               </div>
-              <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(16, 185, 129, 0.1); display: flex; align-items: center; justify-content: center; color: var(--accent-emerald);">
-                <i class="fa-solid fa-circle-check" style="font-size: 18px;"></i>
+              <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(244, 63, 94, 0.1); display: flex; align-items: center; justify-content: center; color: #e11d48; flex-shrink: 0;">
+                <i class="fa-solid fa-tags" style="font-size: 18px;"></i>
               </div>
             </div>
           </div>
 
+          <!-- Card 3: Floor Wise Rooms -->
           <div class="room-kpi-card">
-            <div class="room-kpi-bar" style="background: linear-gradient(90deg, #f59e0b, #fbbf24);"></div>
+            <div class="room-kpi-bar" style="background: linear-gradient(90deg, #3b82f6, #06b6d4);"></div>
             <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-              <div>
-                <div style="font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.6px;">Under Maintenance</div>
-                <div style="font-family: var(--font-mono); font-size: 26px; font-weight: 900; color: var(--accent-amber); margin-top: 4px;" id="stat-maint-rooms">{{ $maintenanceRooms }}</div>
-                <div style="font-size: 11px; color: var(--accent-amber); font-weight: 600; margin-top: 2px;">Engineering active</div>
+              <div style="flex: 1; min-width: 0;">
+                <div style="font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.6px;">Floor Wise Rooms</div>
+                <div style="font-family: var(--font-mono); font-size: 26px; font-weight: 900; color: #0284c7; margin-top: 4px;">
+                  <span id="stat-floor-total-rooms">{{ $totalRooms }}</span>
+                  <span style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; font-family: inherit;">Rooms</span>
+                </div>
+                <div class="kpi-pills-wrap" id="stat-floor-pills">
+                  @forelse($floorWise as $fl => $cnt)
+                    <span class="badge-tag" style="background: rgba(6, 182, 212, 0.1); color: #0284c7; border: 1px solid rgba(6, 182, 212, 0.2); font-size: 10px; padding: 2px 7px; white-space: nowrap;">
+                      Floor {{ $fl }}: <strong style="font-weight: 900; margin-left: 2px;">{{ $cnt }}</strong>
+                    </span>
+                  @empty
+                    <span style="font-size: 11px; color: var(--text-muted);">No floors</span>
+                  @endforelse
+                </div>
               </div>
-              <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(245, 158, 11, 0.1); display: flex; align-items: center; justify-content: center; color: var(--accent-amber);">
-                <i class="fa-solid fa-wrench" style="font-size: 18px;"></i>
+              <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(6, 182, 212, 0.1); display: flex; align-items: center; justify-content: center; color: #0284c7; flex-shrink: 0;">
+                <i class="fa-solid fa-layer-group" style="font-size: 18px;"></i>
               </div>
             </div>
           </div>
 
+          <!-- Card 4: Amenities Wise Rooms -->
           <div class="room-kpi-card">
-            <div class="room-kpi-bar" style="background: linear-gradient(90deg, #22d3ee, #38bdf8);"></div>
+            <div class="room-kpi-bar" style="background: linear-gradient(90deg, #10b981, #14b8a6);"></div>
             <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-              <div>
-                <div style="font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.6px;">Cleaned & Inspected</div>
-                <div style="font-family: var(--font-mono); font-size: 26px; font-weight: 900; color: #0284c7; margin-top: 4px;" id="stat-clean-rooms">{{ $cleanedRooms }}</div>
-                <div style="font-size: 11px; color: var(--text-secondary); font-weight: 600; margin-top: 2px;">Housekeeping Ready</div>
+              <div style="flex: 1; min-width: 0;">
+                <div style="font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.6px;">Amenities Wise Rooms</div>
+                <div style="font-family: var(--font-mono); font-size: 26px; font-weight: 900; color: #059669; margin-top: 4px;">
+                  <span id="stat-amenity-total-rooms">{{ $totalRooms }}</span>
+                  <span style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; font-family: inherit;">Rooms</span>
+                </div>
+                <div class="kpi-pills-wrap" id="stat-amenity-pills">
+                  @forelse($amenityWise as $amn => $cnt)
+                    <span class="badge-tag" style="background: rgba(16, 185, 129, 0.1); color: #059669; border: 1px solid rgba(16, 185, 129, 0.2); font-size: 10px; padding: 2px 7px; white-space: nowrap;">
+                      {{ $amn }}: <strong style="font-weight: 900; margin-left: 2px;">{{ $cnt }}</strong>
+                    </span>
+                  @empty
+                    <span style="font-size: 11px; color: var(--text-muted);">No amenities</span>
+                  @endforelse
+                </div>
               </div>
-              <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(34, 211, 238, 0.1); display: flex; align-items: center; justify-content: center; color: #0284c7;">
-                <i class="fa-solid fa-spray-can-sparkles" style="font-size: 18px;"></i>
+              <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(16, 185, 129, 0.1); display: flex; align-items: center; justify-content: center; color: #059669; flex-shrink: 0;">
+                <i class="fa-solid fa-wand-magic-sparkles" style="font-size: 18px;"></i>
               </div>
             </div>
           </div>
@@ -639,7 +699,7 @@
           <!-- Search Bar & Filters -->
           <div class="filter-group">
             <!-- Search Input -->
-            <div class="crud-search-wrap" style="width: 200px;">
+            <div class="crud-search-wrap" style="width: 190px;">
               <i class="fa-solid fa-magnifying-glass"></i>
               <input type="text" id="room-search-input" class="crud-search-input" style="width: 100%;" value="{{ request('search') }}" placeholder="Search room no..." oninput="handleSearch(this.value)">
             </div>
@@ -660,19 +720,18 @@
               @endforeach
             </select>
 
-            <!-- Operational Status Filter -->
+            <!-- Status Filter (Active / Inactive) -->
             <select id="status-filter" class="toolbar-filter-select" style="width: 130px;" onchange="handleStatusFilter(this.value)">
-              <option value="all">Status: All</option>
-              @foreach($operationalStatuses as $st)
-                <option value="{{ $st->name }}" {{ request('status') == $st->name ? 'selected' : '' }}>{{ $st->name }}</option>
-              @endforeach
+              <option value="all" {{ request('status', 'all') == 'all' ? 'selected' : '' }}>All Status</option>
+              <option value="Active" {{ request('status') == 'Active' ? 'selected' : '' }}>Active</option>
+              <option value="Inactive" {{ request('status') == 'Inactive' ? 'selected' : '' }}>Inactive</option>
             </select>
 
-            <!-- Housekeeping State Filter -->
-            <select id="hk-filter" class="toolbar-filter-select" style="width: 135px;" onchange="handleHkFilter(this.value)">
-              <option value="all">HK: All</option>
-              @foreach($housekeepingStates as $hk)
-                <option value="{{ $hk->name }}" {{ request('housekeeping') == $hk->name ? 'selected' : '' }}>{{ $hk->name }}</option>
+            <!-- Amenities Filter Dropdown -->
+            <select id="amenity-filter" class="toolbar-filter-select" style="width: 150px;" onchange="handleAmenityFilter(this.value)">
+              <option value="all" {{ request('amenity', 'all') == 'all' ? 'selected' : '' }}>All Amenities</option>
+              @foreach($amenities as $amn)
+                <option value="{{ $amn->name }}" {{ request('amenity') == $amn->name ? 'selected' : '' }}>{{ $amn->name }}</option>
               @endforeach
             </select>
           </div>
@@ -1132,6 +1191,9 @@
 <script>
   let roomsData = @json($rooms);
   let selectedRoomIds = new Set();
+  const masterCategories = @json($categories);
+  const masterFloors = @json($floors);
+  const masterAmenities = @json($amenities);
   const beddingConfigsData = @json($beddingConfigs);
   const baseUrl = "{{ route('admin.roommanagement.index') }}";
   const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
@@ -1177,7 +1239,7 @@
   let categoryFilter = urlParams.get('category') || '{{ request('category') }}' || 'ALL';
   let floorFilter = urlParams.get('floor') || '{{ request('floor') }}' || 'all';
   let statusFilter = urlParams.get('status') || '{{ request('status') }}' || 'all';
-  let hkFilter = urlParams.get('housekeeping') || '{{ request('housekeeping') }}' || 'all';
+  let amenityFilter = urlParams.get('amenity') || '{{ request('amenity') }}' || 'all';
   let viewMode = urlParams.get('view') || 'table';
   let currentPage = parseInt(urlParams.get('page') || '1', 10);
   let pageSize = urlParams.get('per_page') || '20';
@@ -1188,7 +1250,7 @@
     if (categoryFilter && categoryFilter !== 'ALL') params.set('category', categoryFilter);
     if (floorFilter && floorFilter !== 'all') params.set('floor', floorFilter);
     if (statusFilter && statusFilter !== 'all') params.set('status', statusFilter);
-    if (hkFilter && hkFilter !== 'all') params.set('housekeeping', hkFilter);
+    if (amenityFilter && amenityFilter !== 'all') params.set('amenity', amenityFilter);
     if (viewMode !== 'table') params.set('view', viewMode);
     if (currentPage > 1) params.set('page', currentPage);
     if (pageSize !== '20') params.set('per_page', pageSize);
@@ -1203,13 +1265,13 @@
       $('#category-filter').select2({ width: '140px' });
       $('#floor-filter').select2({ width: '130px' });
       $('#status-filter').select2({ width: '130px' });
-      $('#hk-filter').select2({ width: '135px' });
+      $('#amenity-filter').select2({ width: '150px' });
 
       // Apply initial values if present in URL
       if (categoryFilter && categoryFilter !== 'ALL') $('#category-filter').val(categoryFilter).trigger('change.select2');
       if (floorFilter && floorFilter !== 'all') $('#floor-filter').val(floorFilter).trigger('change.select2');
       if (statusFilter && statusFilter !== 'all') $('#status-filter').val(statusFilter).trigger('change.select2');
-      if (hkFilter && hkFilter !== 'all') $('#hk-filter').val(hkFilter).trigger('change.select2');
+      if (amenityFilter && amenityFilter !== 'all') $('#amenity-filter').val(amenityFilter).trigger('change.select2');
 
       $('#category-filter').on('change', function() {
         handleCategoryFilter(this.value);
@@ -1220,8 +1282,8 @@
       $('#status-filter').on('change', function() {
         handleStatusFilter(this.value);
       });
-      $('#hk-filter').on('change', function() {
-        handleHkFilter(this.value);
+      $('#amenity-filter').on('change', function() {
+        handleAmenityFilter(this.value);
       });
 
       $('#new-room-floor, #new-room-cat, #new-room-bed, #new-room-status').select2({
@@ -1613,7 +1675,7 @@
       if (categoryFilter && categoryFilter !== 'ALL') params.set('category', categoryFilter);
       if (floorFilter && floorFilter !== 'all') params.set('floor', floorFilter);
       if (statusFilter && statusFilter !== 'all') params.set('status', statusFilter);
-      if (hkFilter && hkFilter !== 'all') params.set('housekeeping', hkFilter);
+      if (amenityFilter && amenityFilter !== 'all') params.set('amenity', amenityFilter);
 
       const res = await fetch(`${baseUrl}?${params.toString()}`, {
         headers: { 'Accept': 'application/json' }
@@ -1621,12 +1683,6 @@
       const data = await res.json();
       if (data.success) {
         roomsData = data.data;
-        if (data.stats) {
-          document.getElementById('stat-total-rooms').textContent = data.stats.total;
-          document.getElementById('stat-active-rooms').textContent = data.stats.active;
-          document.getElementById('stat-maint-rooms').textContent = data.stats.maintenance;
-          document.getElementById('stat-clean-rooms').textContent = data.stats.cleaned;
-        }
         renderView();
       }
     } catch (err) {
@@ -1662,8 +1718,8 @@
     loadRoomsData();
   }
 
-  function handleHkFilter(val) {
-    hkFilter = val;
+  function handleAmenityFilter(val) {
+    amenityFilter = val;
     currentPage = 1;
     loadRoomsData();
   }
@@ -1704,11 +1760,119 @@
 
       const matchCat = categoryFilter === 'ALL' || (room.category && room.category.toUpperCase() === categoryFilter.toUpperCase());
       const matchFloor = floorFilter === 'all' || (room.floor && room.floor.toString() === floorFilter.toString());
-      const matchStatus = statusFilter === 'all' || room.status === statusFilter;
-      const matchHk = hkFilter === 'all' || room.housekeeping_status === hkFilter;
+      const matchStatus = statusFilter === 'all' || (room.status && room.status.toLowerCase() === statusFilter.toLowerCase());
+      
+      const roomAmenities = Array.isArray(room.amenities) ? room.amenities : [];
+      const matchAmenity = amenityFilter === 'all' || roomAmenities.includes(amenityFilter);
 
-      return matchSearch && matchCat && matchFloor && matchStatus && matchHk;
+      return matchSearch && matchCat && matchFloor && matchStatus && matchAmenity;
     });
+  }
+
+  function updateKPIStats(filteredRooms) {
+    const total = filteredRooms.length;
+    const active = filteredRooms.filter(r => (r.status || 'Active').toLowerCase() === 'active').length;
+    const inactive = filteredRooms.filter(r => (r.status || '').toLowerCase() === 'inactive').length;
+
+    // Categories breakdown - initialize all active master categories
+    const catMap = {};
+    masterCategories.forEach(c => { catMap[c.name] = 0; });
+    filteredRooms.forEach(r => {
+      const cat = r.category || 'Unassigned';
+      catMap[cat] = (catMap[cat] || 0) + 1;
+    });
+
+    // Floors breakdown - initialize all active master floors
+    const floorMap = {};
+    masterFloors.forEach(f => { floorMap[f.floor] = 0; });
+    filteredRooms.forEach(r => {
+      const fl = r.floor !== null && r.floor !== undefined ? r.floor.toString() : '1';
+      floorMap[fl] = (floorMap[fl] || 0) + 1;
+    });
+
+    // Amenities breakdown - initialize all active master amenities
+    const amnMap = {};
+    masterAmenities.forEach(a => { amnMap[a.name] = 0; });
+    filteredRooms.forEach(r => {
+      if (Array.isArray(r.amenities)) {
+        r.amenities.forEach(a => {
+          amnMap[a] = (amnMap[a] || 0) + 1;
+        });
+      }
+    });
+
+    // Update DOM Top Numbers
+    const totalEl = document.getElementById('stat-total-rooms');
+    const activeEl = document.getElementById('stat-active-rooms');
+    const inactiveEl = document.getElementById('stat-inactive-rooms');
+    const catTotalEl = document.getElementById('stat-category-total-rooms');
+    const floorTotalEl = document.getElementById('stat-floor-total-rooms');
+    const amnTotalEl = document.getElementById('stat-amenity-total-rooms');
+
+    if (totalEl) totalEl.textContent = total;
+    if (activeEl) activeEl.textContent = active;
+    if (inactiveEl) inactiveEl.textContent = inactive;
+    if (catTotalEl) catTotalEl.textContent = total;
+    if (floorTotalEl) floorTotalEl.textContent = total;
+    if (amnTotalEl) amnTotalEl.textContent = total;
+
+    // Render Status Pills
+    const statusPillsEl = document.getElementById('stat-status-pills');
+    if (statusPillsEl) {
+      statusPillsEl.innerHTML = `
+        <span class="badge-tag green" style="font-size: 10px; padding: 2px 7px;">
+          <i class="fa-solid fa-circle-check"></i> <span id="stat-active-rooms">${active}</span> Active
+        </span>
+        <span class="badge-tag red" style="font-size: 10px; padding: 2px 7px;">
+          <i class="fa-solid fa-circle-xmark"></i> <span id="stat-inactive-rooms">${inactive}</span> Inactive
+        </span>
+      `;
+    }
+
+    // Render Category Pills
+    const catPillsEl = document.getElementById('stat-category-pills');
+    if (catPillsEl) {
+      const entries = Object.entries(catMap);
+      if (entries.length === 0) {
+        catPillsEl.innerHTML = '<span style="font-size: 11px; color: var(--text-muted);">No categories</span>';
+      } else {
+        catPillsEl.innerHTML = entries.map(([cat, cnt]) => `
+          <span class="badge-tag" style="background: rgba(244, 63, 94, 0.1); color: #e11d48; border: 1px solid rgba(244, 63, 94, 0.2); font-size: 10px; padding: 2px 7px; white-space: nowrap;">
+            ${cat}: <strong style="font-weight: 900; margin-left: 2px;">${cnt}</strong>
+          </span>
+        `).join('');
+      }
+    }
+
+    // Render Floor Pills
+    const floorPillsEl = document.getElementById('stat-floor-pills');
+    if (floorPillsEl) {
+      const entries = Object.entries(floorMap);
+      if (entries.length === 0) {
+        floorPillsEl.innerHTML = '<span style="font-size: 11px; color: var(--text-muted);">No floors</span>';
+      } else {
+        floorPillsEl.innerHTML = entries.map(([fl, cnt]) => `
+          <span class="badge-tag" style="background: rgba(6, 182, 212, 0.1); color: #0284c7; border: 1px solid rgba(6, 182, 212, 0.2); font-size: 10px; padding: 2px 7px; white-space: nowrap;">
+            Floor ${fl}: <strong style="font-weight: 900; margin-left: 2px;">${cnt}</strong>
+          </span>
+        `).join('');
+      }
+    }
+
+    // Render Amenity Pills
+    const amnPillsEl = document.getElementById('stat-amenity-pills');
+    if (amnPillsEl) {
+      const entries = Object.entries(amnMap);
+      if (entries.length === 0) {
+        amnPillsEl.innerHTML = '<span style="font-size: 11px; color: var(--text-muted);">No amenities</span>';
+      } else {
+        amnPillsEl.innerHTML = entries.map(([amn, cnt]) => `
+          <span class="badge-tag" style="background: rgba(16, 185, 129, 0.1); color: #059669; border: 1px solid rgba(16, 185, 129, 0.2); font-size: 10px; padding: 2px 7px; white-space: nowrap;">
+            ${amn}: <strong style="font-weight: 900; margin-left: 2px;">${cnt}</strong>
+          </span>
+        `).join('');
+      }
+    }
   }
 
   function renderView() {
@@ -1722,6 +1886,9 @@
     const startIdx = pageSize === 'all' ? 0 : (currentPage - 1) * pageSize;
     const endIdx = pageSize === 'all' ? totalCount : Math.min(startIdx + pageSize, totalCount);
     const pageItems = filtered.slice(startIdx, endIdx);
+
+    // Update Live KPI Cards based on filtered records
+    updateKPIStats(filtered);
 
     // Update Record Count in Header Badge
     const viewCountBadge = document.getElementById('view-count');
@@ -1742,11 +1909,9 @@
         else if (room.category && room.category.includes('SUITE')) catBadgeClass = 'yellow';
         else if (room.category && room.category.includes('EXEC')) catBadgeClass = 'green';
 
-        const isMaintenance = room.status && room.status.toLowerCase().includes('maintenance');
-        const isBlocked = room.status && (room.status === 'Inactive' || room.status === 'Blocked');
-        
-        let statusBadgeClass = isBlocked ? 'red' : (isMaintenance ? 'yellow' : 'green');
-        let statusLabel = isMaintenance ? 'Under Maintenance' : (room.status || 'Active');
+        const isInactive = room.status && room.status.toLowerCase() === 'inactive';
+        let statusBadgeClass = isInactive ? 'red' : 'green';
+        let statusLabel = isInactive ? 'Inactive' : 'Active';
 
         const amenitiesList = Array.isArray(room.amenities) ? room.amenities : [];
         const amenitiesHtml = amenitiesList.slice(0, 3).map(a => `<span class="amenity-chip">${a}</span>`).join('') +
@@ -1786,9 +1951,6 @@
               <div style="display: flex; align-items: center; justify-content: flex-end; gap: 4px;">
                 <button class="btn-action-view" onclick="openViewRoomModal(${room.id})" title="View Details"><i class="fa-solid fa-eye"></i></button>
                 <button class="btn-action-edit" onclick="openEditRoomModal(${room.id})" title="Edit Room Asset"><i class="fa-solid fa-pen"></i></button>
-                <button class="btn-action-maint" onclick="toggleRoomMaintenance(${room.id})" title="${isMaintenance ? 'Mark In-Service' : 'Mark Maintenance'}">
-                  <i class="fa-solid ${isMaintenance ? 'fa-check' : 'fa-wrench'}"></i>
-                </button>
                 <button class="btn-action-del" onclick="deleteRoom(${room.id})" title="Delete Room"><i class="fa-solid fa-trash"></i></button>
               </div>
             </td>
@@ -1810,12 +1972,10 @@
         else if (room.category && room.category.includes('SUITE')) catBadgeClass = 'yellow';
         else if (room.category && room.category.includes('EXEC')) catBadgeClass = 'green';
 
-        const isMaintenance = room.status && room.status.toLowerCase().includes('maintenance');
-        const isBlocked = room.status && (room.status === 'Inactive' || room.status === 'Blocked');
-
-        let statusBadgeClass = isBlocked ? 'red' : (isMaintenance ? 'yellow' : 'green');
-        let statusLabel = isMaintenance ? 'Under Maintenance' : (room.status || 'Active');
-        let borderTopColor = isBlocked ? '#ef4444' : (isMaintenance ? '#f59e0b' : '#10b981');
+        const isInactive = room.status && room.status.toLowerCase() === 'inactive';
+        let statusBadgeClass = isInactive ? 'red' : 'green';
+        let statusLabel = isInactive ? 'Inactive' : 'Active';
+        let borderTopColor = isInactive ? '#ef4444' : '#10b981';
 
         const amenitiesList = Array.isArray(room.amenities) ? room.amenities : [];
         const amenitiesHtml = amenitiesList.slice(0, 3).map(a => `<span class="amenity-chip">${a}</span>`).join('') +
@@ -1938,14 +2098,12 @@
       catBadgeBg = '#fff7ed'; catBadgeColor = '#ea580c'; catBadgeBorder = '#fed7aa';
     }
 
-    const isMaintenance = room.status && room.status.toLowerCase().includes('maintenance');
-    const isBlocked = room.status && (room.status === 'Inactive' || room.status === 'Blocked');
-
-    const statusBg = isMaintenance ? '#fef3c7' : (isBlocked ? '#fef2f2' : '#ecfdf5');
-    const statusColor = isMaintenance ? '#b45309' : (isBlocked ? '#dc2626' : '#059669');
-    const statusBorder = isMaintenance ? '#fde68a' : (isBlocked ? '#fecaca' : '#a7f3d0');
-    const statusDot = isMaintenance ? '#f59e0b' : (isBlocked ? '#ef4444' : '#10b981');
-    const statusText = isMaintenance ? 'Under Maintenance' : (room.status || 'Active');
+    const isInactive = room.status && room.status.toLowerCase() === 'inactive';
+    const statusBg = isInactive ? '#fef2f2' : '#ecfdf5';
+    const statusColor = isInactive ? '#dc2626' : '#059669';
+    const statusBorder = isInactive ? '#fecaca' : '#a7f3d0';
+    const statusDot = isInactive ? '#ef4444' : '#10b981';
+    const statusText = isInactive ? 'Inactive' : 'Active';
 
     const amenitiesList = Array.isArray(room.amenities) ? room.amenities : [];
     const amenitiesHtml = amenitiesList.length > 0
@@ -1956,57 +2114,6 @@
           </div>
         `).join('')
       : `<div style="font-size: 12px; color: #94a3b8; font-style: italic; padding: 6px 0;">No amenities assigned to this room.</div>`;
-
-    let liveStatusBlock = '';
-    if (room.status === 'Maintenance' || room.status === 'Under Maintenance') {
-      const maint = room.latest_maintenance || {};
-      const reasonText = maint.reason || room.notes || 'General Maintenance & Service';
-      const assignText = maint.assign || 'Maintenance Team';
-      let completionText = 'Scheduled Soon';
-      if (maint.expected_date_time) {
-        try {
-          completionText = new Date(maint.expected_date_time).toLocaleString(undefined, {
-            month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit'
-          });
-        } catch(e) { completionText = maint.expected_date_time; }
-      }
-      const noteText = maint.note || '';
-
-      liveStatusBlock = `
-        <div style="background: #fffbeb; border: 1.5px solid #fed7aa; border-radius: 12px; padding: 14px 18px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(245, 158, 11, 0.05);">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-            <span style="background: #fef3c7; color: #b45309; border: 1px solid #fde68a; font-size: 11px; font-weight: 800; padding: 3px 10px; border-radius: 8px; display: inline-flex; align-items: center; gap: 6px;">
-              <i class="fa-solid fa-wrench"></i> ACTIVE MAINTENANCE WORK ORDER
-            </span>
-            <button class="btn-ui-secondary" style="padding: 3px 10px; font-size: 11px; font-weight: 700; background: #ffffff; border-color: #f59e0b; color: #b45309;" onclick="closeModal('view-room-modal'); toggleRoomMaintenance(${room.id});">
-              <i class="fa-solid fa-check"></i> Mark In-Service
-            </button>
-          </div>
-          
-          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; background: #ffffff; padding: 10px 12px; border-radius: 8px; border: 1px solid #fef3c7;">
-            <div>
-              <div style="font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase;">Reason / Work</div>
-              <div style="font-size: 12px; font-weight: 800; color: #1e293b; margin-top: 2px;">${reasonText}</div>
-            </div>
-            <div>
-              <div style="font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase;">Assigned To</div>
-              <div style="font-size: 12px; font-weight: 800; color: #1e293b; margin-top: 2px;">${assignText}</div>
-            </div>
-            <div>
-              <div style="font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase;">Target Completion</div>
-              <div style="font-size: 12px; font-weight: 800; color: #b45309; margin-top: 2px;">${completionText}</div>
-            </div>
-          </div>
-
-          ${noteText ? `
-            <div style="margin-top: 8px; background: #fff; padding: 8px 12px; border-radius: 8px; border: 1px solid #fef3c7; font-size: 11px; color: #475569;">
-              <strong style="color: #64748b; text-transform: uppercase; font-size: 10px; display: block; margin-bottom: 2px;">Notes:</strong>
-              ${noteText}
-            </div>
-          ` : ''}
-        </div>
-      `;
-    }
 
     const content = `
       <!-- Top 2 Equal-Size Boxes Grid -->
@@ -2057,8 +2164,6 @@
         </div>
 
       </div>
-
-      ${liveStatusBlock}
 
       <!-- Quick Info Tiles -->
       <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 16px;">
@@ -2125,10 +2230,10 @@
       PmsAlert.toast('No room assets to export', 'info');
       return;
     }
-    let csv = '"ID","Room Number","Floor","Category","Bedding Config","Pax Capacity","Rate (INR)","Status","Housekeeping Status","Amenities"\n';
+    let csv = '"ID","Room Number","Floor","Category","Bedding Config","Pax Capacity","Rate (INR)","Status","Amenities"\n';
     filtered.forEach(r => {
       const amns = Array.isArray(r.amenities) ? r.amenities.join('; ') : '';
-      csv += `"${r.id}","${r.room_number}","${r.floor}","${r.category}","${r.bedding_config || ''}","${r.pax_capacity || ''}","${r.rate}","${r.status}","${r.housekeeping_status}","${amns}"\n`;
+      csv += `"${r.id}","${r.room_number}","${r.floor}","${r.category}","${r.bedding_config || ''}","${r.pax_capacity || ''}","${r.rate}","${r.status}","${amns}"\n`;
     });
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);

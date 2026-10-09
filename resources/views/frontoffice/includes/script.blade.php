@@ -410,6 +410,44 @@
       <!-- Residing Guest Info (if any) -->
       ${guestSectionHtml}
 
+      <!-- Dynamic Operational & Housekeeping Status Controls -->
+      <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 16px; margin-bottom: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <div style="font-size: 11px; font-weight: 800; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px;">
+            <i class="fa-solid fa-sliders" style="color: #6366f1;"></i> Update Room Status
+          </div>
+          <span id="modal-status-spinner-${roomNo}" style="display: none; font-size: 11px; font-weight: 700; color: #6366f1;">
+            <i class="fa-solid fa-spinner fa-spin"></i> Updating...
+          </span>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div>
+            <label style="display: block; font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 4px; letter-spacing: 0.5px;">
+              <i class="fa-solid fa-broom" style="color: #f59e0b;"></i> Housekeeping Status
+            </label>
+            <select id="modal-hk-select-${roomNo}" onchange="updateRoomStatusAjax('${roomNo}', '${roomData.id || ''}')" style="width: 100%; height: 36px; padding: 6px 12px; font-size: 12px; font-weight: 700; border: 1px solid #cbd5e1; border-radius: 6px; background: #f8fafc; color: #0f172a; cursor: pointer;">
+              <option value="">Select Housekeeping Status</option>
+              ${(window.allHousekeepingStates || []).map(hk => {
+                const isSelected = String(hk.id) === String(roomData.housekeeping_status_id) || (hk.name && hk.name.toLowerCase() === (hkDisplay || '').toLowerCase());
+                return `<option value="${hk.id}" ${isSelected ? 'selected' : ''}>${escapeHtml(hk.name)}</option>`;
+              }).join('')}
+            </select>
+          </div>
+          <div>
+            <label style="display: block; font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 4px; letter-spacing: 0.5px;">
+              <i class="fa-solid fa-shield-halved" style="color: #6366f1;"></i> Operational Status
+            </label>
+            <select id="modal-op-select-${roomNo}" onchange="updateRoomStatusAjax('${roomNo}', '${roomData.id || ''}')" style="width: 100%; height: 36px; padding: 6px 12px; font-size: 12px; font-weight: 700; border: 1px solid #cbd5e1; border-radius: 6px; background: #f8fafc; color: #0f172a; cursor: pointer;">
+              <option value="">Select Operational Status</option>
+              ${(window.allOperationalStatuses || []).map(op => {
+                const isSelected = String(op.id) === String(roomData.operational_status_id) || (op.name && op.name.toLowerCase() === (opDisplay || '').toLowerCase());
+                return `<option value="${op.id}" ${isSelected ? 'selected' : ''}>${escapeHtml(op.name)}</option>`;
+              }).join('')}
+            </select>
+          </div>
+        </div>
+      </div>
+
       <!-- Amenities Section -->
       <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 14px;">
         <div style="font-size: 11px; font-weight: 800; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
@@ -421,7 +459,7 @@
       </div>
     `;
 
-    // Action Buttons Footer
+    // Action Buttons Footer (Clean: without Mark Cleaned / Mark Dirty buttons)
     if (isOccupied && guestObj) {
       footerEl.innerHTML = `
         <button class="btn-ui-secondary" onclick="printInvoice('${roomNo}', '${escapeHtml(guestObj.name)}', '${escapeHtml(guestObj.folio || '')}', ${guestObj.balance || 0})"><i class="fa-solid fa-print"></i> Print Invoice</button>
@@ -429,21 +467,9 @@
         <button class="btn-ui-danger" onclick="checkoutGuest('${roomNo}', '${escapeHtml(guestObj.name)}')"><i class="fa-solid fa-right-from-bracket"></i> Check Out</button>
         <button class="btn-ui-secondary" onclick="closeModal('room-modal')">Close</button>
       `;
-    } else if (isDirty) {
-      footerEl.innerHTML = `
-        <button class="btn-ui-primary" onclick="markRoomCleaned('${roomNo}')"><i class="fa-solid fa-broom"></i> Mark Cleaned</button>
-        <button class="btn-ui-success" onclick="closeModal('room-modal'); openReservationModal('${roomNo}');"><i class="fa-solid fa-key"></i> Check In</button>
-        <button class="btn-ui-secondary" onclick="closeModal('room-modal')">Close</button>
-      `;
-    } else if (isBlocked) {
-      footerEl.innerHTML = `
-        <button class="btn-ui-primary" onclick="markRoomCleaned('${roomNo}')"><i class="fa-solid fa-unlock"></i> Set In-Service</button>
-        <button class="btn-ui-secondary" onclick="closeModal('room-modal')">Close</button>
-      `;
     } else {
       footerEl.innerHTML = `
         <button class="btn-ui-success" onclick="closeModal('room-modal'); openReservationModal('${roomNo}');"><i class="fa-solid fa-key"></i> New Check-In</button>
-        <button class="btn-ui-warning" onclick="markRoomDirty('${roomNo}')"><i class="fa-solid fa-broom"></i> Mark Dirty</button>
         <button class="btn-ui-secondary" onclick="closeModal('room-modal')">Close</button>
       `;
     }
@@ -454,20 +480,99 @@
   // Alias
   window.openRoomDetails = openRoomDetailsModal;
 
-  function markRoomDirty(roomNo) {
-    const card = document.querySelector(`.rack-card[data-room="${roomNo}"]`);
-    if (card) {
-      card.className = 'rack-card c-dirty';
-      card.setAttribute('data-status', 'dirty');
-      const badge = card.querySelector('.rack-badge');
-      if (badge) badge.textContent = 'Dirty';
-    }
-    closeModal('room-modal');
-    if (typeof PmsAlert !== 'undefined') {
-      PmsAlert.toast(`Room ${roomNo} marked as Dirty!`, 'warning');
-    } else {
-      alert(`Room ${roomNo} marked as Dirty!`);
-    }
+  function updateRoomStatusAjax(roomNo, roomId) {
+    const hkSel = document.getElementById(`modal-hk-select-${roomNo}`);
+    const opSel = document.getElementById(`modal-op-select-${roomNo}`);
+    const spinner = document.getElementById(`modal-status-spinner-${roomNo}`);
+
+    const hkId = hkSel ? hkSel.value : '';
+    const opId = opSel ? opSel.value : '';
+
+    if (spinner) spinner.style.display = 'inline-flex';
+
+    fetch("{{ route('frontoffice.room.update-status') }}", {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify({
+        room_no: roomNo,
+        room_id: roomId || null,
+        housekeeping_status_id: hkId || null,
+        operational_status_id: opId || null,
+      })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (spinner) spinner.style.display = 'none';
+      if (data.success && data.room) {
+        const rData = data.room;
+        // Update live rack card on dashboard
+        const card = document.querySelector(`.rack-card[data-room="${roomNo}"]`);
+        if (card) {
+          let cardClass = 'c-available';
+          if (rData.status === 'occupied') cardClass = 'c-occupied';
+          else if (rData.status === 'dirty') cardClass = 'c-dirty';
+          else if (rData.status === 'blocked') cardClass = 'c-blocked';
+          else cardClass = 'c-cleaned';
+
+          card.className = `rack-card ${cardClass}`;
+          card.setAttribute('data-status', rData.status);
+          card.setAttribute('data-cleaning', rData.cleaning);
+          card.setAttribute('data-operational', rData.operational_status);
+          card.setAttribute('data-housekeeping', rData.housekeeping_status);
+
+          const badge = card.querySelector('.rack-badge');
+          if (badge) badge.textContent = rData.cleaning || rData.status;
+
+          // Update data-room-json if exists
+          try {
+            const curJson = JSON.parse(card.getAttribute('data-room-json') || '{}');
+            curJson.status = rData.status;
+            curJson.cleaning = rData.cleaning;
+            curJson.operational_status = rData.operational_status;
+            curJson.operational_status_id = rData.operational_status_id;
+            curJson.housekeeping_status = rData.housekeeping_status;
+            curJson.housekeeping_status_id = rData.housekeeping_status_id;
+            card.setAttribute('data-room-json', JSON.stringify(curJson));
+          } catch(e) {}
+        }
+
+        // Update in window.allPmsRooms
+        if (window.allPmsRooms) {
+          const m = window.allPmsRooms.find(r => String(r.room) === String(roomNo) || String(r.id) === String(roomId));
+          if (m) {
+            m.status = rData.status;
+            m.cleaning = rData.cleaning;
+            m.operational_status = rData.operational_status;
+            m.operational_status_id = rData.operational_status_id;
+            m.housekeeping_status = rData.housekeeping_status;
+            m.housekeeping_status_id = rData.housekeeping_status_id;
+          }
+        }
+
+        if (typeof PmsAlert !== 'undefined') {
+          PmsAlert.toast(data.message || `Room #${roomNo} status updated!`, 'success');
+        } else {
+          alert(data.message || `Room #${roomNo} status updated!`);
+        }
+      } else {
+        if (typeof PmsAlert !== 'undefined') {
+          PmsAlert.toast(data.message || 'Error updating status', 'error');
+        } else {
+          alert(data.message || 'Error updating status');
+        }
+      }
+    })
+    .catch(err => {
+      if (spinner) spinner.style.display = 'none';
+      console.error('Status update error:', err);
+      if (typeof PmsAlert !== 'undefined') {
+        PmsAlert.toast('Network error updating room status', 'error');
+      }
+    });
   }
 
   function checkoutGuest(roomNo, guestName) {
@@ -487,22 +592,6 @@
         const badge = card.querySelector('.rack-badge');
         if (badge) badge.textContent = 'Dirty';
       }
-    }
-  }
-
-  function markRoomCleaned(roomNo) {
-    const card = document.querySelector(`.rack-card[data-room="${roomNo}"]`);
-    if (card) {
-      card.className = 'rack-card c-cleaned';
-      card.setAttribute('data-status', 'available');
-      const badge = card.querySelector('.rack-badge');
-      if (badge) badge.textContent = 'Cleaned';
-    }
-    closeModal('room-modal');
-    if (typeof PmsAlert !== 'undefined') {
-      PmsAlert.toast(`Room ${roomNo} marked as Cleaned!`, 'success');
-    } else {
-      alert(`Room ${roomNo} marked as Cleaned!`);
     }
   }
 
@@ -546,10 +635,12 @@
     window.print();
   }
 
-  // Master Rooms & Floors JSON Data for Dynamic Cascading Selection
+  // Master Rooms, Floors, Statuses & Categories JSON Data for Dynamic Front Office Controls
   window.allPmsRooms = @json($rackRooms ?? $allRoomsData ?? []);
   window.allPmsFloors = @json($floors ?? []);
   window.allPmsCategories = @json($categories ?? []);
+  window.allHousekeepingStates = @json($housekeepingStates ?? \App\Models\HousekeepingState::where('status', 'Active')->orderBy('name', 'asc')->get() ?? []);
+  window.allOperationalStatuses = @json($operationalStatuses ?? \App\Models\OperationalStatus::where('status', 'Active')->orderBy('name', 'asc')->get() ?? []);
 
   function onCategoryChange(catSelect) {
     const block = catSelect.closest('.section-guest-details') || catSelect.closest('.guest-block');

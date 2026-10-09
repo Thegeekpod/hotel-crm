@@ -53,6 +53,8 @@ class DashboardController extends Controller
         $registrationTypes = RegistrationType::where('status', 'Active')->get();
         $titles = Title::where('status', 'Active')->get();
         $nationalities = Nationality::where('status', 'Active')->get();
+        $housekeepingStates = HousekeepingState::where('status', 'Active')->orderBy('name', 'asc')->get();
+        $operationalStatuses = OperationalStatus::where('status', 'Active')->orderBy('name', 'asc')->get();
         $amenityMap = Amenity::pluck('name', 'id')->toArray();
         $nextReserveId = Guest::generateNextReserveId();
 
@@ -153,7 +155,9 @@ class DashboardController extends Controller
                     'type' => $type,
                     'cleaning' => $cleaning,
                     'status' => $status,
+                    'operational_status_id' => $latestOp?->operational_status_id,
                     'operational_status' => $opName ?: ($status === 'blocked' ? 'Out of Order / Blocked' : 'Active In-Service'),
+                    'housekeeping_status_id' => $latestHk?->housekeeping_status_id,
                     'housekeeping_status' => $hkName ?: ($status === 'dirty' ? 'Dirty / Cleaning Due' : 'Cleaned & Inspected'),
                     'rate' => $rate,
                     'guest' => $guest,
@@ -315,6 +319,8 @@ class DashboardController extends Controller
             'registrationTypes',
             'titles',
             'nationalities',
+            'housekeepingStates',
+            'operationalStatuses',
             'stats',
             'nextReserveId',
             'selectedStatus',
@@ -553,6 +559,121 @@ class DashboardController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Error saving reservation: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Update Room Housekeeping & Operational Status dynamically and record history
+     */
+    public function updateRoomStatus(Request $request)
+    {
+        $validated = $request->validate([
+            'room_id' => 'nullable',
+            'room_no' => 'nullable',
+            'housekeeping_status_id' => 'nullable|exists:housekeeping_states,id',
+            'operational_status_id' => 'nullable|exists:operational_statuses,id',
+        ]);
+
+        $room = null;
+        if (!empty($validated['room_id'])) {
+            $room = is_numeric($validated['room_id']) ? Room::find($validated['room_id']) : null;
+        }
+        if (!$room && !empty($validated['room_no'])) {
+            $room = Room::where('room_number', (string)$validated['room_no'])->first();
+        }
+
+        if (!$room) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Room not found.',
+            ], 404);
+        }
+
+        DB::beginTransaction();
+        try {
+            $hkName = '';
+            $opName = '';
+
+            if (!empty($validated['housekeeping_status_id'])) {
+                $hkState = HousekeepingState::find($validated['housekeeping_status_id']);
+                if ($hkState) {
+                    $hkName = $hkState->name;
+                    RoomHousekeepingHistory::create([
+                        'room_id' => $room->id,
+                        'housekeeping_status_id' => $hkState->id,
+                        'start_time' => now(),
+                        'completion_time' => now(),
+                        'status' => 'complete',
+                    ]);
+                }
+            } else {
+                $latestHk = $room->housekeepingHistories()->latest('id')->first();
+                $hkName = $latestHk?->housekeepingStatus?->name ?? 'Cleaned & Inspected';
+            }
+
+            if (!empty($validated['operational_status_id'])) {
+                $opState = OperationalStatus::find($validated['operational_status_id']);
+                if ($opState) {
+                    $opName = $opState->name;
+                    RoomOperationalHistory::create([
+                        'room_id' => $room->id,
+                        'operational_status_id' => $opState->id,
+                    ]);
+                }
+            } else {
+                $latestOp = $room->operationalHistories()->latest('id')->first();
+                $opName = $latestOp?->operationalStatus?->name ?? 'Active In-Service';
+            }
+
+            // Determine calculated rack status
+            $hasActiveGuests = $room->activeGuests()->exists();
+            if ($hasActiveGuests) {
+                $calculatedStatus = 'occupied';
+                $cleaningText = 'Cleaned';
+            } elseif (stripos($opName, 'Blocked') !== false || stripos($opName, 'Maintenance') !== false || stripos($opName, 'Order') !== false) {
+                $calculatedStatus = 'blocked';
+                $cleaningText = 'Blocked';
+            } elseif (stripos($hkName, 'Dirty') !== false) {
+                $calculatedStatus = 'dirty';
+                $cleaningText = 'Dirty';
+            } elseif ($room->status === 'Inactive') {
+                $calculatedStatus = 'blocked';
+                $cleaningText = 'Blocked';
+            } else {
+                $calculatedStatus = 'available';
+                $cleaningText = 'Cleaned';
+            }
+
+            // Sync room model status
+            if ($calculatedStatus === 'available' || $calculatedStatus === 'occupied') {
+                $room->status = 'Active';
+            } elseif ($calculatedStatus === 'blocked') {
+                $room->status = 'Inactive';
+            }
+            $room->save();
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => "Room #{$room->room_number} status updated successfully!",
+                'room' => [
+                    'id' => $room->id,
+                    'room' => (string)$room->room_number,
+                    'status' => $calculatedStatus,
+                    'cleaning' => $cleaningText,
+                    'housekeeping_status_id' => $validated['housekeeping_status_id'] ?? null,
+                    'housekeeping_status' => $hkName,
+                    'operational_status_id' => $validated['operational_status_id'] ?? null,
+                    'operational_status' => $opName,
+                ]
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Error updating room status: ' . $e->getMessage(),
             ], 500);
         }
     }

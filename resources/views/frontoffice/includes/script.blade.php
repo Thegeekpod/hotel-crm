@@ -803,7 +803,65 @@
       }
     }
 
+    // If primary guest room changed, propagate to additional guests who have 'Same Room' checked
+    const allGuestBlocks = document.querySelectorAll('.guest-block');
+    if (allGuestBlocks.length > 0 && (allGuestBlocks[0] === block || allGuestBlocks[0].contains(roomSelect))) {
+      allGuestBlocks.forEach((b, idx) => {
+        if (idx > 0) {
+          const sameChk = b.querySelector('.chk-same-room');
+          if (sameChk && sameChk.checked) {
+            syncSameRoomForBlock(b);
+          }
+        }
+      });
+    }
+
     calculateReservationBilling();
+  }
+
+  function toggleSameRoom(checkboxElem) {
+    const block = checkboxElem.closest('.guest-block') || checkboxElem.closest('.section-guest-details');
+    if (!block) return;
+
+    if (checkboxElem.checked) {
+      syncSameRoomForBlock(block);
+    } else {
+      const catSel = block.querySelector('.select-room-category');
+      const flSel = block.querySelector('.select-room-floor');
+      const rmSel = block.querySelector('.select-room-no');
+      const banner = block.querySelector('.room-capacity-banner');
+      if (catSel) catSel.value = '';
+      if (flSel) flSel.innerHTML = '<option value="">Select Floor</option>';
+      if (rmSel) rmSel.innerHTML = '<option value="">Select Room No.</option>';
+      if (banner) banner.style.display = 'none';
+      calculateReservationBilling();
+    }
+  }
+
+  function syncSameRoomForBlock(targetBlock) {
+    const primaryBlock = document.querySelector('.guest-block');
+    if (!primaryBlock || primaryBlock === targetBlock) return;
+
+    const pCatSel = primaryBlock.querySelector('.select-room-category');
+    const pFlSel = primaryBlock.querySelector('.select-room-floor');
+    const pRmSel = primaryBlock.querySelector('.select-room-no');
+
+    const catSel = targetBlock.querySelector('.select-room-category');
+    const flSel = targetBlock.querySelector('.select-room-floor');
+    const rmSel = targetBlock.querySelector('.select-room-no');
+
+    if (pCatSel && catSel && pCatSel.value) {
+      catSel.value = pCatSel.value;
+      onCategoryChange(catSel);
+    }
+    if (pFlSel && flSel && pFlSel.value) {
+      flSel.value = pFlSel.value;
+      onFloorChange(flSel);
+    }
+    if (pRmSel && rmSel && pRmSel.value) {
+      rmSel.value = pRmSel.value;
+      onRoomChange(rmSel);
+    }
   }
 
   function searchRegularGuest(btnElem) {
@@ -887,7 +945,15 @@
     
     labels.forEach(radio => {
       if (radio.parentElement) {
-        radio.parentElement.style.color = radio.checked ? 'var(--accent-primary, #6366f1)' : 'var(--text-secondary, #64748b)';
+        if (radio.checked) {
+          radio.parentElement.style.background = '#eef2ff';
+          radio.parentElement.style.borderColor = '#c7d2fe';
+          radio.parentElement.style.color = '#4f46e5';
+        } else {
+          radio.parentElement.style.background = 'transparent';
+          radio.parentElement.style.borderColor = 'transparent';
+          radio.parentElement.style.color = '#64748b';
+        }
       }
     });
 
@@ -954,6 +1020,16 @@
     
     newBlock.querySelectorAll('input:not([type="radio"]):not([type="checkbox"])').forEach(inp => inp.value = '');
     
+    // Enable "Same Room" checkbox for Guest #2 and above
+    const sameRoomWrap = newBlock.querySelector('.same-room-checkbox-wrapper');
+    const sameRoomChk = newBlock.querySelector('.chk-same-room');
+    if (sameRoomWrap) {
+      sameRoomWrap.style.display = 'inline-flex';
+    }
+    if (sameRoomChk) {
+      sameRoomChk.checked = false;
+    }
+
     // Reset room selects and capacity banner in cloned block
     const catSel = newBlock.querySelector('.select-room-category');
     const flSel = newBlock.querySelector('.select-room-floor');
@@ -971,7 +1047,7 @@
       removeBtn.className = 'btn-remove-guest';
       removeBtn.innerHTML = '<i class="fa-solid fa-trash"></i> Remove';
       removeBtn.style = 'color: #ef4444; background: none; border: none; font-size: 12px; font-weight: 800; cursor: pointer; text-transform: uppercase; letter-spacing: 1px;';
-      removeBtn.onclick = function() { newBlock.remove(); updateGuestHeadings(); };
+      removeBtn.onclick = function() { newBlock.remove(); updateGuestHeadings(); calculateReservationBilling(); };
       headerDiv.appendChild(removeBtn);
     }
     
@@ -991,6 +1067,11 @@
     blocks.forEach((block, index) => {
       const heading = block.querySelector('h4.guest-heading');
       if (heading) heading.innerText = 'Guest #' + (index + 1);
+      
+      const sameRoomWrap = block.querySelector('.same-room-checkbox-wrapper');
+      if (sameRoomWrap) {
+        sameRoomWrap.style.display = (index === 0) ? 'none' : 'inline-flex';
+      }
     });
   }
 
@@ -1003,16 +1084,26 @@
 
   function setInitialDateTime() {
     const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const todayStr = `${year}-${month}-${day}`;
+
+    const tomorrow = new Date(now);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tYear = tomorrow.getFullYear();
+    const tMonth = String(tomorrow.getMonth() + 1).padStart(2, '0');
+    const tDay = String(tomorrow.getDate()).padStart(2, '0');
+    const tomStr = `${tYear}-${tMonth}-${tDay}`;
+
     const dateInput = document.getElementById('reserve-date-input');
     const timeInput = document.getElementById('reserve-time-input');
     const checkoutDateInput = document.getElementById('checkout-date-input');
     const checkoutTimeInput = document.getElementById('checkout-time-input');
     
     if (dateInput) {
-      const year = now.getFullYear();
-      const month = String(now.getMonth() + 1).padStart(2, '0');
-      const day = String(now.getDate()).padStart(2, '0');
-      dateInput.value = `${year}-${month}-${day}`;
+      dateInput.value = todayStr;
+      dateInput.min = todayStr;
     }
     if (timeInput) {
       const hours = String(now.getHours()).padStart(2, '0');
@@ -1020,17 +1111,47 @@
       timeInput.value = `${hours}:${minutes}`;
     }
     if (checkoutDateInput) {
-      const tomorrow = new Date(now);
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      const tYear = tomorrow.getFullYear();
-      const tMonth = String(tomorrow.getMonth() + 1).padStart(2, '0');
-      const tDay = String(tomorrow.getDate()).padStart(2, '0');
-      checkoutDateInput.value = `${tYear}-${tMonth}-${tDay}`;
+      checkoutDateInput.value = tomStr;
+      checkoutDateInput.min = todayStr;
     }
     if (checkoutTimeInput && !checkoutTimeInput.value) {
       checkoutTimeInput.value = '11:00';
     }
 
+    calculateReservationBilling();
+  }
+
+  function onCheckInDateChange() {
+    const dateInput = document.getElementById('reserve-date-input');
+    const checkoutDateInput = document.getElementById('checkout-date-input');
+    if (dateInput && checkoutDateInput) {
+      const checkInVal = dateInput.value;
+      if (checkInVal) {
+        // Disallow past dates relative to checkin date
+        checkoutDateInput.min = checkInVal;
+        if (!checkoutDateInput.value || checkoutDateInput.value < checkInVal) {
+          const d = new Date(checkInVal + 'T00:00:00');
+          d.setDate(d.getDate() + 1);
+          const y = d.getFullYear();
+          const m = String(d.getMonth() + 1).padStart(2, '0');
+          const day = String(d.getDate()).padStart(2, '0');
+          checkoutDateInput.value = `${y}-${m}-${day}`;
+        }
+      }
+    }
+    calculateReservationBilling();
+  }
+
+  function onCheckOutDateChange() {
+    const dateInput = document.getElementById('reserve-date-input');
+    const checkoutDateInput = document.getElementById('checkout-date-input');
+    if (dateInput && checkoutDateInput) {
+      const checkInVal = dateInput.value;
+      const checkOutVal = checkoutDateInput.value;
+      if (checkInVal && checkOutVal && checkOutVal < checkInVal) {
+        checkoutDateInput.value = checkInVal;
+      }
+    }
     calculateReservationBilling();
   }
 
@@ -1052,25 +1173,38 @@
       nightsBadge.textContent = nights + (nights === 1 ? ' Night' : ' Nights');
     }
 
-    // Find primary room rate
-    let primaryRate = 4500;
-    const firstGuest = document.querySelector('.guest-block');
-    if (firstGuest) {
-      const rmSel = firstGuest.querySelector('.select-room-no');
-      if (rmSel && rmSel.selectedIndex >= 0) {
+    // Calculate total room rate across distinct assigned rooms (or fallback to primary)
+    const guestBlocks = document.querySelectorAll('.guest-block');
+    const assignedRooms = new Map();
+    let fallbackRate = 4500;
+
+    guestBlocks.forEach((block, idx) => {
+      const rmSel = block.querySelector('.select-room-no');
+      if (rmSel && rmSel.selectedIndex >= 0 && rmSel.value) {
         const opt = rmSel.options[rmSel.selectedIndex];
-        if (opt && opt.dataset.rate) {
-          primaryRate = parseFloat(opt.dataset.rate) || 4500;
-        }
+        const rRate = (opt && opt.dataset.rate) ? parseFloat(opt.dataset.rate) : fallbackRate;
+        const rKey = (opt && opt.dataset.roomNo) ? opt.dataset.roomNo : rmSel.value;
+        assignedRooms.set(rKey, rRate);
+        if (idx === 0) fallbackRate = rRate;
       }
+    });
+
+    let totalNightlyRate = 0;
+    if (assignedRooms.size > 0) {
+      for (const [rKey, rRate] of assignedRooms.entries()) {
+        totalNightlyRate += rRate;
+      }
+    } else {
+      totalNightlyRate = fallbackRate;
     }
 
-    const totalGross = primaryRate * nights;
+    const totalGross = totalNightlyRate * nights;
 
     // Update Nights & Gross UI
     const nightsRateLabel = document.getElementById('calc-nights-rate-label');
     if (nightsRateLabel) {
-      nightsRateLabel.textContent = `₹ ${primaryRate.toLocaleString('en-IN')} x ${nights} ${nights === 1 ? 'Night' : 'Nights'}`;
+      const roomCountStr = assignedRooms.size > 1 ? ` (${assignedRooms.size} Rooms)` : '';
+      nightsRateLabel.textContent = `₹ ${totalNightlyRate.toLocaleString('en-IN')} x ${nights} ${nights === 1 ? 'Night' : 'Nights'}${roomCountStr}`;
     }
     const grossDisplay = document.getElementById('calc-gross-display');
     if (grossDisplay) {

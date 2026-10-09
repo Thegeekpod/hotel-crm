@@ -123,6 +123,53 @@
     openModal('reserve-modal');
   }
 
+  function getRegistrationTypeRosetteBadgeHtml(typeName, size = 46) {
+    const t = (typeName || 'New').toLowerCase();
+    let badgeText = 'NEW';
+    let c1 = '#10b981'; // Green
+    let c2 = '#059669';
+    let glowColor = 'rgba(16, 185, 129, 0.35)';
+
+    if (t.includes('regular')) {
+      badgeText = 'REGULAR';
+      c1 = '#3b82f6'; // Blue
+      c2 = '#1d4ed8';
+      glowColor = 'rgba(37, 99, 235, 0.35)';
+    } else if (t.includes('company') || t.includes('corporate')) {
+      badgeText = 'COMPANY';
+      c1 = '#8b5cf6'; // Purple
+      c2 = '#6d28d9';
+      glowColor = 'rgba(124, 58, 237, 0.35)';
+    } else if (t.includes('privilege') || t.includes('vip')) {
+      badgeText = 'PRIVILEGE';
+      c1 = '#f59e0b'; // Amber Gold
+      c2 = '#b45309';
+      glowColor = 'rgba(217, 119, 6, 0.35)';
+    }
+
+    const uid = 'rosette-' + Math.random().toString(36).substring(2, 9);
+    const fontSize = badgeText.length > 7 ? '7px' : (badgeText.length > 5 ? '8px' : '9.5px');
+
+    return `
+      <div class="rosette-reg-badge" style="position: relative; width: ${size}px; height: ${size}px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; filter: drop-shadow(0 3px 6px ${glowColor}); cursor: default; user-select: none;" title="Guest Registration: ${badgeText}">
+        <svg viewBox="0 0 100 100" style="width: 100%; height: 100%; display: block; overflow: visible;">
+          <defs>
+            <linearGradient id="${uid}" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="${c1}"/>
+              <stop offset="100%" stop-color="${c2}"/>
+            </linearGradient>
+          </defs>
+          <!-- 8-Point Smooth Scalloped Rosette Seal Shape -->
+          <path d="M 50 2 C 57 2 62 11 68 14 C 74 17 84 13 89 19 C 94 25 90 35 93 41 C 96 47 105 52 105 59 C 105 66 96 71 93 77 C 90 83 94 93 89 99 C 84 105 74 101 68 104 C 62 107 57 116 50 116 C 43 116 38 107 32 104 C 26 101 16 105 11 99 C 6 93 10 83 7 77 C 4 71 -5 66 -5 59 C -5 52 4 47 7 41 C 10 35 6 25 11 19 C 16 13 26 17 32 14 C 38 11 43 2 50 2 Z" transform="scale(0.83) translate(10, 0)" fill="url(#${uid})" stroke="#ffffff" stroke-width="2.2"/>
+          <circle cx="50" cy="50" r="30" fill="none" stroke="rgba(255,255,255,0.45)" stroke-dasharray="3,2" stroke-width="1.2"/>
+        </svg>
+        <span style="position: absolute; color: #ffffff; font-size: ${fontSize}; font-weight: 900; letter-spacing: 0.3px; text-transform: uppercase; text-align: center; line-height: 1; font-family: var(--font-main, sans-serif); text-shadow: 0 1px 3px rgba(0,0,0,0.5); pointer-events: none; padding: 0 3px;">
+          ${badgeText}
+        </span>
+      </div>
+    `;
+  }
+
   function openRoomDetailsModal(dataOrEl, legacyCat, legacyCleaning, legacyPmsStatus, legacyRate, legacyGuest, legacyOpStatus, legacyHkStatus) {
     let roomData = null;
 
@@ -216,7 +263,26 @@
 
     if (!titleEl || !bodyEl || !footerEl) return;
 
-    titleEl.innerHTML = `<i class="fa-solid fa-door-open" style="color: var(--accent-primary, #6366f1); margin-right: 6px;"></i> Room Details • Room ${escapeHtml(roomNo)}`;
+    const guestsList = Array.isArray(roomData.guests) && roomData.guests.length > 0
+      ? roomData.guests
+      : (guestObj ? [guestObj] : []);
+
+    const guestRegType = (guestsList.length > 0 ? guestsList[0].registration_type : null) || roomData.registration_type || 'New';
+
+    if (isOccupied) {
+      const headerBadge = getRegistrationTypeRosetteBadgeHtml(guestRegType, 34);
+      titleEl.innerHTML = `
+        ${headerBadge}
+        <span>Room Details • Room ${escapeHtml(roomNo)}</span>
+      `;
+    } else {
+      titleEl.innerHTML = `
+        <div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 14px;">
+          <i class="fa-solid fa-door-open"></i>
+        </div>
+        <span>Room Details • Room ${escapeHtml(roomNo)}</span>
+      `;
+    }
 
     const amenitiesHtml = amenities.map(amn => {
       return `<span style="background: rgba(99, 102, 241, 0.08); color: #4338ca; border: 1px solid rgba(99, 102, 241, 0.18); font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 20px; display: inline-flex; align-items: center; gap: 5px;">
@@ -224,12 +290,9 @@
       </span>`;
     }).join('');
 
-    const guestsList = Array.isArray(roomData.guests) && roomData.guests.length > 0
-      ? roomData.guests
-      : (guestObj ? [guestObj] : []);
-
     let guestSectionHtml = '';
     let topReservationBadgeHtml = '';
+
     if (isOccupied && guestsList.length > 0) {
       const primaryGuest = guestsList[0];
       const reservationId = primaryGuest.reserve_id || ('RES-2026-00' + roomNo);
@@ -270,6 +333,7 @@
       if (guestsList.length === 1) {
         // Single Guest Layout
         const g = primaryGuest;
+
         guestSectionHtml = `
           <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px 16px; margin-bottom: 14px; box-shadow: 0 2px 6px rgba(0,0,0,0.03);">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px;">
@@ -284,9 +348,10 @@
             ${topReservationSummaryBar}
 
             <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 14px;">
-              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+              <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px;">
                 <div style="font-size: 15px; font-weight: 800; color: #0f172a;">${escapeHtml(g.name)}</div>
                 <span class="badge-tag blue" style="font-size: 9px; padding: 1px 6px; font-weight: 700;">Primary Guest</span>
+                ${g.company ? `<span class="badge-tag purple" style="font-size: 9px; padding: 1px 6px; font-weight: 700;"><i class="fa-solid fa-building"></i> ${escapeHtml(g.company)}</span>` : ''}
               </div>
               <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 6px 14px; font-size: 11px; color: #64748b;">
                 ${g.mobile ? `<div><strong style="color: #475569;"><i class="fa-solid fa-phone" style="color: #6366f1; width: 14px;"></i> Mobile:</strong> <span style="color: #1e293b; font-weight: 600;">${escapeHtml(g.mobile)}</span></div>` : ''}
@@ -303,14 +368,13 @@
         const guestCardsHtml = guestsList.map((g, idx) => `
           <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px;">
             <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed #e2e8f0; padding-bottom: 6px;">
-              <div style="display: flex; align-items: center; gap: 8px;">
-                <span style="width: 22px; height: 22px; border-radius: 50%; background: ${idx === 0 ? '#eff6ff' : '#ffffff'}; color: ${idx === 0 ? '#2563eb' : '#64748b'}; border: 1px solid ${idx === 0 ? '#bfdbfe' : '#cbd5e1'}; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800;">
-                  ${idx + 1}
-                </span>
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <span style="width: 22px; height: 22px; border-radius: 50%; background: #e0e7ff; color: #4338ca; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; justify-content: center;">${idx + 1}</span>
                 <span style="font-size: 14px; font-weight: 800; color: #0f172a;">${escapeHtml(g.name)}</span>
                 <span class="badge-tag ${idx === 0 ? 'blue' : 'gray'}" style="font-size: 9px; padding: 1px 6px; font-weight: 700;">
                   ${idx === 0 ? 'Primary Guest' : 'Additional Guest'}
                 </span>
+                ${g.company ? `<span class="badge-tag purple" style="font-size: 9px; padding: 1px 6px; font-weight: 700;"><i class="fa-solid fa-building"></i> ${escapeHtml(g.company)}</span>` : ''}
               </div>
               <span class="badge-tag green" style="font-size: 9px; padding: 2px 7px; font-weight: 700;">${escapeHtml(g.state || overallState)}</span>
             </div>
@@ -939,7 +1003,7 @@
   function toggleResType() {
     const checkedRadio = document.querySelector('input[name="res_type"]:checked');
     if (!checkedRadio) return;
-    const type = checkedRadio.value;
+    const type = (checkedRadio.dataset.slug || checkedRadio.value || 'new').toLowerCase();
     const compFields = document.getElementById('section-company-fields');
     const labels = document.querySelectorAll('input[name="res_type"]');
     
@@ -991,7 +1055,7 @@
 
   function togglePrivilegeInput(checkboxElem) {
     const checkedRadio = document.querySelector('input[name="res_type"]:checked');
-    const type = checkedRadio ? checkedRadio.value : 'new';
+    const type = (checkedRadio?.dataset?.slug || checkedRadio?.value || 'new').toLowerCase();
     const block = checkboxElem.closest('.guest-block');
     if (!block) return;
     const privInput = block.querySelector('.privilege-input-container');
@@ -1053,7 +1117,7 @@
     
     const chkPriv = newBlock.querySelector('.chk-privilege');
     const checkedRadio = document.querySelector('input[name="res_type"]:checked');
-    const type = checkedRadio ? checkedRadio.value : 'new';
+    const type = (checkedRadio?.dataset?.slug || checkedRadio?.value || 'new').toLowerCase();
     if (chkPriv) {
       chkPriv.checked = (type === 'privilege');
     }
@@ -1295,8 +1359,8 @@
 
     // Collect Registration Type ID
     const checkedRadio = form.querySelector('input[name="res_type"]:checked');
-    const registrationTypeId = checkedRadio ? checkedRadio.dataset.registrationId : null;
-    const resTypeSlug = checkedRadio ? checkedRadio.value : 'new';
+    const registrationTypeId = checkedRadio ? (checkedRadio.value || checkedRadio.dataset.registrationId) : null;
+    const resTypeSlug = checkedRadio ? (checkedRadio.dataset.slug || 'new') : 'new';
 
     // Collect Reservation Meta
     const reserveDate = form.querySelector('input[name="reserve_date"]')?.value || '';

@@ -38,9 +38,13 @@ class DashboardController extends Controller
             'activeGuests.title',
             'activeGuests.nationality',
             'activeGuests.idCardType',
+            'activeGuests.registrationType',
+            'activeGuests.company',
             'currentGuest.title',
             'currentGuest.nationality',
             'currentGuest.idCardType',
+            'currentGuest.registrationType',
+            'currentGuest.company',
         ])->orderByRaw('CAST(room_number AS UNSIGNED) ASC, room_number ASC')->get();
 
         $floors = Floor::where('status', 'Active')->orderBy('floor', 'asc')->get();
@@ -81,7 +85,7 @@ class DashboardController extends Controller
                     $resId = $r->currentGuest->reserve_id;
                     $linkedGuests = Guest::where('reserve_id', $resId)
                         ->whereIn('status', ['Confirmed', 'Arrived', 'Stay Over'])
-                        ->with(['title', 'nationality', 'idCardType'])
+                        ->with(['title', 'nationality', 'idCardType', 'registrationType', 'company'])
                         ->get();
                     if ($linkedGuests->isNotEmpty()) {
                         $activeGuests = $linkedGuests;
@@ -91,6 +95,9 @@ class DashboardController extends Controller
                 $guestsList = [];
                 foreach ($activeGuests as $idx => $gModel) {
                     $fullName = ($gModel->title?->name ? $gModel->title->name . ' ' : '') . $gModel->guest_name;
+                    $regName = $gModel->registrationType?->name ?? 'New';
+                    $compName = $gModel->company?->name ?? $gModel->new_company_name ?? '';
+
                     $guestsList[] = [
                         'id' => $gModel->id,
                         'name' => $fullName,
@@ -110,6 +117,9 @@ class DashboardController extends Controller
                         'reserve_id' => $gModel->reserve_id,
                         'advance' => (float)$gModel->advance_amount,
                         'is_primary' => empty($gModel->primary_guest_id) || $idx === 0,
+                        'registration_type_id' => $gModel->registration_type_id,
+                        'registration_type' => $regName,
+                        'company' => $compName,
                     ];
                 }
 
@@ -164,6 +174,9 @@ class DashboardController extends Controller
                     'rate' => $rate,
                     'guest' => $guest,
                     'guests' => $guestsList,
+                    'registration_type' => $guest ? ($guest['registration_type'] ?? 'New') : null,
+                    'registration_type_id' => $guest ? ($guest['registration_type_id'] ?? null) : null,
+                    'company' => $guest ? ($guest['company'] ?? null) : null,
                     'bedding' => $r->beddingConfigRelation?->name ?? $r->bedding_config ?? 'King Size Master (72x78)',
                     'bedding_id' => $r->bedding_config_id,
                     'max_adults' => (int)($r->beddingConfigRelation?->max_adults ?? 2),
@@ -396,17 +409,19 @@ class DashboardController extends Controller
             // Auto generate reserve_id if not provided or to ensure strict sequence
             $reserveId = Guest::generateNextReserveId();
 
-            $registrationTypeId = $request->input('registration_type_id');
-            if (!$registrationTypeId && $request->has('res_type')) {
-                $resTypeVal = $request->input('res_type');
-                if (is_numeric($resTypeVal)) {
-                    $registrationTypeId = (int)$resTypeVal;
-                } else {
-                    $foundReg = RegistrationType::where('name', 'like', "%{$resTypeVal}%")->first();
-                    $registrationTypeId = $foundReg?->id;
-                }
+            $registrationTypeId = $request->input('registration_type_id') ?? $request->input('res_type');
+            if ($registrationTypeId && is_numeric($registrationTypeId)) {
+                $registrationTypeId = (int)$registrationTypeId;
+            } elseif ($registrationTypeId && is_string($registrationTypeId)) {
+                $foundReg = RegistrationType::where('name', 'like', "%{$registrationTypeId}%")->first();
+                $registrationTypeId = $foundReg?->id;
+            } else {
+                $defaultReg = RegistrationType::where('name', 'like', '%New%')->first() ?? RegistrationType::first();
+                $registrationTypeId = $defaultReg?->id;
             }
-            $registrationTypeId = ($registrationTypeId && RegistrationType::where('id', $registrationTypeId)->exists()) ? (int)$registrationTypeId : null;
+            if ($registrationTypeId && !RegistrationType::where('id', $registrationTypeId)->exists()) {
+                $registrationTypeId = null;
+            }
 
             $companyId = $request->input('company_id');
             if ($companyId === 'new' || ($request->filled('new_company_name') && !$companyId)) {

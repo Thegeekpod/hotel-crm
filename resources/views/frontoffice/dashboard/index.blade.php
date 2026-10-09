@@ -169,7 +169,7 @@
       <i class="fa-solid fa-rotate" style="color: var(--accent-cyan);"></i> Refresh
     </a>
     
-    <select name="type" class="pms-select" id="filter-type" onchange="submitBackendFilter()">
+    <select name="type" class="pms-select" id="filter-type" onchange="submitBackendFilter()" title="Filter by Room Type">
       <option value="ALL" {{ ($selectedType ?? 'ALL') === 'ALL' ? 'selected' : '' }}>All Types</option>
       @foreach($categories as $cat)
         <option value="{{ strtoupper($cat->name) }}" {{ ($selectedType ?? '') === strtoupper($cat->name) ? 'selected' : '' }}>{{ $cat->name }}</option>
@@ -182,7 +182,7 @@
       @endif
     </select>
 
-    <select name="floor" class="pms-select" id="filter-floor" onchange="submitBackendFilter()">
+    <select name="floor" class="pms-select" id="filter-floor" onchange="submitBackendFilter()" title="Filter by Floor">
       <option value="ALL" {{ ($selectedFloor ?? 'ALL') === 'ALL' ? 'selected' : '' }}>All Floor</option>
       @foreach($floors as $fl)
         <option value="{{ $fl->floor }}" {{ strval($selectedFloor ?? '') === strval($fl->floor) ? 'selected' : '' }}>Floor {{ $fl->floor }}</option>
@@ -194,6 +194,29 @@
         <option value="4" {{ strval($selectedFloor ?? '') === '4' ? 'selected' : '' }}>Floor 4</option>
         <option value="5" {{ strval($selectedFloor ?? '') === '5' ? 'selected' : '' }}>Floor 5</option>
       @endif
+    </select>
+
+    <select name="bedding" class="pms-select" id="filter-bedding" onchange="submitBackendFilter()" title="Filter by Bedding Configuration">
+      <option value="ALL" {{ ($selectedBedding ?? 'ALL') === 'ALL' ? 'selected' : '' }}>All Bedding</option>
+      @foreach($beddingConfigs as $bc)
+        <option value="{{ $bc->id }}" {{ strval($selectedBedding ?? '') === strval($bc->id) ? 'selected' : '' }}>{{ $bc->name }}</option>
+      @endforeach
+    </select>
+
+    <select name="pax" class="pms-select" id="filter-pax" onchange="submitBackendFilter()" title="Filter by Pax Capacity">
+      <option value="ALL" {{ ($selectedPax ?? 'ALL') === 'ALL' ? 'selected' : '' }}>All Pax</option>
+      <option value="1" {{ strval($selectedPax ?? '') === '1' ? 'selected' : '' }}>1 Pax</option>
+      <option value="2" {{ strval($selectedPax ?? '') === '2' ? 'selected' : '' }}>2 Pax</option>
+      <option value="3" {{ strval($selectedPax ?? '') === '3' ? 'selected' : '' }}>3 Pax</option>
+      <option value="4" {{ strval($selectedPax ?? '') === '4' ? 'selected' : '' }}>4 Pax</option>
+      <option value="6" {{ strval($selectedPax ?? '') === '6' ? 'selected' : '' }}>6 Pax</option>
+    </select>
+
+    <select name="amenity" class="pms-select" id="filter-amenity" onchange="submitBackendFilter()" title="Filter by Amenities">
+      <option value="ALL" {{ ($selectedAmenity ?? 'ALL') === 'ALL' ? 'selected' : '' }}>All Amenities</option>
+      @foreach($amenitiesList as $amn)
+        <option value="{{ $amn->id }}" {{ strval($selectedAmenity ?? '') === strval($amn->id) ? 'selected' : '' }}>{{ $amn->name }}</option>
+      @endforeach
     </select>
 
     <div style="display: flex; align-items: center; gap: 6px; font-weight: 700; font-size: 11px; color: var(--text-secondary);">

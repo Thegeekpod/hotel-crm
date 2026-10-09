@@ -872,23 +872,26 @@ a {
    BOTTOM TOOLBAR
    ========================================================================== */
 .pms-bottom-bar {
-  height: 46px;
+  min-height: 46px;
+  height: auto;
   background: var(--glass-white-solid);
   backdrop-filter: var(--glass-blur);
   border-top: 1px solid var(--border-subtle);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 18px;
-  gap: 10px;
+  padding: 6px 14px;
+  gap: 8px;
   flex-shrink: 0;
   box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.03);
+  overflow-x: auto;
 }
 
 .legend-chips {
   display: flex;
   align-items: center;
   gap: 6px;
+  flex-shrink: 0;
 }
 
 .legend-chip {
@@ -959,25 +962,27 @@ a {
 .bottom-actions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  flex-shrink: 0;
 }
 
 .pms-btn-action {
-  height: 30px;
-  padding: 0 14px;
+  height: 28px;
+  padding: 0 12px;
   background: var(--glass-white);
   border: 1px solid var(--border-medium);
-  border-radius: 22px;
+  border-radius: 20px;
   font-size: 11px;
   font-weight: 700;
   color: var(--text-secondary);
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   transition: all 0.25s ease;
   font-family: var(--font-main);
   box-shadow: var(--shadow-xs);
+  white-space: nowrap;
 }
 
 .pms-btn-action:hover {
@@ -988,18 +993,20 @@ a {
 }
 
 .pms-select {
-  height: 30px;
-  padding: 0 12px;
+  height: 28px;
+  padding: 0 10px;
   font-size: 11px;
   border: 1px solid var(--border-medium);
-  border-radius: 22px;
-  background: rgba(255, 255, 255, 0.7);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.85);
   color: var(--text-primary);
   font-weight: 600;
   font-family: var(--font-main);
   cursor: pointer;
-  transition: border-color 0.25s ease;
+  transition: all 0.2s ease;
   box-shadow: var(--shadow-xs);
+  max-width: 135px;
+  text-overflow: ellipsis;
 }
 
 .pms-select:focus {
@@ -1009,13 +1016,13 @@ a {
 }
 
 .pms-input {
-  height: 30px;
-  width: 80px;
-  padding: 0 12px;
+  height: 28px;
+  width: 120px;
+  padding: 0 10px;
   font-size: 11px;
   border: 1px solid var(--border-medium);
-  border-radius: 22px;
-  background: rgba(255, 255, 255, 0.7);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.85);
   color: var(--text-primary);
   font-family: var(--font-main);
   transition: all 0.25s ease;

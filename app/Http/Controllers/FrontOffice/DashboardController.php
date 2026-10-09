@@ -14,6 +14,7 @@ use App\Models\RegistrationType;
 use App\Models\Title;
 use App\Models\Nationality;
 use App\Models\Amenity;
+use App\Models\BeddingConfig;
 use App\Models\Guest;
 use App\Models\HousekeepingState;
 use App\Models\OperationalStatus;
@@ -40,6 +41,8 @@ class DashboardController extends Controller
 
         $floors = Floor::where('status', 'Active')->orderBy('floor', 'asc')->get();
         $categories = RoomCategory::where('status', 'Active')->get();
+        $beddingConfigs = BeddingConfig::where('status', 'Active')->get();
+        $amenitiesList = Amenity::where('status', 'Active')->get();
         $companies = Company::where('status', 'Active')->get();
         $idCardTypes = IdCardType::where('status', 'Active')->get();
         $reservationModes = ReservationMode::where('status', 'Active')->get();
@@ -127,6 +130,7 @@ class DashboardController extends Controller
                     'max_adults' => (int)($r->beddingConfigRelation?->max_adults ?? 2),
                     'max_children' => (int)($r->beddingConfigRelation?->max_children ?? 1),
                     'max_pax' => (int)($r->beddingConfigRelation?->max_total ?? 3),
+                    'amenity_ids' => is_array($r->amenities) ? array_map('strval', $r->amenities) : [],
                     'amenities' => $roomAmenitiesNames,
                 ];
             }
@@ -174,10 +178,13 @@ class DashboardController extends Controller
         $selectedStatus = strtolower($request->query('status', 'all'));
         $selectedType = strtoupper($request->query('type', 'ALL'));
         $selectedFloor = $request->query('floor', 'ALL');
+        $selectedBedding = $request->query('bedding', 'ALL');
+        $selectedPax = $request->query('pax', 'ALL');
+        $selectedAmenity = $request->query('amenity', 'ALL');
         $searchQuery = trim($request->query('search', ''));
 
         // Filter $rackRooms collection based on backend request parameters
-        $filteredRooms = array_filter($rackRooms, function($rm) use ($selectedStatus, $selectedType, $selectedFloor, $searchQuery) {
+        $filteredRooms = array_filter($rackRooms, function($rm) use ($selectedStatus, $selectedType, $selectedFloor, $selectedBedding, $selectedPax, $selectedAmenity, $searchQuery) {
             // Status Filter
             if ($selectedStatus !== 'all' && $selectedStatus !== '') {
                 if ($selectedStatus === 'vacant') {
@@ -193,7 +200,7 @@ class DashboardController extends Controller
             if ($selectedType !== 'ALL' && $selectedType !== '') {
                 $rmType = strtoupper($rm['type']);
                 $rmCat = strtoupper($rm['category']);
-                if ($rmType !== $selectedType && $rmCat !== $selectedType) {
+                if ($rmType !== $selectedType && $rmCat !== $selectedType && strval($rm['category_id']) !== strval($selectedType)) {
                     return false;
                 }
             }
@@ -205,14 +212,54 @@ class DashboardController extends Controller
                 }
             }
 
-            // Search Query (Room Number, Type, Guest Name)
+            // Bedding Config Filter
+            if ($selectedBedding !== 'ALL' && $selectedBedding !== '') {
+                if (strval($rm['bedding_id']) !== strval($selectedBedding) && stripos($rm['bedding'], $selectedBedding) === false) {
+                    return false;
+                }
+            }
+
+            // Pax Capacity Filter
+            if ($selectedPax !== 'ALL' && $selectedPax !== '') {
+                if (str_ends_with($selectedPax, '+')) {
+                    $minPax = (int)$selectedPax;
+                    if ($rm['max_pax'] < $minPax) {
+                        return false;
+                    }
+                } else {
+                    if (strval($rm['max_pax']) !== strval($selectedPax)) {
+                        return false;
+                    }
+                }
+            }
+
+            // Amenity Filter
+            if ($selectedAmenity !== 'ALL' && $selectedAmenity !== '') {
+                $hasAmenity = false;
+                if (in_array(strval($selectedAmenity), $rm['amenity_ids'] ?? [], true)) {
+                    $hasAmenity = true;
+                } else {
+                    foreach ($rm['amenities'] as $aName) {
+                        if (stripos($aName, $selectedAmenity) !== false || strval($selectedAmenity) === strval($aName)) {
+                            $hasAmenity = true;
+                            break;
+                        }
+                    }
+                }
+                if (!$hasAmenity) {
+                    return false;
+                }
+            }
+
+            // Search Query (Room Number, Type, Guest Name, Bedding)
             if ($searchQuery !== '') {
                 $q = strtolower($searchQuery);
                 $matchRoom = str_contains(strtolower($rm['room']), $q);
                 $matchType = str_contains(strtolower($rm['type']), $q) || str_contains(strtolower($rm['category']), $q);
                 $matchGuest = !empty($rm['guest']['name']) && str_contains(strtolower($rm['guest']['name']), $q);
+                $matchBedding = str_contains(strtolower($rm['bedding']), $q);
 
-                if (!$matchRoom && !$matchType && !$matchGuest) {
+                if (!$matchRoom && !$matchType && !$matchGuest && !$matchBedding) {
                     return false;
                 }
             }
@@ -226,6 +273,8 @@ class DashboardController extends Controller
             'rackRooms',
             'floors',
             'categories',
+            'beddingConfigs',
+            'amenitiesList',
             'companies',
             'idCardTypes',
             'reservationModes',
@@ -238,6 +287,9 @@ class DashboardController extends Controller
             'selectedStatus',
             'selectedType',
             'selectedFloor',
+            'selectedBedding',
+            'selectedPax',
+            'selectedAmenity',
             'searchQuery'
         ));
     }

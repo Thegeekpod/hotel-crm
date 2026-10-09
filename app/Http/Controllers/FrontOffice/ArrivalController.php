@@ -29,14 +29,18 @@ class ArrivalController extends Controller
             ->latest('id')
             ->get();
 
+        $discounts = \App\Models\Discount::where('status', 'Active')->orderBy('discount_percentage', 'asc')->get();
+
         $arrivals = [];
         foreach ($dbGuests as $g) {
+            $checkInStr = $g->reserve_date ? $g->reserve_date->format('d M') : 'Today';
+            $checkOutStr = $g->checkout_date ? $g->checkout_date->format('d M') : now()->addDays(1)->format('d M');
             $arrivals[] = [
                 'ref' => $g->reserve_id ?: ('RES-' . $g->id),
                 'guest_name' => ($g->title?->name ? $g->title->name . ' ' : '') . $g->guest_name,
                 'category' => strtoupper($g->room?->categoryRelation?->name ?? 'DELUXE'),
                 'room' => (string)($g->room?->room_number ?? 'Pending'),
-                'stay_dates' => ($g->reserve_date ? $g->reserve_date->format('d M') : 'Today') . ' - ' . now()->addDays(2)->format('d M'),
+                'stay_dates' => $checkInStr . ' - ' . $checkOutStr,
                 'pax' => 2,
                 'advance' => '₹ ' . number_format($g->advance_amount),
                 'status' => $g->status ?: 'Confirmed',
@@ -51,7 +55,7 @@ class ArrivalController extends Controller
                     'guest_name' => 'Manish Khemka',
                     'category' => 'SUPER DELUXE',
                     'room' => '101',
-                    'stay_dates' => now()->format('d M') . ' - ' . now()->addDays(2)->format('d M'),
+                    'stay_dates' => now()->format('d M') . ' - ' . now()->addDays(1)->format('d M'),
                     'pax' => 2,
                     'advance' => '₹ 3,000',
                     'status' => 'Confirmed',
@@ -68,6 +72,7 @@ class ArrivalController extends Controller
             'idCardTypes',
             'reservationModes',
             'paymentModes',
+            'discounts',
             'rackRooms'
         ));
     }

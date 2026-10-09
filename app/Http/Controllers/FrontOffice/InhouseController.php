@@ -28,15 +28,18 @@ class InhouseController extends Controller
             ->whereIn('status', ['Arrived', 'Stay Over'])
             ->get();
 
+        $discounts = \App\Models\Discount::where('status', 'Active')->orderBy('discount_percentage', 'asc')->get();
+
         $inhouseGuests = [];
         foreach ($dbInhouse as $g) {
+            $departureStr = $g->checkout_date ? ($g->checkout_date->format('d M') . ' ' . ($g->checkout_time ?: '11:00')) : now()->addDays(1)->format('d M 11:00');
             $inhouseGuests[] = [
                 'room' => (string)($g->room?->room_number ?? '101'),
                 'type' => strtoupper($g->room?->categoryRelation?->name ?? 'DELUXE'),
                 'name' => ($g->title?->name ? $g->title->name . ' ' : '') . $g->guest_name,
                 'phone' => $g->mobile ?: '+91 98765 43210',
                 'checkin' => ($g->reserve_date ? $g->reserve_date->format('d M') : now()->subDays(1)->format('d M')) . ' ' . ($g->reserve_time ?: '14:00'),
-                'departure' => now()->addDays(2)->format('d M 11:00'),
+                'departure' => $departureStr,
                 'pax' => 2,
                 'status' => $g->status ?: 'Arrived',
                 'status_class' => ($g->status === 'Arrived' ? 'green' : 'yellow'),
@@ -53,6 +56,7 @@ class InhouseController extends Controller
             'idCardTypes',
             'reservationModes',
             'paymentModes',
+            'discounts',
             'rackRooms'
         ));
     }

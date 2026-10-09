@@ -33,9 +33,6 @@ class Floor extends Model
      */
     public function getCalculatedRoomsCountAttribute(): int
     {
-        return Room::where('floor_id', $this->id)
-            ->orWhere('floor', $this->floor)
-            ->orWhere('floor', $this->name)
-            ->count();
+        return Room::where('floor_id', $this->id)->count();
     }
 }

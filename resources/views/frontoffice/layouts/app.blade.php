@@ -133,27 +133,46 @@
               <!-- Reservation Meta Fields -->
               <div id="section-reservation-details" style="display: flex; flex-direction: column; background: #fff; padding: 24px; border: 1px solid var(--border-medium); border-radius: var(--radius-md); box-shadow: 0 4px 12px rgba(0,0,0,0.02); margin-bottom: 24px;">
                 
-                <div style="display: flex; gap: 16px; margin-bottom: 20px;">
-                  <div style="flex: 1;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                  <div>
                     <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Reserve ID</label>
                     <input type="text" id="reserve-id-input" name="reserve_id" class="pms-input-field" style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #f1f5f9; color: var(--accent-primary); font-weight: 800; font-family: var(--font-mono);" value="{{ $nextReserveId ?? \App\Models\Guest::generateNextReserveId() }}" readonly>
                   </div>
-                  <div style="flex: 1;">
-                    <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Reserve Date</label>
-                    <input type="date" id="reserve-date-input" name="reserve_date" class="pms-input-field" style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff; color: var(--text-primary);">
-                  </div>
-                  <div style="flex: 1;">
-                    <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Reserve Time</label>
-                    <input type="time" id="reserve-time-input" name="reserve_time" class="pms-input-field" style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff; color: var(--text-primary);">
+                  <div>
+                    <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Mode of Reserve</label>
+                    <select name="reservation_mode_id" class="pms-input-field" style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff; color: var(--text-primary); font-weight: 600;">
+                      @foreach($reservationModes ?? \App\Models\ReservationMode::where('status', 'Active')->get() as $rm)
+                        <option value="{{ $rm->id }}">{{ $rm->name }}</option>
+                      @endforeach
+                    </select>
                   </div>
                 </div>
-                <div style="margin-bottom: 20px;">
-                  <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Mode of Reserve</label>
-                  <select name="reservation_mode_id" class="pms-input-field" style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff; color: var(--text-primary); font-weight: 600;">
-                    @foreach($reservationModes ?? \App\Models\ReservationMode::where('status', 'Active')->get() as $rm)
-                      <option value="{{ $rm->id }}">{{ $rm->name }}</option>
-                    @endforeach
-                  </select>
+
+                <!-- Check-In & Check-Out Date & Time with Stay Duration -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; background: linear-gradient(135deg, rgba(99, 102, 241, 0.04), rgba(16, 185, 129, 0.04)); padding: 14px 16px; border: 1px solid rgba(99, 102, 241, 0.15); border-radius: var(--radius-md);">
+                  <div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                      <label style="display:block; font-size: 10px; font-weight: 800; color: var(--accent-primary); text-transform: uppercase; letter-spacing: 0.5px;">
+                        <i class="fa-solid fa-calendar-check"></i> Check-in (Arrival)
+                      </label>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                      <input type="date" id="reserve-date-input" name="reserve_date" class="pms-input-field" onchange="calculateReservationBilling()" style="flex: 3; height:38px; padding:6px 10px; font-size:12px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff; color: var(--text-primary); font-weight: 700;">
+                      <input type="time" id="reserve-time-input" name="reserve_time" class="pms-input-field" style="flex: 2; height:38px; padding:6px 8px; font-size:12px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff; color: var(--text-primary); font-weight: 600;">
+                    </div>
+                  </div>
+                  <div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                      <label style="display:block; font-size: 10px; font-weight: 800; color: #059669; text-transform: uppercase; letter-spacing: 0.5px;">
+                        <i class="fa-solid fa-calendar-xmark"></i> Check-out (Departure)
+                      </label>
+                      <span id="stay-nights-badge" style="font-size: 10px; font-weight: 800; background: #e0e7ff; color: #4338ca; padding: 2px 8px; border-radius: 4px; border: 1px solid #c7d2fe;">1 Night</span>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                      <input type="date" id="checkout-date-input" name="checkout_date" class="pms-input-field" onchange="calculateReservationBilling()" style="flex: 3; height:38px; padding:6px 10px; font-size:12px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff; color: var(--text-primary); font-weight: 700;">
+                      <input type="time" id="checkout-time-input" name="checkout_time" class="pms-input-field" style="flex: 2; height:38px; padding:6px 8px; font-size:12px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff; color: var(--text-primary); font-weight: 600;" value="11:00">
+                    </div>
+                  </div>
                 </div>
 
                 <!-- Company Specific Fields -->
@@ -431,16 +450,67 @@
                   </select>
                 </div>
 
-                <!-- Conditional Advance & Remarks Fields -->
-                <div id="payment-details-container" style="display: none; flex-direction: column; gap: 12px; margin-bottom: 4px;">
+                <!-- Dynamic Calculation & Billing Breakdown Panel -->
+                <div id="payment-details-container" style="display: none; flex-direction: column; gap: 10px; margin-bottom: 4px;">
+                  
+                  <!-- Total Gross Tariff Card -->
+                  <div style="background: #f8fafc; border: 1px solid var(--border-medium); border-radius: 8px; padding: 10px 12px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                      <span style="font-size: 10px; font-weight: 800; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px;">Room Tariff</span>
+                      <span id="calc-nights-rate-label" style="font-size: 10px; font-weight: 700; color: var(--text-secondary); font-family: var(--font-mono);">₹ 4,500 x 1 Night</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                      <span style="font-size: 11px; font-weight: 700; color: var(--text-primary);">Total Gross:</span>
+                      <span id="calc-gross-display" style="font-size: 15px; font-weight: 900; color: var(--text-primary); font-family: var(--font-mono);">₹ 4,500.00</span>
+                    </div>
+                    <input type="hidden" name="total_amount" id="calc-total-amount" value="4500">
+                  </div>
+
+                  <!-- Discount Selection from discounts table -->
+                  <div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                      <label style="display:block; font-size: 10px; font-weight: 800; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Discount</label>
+                      <span id="calc-discount-val-label" style="font-size: 11px; font-weight: 800; color: #059669; font-family: var(--font-mono);">- ₹ 0.00</span>
+                    </div>
+                    <select name="discount_id" id="payment-discount-select" onchange="calculateReservationBilling()" style="width:100%; height:38px; padding:6px 12px; font-size:12px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff; color: var(--text-primary); font-weight: 700;">
+                      <option value="" data-pct="0">No Discount (0%)</option>
+                      @php
+                        $discountsList = $discounts ?? \App\Models\Discount::where('status', 'Active')->orderBy('discount_percentage', 'asc')->get();
+                      @endphp
+                      @foreach($discountsList as $disc)
+                        <option value="{{ $disc->id }}" data-pct="{{ $disc->discount_percentage }}">{{ (float)$disc->discount_percentage }}% Discount</option>
+                      @endforeach
+                    </select>
+                    <input type="hidden" name="discount_percentage" id="calc-discount-percentage" value="0">
+                    <input type="hidden" name="discount_amount" id="calc-discount-amount" value="0">
+                  </div>
+
+                  <!-- Net Payable Amount -->
+                  <div style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.08), rgba(16, 185, 129, 0.08)); border: 1px solid rgba(99, 102, 241, 0.25); border-radius: 8px; padding: 10px 12px; display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-size: 11px; font-weight: 800; color: var(--accent-primary); text-transform: uppercase; letter-spacing: 0.5px;">Payable Amount:</span>
+                    <span id="calc-payable-display" style="font-size: 15px; font-weight: 900; color: var(--accent-primary); font-family: var(--font-mono);">₹ 4,500.00</span>
+                    <input type="hidden" name="payable_amount" id="calc-payable-amount" value="4500">
+                  </div>
+
+                  <!-- Advance Amount Input -->
                   <div>
                     <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Advance Amount (₹)</label>
-                    <input type="number" name="advance_amount" id="payment-advance-amount" style="width:100%; height:40px; padding:8px 14px; font-size:13px; font-weight: 700; font-family: var(--font-mono); border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff; color: var(--text-primary);" placeholder="Enter Advance Amount">
+                    <input type="number" name="advance_amount" id="payment-advance-amount" oninput="calculateReservationBilling()" min="0" step="any" style="width:100%; height:40px; padding:8px 14px; font-size:13px; font-weight: 700; font-family: var(--font-mono); border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff; color: var(--text-primary);" placeholder="0.00">
                   </div>
+
+                  <!-- Remaining / Balance Amount Display -->
+                  <div id="calc-balance-box" style="background: rgba(225, 29, 72, 0.06); border: 1px solid rgba(225, 29, 72, 0.2); border-radius: 8px; padding: 10px 12px; display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-size: 11px; font-weight: 800; color: #e11d48; text-transform: uppercase; letter-spacing: 0.5px;">Remaining Amount:</span>
+                    <span id="calc-balance-display" style="font-size: 15px; font-weight: 900; color: #e11d48; font-family: var(--font-mono);">₹ 4,500.00</span>
+                    <input type="hidden" name="balance" id="calc-balance-amount" value="4500">
+                  </div>
+
+                  <!-- Remarks -->
                   <div>
                     <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Remarks</label>
                     <input type="text" name="payment_remarks" id="payment-remarks" style="width:100%; height:40px; padding:8px 14px; font-size:13px; border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff; color: var(--text-primary);" placeholder="Transaction ID, UPI Ref, or Notes">
                   </div>
+
                 </div>
 
               </div>

@@ -20,6 +20,7 @@ use App\Models\HousekeepingState;
 use App\Models\OperationalStatus;
 use App\Models\RoomHousekeepingHistory;
 use App\Models\RoomOperationalHistory;
+use App\Models\Discount;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -50,6 +51,7 @@ class DashboardController extends Controller
         $idCardTypes = IdCardType::where('status', 'Active')->get();
         $reservationModes = ReservationMode::where('status', 'Active')->get();
         $paymentModes = PaymentMode::where('status', 'Active')->get();
+        $discounts = Discount::where('status', 'Active')->orderBy('discount_percentage', 'asc')->get();
         $registrationTypes = RegistrationType::where('status', 'Active')->get();
         $titles = Title::where('status', 'Active')->get();
         $nationalities = Nationality::where('status', 'Active')->get();
@@ -316,6 +318,7 @@ class DashboardController extends Controller
             'idCardTypes',
             'reservationModes',
             'paymentModes',
+            'discounts',
             'registrationTypes',
             'titles',
             'nationalities',
@@ -429,6 +432,30 @@ class DashboardController extends Controller
             $paymentRemarks = $request->input('payment_remarks');
             $reserveDate = $request->input('reserve_date', date('Y-m-d'));
             $reserveTime = $request->input('reserve_time', date('H:i'));
+            $checkoutDate = $request->input('checkout_date', date('Y-m-d', strtotime('+1 day')));
+            $checkoutTime = $request->input('checkout_time', '11:00');
+
+            // Calculate stay duration (nights)
+            $dIn = new \DateTime($reserveDate);
+            $dOut = new \DateTime($checkoutDate);
+            $diffNights = (int)$dIn->diff($dOut)->format('%r%a');
+            $totalNights = max(1, $diffNights);
+
+            // Discount calculation
+            $discountId = $request->input('discount_id');
+            $discountPercentage = 0.0;
+            if ($discountId && is_numeric($discountId)) {
+                $discountModel = Discount::find($discountId);
+                if ($discountModel) {
+                    $discountPercentage = (float)$discountModel->discount_percentage;
+                    $discountId = $discountModel->id;
+                } else {
+                    $discountId = null;
+                }
+            } else {
+                $discountId = null;
+                $discountPercentage = (float)($request->input('discount_percentage', 0));
+            }
 
             // Check if guests data is passed as array or flat inputs
             $rawGuests = $request->input('guests');
@@ -472,7 +499,10 @@ class DashboardController extends Controller
                 }
 
                 $roomRate = (float)($roomObj?->rate ?? 4500);
-                $calculatedBalance = max(0, $roomRate - ($idx === 0 ? $advanceAmount : 0));
+                $totalAmount = $roomRate * $totalNights;
+                $discountAmount = round(($totalAmount * $discountPercentage) / 100.0, 2);
+                $payableAmount = max(0, $totalAmount - $discountAmount);
+                $calculatedBalance = max(0, $payableAmount - ($idx === 0 ? $advanceAmount : 0));
                 $folioNo = Guest::generateFolioNumber($roomObj?->room_number ?? '100');
 
                 $titleId = (!empty($gData['title_id']) && Title::where('id', $gData['title_id'])->exists()) ? (int)$gData['title_id'] : null;
@@ -490,6 +520,11 @@ class DashboardController extends Controller
                     'new_company_phone' => $request->input('new_company_phone'),
                     'reserve_date' => $reserveDate,
                     'reserve_time' => $reserveTime,
+                    'checkout_date' => $checkoutDate,
+                    'checkout_time' => $checkoutTime,
+                    'total_nights' => $totalNights,
+                    'room_rate' => $roomRate,
+                    'total_amount' => $totalAmount,
                     'title_id' => $titleId,
                     'guest_name' => $gData['guest_name'],
                     'guest_address' => $gData['guest_address'] ?? null,
@@ -506,6 +541,10 @@ class DashboardController extends Controller
                     'id_card_type_id' => $idCardTypeId,
                     'id_card_number' => $gData['id_card_number'] ?? null,
                     'payment_mode_id' => ($idx === 0) ? $paymentModeId : null,
+                    'discount_id' => ($idx === 0) ? $discountId : null,
+                    'discount_percentage' => ($idx === 0) ? $discountPercentage : 0.0,
+                    'discount_amount' => ($idx === 0) ? $discountAmount : 0.00,
+                    'payable_amount' => ($idx === 0) ? $payableAmount : 0.00,
                     'advance_amount' => ($idx === 0) ? $advanceAmount : 0.00,
                     'payment_remarks' => ($idx === 0) ? $paymentRemarks : null,
                     'primary_guest_id' => $primaryGuest ? $primaryGuest->id : null,

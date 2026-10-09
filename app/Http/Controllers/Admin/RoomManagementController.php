@@ -339,7 +339,7 @@ class RoomManagementController extends Controller
         if ($floorId) {
             $fl = Floor::find($floorId);
             if ($fl) {
-                $fl->rooms = Room::where('floor_id', $fl->id)->orWhere('floor', $fl->floor)->orWhere('floor', $fl->name)->count();
+                $fl->rooms = Room::where('floor_id', $fl->id)->count();
                 $fl->save();
             }
         }
@@ -362,7 +362,7 @@ class RoomManagementController extends Controller
         // Recalculate room counts across all floors
         $floors = Floor::all();
         foreach ($floors as $fl) {
-            $fl->rooms = Room::where('floor_id', $fl->id)->orWhere('floor', $fl->floor)->orWhere('floor', $fl->name)->count();
+            $fl->rooms = Room::where('floor_id', $fl->id)->count();
             $fl->save();
         }
 

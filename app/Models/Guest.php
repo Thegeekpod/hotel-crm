@@ -22,6 +22,11 @@ class Guest extends Model
         'new_company_phone',
         'reserve_date',
         'reserve_time',
+        'checkout_date',
+        'checkout_time',
+        'total_nights',
+        'room_rate',
+        'total_amount',
         'title_id',
         'guest_name',
         'guest_address',
@@ -38,6 +43,10 @@ class Guest extends Model
         'id_card_type_id',
         'id_card_number',
         'payment_mode_id',
+        'discount_id',
+        'discount_percentage',
+        'discount_amount',
+        'payable_amount',
         'advance_amount',
         'payment_remarks',
         'primary_guest_id',
@@ -47,6 +56,13 @@ class Guest extends Model
 
     protected $casts = [
         'reserve_date' => 'date',
+        'checkout_date' => 'date',
+        'total_nights' => 'integer',
+        'room_rate' => 'decimal:2',
+        'total_amount' => 'decimal:2',
+        'discount_percentage' => 'float',
+        'discount_amount' => 'decimal:2',
+        'payable_amount' => 'decimal:2',
         'dob' => 'date',
         'anniversary' => 'date',
         'has_privilege_card' => 'boolean',
@@ -130,6 +146,11 @@ class Guest extends Model
     public function paymentMode()
     {
         return $this->belongsTo(PaymentMode::class, 'payment_mode_id');
+    }
+
+    public function discount()
+    {
+        return $this->belongsTo(Discount::class, 'discount_id');
     }
 
     public function primaryGuest()

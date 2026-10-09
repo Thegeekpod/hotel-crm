@@ -25,8 +25,8 @@ class RoomMaintainController extends Controller
                   ->orWhere('status', 'like', "%{$search}%")
                   ->orWhereHas('room', function ($rq) use ($search) {
                       $rq->where('room_number', 'like', "%{$search}%")
-                         ->orWhere('floor', 'like', "%{$search}%")
-                         ->orWhere('category', 'like', "%{$search}%");
+                         ->orWhereHas('floorRelation', fn ($fq) => $fq->where('floor', 'like', "%{$search}%")->orWhere('name', 'like', "%{$search}%"))
+                         ->orWhereHas('categoryRelation', fn ($cq) => $cq->where('name', 'like', "%{$search}%"));
                   });
             });
         }
@@ -38,14 +38,16 @@ class RoomMaintainController extends Controller
         if ($request->filled('floor') && $request->input('floor') !== 'all') {
             $floor = $request->input('floor');
             $query->whereHas('room', function ($rq) use ($floor) {
-                $rq->where('floor', $floor);
+                $rq->where('floor_id', $floor)
+                   ->orWhereHas('floorRelation', fn ($fq) => $fq->where('floor', $floor)->orWhere('name', $floor));
             });
         }
 
         if ($request->filled('category') && $request->input('category') !== 'all') {
             $cat = $request->input('category');
             $query->whereHas('room', function ($rq) use ($cat) {
-                $rq->where('category', $cat);
+                $rq->where('category_id', $cat)
+                   ->orWhereHas('categoryRelation', fn ($cq) => $cq->where('name', $cat));
             });
         }
 

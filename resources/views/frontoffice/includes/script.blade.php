@@ -802,6 +802,8 @@
         flSel.value = match.floor_id || match.floor;
       }
     }
+
+    calculateReservationBilling();
   }
 
   function searchRegularGuest(btnElem) {
@@ -1003,6 +1005,8 @@
     const now = new Date();
     const dateInput = document.getElementById('reserve-date-input');
     const timeInput = document.getElementById('reserve-time-input');
+    const checkoutDateInput = document.getElementById('checkout-date-input');
+    const checkoutTimeInput = document.getElementById('checkout-time-input');
     
     if (dateInput) {
       const year = now.getFullYear();
@@ -1015,12 +1019,137 @@
       const minutes = String(now.getMinutes()).padStart(2, '0');
       timeInput.value = `${hours}:${minutes}`;
     }
+    if (checkoutDateInput) {
+      const tomorrow = new Date(now);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const tYear = tomorrow.getFullYear();
+      const tMonth = String(tomorrow.getMonth() + 1).padStart(2, '0');
+      const tDay = String(tomorrow.getDate()).padStart(2, '0');
+      checkoutDateInput.value = `${tYear}-${tMonth}-${tDay}`;
+    }
+    if (checkoutTimeInput && !checkoutTimeInput.value) {
+      checkoutTimeInput.value = '11:00';
+    }
+
+    calculateReservationBilling();
+  }
+
+  function calculateReservationBilling() {
+    const reserveDateVal = document.getElementById('reserve-date-input')?.value;
+    const checkoutDateVal = document.getElementById('checkout-date-input')?.value;
+    
+    let nights = 1;
+    if (reserveDateVal && checkoutDateVal) {
+      const d1 = new Date(reserveDateVal + 'T00:00:00');
+      const d2 = new Date(checkoutDateVal + 'T00:00:00');
+      const diffTime = d2.getTime() - d1.getTime();
+      const diffDays = Math.round(diffTime / (1000 * 3600 * 24));
+      nights = Math.max(1, diffDays);
+    }
+
+    const nightsBadge = document.getElementById('stay-nights-badge');
+    if (nightsBadge) {
+      nightsBadge.textContent = nights + (nights === 1 ? ' Night' : ' Nights');
+    }
+
+    // Find primary room rate
+    let primaryRate = 4500;
+    const firstGuest = document.querySelector('.guest-block');
+    if (firstGuest) {
+      const rmSel = firstGuest.querySelector('.select-room-no');
+      if (rmSel && rmSel.selectedIndex >= 0) {
+        const opt = rmSel.options[rmSel.selectedIndex];
+        if (opt && opt.dataset.rate) {
+          primaryRate = parseFloat(opt.dataset.rate) || 4500;
+        }
+      }
+    }
+
+    const totalGross = primaryRate * nights;
+
+    // Update Nights & Gross UI
+    const nightsRateLabel = document.getElementById('calc-nights-rate-label');
+    if (nightsRateLabel) {
+      nightsRateLabel.textContent = `₹ ${primaryRate.toLocaleString('en-IN')} x ${nights} ${nights === 1 ? 'Night' : 'Nights'}`;
+    }
+    const grossDisplay = document.getElementById('calc-gross-display');
+    if (grossDisplay) {
+      grossDisplay.textContent = `₹ ${totalGross.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    }
+    const totalAmountInp = document.getElementById('calc-total-amount');
+    if (totalAmountInp) {
+      totalAmountInp.value = totalGross.toFixed(2);
+    }
+
+    // Discount calculation
+    const discSelect = document.getElementById('payment-discount-select');
+    let discountPct = 0;
+    if (discSelect && discSelect.selectedIndex >= 0) {
+      const opt = discSelect.options[discSelect.selectedIndex];
+      if (opt && opt.dataset.pct) {
+        discountPct = parseFloat(opt.dataset.pct) || 0;
+      }
+    }
+
+    const discountAmount = Math.round(((totalGross * discountPct) / 100) * 100) / 100;
+    const payableAmount = Math.max(0, totalGross - discountAmount);
+
+    const discValLabel = document.getElementById('calc-discount-val-label');
+    if (discValLabel) {
+      discValLabel.textContent = `- ₹ ${discountAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    }
+    const discPctInp = document.getElementById('calc-discount-percentage');
+    if (discPctInp) discPctInp.value = discountPct;
+    const discAmtInp = document.getElementById('calc-discount-amount');
+    if (discAmtInp) discAmtInp.value = discountAmount.toFixed(2);
+
+    const payableDisplay = document.getElementById('calc-payable-display');
+    if (payableDisplay) {
+      payableDisplay.textContent = `₹ ${payableAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    }
+    const payableAmtInp = document.getElementById('calc-payable-amount');
+    if (payableAmtInp) payableAmtInp.value = payableAmount.toFixed(2);
+
+    // Advance amount and remaining balance
+    const advInput = document.getElementById('payment-advance-amount');
+    const advanceVal = parseFloat(advInput?.value) || 0;
+    const remainingBalance = Math.max(0, payableAmount - advanceVal);
+
+    const balanceDisplay = document.getElementById('calc-balance-display');
+    if (balanceDisplay) {
+      balanceDisplay.textContent = `₹ ${remainingBalance.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    }
+    const balanceInp = document.getElementById('calc-balance-amount');
+    if (balanceInp) balanceInp.value = remainingBalance.toFixed(2);
+
+    const balanceBox = document.getElementById('calc-balance-box');
+    if (balanceBox) {
+      const boxLabel = balanceBox.querySelector('span');
+      if (remainingBalance <= 0) {
+        balanceBox.style.background = 'rgba(16, 185, 129, 0.08)';
+        balanceBox.style.borderColor = 'rgba(16, 185, 129, 0.3)';
+        if (balanceDisplay) balanceDisplay.style.color = '#059669';
+        if (boxLabel) {
+          boxLabel.style.color = '#059669';
+          boxLabel.innerHTML = '<i class="fa-solid fa-circle-check"></i> Fully Paid (No Balance):';
+        }
+      } else {
+        balanceBox.style.background = 'rgba(225, 29, 72, 0.06)';
+        balanceBox.style.borderColor = 'rgba(225, 29, 72, 0.2)';
+        if (balanceDisplay) balanceDisplay.style.color = '#e11d48';
+        if (boxLabel) {
+          boxLabel.style.color = '#e11d48';
+          boxLabel.innerHTML = 'Remaining Amount:';
+        }
+      }
+    }
   }
 
   function togglePaymentFields(selectElem) {
     const container = document.getElementById('payment-details-container');
     if (container) {
-      container.style.display = (selectElem.value !== 'None') ? 'flex' : 'none';
+      container.style.display = (selectElem.value !== 'None' && selectElem.value !== '') ? 'flex' : 'none';
+      calculateReservationBilling();
     }
   }
 
@@ -1038,6 +1167,8 @@
     // Collect Reservation Meta
     const reserveDate = form.querySelector('input[name="reserve_date"]')?.value || '';
     const reserveTime = form.querySelector('input[name="reserve_time"]')?.value || '';
+    const checkoutDate = form.querySelector('input[name="checkout_date"]')?.value || '';
+    const checkoutTime = form.querySelector('input[name="checkout_time"]')?.value || '';
     const reservationModeId = form.querySelector('select[name="reservation_mode_id"]')?.value || null;
 
     // Collect Corporate Details
@@ -1099,8 +1230,13 @@
       return;
     }
 
-    // Collect Payment
+    // Collect Payment & Billing Breakdown
     const paymentModeId = form.querySelector('select[name="payment_mode_id"]')?.value;
+    const discountId = form.querySelector('select[name="discount_id"]')?.value || null;
+    const discountPercentage = form.querySelector('input[name="discount_percentage"]')?.value || 0;
+    const discountAmount = form.querySelector('input[name="discount_amount"]')?.value || 0;
+    const totalAmount = form.querySelector('input[name="total_amount"]')?.value || 0;
+    const payableAmount = form.querySelector('input[name="payable_amount"]')?.value || 0;
     const advanceAmount = form.querySelector('input[name="advance_amount"]')?.value || 0;
     const paymentRemarks = form.querySelector('input[name="payment_remarks"]')?.value || '';
 
@@ -1109,6 +1245,8 @@
       res_type: resTypeSlug,
       reserve_date: reserveDate,
       reserve_time: reserveTime,
+      checkout_date: checkoutDate,
+      checkout_time: checkoutTime,
       reservation_mode_id: reservationModeId,
       company_id: companyId,
       new_company_name: newCompanyName,
@@ -1117,6 +1255,11 @@
       new_company_phone: newCompanyPhone,
       guests: guests,
       payment_mode_id: paymentModeId,
+      discount_id: discountId,
+      discount_percentage: discountPercentage,
+      discount_amount: discountAmount,
+      total_amount: totalAmount,
+      payable_amount: payableAmount,
       advance_amount: advanceAmount,
       payment_remarks: paymentRemarks,
     };

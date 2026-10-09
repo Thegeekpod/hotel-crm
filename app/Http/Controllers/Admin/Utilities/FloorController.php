@@ -26,10 +26,7 @@ class FloorController extends Controller
         }
 
         $items = $query->get()->map(function ($floor) {
-            $roomCount = Room::where('floor_id', $floor->id)
-                ->orWhere('floor', $floor->floor)
-                ->orWhere('floor', $floor->name)
-                ->count();
+            $roomCount = Room::where('floor_id', $floor->id)->count();
             $floor->rooms = $roomCount;
             return $floor;
         });
@@ -61,10 +58,7 @@ class FloorController extends Controller
         ]);
 
         // Auto count if any existing rooms match this floor
-        $roomCount = Room::where('floor_id', $item->id)
-            ->orWhere('floor', $item->floor)
-            ->orWhere('floor', $item->name)
-            ->count();
+        $roomCount = Room::where('floor_id', $item->id)->count();
         $item->rooms = $roomCount;
         $item->save();
 
@@ -97,10 +91,7 @@ class FloorController extends Controller
             'status' => $validated['status'],
         ]);
 
-        $roomCount = Room::where('floor_id', $item->id)
-            ->orWhere('floor', $item->floor)
-            ->orWhere('floor', $item->name)
-            ->count();
+        $roomCount = Room::where('floor_id', $item->id)->count();
         $item->rooms = $roomCount;
         $item->save();
 

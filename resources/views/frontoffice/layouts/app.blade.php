@@ -35,8 +35,8 @@
       <span style="background: #fbc531; color: #1e293b; font-size: 9px; padding: 2px 5px; border-radius: 3px; font-weight: 800;">PMS 2026</span>
     </div>
     <div class="pms-header-center">
-      <span><i class="fa-regular fa-calendar-days"></i> {{ date('l, d M Y') }}</span>
-      <span><i class="fa-solid fa-sun" style="color: #fbc531;"></i> Morning Shift (07:00 - 15:00)</span>
+      <span><i class="fa-regular fa-calendar-days"></i> {{ isset($selectedDate) ? \Carbon\Carbon::parse($selectedDate)->format('l, d M Y') : date('l, d M Y') }} @if(isset($isToday) && $isToday)<strong style="color: #10b981; font-size: 10px; margin-left: 4px; text-transform: uppercase;">(Today)</strong>@endif</span>
+      <span><i class="fa-solid {{ $shiftIcon ?? 'fa-sun' }}" style="color: {{ $shiftColor ?? '#fbc531' }};"></i> {{ $currentShift ?? 'Morning Shift (07:00 - 15:00)' }}</span>
       <span><i class="fa-solid fa-location-dot" style="color: #22d3ee;"></i> Main Luxury Wing</span>
     </div>
     <div class="pms-header-right">

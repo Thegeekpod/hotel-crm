@@ -503,14 +503,23 @@ class MasterUtilitiesSeeder extends Seeder
 
             $reserveCode = "{$gd['seq']}\\{$finYear}";
 
+            $isStayOver = ($gd['status'] === 'Stay Over');
+            $isConfirmed = ($gd['status'] === 'Confirmed');
+            $inDate = $isStayOver ? now()->subDays(1)->toDateString() : now()->toDateString();
+            $outDate = $isConfirmed ? now()->addDays(1)->toDateString() : now()->addDays(2)->toDateString();
+            $nights = $isStayOver ? 3 : ($isConfirmed ? 1 : 2);
+
             Guest::updateOrCreate(
                 ['reserve_id' => $reserveCode],
                 [
                     'registration_type_id' => $gd['reg']?->id,
                     'reservation_mode_id' => $gd['mode']?->id,
                     'company_id' => isset($gd['company']) ? $gd['company']?->id : null,
-                    'reserve_date' => now()->toDateString(),
-                    'reserve_time' => now()->format('H:i'),
+                    'reserve_date' => $inDate,
+                    'reserve_time' => '11:00',
+                    'checkout_date' => $outDate,
+                    'checkout_time' => '11:00',
+                    'total_nights' => $nights,
                     'title_id' => $gd['title']?->id,
                     'guest_name' => $gd['name'],
                     'guest_address' => 'Flat / Suite ' . $gd['room'] . ', Sagar Sonnet Residency',

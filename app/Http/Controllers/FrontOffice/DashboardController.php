@@ -29,23 +29,57 @@ class DashboardController extends Controller
 {
     public function index(Request $request)
     {
+        // Date filter handling: default to today (now()->toDateString())
+        $selectedDate = $request->query('date', now()->toDateString());
+        try {
+            $selectedCarbon = \Carbon\Carbon::parse($selectedDate);
+            $selectedDate = $selectedCarbon->toDateString();
+        } catch (\Exception $e) {
+            $selectedDate = now()->toDateString();
+            $selectedCarbon = \Carbon\Carbon::parse($selectedDate);
+        }
+        $isToday = ($selectedDate === now()->toDateString());
+        $prevDate = $selectedCarbon->copy()->subDay()->toDateString();
+        $nextDate = $selectedCarbon->copy()->addDay()->toDateString();
+
+        // Calculate dynamic shift based on current hour
+        $hour = (int)date('H');
+        if ($hour >= 7 && $hour < 15) {
+            $currentShift = 'Morning Shift (07:00 - 15:00)';
+            $shiftIcon = 'fa-sun';
+            $shiftColor = '#fbc531';
+        } elseif ($hour >= 15 && $hour < 23) {
+            $currentShift = 'Evening Shift (15:00 - 23:00)';
+            $shiftIcon = 'fa-cloud-sun';
+            $shiftColor = '#f97316';
+        } else {
+            $currentShift = 'Night Shift (23:00 - 07:00)';
+            $shiftIcon = 'fa-moon';
+            $shiftColor = '#a78bfa';
+        }
+
         $dbRooms = Room::with([
             'floorRelation',
             'categoryRelation',
             'beddingConfigRelation',
             'housekeepingHistories.housekeepingStatus',
             'operationalHistories.operationalStatus',
-            'activeGuests.title',
-            'activeGuests.nationality',
-            'activeGuests.idCardType',
-            'activeGuests.registrationType',
-            'activeGuests.company',
-            'currentGuest.title',
-            'currentGuest.nationality',
-            'currentGuest.idCardType',
-            'currentGuest.registrationType',
-            'currentGuest.company',
         ])->orderByRaw('CAST(room_number AS UNSIGNED) ASC, room_number ASC')->get();
+
+        // Preload all active guests covering selectedDate grouped by room_id
+        $activeGuestsByRoom = Guest::where(function ($q) use ($selectedDate) {
+            $q->whereDate('reserve_date', '<=', $selectedDate)
+              ->where(function ($co) use ($selectedDate) {
+                  $co->whereDate('checkout_date', '>=', $selectedDate)
+                     ->orWhereNull('checkout_date');
+              });
+        })
+        ->whereIn('status', ['Confirmed', 'Arrived', 'Stay Over'])
+        ->with(['title', 'nationality', 'idCardType', 'registrationType', 'company'])
+        ->orderByRaw("CASE WHEN status = 'Stay Over' THEN 1 WHEN status = 'Arrived' THEN 2 WHEN status = 'Confirmed' THEN 3 ELSE 4 END")
+        ->orderBy('id', 'desc')
+        ->get()
+        ->groupBy('room_id');
 
         $floors = Floor::where('status', 'Active')->orderBy('floor', 'asc')->get();
         $categories = RoomCategory::where('status', 'Active')->get();
@@ -75,15 +109,15 @@ class DashboardController extends Controller
                 $latestOp = $r->operationalHistories->sortByDesc('id')->first();
                 $latestHk = $r->housekeepingHistories->sortByDesc('id')->first();
                 
-                $activeGuests = $r->activeGuests ?? collect();
-                if ($activeGuests->isEmpty() && $r->currentGuest) {
-                    $activeGuests = collect([$r->currentGuest]);
-                }
+                // Get active guest(s) for this room on the selected date
+                $activeGuests = $activeGuestsByRoom->get($r->id, collect());
 
-                // If current guest has reserve_id, also find any other guests with same reserve_id
-                if ($r->currentGuest && $r->currentGuest->reserve_id) {
-                    $resId = $r->currentGuest->reserve_id;
+                // If current guest has reserve_id, also find any other linked guests with same reserve_id
+                $firstActiveGuest = $activeGuests->first();
+                if ($firstActiveGuest && $firstActiveGuest->reserve_id) {
+                    $resId = $firstActiveGuest->reserve_id;
                     $linkedGuests = Guest::where('reserve_id', $resId)
+                        ->where('room_id', $r->id)
                         ->whereIn('status', ['Confirmed', 'Arrived', 'Stay Over'])
                         ->with(['title', 'nationality', 'idCardType', 'registrationType', 'company'])
                         ->get();
@@ -234,12 +268,12 @@ class DashboardController extends Controller
             'dirty' => $dirtyCount,
             'available' => $availableCount,
             'vacant' => $vacantCount,
-            'expected_arrival' => Guest::where('status', 'Confirmed')->count() ?: 1,
-            'expected_departure' => Guest::where('status', 'Stay Over')->count() ?: 5,
+            'expected_arrival' => Guest::whereDate('reserve_date', $selectedDate)->where('status', 'Confirmed')->count(),
+            'expected_departure' => Guest::whereDate('checkout_date', $selectedDate)->whereIn('status', ['Stay Over', 'Arrived'])->count(),
             'rooms_to_sale' => $vacantCount,
-            'checked_in' => Guest::whereIn('status', ['Arrived', 'Stay Over'])->count() ?: $occupiedCount,
-            'checked_out' => Guest::where('status', 'Checked Out')->count() ?: 0,
-            'total_pax' => $totalPax > 0 ? $totalPax : 18,
+            'checked_in' => Guest::whereDate('reserve_date', $selectedDate)->whereIn('status', ['Arrived', 'Stay Over'])->count(),
+            'checked_out' => Guest::whereDate('checkout_date', $selectedDate)->where('status', 'Checked Out')->count(),
+            'total_pax' => $totalPax > 0 ? $totalPax : 0,
             'cleaned_ratio' => $cleanRatio,
             'percentages' => [
                 'occupied' => $totalRooms > 0 ? round(($occupiedCount / $totalRooms) * 100, 2) : 0,
@@ -367,7 +401,14 @@ class DashboardController extends Controller
             'selectedBedding',
             'selectedPax',
             'selectedAmenity',
-            'searchQuery'
+            'searchQuery',
+            'selectedDate',
+            'isToday',
+            'prevDate',
+            'nextDate',
+            'currentShift',
+            'shiftIcon',
+            'shiftColor'
         ));
     }
 

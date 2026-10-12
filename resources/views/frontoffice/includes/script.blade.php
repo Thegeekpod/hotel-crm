@@ -5,6 +5,31 @@
     submitBackendFilter();
   }
 
+  function onDateFilterChanged(newDate) {
+    const dateInput = document.getElementById('filter-date-val');
+    if (dateInput) {
+      dateInput.value = newDate;
+    }
+    submitBackendFilter();
+  }
+
+  function setDateFilterToday() {
+    const today = new Date().toISOString().split('T')[0];
+    onDateFilterChanged(today);
+  }
+
+  function changeDateFilter(daysOffset) {
+    const curVal = document.getElementById('pms-calendar-input')?.value || document.getElementById('filter-date-val')?.value || new Date().toISOString().split('T')[0];
+    const parts = curVal.split('-');
+    const d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+    d.setDate(d.getDate() + daysOffset);
+    const yr = d.getFullYear();
+    const mo = String(d.getMonth() + 1).padStart(2, '0');
+    const da = String(d.getDate()).padStart(2, '0');
+    const nextVal = `${yr}-${mo}-${da}`;
+    onDateFilterChanged(nextVal);
+  }
+
   function submitBackendFilter() {
     const form = document.getElementById('backend-filter-form');
     if (form) {

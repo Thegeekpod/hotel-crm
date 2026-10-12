@@ -9,8 +9,44 @@
   <!-- Left: All Rooms Rack Panel -->
   <div class="pms-rack-panel">
     <div class="rack-title-bar">
-      <h2><i class="fa-solid fa-th-large" style="color: var(--accent-primary);"></i> All Rooms</h2>
-      <span style="font-size: 11px; color: var(--text-muted); font-weight: 600;">Hotel Sagar Sonnet • {{ $stats['total'] }} Total Rooms</span>
+      <div>
+        <h2><i class="fa-solid fa-th-large" style="color: var(--accent-primary);"></i> All Rooms</h2>
+        <span style="font-size: 11px; color: var(--text-muted); font-weight: 600;">Hotel Sagar Sonnet • {{ $stats['total'] }} Total Rooms</span>
+      </div>
+
+      <!-- Real-Time Date Filter Navigator -->
+      <div class="pms-date-filter-group" style="display: flex; align-items: center; gap: 8px;">
+        <div style="display: flex; align-items: center; background: #ffffff; border: 1.5px solid var(--border-color, #cbd5e1); border-radius: 8px; padding: 2px 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.06);">
+          <button type="button" class="btn-date-step" onclick="changeDateFilter(-1)" title="Previous Day ({{ \Carbon\Carbon::parse($prevDate)->format('d M') }})" style="border: none; background: transparent; width: 28px; height: 28px; border-radius: 6px; cursor: pointer; color: var(--text-secondary); display: flex; align-items: center; justify-content: center; transition: all 0.15s ease;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='transparent'">
+            <i class="fa-solid fa-chevron-left" style="font-size: 11px;"></i>
+          </button>
+          
+          <button type="button" class="btn-date-today" onclick="setDateFilterToday()" title="Jump to Today" style="border: none; background: {{ $isToday ? 'rgba(16, 185, 129, 0.14)' : 'transparent' }}; color: {{ $isToday ? '#059669' : 'var(--text-secondary)' }}; font-weight: 800; font-size: 11px; padding: 3px 8px; border-radius: 5px; cursor: pointer; margin: 0 2px;">
+            Today
+          </button>
+          
+          <div style="display: flex; align-items: center; gap: 6px; padding: 0 6px; border-left: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0;">
+            <i class="fa-regular fa-calendar-days" style="color: var(--accent-primary, #6366f1); font-size: 13px;"></i>
+            <input type="date" id="pms-calendar-input" value="{{ $selectedDate }}" onchange="onDateFilterChanged(this.value)" style="border: none; background: transparent; font-weight: 700; font-size: 12px; color: var(--text-primary); cursor: pointer; outline: none; font-family: inherit;">
+          </div>
+
+          <button type="button" class="btn-date-step" onclick="changeDateFilter(1)" title="Next Day ({{ \Carbon\Carbon::parse($nextDate)->format('d M') }})" style="border: none; background: transparent; width: 28px; height: 28px; border-radius: 6px; cursor: pointer; color: var(--text-secondary); display: flex; align-items: center; justify-content: center; transition: all 0.15s ease;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='transparent'">
+            <i class="fa-solid fa-chevron-right" style="font-size: 11px;"></i>
+          </button>
+        </div>
+
+        @if($isToday)
+          <span style="display: inline-flex; align-items: center; gap: 5px; background: rgba(16, 185, 129, 0.12); color: #059669; font-weight: 800; font-size: 11px; padding: 5px 10px; border-radius: 6px; border: 1px solid rgba(16, 185, 129, 0.25);">
+            <span style="width: 7px; height: 7px; background: #10b981; border-radius: 50%; display: inline-block; box-shadow: 0 0 6px rgba(16, 185, 129, 0.7);"></span>
+            Live Today
+          </span>
+        @else
+          <span style="display: inline-flex; align-items: center; gap: 5px; background: rgba(99, 102, 241, 0.12); color: #4f46e5; font-weight: 800; font-size: 11px; padding: 5px 10px; border-radius: 6px; border: 1px solid rgba(99, 102, 241, 0.25);">
+            <i class="fa-solid fa-calendar-day" style="font-size: 11px;"></i>
+            {{ \Carbon\Carbon::parse($selectedDate)->format('D, d M Y') }}
+          </span>
+        @endif
+      </div>
     </div>
 
     <div class="rack-grid-viewport">
@@ -214,6 +250,7 @@
   </div>
 
   <form method="GET" action="{{ route('frontoffice.dashboard') }}" id="backend-filter-form" class="bottom-actions">
+    <input type="hidden" name="date" id="filter-date-val" value="{{ $selectedDate }}">
     <input type="hidden" name="status" id="filter-status-val" value="{{ $selectedStatus ?? 'all' }}">
 
     <button type="button" class="pms-btn-action" onclick="if(typeof PmsAlert !== 'undefined') PmsAlert.toast('Notification sent to floor supervisors!', 'info'); else alert('Notification sent to floor supervisors!');">

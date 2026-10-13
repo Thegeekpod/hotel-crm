@@ -331,26 +331,6 @@
                       </div>
                     </div>
 
-                    <!-- Row 5: DOB + Anniversary + Status -->
-                    <div style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr); gap: 12px; margin-bottom: 14px;">
-                      <div style="min-width: 0;">
-                        <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 5px; color: #64748b; text-transform: uppercase; letter-spacing: 0.8px;">Date of Birth</label>
-                        <input type="date" name="dob" class="guest-dob-input" style="width:100%; height:38px; padding:4px 8px; font-size:12px; font-weight: 600; border:1px solid #cbd5e1; border-radius: 8px; background: #ffffff; box-sizing: border-box;">
-                      </div>
-                      <div style="min-width: 0;">
-                        <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 5px; color: #64748b; text-transform: uppercase; letter-spacing: 0.8px;">Anniversary</label>
-                        <input type="date" name="anniversary" class="guest-anniversary-input" style="width:100%; height:38px; padding:4px 8px; font-size:12px; font-weight: 600; border:1px solid #cbd5e1; border-radius: 8px; background: #ffffff; box-sizing: border-box;">
-                      </div>
-                      <div style="min-width: 0;">
-                        <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 5px; color: #64748b; text-transform: uppercase; letter-spacing: 0.8px;">Status</label>
-                        <select name="status" class="pms-select-status" style="width:100%; height:38px; padding:6px 10px; font-size:12px; border:1px solid #cbd5e1; border-radius: 8px; background: #ffffff; font-weight: 700; color: #059669; box-sizing: border-box;">
-                          <option value="Confirmed">Confirmed</option>
-                          <option value="Tentative">Tentative</option>
-                          <option value="Waitlisted">Waitlisted</option>
-                        </select>
-                      </div>
-                    </div>
-
                     <!-- Privilege Card Row -->
                     <div class="privilege-checkbox-container" style="display: flex; flex-direction: column; align-items: flex-start; gap: 8px; margin-bottom: 14px; padding: 10px 14px; background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 8px; box-sizing: border-box;">
                       <div style="width: 100%;">

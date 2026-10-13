@@ -1004,21 +1004,7 @@
           const idInp = block.querySelector('.guest-id-number');
           const titleSel = block.querySelector('.pms-select-title');
           const natSel = block.querySelector('.pms-select-nationality');
-          const idTypeSel = block.querySelector('.pms-select-idtype');
-          const dobInp = block.querySelector('.guest-dob-input');
-          const annivInp = block.querySelector('.guest-anniversary-input');
-
-          if (nameInp) nameInp.value = g.name || '';
-          if (addrInp) addrInp.value = g.address || '';
-          if (cityInp) cityInp.value = g.city || '';
-          if (mobInp) mobInp.value = g.mobile || phone;
-          if (emailInp) emailInp.value = g.email || '';
-          if (idInp) idInp.value = g.id_card_number || '';
-          if (titleSel && g.title_id) titleSel.value = g.title_id;
-          if (natSel && g.nationality_id) natSel.value = g.nationality_id;
           if (idTypeSel && g.id_card_type_id) idTypeSel.value = g.id_card_type_id;
-          if (dobInp && g.dob) dobInp.value = g.dob;
-          if (annivInp && g.anniversary) annivInp.value = g.anniversary;
 
           if (typeof PmsAlert !== 'undefined') {
             PmsAlert.toast('Regular guest profile loaded for ' + g.name, 'success');
@@ -1477,8 +1463,6 @@
       const city = block.querySelector('input[name="city"]')?.value?.trim();
       const mobile = block.querySelector('input[name="mobile"]')?.value?.trim();
       const email = block.querySelector('input[name="email"]')?.value?.trim();
-      const dob = block.querySelector('input[name="dob"]')?.value;
-      const anniversary = block.querySelector('input[name="anniversary"]')?.value;
       const status = block.querySelector('select[name="status"]')?.value || 'Confirmed';
       const hasPriv = block.querySelector('.chk-privilege')?.checked || false;
       const privNo = block.querySelector('input[name="privilege_card_no"]')?.value?.trim();
@@ -1495,8 +1479,6 @@
           city: city,
           mobile: mobile,
           email: email,
-          dob: dob,
-          anniversary: anniversary,
           status: status,
           has_privilege_card: hasPriv,
           privilege_card_no: privNo,

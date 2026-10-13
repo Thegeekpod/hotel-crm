@@ -4,6 +4,29 @@
 
 @push('styles')
 <style>
+  /* Prevent any awkward text wrapping in table */
+  .pms-table th,
+  .pms-table td {
+    white-space: nowrap !important;
+  }
+
+  .guest-id-text {
+    font-family: var(--font-mono, monospace);
+    font-weight: 800;
+    color: #4f46e5;
+    font-size: 12px;
+    white-space: nowrap;
+    letter-spacing: 0.3px;
+  }
+
+  .guest-folio-text {
+    font-size: 10px;
+    color: #64748b;
+    font-family: var(--font-mono, monospace);
+    margin-top: 2px;
+    white-space: nowrap;
+  }
+
   /* Header styling */
   .guest-header-card {
     background: #ffffff;
@@ -21,11 +44,6 @@
     border-radius: 12px;
     padding: 12px 18px;
     margin-bottom: 16px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 12px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.02);
   }
 
@@ -36,7 +54,7 @@
     max-width: 440px;
   }
 
-  .search-box-wrap i {
+  .search-box-wrap i.search-icon {
     position: absolute;
     left: 14px;
     top: 50%;
@@ -48,7 +66,7 @@
   .search-box-wrap input {
     width: 100%;
     height: 38px;
-    padding: 6px 12px 6px 36px;
+    padding: 6px 36px 6px 36px;
     font-size: 12px;
     font-weight: 600;
     border-radius: 10px;
@@ -83,6 +101,28 @@
   }
 
   .pms-filter-select:focus {
+    background-color: #ffffff;
+    border-color: #6366f1;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+  }
+
+  .pms-filter-date {
+    height: 38px;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 700;
+    border-radius: 10px;
+    border: 1px solid #cbd5e1;
+    background: #f8fafc;
+    color: #1e293b;
+    cursor: pointer;
+    outline: none;
+    transition: all 0.2s;
+    font-family: inherit;
+  }
+
+  .pms-filter-date:focus {
     background-color: #ffffff;
     border-color: #6366f1;
     outline: none;
@@ -172,54 +212,7 @@
     border: 1px solid rgba(239, 68, 68, 0.25);
   }
 
-  /* Segment Badges */
-  .badge-vip {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 2px 8px;
-    border-radius: 6px;
-    font-size: 10px;
-    font-weight: 800;
-    background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(217, 119, 6, 0.1));
-    color: #b45309;
-    border: 1px solid rgba(245, 158, 11, 0.3);
-  }
-
-  .badge-corporate {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 2px 8px;
-    border-radius: 6px;
-    font-size: 10px;
-    font-weight: 800;
-    background: rgba(99, 102, 241, 0.1);
-    color: #4338ca;
-    border: 1px solid rgba(99, 102, 241, 0.25);
-  }
-
-  .badge-regular {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 2px 8px;
-    border-radius: 6px;
-    font-size: 10px;
-    font-weight: 700;
-    background: #f1f5f9;
-    color: #475569;
-    border: 1px solid #e2e8f0;
-  }
-
   /* Action buttons */
-  .action-flex-wrap {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-  }
-
   .btn-action-view {
     width: 32px;
     height: 32px;
@@ -252,7 +245,7 @@
   .pms-page-btn {
     min-width: 30px;
     height: 30px;
-    padding: 0 6px;
+    padding: 0 8px;
     border-radius: 6px;
     border: 1px solid #cbd5e1;
     background: #ffffff;
@@ -263,10 +256,11 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    text-decoration: none;
     transition: all 0.15s ease;
   }
 
-  .pms-page-btn:hover:not(:disabled) {
+  .pms-page-btn:hover:not(.active) {
     border-color: #6366f1;
     color: #6366f1;
     background: #eef2ff;
@@ -276,11 +270,6 @@
     background: #6366f1;
     border-color: #6366f1;
     color: #ffffff;
-  }
-
-  .pms-page-btn:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
   }
 
   /* Guest Dossier Modal Styles */
@@ -421,7 +410,8 @@
 
 @section('content')
 @php
-  $serializedGuests = $guests->map(function($g) {
+  // Map page guests for instant view modal opening
+  $serializedGuests = collect($guests->items())->map(function($g) {
     return [
       'id' => $g->id,
       'reserve_id' => $g->reserve_id ?: ('RES-' . $g->id),
@@ -486,15 +476,34 @@
     <div class="guest-header-card">
       <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
         <div>
-          <h2 style="margin: 0; font-size: 18px; font-weight: 800; color: #1e293b; display: flex; align-items: center; gap: 10px;">
+          <h2 style="margin: 0; font-size: 18px; font-weight: 800; color: #1e293b; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
             <i class="fa-solid fa-address-card" style="color: #6366f1;"></i> 
             Guest Master & CRM Directory
             <span style="font-size: 11px; font-weight: 700; background: #e0e7ff; color: #4338ca; border: 1px solid #c7d2fe; padding: 2px 10px; border-radius: 20px;">
-              {{ count($guests) }} Total Profiles
+              {{ $guests->total() }} Records
             </span>
+            @if(!empty($fromDate) && !empty($toDate) && $fromDate === $toDate)
+              <span style="font-size: 11px; font-weight: 700; background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; padding: 2px 10px; border-radius: 20px;">
+                <i class="fa-regular fa-calendar-check"></i> {{ $fromDate === $today ? "Today's Check-ins (" . \Carbon\Carbon::parse($fromDate)->format('d M Y') . ")" : "Check-in: " . \Carbon\Carbon::parse($fromDate)->format('d M Y') }}
+              </span>
+            @elseif(!empty($fromDate) || !empty($toDate))
+              <span style="font-size: 11px; font-weight: 700; background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; padding: 2px 10px; border-radius: 20px;">
+                <i class="fa-regular fa-calendar-check"></i> Check-in: {{ !empty($fromDate) ? \Carbon\Carbon::parse($fromDate)->format('d M Y') : 'Start' }} &rarr; {{ !empty($toDate) ? \Carbon\Carbon::parse($toDate)->format('d M Y') : 'End' }}
+              </span>
+            @else
+              <span style="font-size: 11px; font-weight: 700; background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; padding: 2px 10px; border-radius: 20px;">
+                <i class="fa-regular fa-calendar"></i> All Check-in Dates
+              </span>
+            @endif
           </h2>
           <div style="font-size: 12px; color: #64748b; margin-top: 2px;">
-            Comprehensive guest directory, stay history dossiers, allotted rooms, billing statements, and identity records.
+            @if(!empty($fromDate) && !empty($toDate) && $fromDate === $toDate)
+              Showing guest records with check-in on <strong>{{ \Carbon\Carbon::parse($fromDate)->format('D, d F Y') }}</strong> ({{ $fromDate === $today ? 'Today' : 'Selected Date' }}).
+            @elseif(!empty($fromDate) || !empty($toDate))
+              Showing guest records with check-in between <strong>{{ !empty($fromDate) ? \Carbon\Carbon::parse($fromDate)->format('d M Y') : 'Start' }}</strong> and <strong>{{ !empty($toDate) ? \Carbon\Carbon::parse($toDate)->format('d M Y') : 'End' }}</strong>.
+            @else
+              Comprehensive guest directory, stay history dossiers, allotted rooms, billing statements, and identity records.
+            @endif
           </div>
         </div>
         <div style="display: flex; gap: 8px; align-items: center;">
@@ -511,64 +520,116 @@
       </div>
     </div>
 
-    <!-- Toolbar: Search Filter & Dropdowns & Entries Selector -->
-    <div class="guest-toolbar">
-      <div style="display: flex; gap: 12px; align-items: center; flex: 1; flex-wrap: wrap;">
-        <!-- Search Box -->
-        <div class="search-box-wrap">
-          <i class="fa-solid fa-magnifying-glass"></i>
-          <input type="text" id="guest-crm-search-input" placeholder="Search by Guest Name, Phone, Email, Room, Reserve ID, Folio, City..." oninput="onCrmSearchOrFilterChange()">
+    <!-- Backend Filter Form & Toolbar -->
+    <form method="GET" action="{{ route('frontoffice.guest') }}" id="guest-filter-form" class="guest-toolbar">
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; width: 100%;">
+        <div style="display: flex; gap: 12px; align-items: center; flex: 1; flex-wrap: wrap;">
+          <!-- Search Box -->
+          <div class="search-box-wrap">
+            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+            <input type="text" 
+                   name="search" 
+                   id="guest-crm-search-input" 
+                   value="{{ request('search') }}" 
+                   placeholder="Search by Name, Phone, Email, ID, Folio, City..." 
+                   onkeydown="if(event.key==='Enter'){this.form.submit();}">
+            @if(request()->filled('search'))
+              <a href="{{ route('frontoffice.guest', request()->except('search', 'page')) }}" 
+                 title="Clear search" 
+                 style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; text-decoration: none; font-size: 12px;">
+                 <i class="fa-solid fa-xmark"></i>
+              </a>
+            @endif
+          </div>
+
+          <!-- Check-in From & To Date Filter (Default: Today) -->
+          <div style="display: inline-flex; align-items: center; gap: 6px;">
+            <label for="crm-from-date" style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">
+              <i class="fa-regular fa-calendar-days" style="color: #6366f1;"></i> Check-in From:
+            </label>
+            <input type="date" 
+                   name="from_date" 
+                   id="crm-from-date" 
+                   class="pms-filter-date" 
+                   value="{{ $fromDate ?? '' }}" 
+                   onchange="this.form.submit()" 
+                   title="Filter by Check-in Date From">
+
+            <label for="crm-to-date" style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">
+              To:
+            </label>
+            <input type="date" 
+                   name="to_date" 
+                   id="crm-to-date" 
+                   class="pms-filter-date" 
+                   value="{{ $toDate ?? '' }}" 
+                   onchange="this.form.submit()" 
+                   title="Filter by Check-in Date To">
+          </div>
+
+          <!-- Status Filter Dropdown -->
+          <div style="display: inline-flex; align-items: center; gap: 6px;">
+            <label for="crm-status-filter" style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">
+              <i class="fa-solid fa-filter" style="color: #6366f1;"></i> Status:
+            </label>
+            <select name="status" id="crm-status-filter" class="pms-filter-select" onchange="this.form.submit()">
+              <option value="all" {{ request('status') === 'all' || !request()->filled('status') ? 'selected' : '' }}>All Statuses</option>
+              <option value="Confirmed" {{ request('status') === 'Confirmed' ? 'selected' : '' }}>Confirmed</option>
+              <option value="Checked In" {{ request('status') === 'Checked In' ? 'selected' : '' }}>Checked In</option>
+              <option value="Arrived" {{ request('status') === 'Arrived' ? 'selected' : '' }}>Arrived</option>
+              <option value="Stay Over" {{ request('status') === 'Stay Over' ? 'selected' : '' }}>Stay Over</option>
+              <option value="Checked Out" {{ request('status') === 'Checked Out' ? 'selected' : '' }}>Checked Out</option>
+              <option value="Cancelled" {{ request('status') === 'Cancelled' ? 'selected' : '' }}>Cancelled</option>
+            </select>
+          </div>
+
+          <!-- Registration Type Filter -->
+          <div style="display: inline-flex; align-items: center; gap: 6px;">
+            <label for="crm-regtype-filter" style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">
+              <i class="fa-solid fa-id-badge" style="color: #6366f1;"></i> Reg Type:
+            </label>
+            <select name="registration_type" id="crm-regtype-filter" class="pms-filter-select" onchange="this.form.submit()">
+              <option value="all" {{ request('registration_type') === 'all' || !request()->filled('registration_type') ? 'selected' : '' }}>All Reg Types</option>
+              @foreach($registrationTypes ?? [] as $rt)
+                <option value="{{ $rt->name }}" {{ request('registration_type') === $rt->name ? 'selected' : '' }}>{{ $rt->name }}</option>
+              @endforeach
+            </select>
+          </div>
+
+          <!-- All Dates Link (if date filter active) -->
+          @if(!empty($fromDate) || !empty($toDate))
+            <a href="{{ route('frontoffice.guest', array_merge(request()->except(['from_date', 'to_date', 'page']), ['all_dates' => 1])) }}" 
+               class="btn-ui-secondary" 
+               style="padding: 7px 12px; border-radius: 8px; border: 1px solid #cbd5e1; background: #ffffff; font-size: 11px; font-weight: 700; color: #475569; display: inline-flex; align-items: center; gap: 5px; text-decoration: none;"
+               title="View all records without date restrictions">
+              <i class="fa-regular fa-calendar"></i> All Dates
+            </a>
+          @endif
+
+          <!-- Reset Button (defaults back to today) -->
+          <a href="{{ route('frontoffice.guest') }}" 
+             class="btn-ui-secondary" 
+             style="padding: 7px 12px; border-radius: 8px; border: 1px solid #cbd5e1; background: #ffffff; font-size: 11px; font-weight: 700; color: #475569; display: inline-flex; align-items: center; gap: 5px; text-decoration: none;"
+             title="Reset filters to today's check-ins">
+            <i class="fa-solid fa-rotate-left"></i> Today / Reset
+          </a>
         </div>
 
-        <!-- Status Filter Dropdown -->
-        <div style="display: inline-flex; align-items: center; gap: 6px;">
-          <label for="crm-status-filter" style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">
-            <i class="fa-solid fa-filter" style="color: #6366f1;"></i> Status:
-          </label>
-          <select id="crm-status-filter" class="pms-filter-select" onchange="onCrmSearchOrFilterChange()">
-            <option value="all">All Statuses</option>
-            <option value="Confirmed">Confirmed</option>
-            <option value="Checked In">Checked In</option>
-            <option value="Arrived">Arrived</option>
-            <option value="Stay Over">Stay Over</option>
-            <option value="Checked Out">Checked Out</option>
-            <option value="Cancelled">Cancelled</option>
-          </select>
+        <!-- Page Size Selector -->
+        <div style="display: flex; gap: 12px; align-items: center;">
+          <div class="pms-per-page-wrap">
+            <span>Show</span>
+            <select name="per_page" class="pms-per-page-select" id="crm-per-page-select" onchange="this.form.submit()">
+              <option value="10" {{ request('per_page') == '10' || !request()->filled('per_page') ? 'selected' : '' }}>10</option>
+              <option value="25" {{ request('per_page') == '25' ? 'selected' : '' }}>25</option>
+              <option value="50" {{ request('per_page') == '50' ? 'selected' : '' }}>50</option>
+              <option value="all" {{ request('per_page') == 'all' ? 'selected' : '' }}>All</option>
+            </select>
+            <span>entries</span>
+          </div>
         </div>
-
-        <!-- Registration Type Filter -->
-        <div style="display: inline-flex; align-items: center; gap: 6px;">
-          <label for="crm-regtype-filter" style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">
-            <i class="fa-solid fa-id-badge" style="color: #6366f1;"></i> Reg Type:
-          </label>
-          <select id="crm-regtype-filter" class="pms-filter-select" onchange="onCrmSearchOrFilterChange()">
-            <option value="all">All Reg Types</option>
-            @foreach($registrationTypes ?? [] as $rt)
-              <option value="{{ strtolower($rt->name) }}">{{ $rt->name }}</option>
-            @endforeach
-          </select>
-        </div>
-
-        <!-- Reset Button -->
-        <button type="button" class="btn-ui-secondary" onclick="resetCrmFilters()" style="padding: 7px 14px; border-radius: 8px; border: 1px solid #cbd5e1; background: #ffffff; font-size: 11px; font-weight: 700; color: #475569; display: inline-flex; align-items: center; gap: 5px;">
-          <i class="fa-solid fa-rotate-left"></i> Reset
-        </button>
       </div>
-
-      <!-- Page Size Selector -->
-      <div style="display: flex; gap: 12px; align-items: center;">
-        <div class="pms-per-page-wrap">
-          <span>Show</span>
-          <select class="pms-per-page-select" id="crm-per-page-select" onchange="changeCrmPageSize(this.value)">
-            <option value="10" selected>10</option>
-            <option value="25">25</option>
-            <option value="50">50</option>
-            <option value="all">All</option>
-          </select>
-          <span>entries</span>
-        </div>
-      </div>
-    </div>
+    </form>
 
     <!-- Main Guests CRM Table with SL Indexing -->
     <div class="pms-page-content">
@@ -576,28 +637,172 @@
         <table class="pms-table" id="guest-crm-table">
           <thead>
             <tr>
-              <th style="width: 45px; text-align: center;">SL</th>
-              <th style="width: 120px;">Guest ID</th>
-              <th style="min-width: 160px;">Name</th>
-              <th style="min-width: 130px;">Phone</th>
-              <th style="min-width: 160px;">Email</th>
-              <th style="min-width: 130px;">ID Proof</th>
-              <th style="min-width: 130px; text-align: center;">Registration Type</th>
-              <th style="min-width: 100px; text-align: center;">Status</th>
-              <th style="width: 70px; text-align: center;">Action</th>
+              <th style="width: 45px; text-align: center; white-space: nowrap;">SL</th>
+              <th style="min-width: 140px; white-space: nowrap;">Guest ID</th>
+              <th style="min-width: 130px; text-align: left; white-space: nowrap;">Registration Type</th>
+              <th style="min-width: 160px; white-space: nowrap;">Name</th>
+              <th style="min-width: 130px; white-space: nowrap;">Phone</th>
+              <th style="min-width: 160px; white-space: nowrap;">Email</th>
+              <th style="min-width: 130px; white-space: nowrap;">Check-in</th>
+              <th style="min-width: 130px; white-space: nowrap;">ID Proof</th>
+              <th style="min-width: 100px; text-align: center; white-space: nowrap;">Status</th>
+              <th style="width: 70px; text-align: center; white-space: nowrap;">Action</th>
             </tr>
           </thead>
           <tbody id="guest-crm-tbody">
-            <!-- Rendered dynamically by renderTable() with SL Indexing & Pagination -->
+            @forelse($guests as $index => $item)
+              @php
+                $sl = ($guests->currentPage() - 1) * $guests->perPage() + $loop->iteration;
+                $statusNormalized = strtolower($item->status ?? 'confirmed');
+                $statusClass = match($statusNormalized) {
+                  'confirmed' => 'confirmed',
+                  'arrived' => 'arrived',
+                  'checked in', 'checked-in', 'checkedin' => 'checkedin',
+                  'stay over', 'stayover' => 'stayover',
+                  'checked out', 'checked-out', 'checkedout' => 'checkedout',
+                  'cancelled' => 'cancelled',
+                  default => 'confirmed'
+                };
+              @endphp
+              <tr class="guest-row" id="row-guest-{{ $item->id }}">
+                <!-- SL Indexing -->
+                <td style="text-align: center; font-family: var(--font-mono, monospace); font-weight: 800; color: #64748b; font-size: 11px; white-space: nowrap;">
+                  {{ $sl }}
+                </td>
+
+                <!-- Guest ID (Reserve ID & Folio) - NO WRAP -->
+                <td style="white-space: nowrap; min-width: 140px;">
+                  <div class="guest-id-text">
+                    {{ $item->reserve_id ?: ('RES-' . $item->id) }}
+                  </div>
+                  <div class="guest-folio-text">
+                    <i class="fa-regular fa-file-lines"></i> {{ $item->folio_number ?: ('FOL-' . ($item->room?->room_number ?? '100') . '-' . $item->id) }}
+                  </div>
+                </td>
+
+                <!-- Registration Type - Left Aligned -->
+                <td style="text-align: left; white-space: nowrap;">
+                  <span style="font-size: 10px; padding: 3px 9px; border-radius: 6px; background: #f1f5f9; color: #334155; font-weight: 700; border: 1px solid #cbd5e1; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;">
+                    <i class="fa-solid fa-id-badge" style="font-size: 9px; color: #6366f1;"></i>
+                    {{ $item->registrationType?->name ?? 'Regular' }}
+                  </span>
+                </td>
+
+                <!-- Name -->
+                <td style="white-space: nowrap;">
+                  <div style="font-weight: 800; color: #0f172a; font-size: 13px; white-space: nowrap;">
+                    {{ ($item->title?->name ? $item->title->name . ' ' : '') . $item->guest_name }}
+                  </div>
+                  @if($item->city)
+                    <div style="font-size: 10px; color: #94a3b8; margin-top: 2px; white-space: nowrap;">
+                      <i class="fa-solid fa-location-dot" style="font-size: 9px;"></i> {{ $item->city }}
+                    </div>
+                  @endif
+                </td>
+
+                <!-- Phone -->
+                <td style="white-space: nowrap;">
+                  <div style="font-family: var(--font-mono, monospace); font-weight: 700; font-size: 12px; color: #1e293b; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap;">
+                    <i class="fa-solid fa-phone" style="font-size: 10px; color: #10b981;"></i>
+                    <span>{{ $item->mobile ?: 'N/A' }}</span>
+                  </div>
+                </td>
+
+                <!-- Email -->
+                <td style="white-space: nowrap;">
+                  <div style="font-size: 11px; color: #475569; white-space: nowrap;">
+                    @if($item->email)
+                      <i class="fa-regular fa-envelope" style="font-size: 10px; color: #6366f1; margin-right: 4px;"></i>{{ $item->email }}
+                    @else
+                      <span style="color: #94a3b8;">N/A</span>
+                    @endif
+                  </div>
+                </td>
+
+                <!-- Check-in Date -->
+                <td style="white-space: nowrap;">
+                  <div style="font-weight: 700; color: #1e293b; font-size: 12px; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap;">
+                    <i class="fa-regular fa-calendar-days" style="color: #6366f1; font-size: 11px;"></i>
+                    <span>{{ $item->reserve_date ? \Carbon\Carbon::parse($item->reserve_date)->format('d M Y') : 'N/A' }}</span>
+                  </div>
+                  @if($item->reserve_time)
+                    <div style="font-size: 10px; color: #64748b; font-family: var(--font-mono, monospace); margin-top: 2px; white-space: nowrap;">
+                      <i class="fa-regular fa-clock" style="font-size: 9px; color: #94a3b8;"></i> {{ date('h:i A', strtotime($item->reserve_time)) }}
+                    </div>
+                  @endif
+                </td>
+
+                <!-- ID Proof -->
+                <td style="white-space: nowrap;">
+                  <div style="font-size: 11px; font-weight: 700; color: #334155; white-space: nowrap;">
+                    {{ $item->idCardType?->name ?? 'N/A' }}
+                  </div>
+                  <div style="font-size: 10px; color: #64748b; font-family: var(--font-mono, monospace); margin-top: 2px; white-space: nowrap;">
+                    {{ $item->id_card_number ?: 'N/A' }}
+                  </div>
+                </td>
+
+                <!-- Status Badge -->
+                <td style="text-align: center; white-space: nowrap;">
+                  <span class="status-badge {{ $statusClass }}">
+                    <i class="fa-solid fa-circle" style="font-size: 6px;"></i>
+                    <span>{{ $item->status ?? 'Confirmed' }}</span>
+                  </span>
+                </td>
+
+                <!-- Action: Uniform Eye View Button -->
+                <td style="text-align: center; white-space: nowrap;">
+                  <button type="button" 
+                          class="btn-action-view" 
+                          onclick="openGuestDetailsModalById({{ $item->id }})" 
+                          title="View Complete Guest Dossier (Rooms, Stay, Billing, Company)">
+                    <i class="fa-solid fa-eye"></i>
+                  </button>
+                </td>
+              </tr>
+            @empty
+              <tr>
+                <td colspan="10" style="text-align: center; color: var(--text-muted); padding: 36px 20px;">
+                  <div style="font-size: 28px; color: #cbd5e1; margin-bottom: 8px;"><i class="fa-solid fa-users-slash"></i></div>
+                  <div style="font-size: 13px; font-weight: 700; color: #64748b;">No matching guests found.</div>
+                  <div style="font-size: 11px; color: #94a3b8; margin-top: 4px;">Try modifying your search query or filter options.</div>
+                </td>
+              </tr>
+            @endforelse
           </tbody>
         </table>
 
-        <!-- Table Pagination Footer -->
+        <!-- Backend Table Pagination Footer -->
         <div class="pms-table-pagination" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 18px; border-top: 1px solid #e2e8f0; background: #ffffff; flex-wrap: wrap; gap: 10px;">
-          <div class="pms-pagination-info" id="crm-pagination-info" style="font-size: 12px; font-weight: 600; color: #64748b;">
-            Showing 0 to 0 of 0 records
+          <div class="pms-pagination-info" style="font-size: 12px; font-weight: 600; color: #64748b;">
+            Showing {{ $guests->firstItem() ?? 0 }} to {{ $guests->lastItem() ?? 0 }} of {{ $guests->total() }} records
           </div>
-          <div class="pms-page-nav" id="crm-pagination-nav"></div>
+          <div class="pms-page-nav">
+            @if ($guests->hasPages())
+              {{-- Previous Page Link --}}
+              @if ($guests->onFirstPage())
+                <span class="pms-page-btn" style="opacity: 0.4; cursor: not-allowed;"><i class="fa-solid fa-chevron-left"></i></span>
+              @else
+                <a href="{{ $guests->previousPageUrl() }}" class="pms-page-btn" title="Previous Page"><i class="fa-solid fa-chevron-left"></i></a>
+              @endif
+
+              {{-- Pagination Number Elements --}}
+              @foreach ($guests->getUrlRange(max(1, $guests->currentPage() - 2), min($guests->lastPage(), $guests->currentPage() + 2)) as $page => $url)
+                @if ($page == $guests->currentPage())
+                  <span class="pms-page-btn active">{{ $page }}</span>
+                @else
+                  <a href="{{ $url }}" class="pms-page-btn">{{ $page }}</a>
+                @endif
+              @endforeach
+
+              {{-- Next Page Link --}}
+              @if ($guests->hasMorePages())
+                <a href="{{ $guests->nextPageUrl() }}" class="pms-page-btn" title="Next Page"><i class="fa-solid fa-chevron-right"></i></a>
+              @else
+                <span class="pms-page-btn" style="opacity: 0.4; cursor: not-allowed;"><i class="fa-solid fa-chevron-right"></i></span>
+              @endif
+            @endif
+          </div>
         </div>
       </div>
     </div>
@@ -608,7 +813,7 @@
 <!-- Bottom Summary Bar -->
 <footer class="pms-bottom-bar">
   <div style="font-size: 11px; font-weight: 700; color: var(--text-secondary); display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
-    <span><i class="fa-solid fa-users" style="color: #6366f1;"></i> Total Guests: <strong>{{ $stats['total'] ?? count($guests) }}</strong></span>
+    <span><i class="fa-solid fa-users" style="color: #6366f1;"></i> Total Guests: <strong>{{ $stats['total'] ?? 0 }}</strong></span>
     <span>•</span>
     <span><i class="fa-solid fa-key" style="color: #0891b2;"></i> Checked In: <strong>{{ $stats['checked_in'] ?? 0 }}</strong></span>
     <span>•</span>
@@ -692,6 +897,11 @@
           </div>
 
           <div class="dossier-field-row">
+            <span class="dossier-label">Registration Type</span>
+            <span class="dossier-val" id="crm-mdl-card-regtype" style="color: #4338ca; font-weight: 800;">-</span>
+          </div>
+
+          <div class="dossier-field-row">
             <span class="dossier-label">Mobile Number</span>
             <span class="dossier-val mono" id="crm-mdl-card-phone">-</span>
           </div>
@@ -719,11 +929,6 @@
           <div class="dossier-field-row">
             <span class="dossier-label">Identity Proof</span>
             <span class="dossier-val" id="crm-mdl-card-idproof">-</span>
-          </div>
-
-          <div class="dossier-field-row">
-            <span class="dossier-label">Registration Type</span>
-            <span class="dossier-val" id="crm-mdl-card-regtype">-</span>
           </div>
 
           <div class="dossier-field-row" id="crm-mdl-card-privilege-row" style="display: none;">
@@ -863,8 +1068,6 @@
 <script>
   window.allCrmGuests = @json($serializedGuests);
   let currentActiveCrmGuest = null;
-  let currentCrmPage = 1;
-  let crmPageSize = 10;
 
   // HTML escaping helper
   function escapeHtml(str) {
@@ -884,343 +1087,142 @@
 
   // Status badge color mapper
   function getStatusBadgeColor(status) {
-    switch (status) {
-      case 'Confirmed': return 'confirmed';
-      case 'Arrived': return 'arrived';
-      case 'Checked In': return 'checkedin';
-      case 'Stay Over': return 'stayover';
-      case 'Checked Out': return 'checkedout';
-      case 'Cancelled': return 'cancelled';
+    switch ((status || '').toLowerCase()) {
+      case 'confirmed': return 'confirmed';
+      case 'arrived': return 'arrived';
+      case 'checked in': case 'checked-in': case 'checkedin': return 'checkedin';
+      case 'stay over': case 'stayover': return 'stayover';
+      case 'checked out': case 'checked-out': case 'checkedout': return 'checkedout';
+      case 'cancelled': return 'cancelled';
       default: return 'confirmed';
     }
   }
 
-  // Filter records based on search, status, and registration type
-  function getFilteredCrmRecords() {
-    const query = (document.getElementById('guest-crm-search-input')?.value || '').toLowerCase().trim();
-    const selectedStatus = document.getElementById('crm-status-filter')?.value || 'all';
-    const selectedRegType = document.getElementById('crm-regtype-filter')?.value || 'all';
-
-    return (window.allCrmGuests || []).filter(item => {
-      // Status dropdown filter
-      if (selectedStatus !== 'all') {
-        if (!item.status || item.status.toLowerCase() !== selectedStatus.toLowerCase()) {
-          return false;
-        }
-      }
-
-      // Registration Type filter
-      if (selectedRegType !== 'all') {
-        if (!item.registration_type || item.registration_type.toLowerCase() !== selectedRegType.toLowerCase()) {
-          return false;
-        }
-      }
-
-      // Search keyword filter
-      if (!query) return true;
-      const searchBlob = `${item.guest_name} ${item.mobile} ${item.email} ${item.city} ${item.reserve_id} ${item.folio_number} ${item.id_card_number} ${item.registration_type} ${item.status}`.toLowerCase();
-      return searchBlob.includes(query);
-    });
-  }
-
-  // Render Table with SL Indexing and Pagination
-  function renderCrmTable() {
-    const filtered = getFilteredCrmRecords();
-    const totalRecords = filtered.length;
-    let totalPages = 1;
-    let paginatedRecords = filtered;
-
-    if (crmPageSize !== 'all') {
-      const limit = parseInt(crmPageSize, 10);
-      totalPages = Math.ceil(totalRecords / limit) || 1;
-      if (currentCrmPage > totalPages) currentCrmPage = totalPages;
-      if (currentCrmPage < 1) currentCrmPage = 1;
-      const startIdx = (currentCrmPage - 1) * limit;
-      paginatedRecords = filtered.slice(startIdx, startIdx + limit);
-    }
-
-    const tbody = document.getElementById('guest-crm-tbody');
-    if (!tbody) return;
-
-    if (paginatedRecords.length === 0) {
-      tbody.innerHTML = `
-        <tr>
-          <td colspan="9" style="text-align: center; color: var(--text-muted); padding: 36px 20px;">
-            <div style="font-size: 28px; color: #cbd5e1; margin-bottom: 8px;"><i class="fa-solid fa-users-slash"></i></div>
-            <div style="font-size: 13px; font-weight: 700; color: #64748b;">No matching guests found.</div>
-            <div style="font-size: 11px; color: #94a3b8; margin-top: 4px;">Try modifying your search query or filter options.</div>
-          </td>
-        </tr>
-      `;
-      renderCrmPagination(totalRecords, totalPages, 0, 0);
-      return;
-    }
-
-    const startIndex = crmPageSize === 'all' ? 0 : (currentCrmPage - 1) * parseInt(crmPageSize, 10);
-
-    tbody.innerHTML = paginatedRecords.map((item, idx) => {
-      const sl = startIndex + idx + 1;
-      const badgeColor = getStatusBadgeColor(item.status);
-
-      return `
-        <tr class="guest-row" id="row-guest-${item.id}">
-          <!-- SL Indexing -->
-          <td style="text-align: center; font-family: var(--font-mono, monospace); font-weight: 800; color: #64748b; font-size: 11px;">
-            ${sl}
-          </td>
-
-          <!-- Guest ID (Reserve ID & Folio) -->
-          <td>
-            <div style="font-family: var(--font-mono, monospace); font-weight: 800; color: #4f46e5; font-size: 12px;">
-              ${escapeHtml(item.reserve_id)}
-            </div>
-            <div style="font-size: 10px; color: #64748b; font-family: var(--font-mono, monospace); margin-top: 2px;">
-              <i class="fa-regular fa-file-lines"></i> ${escapeHtml(item.folio_number)}
-            </div>
-          </td>
-
-          <!-- Name -->
-          <td>
-            <div style="font-weight: 800; color: #0f172a; font-size: 13px;">
-              ${escapeHtml(item.guest_name)}
-            </div>
-            ${item.city && item.city !== 'N/A' ? `
-              <div style="font-size: 10px; color: #94a3b8; margin-top: 2px;">
-                <i class="fa-solid fa-location-dot" style="font-size: 9px;"></i> ${escapeHtml(item.city)}
-              </div>` : ''}
-          </td>
-
-          <!-- Phone -->
-          <td>
-            <div style="font-family: var(--font-mono, monospace); font-weight: 700; font-size: 12px; color: #1e293b; display: inline-flex; align-items: center; gap: 5px;">
-              <i class="fa-solid fa-phone" style="font-size: 10px; color: #10b981;"></i>
-              <span>${escapeHtml(item.mobile)}</span>
-            </div>
-          </td>
-
-          <!-- Email -->
-          <td>
-            <div style="font-size: 11px; color: #475569;">
-              ${item.email && item.email !== 'N/A' ? `
-                <span title="${escapeHtml(item.email)}">
-                  <i class="fa-regular fa-envelope" style="font-size: 10px; color: #6366f1; margin-right: 4px;"></i>${escapeHtml(item.email)}
-                </span>
-              ` : '<span style="color: #94a3b8;">N/A</span>'}
-            </div>
-          </td>
-
-          <!-- ID Proof -->
-          <td>
-            <div style="font-size: 11px; font-weight: 700; color: #334155;">
-              ${escapeHtml(item.id_card_type)}
-            </div>
-            <div style="font-size: 10px; color: #64748b; font-family: var(--font-mono, monospace); margin-top: 2px;">
-              ${escapeHtml(item.id_card_number)}
-            </div>
-          </td>
-
-          <!-- Registration Type -->
-          <td style="text-align: center;">
-            <span style="font-size: 10px; padding: 3px 9px; border-radius: 6px; background: #f1f5f9; color: #334155; font-weight: 700; border: 1px solid #cbd5e1; display: inline-flex; align-items: center; gap: 4px;">
-              <i class="fa-solid fa-id-badge" style="font-size: 9px; color: #6366f1;"></i>
-              ${escapeHtml(item.registration_type || 'Regular')}
-            </span>
-          </td>
-
-          <!-- Status Badge -->
-          <td style="text-align: center;">
-            <span class="status-badge ${badgeColor}">
-              <i class="fa-solid fa-circle" style="font-size: 6px;"></i>
-              <span>${escapeHtml(item.status)}</span>
-            </span>
-          </td>
-
-          <!-- Action: Uniform Eye View Button -->
-          <td style="text-align: center;">
-            <button type="button" 
-                    class="btn-action-view" 
-                    onclick="openGuestDetailsModalById(${item.id})" 
-                    title="View Complete Guest Dossier (Rooms, Stay, Billing, Company)">
-              <i class="fa-solid fa-eye"></i>
-            </button>
-          </td>
-        </tr>
-      `;
-    }).join('');
-
-    const fromItem = totalRecords === 0 ? 0 : startIndex + 1;
-    const toItem = crmPageSize === 'all' ? totalRecords : Math.min(startIndex + parseInt(crmPageSize, 10), totalRecords);
-    renderCrmPagination(totalRecords, totalPages, fromItem, toItem);
-  }
-
-  // Render Pagination Navigation Controls
-  function renderCrmPagination(total, pages, from, to) {
-    const info = document.getElementById('crm-pagination-info');
-    if (info) {
-      info.textContent = total === 0 ? 'Showing 0 records' : `Showing ${from} to ${to} of ${total} records`;
-    }
-
-    const nav = document.getElementById('crm-pagination-nav');
-    if (!nav) return;
-
-    if (pages <= 1) {
-      nav.innerHTML = '';
-      return;
-    }
-
-    let buttons = `
-      <button type="button" class="pms-page-btn" ${currentCrmPage === 1 ? 'disabled' : ''} onclick="goToCrmPage(${currentCrmPage - 1})" title="Previous Page">
-        <i class="fa-solid fa-chevron-left"></i>
-      </button>
-    `;
-
-    for (let p = 1; p <= pages; p++) {
-      if (p === 1 || p === pages || (p >= currentCrmPage - 1 && p <= currentCrmPage + 1)) {
-        buttons += `
-          <button type="button" class="pms-page-btn ${p === currentCrmPage ? 'active' : ''}" onclick="goToCrmPage(${p})">
-            ${p}
-          </button>
-        `;
-      } else if (p === currentCrmPage - 2 || p === currentCrmPage + 2) {
-        buttons += `<span class="pms-page-btn" style="border:none; cursor:default; background:transparent;">...</span>`;
-      }
-    }
-
-    buttons += `
-      <button type="button" class="pms-page-btn" ${currentCrmPage === pages ? 'disabled' : ''} onclick="goToCrmPage(${currentCrmPage + 1})" title="Next Page">
-        <i class="fa-solid fa-chevron-right"></i>
-      </button>
-    `;
-
-    nav.innerHTML = buttons;
-  }
-
-  // Handle page size change
-  function changeCrmPageSize(val) {
-    crmPageSize = val === 'all' ? 'all' : parseInt(val, 10);
-    currentCrmPage = 1;
-    renderCrmTable();
-  }
-
-  // Handle page jump
-  function goToCrmPage(p) {
-    currentCrmPage = p;
-    renderCrmTable();
-  }
-
-  // Triggered on search input or filter changes
-  function onCrmSearchOrFilterChange() {
-    currentCrmPage = 1;
-    renderCrmTable();
-  }
-
-  // Reset all filters
-  function resetCrmFilters() {
-    const searchInp = document.getElementById('guest-crm-search-input');
-    const statusSelect = document.getElementById('crm-status-filter');
-    const regTypeSelect = document.getElementById('crm-regtype-filter');
-    if (searchInp) searchInp.value = '';
-    if (statusSelect) statusSelect.value = 'all';
-    if (regTypeSelect) regTypeSelect.value = 'all';
-    currentCrmPage = 1;
-    renderCrmTable();
-  }
-
-  // Open Uniform Guest Dossier Modal by Guest ID
-  function openGuestDetailsModalById(guestId) {
-    const guest = (window.allCrmGuests || []).find(g => String(g.id) === String(guestId));
-    if (!guest) {
-      if (typeof PmsAlert !== 'undefined') {
-        PmsAlert.toast('Guest record not found', 'error');
-      } else {
-        alert('Guest record not found');
-      }
-      return;
-    }
-
+  // Populate and open the Dossier Modal
+  function populateAndOpenModal(guest) {
     currentActiveCrmGuest = guest;
 
     // Header info
-    document.getElementById('crm-mdl-guest-name').textContent = guest.guest_name;
-    document.getElementById('crm-mdl-reserve-id').textContent = guest.reserve_id;
-    document.getElementById('crm-mdl-folio-number').textContent = guest.folio_number;
+    document.getElementById('crm-mdl-guest-name').textContent = guest.guest_name || guest.name;
+    document.getElementById('crm-mdl-reserve-id').textContent = guest.reserve_id || ('RES-' + guest.id);
+    document.getElementById('crm-mdl-folio-number').textContent = guest.folio_number || '-';
     document.getElementById('crm-mdl-registered-at').textContent = guest.created_at_fmt || 'N/A';
 
     const statusBadge = document.getElementById('crm-mdl-status-badge');
     if (statusBadge) {
-      statusBadge.textContent = guest.status;
+      statusBadge.textContent = guest.status || 'Confirmed';
       statusBadge.className = `status-badge ${getStatusBadgeColor(guest.status)}`;
     }
 
     // Highlight Banner
-    document.getElementById('crm-mdl-room-number').textContent = guest.room_number;
-    document.getElementById('crm-mdl-room-category').textContent = guest.room_category;
-    document.getElementById('crm-mdl-room-floor').textContent = guest.room_floor;
-    document.getElementById('crm-mdl-room-bedding').textContent = guest.room_bedding;
-    document.getElementById('crm-mdl-total-nights').textContent = guest.total_nights;
+    document.getElementById('crm-mdl-room-number').textContent = guest.room_number || (guest.room?.room_number ?? 'Pending');
+    document.getElementById('crm-mdl-room-category').textContent = guest.room_category || (guest.room?.category_relation?.name ?? 'DELUXE');
+    document.getElementById('crm-mdl-room-floor').textContent = guest.room_floor || (guest.room?.floor_relation?.floor ?? '1');
+    document.getElementById('crm-mdl-room-bedding').textContent = guest.room_bedding || (guest.room?.bedding_config_relation?.name ?? 'Standard');
+    document.getElementById('crm-mdl-total-nights').textContent = guest.total_nights || 1;
 
     // Card 1: Guest Profile
-    document.getElementById('crm-mdl-card-name').textContent = guest.guest_name;
-    document.getElementById('crm-mdl-card-phone').textContent = guest.mobile;
-    document.getElementById('crm-mdl-card-email').textContent = guest.email;
-    document.getElementById('crm-mdl-card-city').textContent = guest.city;
-    document.getElementById('crm-mdl-card-address').textContent = guest.guest_address;
-    document.getElementById('crm-mdl-card-nationality').textContent = guest.nationality;
-    document.getElementById('crm-mdl-card-idproof').textContent = `${guest.id_card_type} • ${guest.id_card_number}`;
-    document.getElementById('crm-mdl-card-regtype').textContent = guest.registration_type;
+    document.getElementById('crm-mdl-card-name').textContent = guest.guest_name || guest.name;
+    document.getElementById('crm-mdl-card-regtype').textContent = guest.registration_type || (guest.registration_type?.name ?? 'Regular');
+    document.getElementById('crm-mdl-card-phone').textContent = guest.mobile || 'N/A';
+    document.getElementById('crm-mdl-card-email').textContent = guest.email || 'N/A';
+    document.getElementById('crm-mdl-card-city').textContent = guest.city || 'N/A';
+    document.getElementById('crm-mdl-card-address').textContent = guest.guest_address || 'N/A';
+    document.getElementById('crm-mdl-card-nationality').textContent = guest.nationality || (guest.nationality?.name ?? 'Indian');
+    
+    const idProofType = guest.id_card_type || (guest.id_card_type?.name ?? 'ID Proof');
+    const idProofNum = guest.id_card_number || 'N/A';
+    document.getElementById('crm-mdl-card-idproof').textContent = `${idProofType} • ${idProofNum}`;
 
     const privRow = document.getElementById('crm-mdl-card-privilege-row');
     if (guest.has_privilege_card) {
       privRow.style.display = 'flex';
-      document.getElementById('crm-mdl-card-privilege').textContent = guest.privilege_card_no;
+      document.getElementById('crm-mdl-card-privilege').textContent = guest.privilege_card_no || 'Active';
     } else {
       privRow.style.display = 'none';
     }
 
     // Card 2: Stay & Corporate
-    document.getElementById('crm-mdl-card-checkin').textContent = `${guest.reserve_date} (${guest.reserve_time})`;
-    document.getElementById('crm-mdl-card-checkout').textContent = `${guest.checkout_date} (${guest.checkout_time})`;
-    document.getElementById('crm-mdl-card-duration').textContent = `${guest.total_nights} Night(s)`;
-    document.getElementById('crm-mdl-card-resmode').textContent = guest.reservation_mode;
+    document.getElementById('crm-mdl-card-checkin').textContent = `${guest.reserve_date} (${guest.reserve_time || '12:00 PM'})`;
+    document.getElementById('crm-mdl-card-checkout').textContent = `${guest.checkout_date} (${guest.checkout_time || '11:00 AM'})`;
+    document.getElementById('crm-mdl-card-duration').textContent = `${guest.total_nights || 1} Night(s)`;
+    document.getElementById('crm-mdl-card-resmode').textContent = guest.reservation_mode || (guest.reservation_mode?.name ?? 'Front Desk');
 
     const corpSection = document.getElementById('crm-mdl-corporate-card-section');
     if (guest.company) {
       corpSection.style.display = 'block';
       document.getElementById('crm-mdl-company-name').textContent = guest.company.name;
-      document.getElementById('crm-mdl-company-gstin').textContent = guest.company.gstin;
+      document.getElementById('crm-mdl-company-gstin').textContent = guest.company.gstin || 'N/A';
       const discVal = guest.company.discount_type === 'percentage' 
         ? `${guest.company.discount_value}%` 
-        : `₹ ${Number(guest.company.discount_value).toLocaleString('en-IN')}`;
-      document.getElementById('crm-mdl-company-discount').textContent = `${discVal} (${guest.company.discount_type})`;
+        : `₹ ${Number(guest.company.discount_value || 0).toLocaleString('en-IN')}`;
+      document.getElementById('crm-mdl-company-discount').textContent = `${discVal} (${guest.company.discount_type || 'percentage'})`;
     } else {
       corpSection.style.display = 'none';
     }
 
     // Card 3: Pricing & Billing Breakdown
-    document.getElementById('crm-mdl-bill-rate').textContent = formatINR(guest.room_rate);
-    document.getElementById('crm-mdl-bill-gross').textContent = formatINR(guest.total_amount);
-    document.getElementById('crm-mdl-bill-advance').textContent = formatINR(guest.advance_amount);
+    const rate = Number(guest.room_rate || 0);
+    const gross = Number(guest.total_amount || 0);
+    const advance = Number(guest.advance_amount || 0);
+    const balance = Number(guest.balance || 0);
+    const discountAmt = Number(guest.discount_amount || 0);
+    const discountPct = Number(guest.discount_percentage || 0);
+    const payable = Number(guest.payable_amount || 0);
+
+    document.getElementById('crm-mdl-bill-rate').textContent = formatINR(rate);
+    document.getElementById('crm-mdl-bill-gross').textContent = formatINR(gross);
+    document.getElementById('crm-mdl-bill-advance').textContent = formatINR(advance);
 
     const balElem = document.getElementById('crm-mdl-bill-balance');
-    balElem.textContent = formatINR(guest.balance);
-    balElem.style.color = guest.balance > 0 ? '#e11d48' : '#059669';
+    balElem.textContent = formatINR(balance);
+    balElem.style.color = balance > 0 ? '#e11d48' : '#059669';
 
     const balLabel = document.getElementById('crm-mdl-balance-label');
-    if (balLabel) balLabel.textContent = guest.balance > 0 ? 'Balance Due' : 'Fully Settled';
+    if (balLabel) balLabel.textContent = balance > 0 ? 'Balance Due' : 'Fully Settled';
 
-    document.getElementById('crm-mdl-bill-calc-row').textContent = `${formatINR(guest.room_rate)} × ${guest.total_nights} Night(s) = ${formatINR(guest.room_rate * guest.total_nights)}`;
+    document.getElementById('crm-mdl-bill-calc-row').textContent = `${formatINR(rate)} × ${guest.total_nights || 1} Night(s) = ${formatINR(rate * (guest.total_nights || 1))}`;
     
     let discText = 'None';
-    if (guest.discount_amount > 0 || guest.discount_percentage > 0) {
-      discText = `${formatINR(guest.discount_amount)} (${guest.discount_percentage}%)`;
+    if (discountAmt > 0 || discountPct > 0) {
+      discText = `${formatINR(discountAmt)} (${discountPct}%)`;
     }
     document.getElementById('crm-mdl-bill-discount').textContent = discText;
-    document.getElementById('crm-mdl-bill-payable').textContent = formatINR(guest.payable_amount);
-    document.getElementById('crm-mdl-bill-paymode').textContent = guest.payment_mode;
-    document.getElementById('crm-mdl-bill-remarks').textContent = guest.payment_remarks;
+    document.getElementById('crm-mdl-bill-payable').textContent = formatINR(payable);
+    document.getElementById('crm-mdl-bill-paymode').textContent = guest.payment_mode || (guest.payment_mode?.name ?? 'Cash / Direct');
+    document.getElementById('crm-mdl-bill-remarks').textContent = guest.payment_remarks || 'None';
 
     // Show modal
     openModal('guest-crm-details-modal');
+  }
+
+  // Open Uniform Guest Dossier Modal by Guest ID (with fallback to backend JSON API)
+  function openGuestDetailsModalById(guestId) {
+    const guest = (window.allCrmGuests || []).find(g => String(g.id) === String(guestId));
+    if (guest) {
+      populateAndOpenModal(guest);
+      return;
+    }
+
+    // Fetch via backend API if not in current page memory
+    fetch(`{{ url('front-office/guest') }}/${guestId}/details`, {
+      headers: { 'Accept': 'application/json' }
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success && data.guest) {
+        populateAndOpenModal(data.guest);
+      } else {
+        if (typeof PmsAlert !== 'undefined') {
+          PmsAlert.toast('Guest record not found', 'error');
+        } else {
+          alert('Guest record not found');
+        }
+      }
+    })
+    .catch(() => {
+      alert('Unable to load guest profile');
+    });
   }
 
   // Print Guest Dossier
@@ -1255,10 +1257,14 @@
               <td style="padding: 4px 0; width: 25%; font-weight: 700;">${escapeHtml(g.mobile)}</td>
             </tr>
             <tr>
-              <td style="padding: 4px 0; font-weight: 600; color: #64748b;">Email:</td>
-              <td style="padding: 4px 0;">${escapeHtml(g.email)}</td>
+              <td style="padding: 4px 0; font-weight: 600; color: #64748b;">Registration Type:</td>
+              <td style="padding: 4px 0; font-weight: 700; color: #4f46e5;">${escapeHtml(g.registration_type)}</td>
               <td style="padding: 4px 0; font-weight: 600; color: #64748b;">City / Nationality:</td>
               <td style="padding: 4px 0; font-weight: 700;">${escapeHtml(g.city)} / ${escapeHtml(g.nationality)}</td>
+            </tr>
+            <tr>
+              <td style="padding: 4px 0; font-weight: 600; color: #64748b;">Email:</td>
+              <td style="padding: 4px 0;" colspan="3">${escapeHtml(g.email)}</td>
             </tr>
             <tr>
               <td style="padding: 4px 0; font-weight: 600; color: #64748b;">Address:</td>
@@ -1349,10 +1355,5 @@
 
     window.print();
   }
-
-  // Initialize on document ready
-  document.addEventListener('DOMContentLoaded', function() {
-    renderCrmTable();
-  });
 </script>
 @endpush

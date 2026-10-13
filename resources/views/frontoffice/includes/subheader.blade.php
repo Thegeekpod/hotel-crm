@@ -22,7 +22,7 @@
         <span class="ico-box"><i class="fa-solid fa-key" style="color: #6366f1;"></i></span>
         <span class="lbl-box">Check In</span>
       </button> 
-      <a href="{{ route('frontoffice.inhouse') }}" class="ribbon-btn">
+      <a href="#" class="ribbon-btn">
         <span class="ico-box"><i class="fa-solid fa-right-from-bracket" style="color: #f43f5e;"></i></span>
         <span class="lbl-box">Check Out</span>
       </a> -->

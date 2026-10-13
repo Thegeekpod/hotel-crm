@@ -13,6 +13,8 @@ Route::prefix('front-office')->name('frontoffice.')->group(function () {
     Route::get('/fdesk', [DashboardController::class, 'index'])->name('fdesk');
 
     Route::get('/arrivals', [ArrivalController::class, 'index'])->name('arrivals');
+    Route::post('/arrivals/{id}/status', [ArrivalController::class, 'updateStatus'])->name('arrivals.update-status');
+    Route::get('/arrivals/{id}/details', [ArrivalController::class, 'getDetails'])->name('arrivals.details');
     Route::get('/inhouse', [InhouseController::class, 'index'])->name('inhouse');
     Route::get('/guest', [GuestController::class, 'index'])->name('guest');
     Route::get('/guest-crm', [GuestController::class, 'index'])->name('guest-crm');

@@ -10,6 +10,10 @@ use App\Models\IdCardType;
 use App\Models\ReservationMode;
 use App\Models\PaymentMode;
 use App\Models\Guest;
+use App\Models\HousekeepingState;
+use App\Models\OperationalStatus;
+use App\Models\RoomHousekeepingHistory;
+use App\Models\RoomOperationalHistory;
 use Illuminate\Http\Request;
 
 class ArrivalController extends Controller
@@ -24,45 +28,54 @@ class ArrivalController extends Controller
         $paymentModes = PaymentMode::where('status', 'Active')->get();
         $rackRooms = [];
 
-        $dbGuests = Guest::with(['room.categoryRelation', 'title'])
-            ->whereIn('status', ['Confirmed', 'Guaranteed', 'Waitlisted', 'Tentative'])
-            ->latest('id')
-            ->get();
-        $arrivals = [];
-        foreach ($dbGuests as $g) {
-            $checkInStr = $g->reserve_date ? $g->reserve_date->format('d M') : 'Today';
-            $checkOutStr = $g->checkout_date ? $g->checkout_date->format('d M') : now()->addDays(1)->format('d M');
-            $arrivals[] = [
-                'ref' => $g->reserve_id ?: ('RES-' . $g->id),
-                'guest_name' => ($g->title?->name ? $g->title->name . ' ' : '') . $g->guest_name,
-                'category' => strtoupper($g->room?->categoryRelation?->name ?? 'DELUXE'),
-                'room' => (string)($g->room?->room_number ?? 'Pending'),
-                'stay_dates' => $checkInStr . ' - ' . $checkOutStr,
-                'pax' => 2,
-                'advance' => '₹ ' . number_format($g->advance_amount),
-                'status' => $g->status ?: 'Confirmed',
-                'status_class' => ($g->status === 'Guaranteed' ? 'blue' : ($g->status === 'Confirmed' ? 'green' : 'yellow')),
-            ];
+        // Fetch all guests ordered latest first
+        $query = Guest::with([
+            'room.categoryRelation',
+            'room.floorRelation',
+            'room.beddingConfigRelation',
+            'title',
+            'nationality',
+            'idCardType',
+            'company',
+            'paymentMode',
+            'registrationType',
+            'reservationMode',
+        ])->latest('id');
+
+        if ($request->filled('status') && $request->status !== 'All') {
+            $query->where('status', $request->status);
         }
 
-        if (empty($arrivals)) {
-            $arrivals = [
-                [
-                    'ref' => '830\\2026-2027',
-                    'guest_name' => 'Manish Khemka',
-                    'category' => 'SUPER DELUXE',
-                    'room' => '101',
-                    'stay_dates' => now()->format('d M') . ' - ' . now()->addDays(1)->format('d M'),
-                    'pax' => 2,
-                    'advance' => '₹ 3,000',
-                    'status' => 'Confirmed',
-                    'status_class' => 'green'
-                ],
-            ];
+        if ($request->filled('search')) {
+            $s = trim($request->search);
+            $query->where(function ($q) use ($s) {
+                $q->where('guest_name', 'like', "%{$s}%")
+                  ->orWhere('mobile', 'like', "%{$s}%")
+                  ->orWhere('email', 'like', "%{$s}%")
+                  ->orWhere('reserve_id', 'like', "%{$s}%")
+                  ->orWhere('folio_number', 'like', "%{$s}%")
+                  ->orWhereHas('room', function ($rq) use ($s) {
+                      $rq->where('room_number', 'like', "%{$s}%");
+                  });
+            });
         }
+
+        $guests = $query->get();
+
+        // Calculate statistics
+        $stats = [
+            'total' => Guest::count(),
+            'confirmed' => Guest::where('status', 'Confirmed')->count(),
+            'arrived' => Guest::where('status', 'Arrived')->count(),
+            'checked_in' => Guest::where('status', 'Checked In')->count(),
+            'stay_over' => Guest::where('status', 'Stay Over')->count(),
+            'checked_out' => Guest::where('status', 'Checked Out')->count(),
+            'cancelled' => Guest::where('status', 'Cancelled')->count(),
+        ];
 
         return view('frontoffice.arrivals.index', compact(
-            'arrivals',
+            'guests',
+            'stats',
             'categories',
             'floors',
             'companies',
@@ -71,5 +84,69 @@ class ArrivalController extends Controller
             'paymentModes',
             'rackRooms'
         ));
+    }
+
+    public function updateStatus(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'status' => 'required|string|max:50',
+        ]);
+
+        $guest = Guest::with(['room'])->findOrFail($id);
+        $oldStatus = $guest->status ?: 'Confirmed';
+        $newStatus = $validated['status'];
+
+        $guest->status = $newStatus;
+        $guest->save();
+
+        if (in_array($newStatus, ['Arrived', 'Checked In']) && $guest->room) {
+            $activeOp = OperationalStatus::where('name', 'like', '%Active%')->first();
+            if ($activeOp) {
+                RoomOperationalHistory::create([
+                    'room_id' => $guest->room->id,
+                    'operational_status_id' => $activeOp->id,
+                ]);
+            }
+        }
+
+        $badgeClass = match ($newStatus) {
+            'Confirmed' => 'blue',
+            'Arrived' => 'green',
+            'Checked In' => 'cyan',
+            'Stay Over' => 'yellow',
+            'Checked Out' => 'purple',
+            'Cancelled' => 'red',
+            default => 'gray',
+        };
+
+        return response()->json([
+            'success' => true,
+            'message' => "Guest {$guest->guest_name}'s status successfully updated from '{$oldStatus}' to '{$newStatus}'.",
+            'status' => $newStatus,
+            'badge_class' => $badgeClass,
+        ]);
+    }
+
+    public function getDetails($id)
+    {
+        $guest = Guest::with([
+            'room.categoryRelation',
+            'room.floorRelation',
+            'room.beddingConfigRelation',
+            'title',
+            'nationality',
+            'idCardType',
+            'company',
+            'paymentMode',
+            'registrationType',
+            'reservationMode',
+            'primaryGuest',
+            'additionalGuests',
+        ])->findOrFail($id);
+
+        return response()->json([
+            'success' => true,
+            'guest' => $guest,
+        ]);
     }
 }

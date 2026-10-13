@@ -558,18 +558,64 @@
                     <input type="hidden" name="total_amount" id="calc-total-amount" value="4500">
                   </div>
 
-                  <!-- Company / Corporate Discount Display -->
-                  <div>
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                      <label style="display:block; font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.8px;">Company Discount</label>
-                      <span id="calc-discount-val-label" style="font-size: 10px; font-weight: 800; color: #059669; font-family: monospace;">- ₹ 0.00</span>
+                  <!-- Discount Configuration Panel (For all registration types & auto-synced with Company) -->
+                  <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 12px; box-sizing: border-box;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                      <label style="display:block; font-size: 10px; font-weight: 800; color: #475569; text-transform: uppercase; letter-spacing: 0.8px; margin: 0;">
+                        <i class="fa-solid fa-tags" style="color: #6366f1; margin-right: 4px;"></i> Discount
+                      </label>
+                      <span id="calc-discount-val-label" style="font-size: 11px; font-weight: 900; color: #059669; font-family: monospace;">- ₹ 0.00</span>
                     </div>
-                    <div id="company-discount-info-badge" style="display: flex; align-items: center; gap: 8px; padding: 7px 10px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 12px; font-weight: 700; color: #475569; min-height: 36px; box-sizing: border-box;">
-                      <i class="fa-solid fa-tags" style="color: #6366f1;"></i>
-                      <span id="company-discount-applied-text">No corporate discount (0%)</span>
+
+                    <!-- Discount Type Radio Selector (% vs Solid Amount) -->
+                    <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+                      <label id="discount-type-pct-label" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 6px 8px; background: #eef2ff; border: 1.5px solid #6366f1; border-radius: 6px; font-size: 11px; font-weight: 800; color: #4f46e5; cursor: pointer; user-select: none; transition: all 0.15s ease;">
+                        <input type="radio" name="discount_type" value="percentage" checked onchange="onDiscountTypeChange(this.value)" style="accent-color: #4f46e5; margin: 0; width: 14px; height: 14px; cursor: pointer;">
+                        <span>Percentage (%)</span>
+                      </label>
+                      <label id="discount-type-amt-label" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 6px 8px; background: #ffffff; border: 1.5px solid #cbd5e1; border-radius: 6px; font-size: 11px; font-weight: 700; color: #64748b; cursor: pointer; user-select: none; transition: all 0.15s ease;">
+                        <input type="radio" name="discount_type" value="amount" onchange="onDiscountTypeChange(this.value)" style="accent-color: #4f46e5; margin: 0; width: 14px; height: 14px; cursor: pointer;">
+                        <span>Solid Amount (₹)</span>
+                      </label>
                     </div>
-                    <input type="hidden" name="discount_percentage" id="calc-discount-percentage" value="0">
-                    <input type="hidden" name="discount_amount" id="calc-discount-amount" value="0">
+
+                    <!-- Percentage Input Box -->
+                    <div id="disc-percentage-input-wrapper">
+                      <div style="position: relative;">
+                        <input type="number" 
+                               name="discount_percentage" 
+                               id="calc-discount-percentage" 
+                               oninput="calculateReservationBilling()" 
+                               min="0" 
+                               max="100" 
+                               step="any" 
+                               value="0"
+                               style="width: 100%; height: 36px; padding: 6px 30px 6px 12px; font-size: 12px; font-weight: 700; font-family: monospace; border: 1px solid #cbd5e1; border-radius: 6px; background: #f8fafc; color: #1e293b; box-sizing: border-box;" 
+                               placeholder="Discount % (e.g. 10)">
+                        <span style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: 11px; font-weight: 800; color: #64748b; pointer-events: none;">%</span>
+                      </div>
+                    </div>
+
+                    <!-- Solid Amount Input Box -->
+                    <div id="disc-amount-input-wrapper" style="display: none;">
+                      <div style="position: relative;">
+                        <span style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-size: 11px; font-weight: 800; color: #64748b; pointer-events: none;">₹</span>
+                        <input type="number" 
+                               name="discount_amount" 
+                               id="calc-discount-amount" 
+                               oninput="calculateReservationBilling()" 
+                               min="0" 
+                               step="any" 
+                               value="0"
+                               style="width: 100%; height: 36px; padding: 6px 12px 6px 24px; font-size: 12px; font-weight: 700; font-family: monospace; border: 1px solid #cbd5e1; border-radius: 6px; background: #f8fafc; color: #1e293b; box-sizing: border-box;" 
+                               placeholder="Solid Amount in ₹ (e.g. 500)">
+                      </div>
+                    </div>
+
+                    <!-- Corporate Pre-fill Notice Note -->
+                    <div id="company-discount-applied-text" style="display: none; font-size: 10px; font-weight: 700; color: #059669; margin-top: 6px; line-height: 1.3; align-items: center; gap: 4px;">
+                      <i class="fa-solid fa-building-circle-check"></i> <span id="company-discount-note">Corporate discount auto-applied</span>
+                    </div>
                   </div>
 
                   <!-- Net Payable Amount -->

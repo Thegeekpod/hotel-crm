@@ -55,6 +55,13 @@
     }
   }
 
+  function checkInFromRoomModal(roomNo) {
+    closeModal('room-modal');
+    setTimeout(() => {
+      openReservationModal(roomNo);
+    }, 60);
+  }
+
   function setRoomFieldsLocked(block, isLocked, roomNo = null) {
     if (!block) return;
     const catSel = block.querySelector('.select-room-category');
@@ -107,104 +114,131 @@
   }
 
   function openReservationModal(preselectRoomNo = null, preselectCatId = null, preselectFloorId = null) {
-    setInitialDateTime();
-    fetchNextReserveId();
-    
-    const firstGuest = document.querySelector('.guest-block');
-
-    if (preselectRoomNo || preselectCatId || preselectFloorId) {
-      // Temporarily unlock to apply option selections smoothly
-      if (firstGuest) setRoomFieldsLocked(firstGuest, false);
-
-      let match = null;
-      if (preselectRoomNo && window.allPmsRooms) {
-        match = window.allPmsRooms.find(r => String(r.room) === String(preselectRoomNo) || String(r.id) === String(preselectRoomNo));
-        if (match) {
-          preselectCatId = preselectCatId || match.category_id;
-          preselectFloorId = preselectFloorId || match.floor_id || match.floor;
-        }
-      }
-
-      if (firstGuest) {
-        const catSel = firstGuest.querySelector('.select-room-category');
-        const flSel = firstGuest.querySelector('.select-room-floor');
-        const rmSel = firstGuest.querySelector('.select-room-no');
-
-        if (catSel && preselectCatId) {
-          catSel.value = preselectCatId;
-          if (!catSel.value && match) {
-            for (let opt of catSel.options) {
-              if (opt.value == match.category_id || 
-                  (match.category && opt.text.trim().toLowerCase() === match.category.toLowerCase()) ||
-                  (match.type && opt.text.trim().toLowerCase() === match.type.toLowerCase())) {
-                catSel.value = opt.value;
-                break;
-              }
-            }
-          }
-          onCategoryChange(catSel);
-        }
-
-        if (flSel && (preselectFloorId || match)) {
-          const targetFloorId = preselectFloorId || (match ? (match.floor_id || match.floor) : '');
-          flSel.value = targetFloorId;
-          if (!flSel.value && match) {
-            for (let opt of flSel.options) {
-              if (opt.value == match.floor_id || opt.value == match.floor || opt.dataset.floorNo == match.floor) {
-                flSel.value = opt.value;
-                break;
-              }
-            }
-          }
-          onFloorChange(flSel);
-        }
-
-        if (rmSel && (preselectRoomNo || match)) {
-          const targetRoomNo = match ? String(match.room) : String(preselectRoomNo);
-          const targetRoomId = match ? String(match.id) : String(preselectRoomNo);
-
-          let foundOpt = false;
-          for (let opt of rmSel.options) {
-            if (opt.value === targetRoomId || opt.value === targetRoomNo || opt.dataset.roomNo === targetRoomNo) {
-              rmSel.value = opt.value;
-              foundOpt = true;
-              break;
-            }
-          }
-
-          if (!foundOpt && match) {
-            const opt = document.createElement('option');
-            opt.value = match.id || match.room;
-            opt.dataset.roomNo = match.room;
-            opt.dataset.rate = match.rate;
-            opt.dataset.bedding = match.bedding || 'King Size Master (72x78)';
-            opt.dataset.maxAdults = match.max_adults || 2;
-            opt.dataset.maxChildren = match.max_children || 1;
-            opt.dataset.maxPax = match.max_pax || 3;
-            opt.textContent = `Room #${match.room} (₹${Number(match.rate).toLocaleString()}) • ${(match.status || 'available').toUpperCase()}`;
-            opt.style.fontWeight = 'bold';
-            opt.style.color = (match.status === 'available') ? '#059669' : '#ef4444';
-            rmSel.appendChild(opt);
-            rmSel.value = opt.value;
-          }
-
-          onRoomChange(rmSel);
-        }
-
-        // Lock fields since opened through a specific room
-        const finalRoomNo = match ? match.room : preselectRoomNo;
-        setRoomFieldsLocked(firstGuest, true, finalRoomNo);
-      }
-    } else {
-      // General reservation: unlock fields so staff can choose room freely
-      if (firstGuest) {
-        setRoomFieldsLocked(firstGuest, false);
-      }
-    }
-    setTimeout(() => {
-      checkSelectedRoomAvailability();
-    }, 60);
+    // Immediately open reserve modal so user sees the form without lag
     openModal('reserve-modal');
+
+    try {
+      setInitialDateTime();
+    } catch (e) {
+      console.error('Error in setInitialDateTime:', e);
+    }
+
+    try {
+      fetchNextReserveId();
+    } catch (e) {
+      console.error('Error in fetchNextReserveId:', e);
+    }
+    
+    try {
+      const firstGuest = document.querySelector('.guest-block');
+
+      if (preselectRoomNo || preselectCatId || preselectFloorId) {
+        // Temporarily unlock to apply option selections smoothly
+        if (firstGuest) setRoomFieldsLocked(firstGuest, false);
+
+        let match = null;
+        if (preselectRoomNo && window.allPmsRooms) {
+          match = window.allPmsRooms.find(r => String(r.room) === String(preselectRoomNo) || String(r.id) === String(preselectRoomNo));
+          if (match) {
+            preselectCatId = preselectCatId || match.category_id;
+            preselectFloorId = preselectFloorId || match.floor_id || match.floor;
+          }
+        }
+
+        if (firstGuest) {
+          const catSel = firstGuest.querySelector('.select-room-category');
+          const flSel = firstGuest.querySelector('.select-room-floor');
+          const rmSel = firstGuest.querySelector('.select-room-no');
+
+          if (catSel && preselectCatId) {
+            catSel.value = preselectCatId;
+            if (!catSel.value && match) {
+              for (let opt of catSel.options) {
+                if (opt.value == match.category_id || 
+                    (match.category && opt.text.trim().toLowerCase() === match.category.toLowerCase()) ||
+                    (match.type && opt.text.trim().toLowerCase() === match.type.toLowerCase())) {
+                  catSel.value = opt.value;
+                  break;
+                }
+              }
+            }
+            onCategoryChange(catSel);
+          }
+
+          if (flSel && (preselectFloorId || match)) {
+            const targetFloorId = preselectFloorId || (match ? (match.floor_id || match.floor) : '');
+            flSel.value = targetFloorId;
+            if (!flSel.value && match) {
+              for (let opt of flSel.options) {
+                if (opt.value == match.floor_id || opt.value == match.floor || opt.dataset.floorNo == match.floor) {
+                  flSel.value = opt.value;
+                  break;
+                }
+              }
+            }
+            onFloorChange(flSel);
+          }
+
+          if (rmSel && (preselectRoomNo || match)) {
+            const targetRoomNo = match ? String(match.room) : String(preselectRoomNo);
+            const targetRoomId = match ? String(match.id) : String(preselectRoomNo);
+
+            let foundOpt = false;
+            for (let opt of rmSel.options) {
+              if (opt.value === targetRoomId || opt.value === targetRoomNo || opt.dataset.roomNo === targetRoomNo) {
+                rmSel.value = opt.value;
+                foundOpt = true;
+                break;
+              }
+            }
+
+            if (!foundOpt && match) {
+              const opt = document.createElement('option');
+              opt.value = match.id || match.room;
+              opt.dataset.roomNo = match.room;
+              opt.dataset.rate = match.rate;
+              opt.dataset.bedding = match.bedding || 'King Size Master (72x78)';
+              opt.dataset.maxAdults = match.max_adults || 2;
+              opt.dataset.maxChildren = match.max_children || 1;
+              opt.dataset.maxPax = match.max_pax || 3;
+              opt.textContent = `Room #${match.room} (₹${Number(match.rate).toLocaleString()}) • ${(match.status || 'available').toUpperCase()}`;
+              opt.style.fontWeight = 'bold';
+              opt.style.color = (match.status === 'available') ? '#059669' : '#ef4444';
+              rmSel.appendChild(opt);
+              rmSel.value = opt.value;
+            }
+
+            onRoomChange(rmSel);
+          }
+
+          // Lock fields since opened through a specific room
+          const finalRoomNo = match ? match.room : preselectRoomNo;
+          setRoomFieldsLocked(firstGuest, true, finalRoomNo);
+        }
+      } else {
+        // General reservation: unlock fields so staff can choose room freely
+        if (firstGuest) {
+          setRoomFieldsLocked(firstGuest, false);
+        }
+      }
+    } catch (e) {
+      console.error('Error preselecting room:', e);
+    }
+
+    setTimeout(() => {
+      try {
+        checkSelectedRoomAvailability();
+        const checkedResType = document.querySelector('input[name="res_type"]:checked');
+        const isComp = (checkedResType?.dataset?.slug || checkedResType?.value || '').toLowerCase() === 'company';
+        if (isComp) {
+          applyCompanyDiscountFromSelect();
+        } else {
+          calculateReservationBilling();
+        }
+      } catch (err) {
+        console.error('Error in post-reservation timeout:', err);
+      }
+    }, 60);
   }
 
   function getRegistrationTypeRosetteBadgeHtml(typeName, size = 46) {
@@ -624,25 +658,28 @@
       </div>
     `;
 
-    // Action Buttons Footer (Clean: without Mark Cleaned / Mark Dirty buttons)
+    // Action Buttons Footer
     if (isOccupied && guestObj) {
       footerEl.innerHTML = `
-        <button class="btn-ui-secondary" onclick="printInvoice('${roomNo}', '${escapeHtml(guestObj.name)}', '${escapeHtml(guestObj.folio || '')}', ${guestObj.balance || 0})"><i class="fa-solid fa-print"></i> Print Invoice</button>
-        <button class="btn-ui-primary" onclick="if(typeof PmsAlert !== 'undefined') PmsAlert.toast('POS charge panel opened for Room ${roomNo}', 'info'); else alert('POS charge panel opened for Room ${roomNo}');"><i class="fa-solid fa-utensils"></i> Add POS Charge</button>
-        <button class="btn-ui-danger" onclick="checkoutGuest('${roomNo}', '${escapeHtml(guestObj.name)}')"><i class="fa-solid fa-right-from-bracket"></i> Check Out</button>
-        <button class="btn-ui-secondary" onclick="closeModal('room-modal')">Close</button>
+        <button type="button" class="btn-ui-success" onclick="checkInFromRoomModal('${roomNo}')"><i class="fa-solid fa-key"></i> New Check-In</button>
+        <button type="button" class="btn-ui-secondary" onclick="printInvoice('${roomNo}', '${escapeHtml(guestObj.name)}', '${escapeHtml(guestObj.folio || '')}', ${guestObj.balance || 0})"><i class="fa-solid fa-print"></i> Print Invoice</button>
+        <button type="button" class="btn-ui-primary" onclick="if(typeof PmsAlert !== 'undefined') PmsAlert.toast('POS charge panel opened for Room ${roomNo}', 'info'); else alert('POS charge panel opened for Room ${roomNo}');"><i class="fa-solid fa-utensils"></i> Add POS Charge</button>
+        <button type="button" class="btn-ui-danger" onclick="checkoutGuest('${roomNo}', '${escapeHtml(guestObj.name)}')"><i class="fa-solid fa-right-from-bracket"></i> Check Out</button>
+        <button type="button" class="btn-ui-secondary" onclick="closeModal('room-modal')">Close</button>
       `;
     } else {
       footerEl.innerHTML = `
-        <button class="btn-ui-success" onclick="closeModal('room-modal'); openReservationModal('${roomNo}');"><i class="fa-solid fa-key"></i> New Check-In</button>
-        <button class="btn-ui-secondary" onclick="closeModal('room-modal')">Close</button>
+        <button type="button" class="btn-ui-success" onclick="checkInFromRoomModal('${roomNo}')"><i class="fa-solid fa-key"></i> New Check-In</button>
+        <button type="button" class="btn-ui-secondary" onclick="closeModal('room-modal')">Close</button>
       `;
     }
 
     openModal('room-modal');
   }
 
-  // Alias
+  // Aliases & Global Functions
+  window.checkInFromRoomModal = checkInFromRoomModal;
+  window.openReservationModal = openReservationModal;
   window.openRoomDetails = openRoomDetailsModal;
 
   function updateRoomStatusAjax(roomNo, roomId) {
@@ -801,7 +838,24 @@
   }
 
   // Master Rooms, Floors, Statuses & Categories JSON Data for Dynamic Front Office Controls
-  window.allPmsRooms = @json($rackRooms ?? $allRoomsData ?? []);
+  (function() {
+    const _fullHotelRooms = @json($allRoomsData ?? []);
+    const _rackRooms = @json($rackRooms ?? []);
+    const _roomsMap = new Map();
+    (_fullHotelRooms || []).forEach(r => _roomsMap.set(String(r.id), Object.assign({}, r)));
+    (_rackRooms || []).forEach(r => {
+      const key = String(r.id);
+      if (_roomsMap.has(key)) {
+        _roomsMap.set(key, Object.assign({}, _roomsMap.get(key), r));
+      } else {
+        _roomsMap.set(key, r);
+      }
+    });
+    window.allPmsRooms = Array.from(_roomsMap.values());
+    if (window.allPmsRooms.length === 0) {
+      window.allPmsRooms = _rackRooms.length > 0 ? _rackRooms : _fullHotelRooms;
+    }
+  })();
   window.allPmsFloors = @json($floors ?? []);
   window.allPmsCategories = @json($categories ?? []);
   window.allHousekeepingStates = @json($housekeepingStates ?? \App\Models\HousekeepingState::where('status', 'Active')->orderBy('name', 'asc')->get() ?? []);
@@ -1113,6 +1167,14 @@
       compFields.style.display = (type === 'company') ? 'block' : 'none';
     }
 
+    if (type === 'company') {
+      applyCompanyDiscountFromSelect();
+    } else {
+      const noticeWrap = document.getElementById('company-discount-applied-text');
+      if (noticeWrap) noticeWrap.style.display = 'none';
+      calculateReservationBilling();
+    }
+
     const guestBlocks = document.querySelectorAll('.guest-block');
     guestBlocks.forEach(block => {
       const regSearch = block.querySelector('.section-regular-search');
@@ -1228,12 +1290,114 @@
     });
   }
 
+  function onDiscountTypeChange(type) {
+    const pctWrap = document.getElementById('disc-percentage-input-wrapper');
+    const amtWrap = document.getElementById('disc-amount-input-wrapper');
+    const pctLabel = document.getElementById('discount-type-pct-label');
+    const amtLabel = document.getElementById('discount-type-amt-label');
+
+    if (type === 'amount') {
+      if (pctWrap) pctWrap.style.display = 'none';
+      if (amtWrap) amtWrap.style.display = 'block';
+
+      if (amtLabel) {
+        amtLabel.style.background = '#ecfdf5';
+        amtLabel.style.borderColor = '#10b981';
+        amtLabel.style.color = '#059669';
+        amtLabel.style.fontWeight = '800';
+      }
+      if (pctLabel) {
+        pctLabel.style.background = '#ffffff';
+        pctLabel.style.borderColor = '#cbd5e1';
+        pctLabel.style.color = '#64748b';
+        pctLabel.style.fontWeight = '700';
+      }
+    } else {
+      if (pctWrap) pctWrap.style.display = 'block';
+      if (amtWrap) amtWrap.style.display = 'none';
+
+      if (pctLabel) {
+        pctLabel.style.background = '#eef2ff';
+        pctLabel.style.borderColor = '#6366f1';
+        pctLabel.style.color = '#4f46e5';
+        pctLabel.style.fontWeight = '800';
+      }
+      if (amtLabel) {
+        amtLabel.style.background = '#ffffff';
+        amtLabel.style.borderColor = '#cbd5e1';
+        amtLabel.style.color = '#64748b';
+        amtLabel.style.fontWeight = '700';
+      }
+    }
+
+    calculateReservationBilling();
+  }
+
+  function applyCompanyDiscountFromSelect() {
+    const compSelect = document.getElementById('company-select');
+    if (!compSelect) return;
+
+    const noticeWrap = document.getElementById('company-discount-applied-text');
+    const noticeSpan = document.getElementById('company-discount-note');
+
+    if (compSelect.value === 'new') {
+      const newDiscType = document.querySelector('input[name="new_company_discount_type"]:checked')?.value || 'percentage';
+      const newDiscVal = newDiscType === 'amount'
+        ? (parseFloat(document.getElementById('new-comp-disc-amt')?.value) || 0)
+        : (parseFloat(document.getElementById('new-comp-disc-pct')?.value) || 0);
+
+      setDiscountTypeAndValue(newDiscType, newDiscVal);
+
+      if (noticeWrap && noticeSpan) {
+        noticeWrap.style.display = 'inline-flex';
+        noticeSpan.textContent = `New Corporate Rate: ${newDiscType === 'amount' ? '₹ ' + newDiscVal : newDiscVal + '%'}`;
+      }
+    } else if (compSelect.selectedIndex >= 0) {
+      const opt = compSelect.options[compSelect.selectedIndex];
+      if (opt && opt.value) {
+        const dType = opt.dataset.discountType || 'percentage';
+        const dVal = parseFloat(opt.dataset.discountValue) || 0;
+        const compName = opt.text.trim();
+
+        setDiscountTypeAndValue(dType, dVal);
+
+        if (noticeWrap && noticeSpan) {
+          noticeWrap.style.display = 'inline-flex';
+          noticeSpan.textContent = `Corporate discount auto-applied: ${compName} (${dType === 'amount' ? '₹ ' + dVal : dVal + '%'})`;
+        }
+      } else {
+        if (noticeWrap) noticeWrap.style.display = 'none';
+      }
+    } else {
+      if (noticeWrap) noticeWrap.style.display = 'none';
+    }
+
+    calculateReservationBilling();
+  }
+
+  function setDiscountTypeAndValue(type, value) {
+    const pctRadio = document.querySelector('input[name="discount_type"][value="percentage"]');
+    const amtRadio = document.querySelector('input[name="discount_type"][value="amount"]');
+    const pctInp = document.getElementById('calc-discount-percentage');
+    const amtInp = document.getElementById('calc-discount-amount');
+
+    if (type === 'amount') {
+      if (amtRadio) amtRadio.checked = true;
+      onDiscountTypeChange('amount');
+      if (amtInp) amtInp.value = value > 0 ? value : 0;
+    } else {
+      if (pctRadio) pctRadio.checked = true;
+      onDiscountTypeChange('percentage');
+      if (pctInp) pctInp.value = value > 0 ? value : 0;
+    }
+  }
+
   function toggleNewCompany(selectElem) {
     const newCompDetails = document.getElementById('new-company-details');
     if (newCompDetails) {
       newCompDetails.style.display = (selectElem.value === 'new') ? 'block' : 'none';
     }
-    calculateReservationBilling();
+    applyCompanyDiscountFromSelect();
   }
 
   function toggleNewCompanyDiscountType(type) {
@@ -1246,7 +1410,7 @@
       if (pctWrap) pctWrap.style.display = 'block';
       if (amtWrap) amtWrap.style.display = 'none';
     }
-    calculateReservationBilling();
+    applyCompanyDiscountFromSelect();
   }
 
   function setInitialDateTime() {
@@ -1384,59 +1548,45 @@
       totalAmountInp.value = totalGross.toFixed(2);
     }
 
-    // Company / Corporate Discount calculation
-    const typeBtn = document.querySelector('.type-btn.active');
-    const resType = typeBtn ? typeBtn.dataset.type : 'regular';
-    const compSelect = document.getElementById('company-select');
+    // Discount Calculation (Dynamic: % or Solid Amount for all registration types)
+    const discType = document.querySelector('input[name="discount_type"]:checked')?.value || 'percentage';
     let discountPct = 0;
     let discountAmount = 0;
-    let appliedText = 'No corporate discount (0%)';
 
-    if (resType === 'company' && compSelect) {
-      const selectedVal = compSelect.value;
-      if (selectedVal === 'new') {
-        const newDiscType = document.querySelector('input[name="new_company_discount_type"]:checked')?.value || 'percentage';
-        if (newDiscType === 'amount') {
-          const solidAmt = parseFloat(document.getElementById('new-comp-disc-amt')?.value) || 0;
-          discountAmount = Math.min(totalGross, solidAmt);
-          discountPct = totalGross > 0 ? Math.round(((discountAmount / totalGross) * 100) * 100) / 100 : 0;
-          appliedText = solidAmt > 0 ? `New Corporate Solid Discount: ₹ ${solidAmt.toFixed(2)}` : 'Corporate Discount: ₹ 0.00';
-        } else {
-          discountPct = parseFloat(document.getElementById('new-comp-disc-pct')?.value) || 0;
-          discountAmount = Math.round(((totalGross * discountPct) / 100) * 100) / 100;
-          appliedText = discountPct > 0 ? `New Corporate Discount: ${discountPct}%` : 'Corporate Discount: 0%';
-        }
-      } else if (compSelect.selectedIndex >= 0) {
-        const opt = compSelect.options[compSelect.selectedIndex];
-        if (opt && opt.value) {
-          const dType = opt.dataset.discountType || 'percentage';
-          const dVal = parseFloat(opt.dataset.discountValue) || 0;
-          if (dType === 'amount') {
-            discountAmount = Math.min(totalGross, dVal);
-            discountPct = totalGross > 0 ? Math.round(((discountAmount / totalGross) * 100) * 100) / 100 : 0;
-            appliedText = dVal > 0 ? `Corporate Solid: ₹ ${dVal.toFixed(2)}` : 'Corporate Discount: ₹ 0.00';
-          } else {
-            discountPct = dVal;
-            discountAmount = Math.round(((totalGross * discountPct) / 100) * 100) / 100;
-            appliedText = dVal > 0 ? `Corporate Rate: ${dVal}%` : 'Corporate Discount: 0%';
-          }
-        }
+    if (discType === 'amount') {
+      const solidAmt = parseFloat(document.getElementById('calc-discount-amount')?.value) || 0;
+      discountAmount = Math.min(totalGross, Math.max(0, solidAmt));
+      discountPct = totalGross > 0 ? Math.round(((discountAmount / totalGross) * 100) * 100) / 100 : 0;
+
+      const pctInp = document.getElementById('calc-discount-percentage');
+      if (pctInp && document.activeElement !== pctInp) {
+        pctInp.value = discountPct > 0 ? discountPct : '0';
+      }
+    } else {
+      const pctVal = parseFloat(document.getElementById('calc-discount-percentage')?.value) || 0;
+      discountPct = Math.min(100, Math.max(0, pctVal));
+      discountAmount = Math.round(((totalGross * discountPct) / 100) * 100) / 100;
+
+      const amtInp = document.getElementById('calc-discount-amount');
+      if (amtInp && document.activeElement !== amtInp) {
+        amtInp.value = discountAmount > 0 ? discountAmount.toFixed(2) : '0';
       }
     }
 
     const payableAmount = Math.max(0, totalGross - discountAmount);
 
-    const appliedTextEl = document.getElementById('company-discount-applied-text');
-    if (appliedTextEl) appliedTextEl.textContent = appliedText;
-
     const discValLabel = document.getElementById('calc-discount-val-label');
     if (discValLabel) {
-      discValLabel.textContent = `- ₹ ${discountAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      if (discountAmount > 0) {
+        discValLabel.textContent = `- ₹ ${discountAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (${discountPct}%)`;
+      } else {
+        discValLabel.textContent = `- ₹ 0.00`;
+      }
     }
-    const discPctInp = document.getElementById('calc-discount-percentage');
-    if (discPctInp) discPctInp.value = discountPct;
-    const discAmtInp = document.getElementById('calc-discount-amount');
-    if (discAmtInp) discAmtInp.value = discountAmount.toFixed(2);
+    const discAmtInput = document.getElementById('calc-discount-amount');
+    if (discAmtInput && discType === 'percentage' && document.activeElement !== discAmtInput) {
+      discAmtInput.value = discountAmount > 0 ? discountAmount.toFixed(2) : '0';
+    }
 
     const payableDisplay = document.getElementById('calc-payable-display');
     if (payableDisplay) {
@@ -1750,8 +1900,9 @@
     const newCompDiscValue = newCompDiscType === 'amount'
       ? (parseFloat(form.querySelector('input[name="new_company_discount_amt"]')?.value) || 0)
       : (parseFloat(form.querySelector('input[name="new_company_discount_pct"]')?.value) || 0);
-    const discountPercentage = form.querySelector('input[name="discount_percentage"]')?.value || 0;
-    const discountAmount = form.querySelector('input[name="discount_amount"]')?.value || 0;
+    const discountType = form.querySelector('input[name="discount_type"]:checked')?.value || 'percentage';
+    const discountPercentage = parseFloat(form.querySelector('input[name="discount_percentage"]')?.value) || 0;
+    const discountAmount = parseFloat(form.querySelector('input[name="discount_amount"]')?.value) || 0;
     const totalAmount = form.querySelector('input[name="total_amount"]')?.value || 0;
     const payableAmount = form.querySelector('input[name="payable_amount"]')?.value || 0;
     const advanceAmount = form.querySelector('input[name="advance_amount"]')?.value || 0;
@@ -1774,6 +1925,7 @@
       new_company_discount_value: newCompDiscValue,
       guests: guests,
       payment_mode_id: paymentModeId,
+      discount_type: discountType,
       discount_percentage: discountPercentage,
       discount_amount: discountAmount,
       total_amount: totalAmount,

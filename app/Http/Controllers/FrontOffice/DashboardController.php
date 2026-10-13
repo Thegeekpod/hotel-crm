@@ -1021,19 +1021,19 @@ class DashboardController extends Controller
             $diffNights = (int)$dIn->diff($dOut)->format('%r%a');
             $totalNights = max(1, $diffNights);
 
-            // Company / Corporate Discount calculation
+            // Discount calculation for reservation (Supports % or Solid Amount across all registration types)
+            $discountType = $request->input('discount_type', 'percentage');
+            $reqDiscountPct = (float)$request->input('discount_percentage', 0);
+            $reqDiscountAmt = (float)$request->input('discount_amount', 0);
+
             $companyModel = $companyId ? Company::find($companyId) : null;
-            $discountPercentage = 0.0;
-            $companyDiscountAmount = 0.0;
-            if ($companyModel && (float)$companyModel->discount_value > 0) {
-                if ($companyModel->discount_type === 'amount') {
-                    $companyDiscountAmount = (float)$companyModel->discount_value;
+            if ($reqDiscountAmt <= 0 && $reqDiscountPct <= 0 && $companyModel && (float)$companyModel->discount_value > 0) {
+                $discountType = $companyModel->discount_type ?? 'percentage';
+                if ($discountType === 'amount') {
+                    $reqDiscountAmt = (float)$companyModel->discount_value;
                 } else {
-                    $discountPercentage = (float)$companyModel->discount_value;
+                    $reqDiscountPct = (float)$companyModel->discount_value;
                 }
-            } else {
-                $discountPercentage = (float)($request->input('discount_percentage', 0));
-                $companyDiscountAmount = (float)($request->input('discount_amount', 0));
             }
 
             // Check if guests data is passed as array or flat inputs
@@ -1100,11 +1100,15 @@ class DashboardController extends Controller
 
                 $roomRate = (float)($roomObj?->rate ?? 4500);
                 $totalAmount = $roomRate * $totalNights;
-                if ($companyDiscountAmount > 0) {
-                    $discountAmount = min($totalAmount, $companyDiscountAmount);
+                if ($discountType === 'amount' && $reqDiscountAmt > 0) {
+                    $discountAmount = min($totalAmount, $reqDiscountAmt);
                     $discountPercentage = $totalAmount > 0 ? round(($discountAmount / $totalAmount) * 100, 2) : 0.0;
-                } else {
+                } elseif ($reqDiscountPct > 0) {
+                    $discountPercentage = $reqDiscountPct;
                     $discountAmount = round(($totalAmount * $discountPercentage) / 100.0, 2);
+                } else {
+                    $discountAmount = 0.0;
+                    $discountPercentage = 0.0;
                 }
                 $payableAmount = max(0, $totalAmount - $discountAmount);
                 $calculatedBalance = max(0, $payableAmount - ($idx === 0 ? $advanceAmount : 0));

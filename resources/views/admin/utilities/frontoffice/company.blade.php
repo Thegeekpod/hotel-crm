@@ -295,6 +295,7 @@
                   <th>GSTIN</th>
                   <th>Phone Number</th>
                   <th>Address</th>
+                  <th>Discount</th>
                   <th>Status</th>
                   <th style="text-align: right; width: 120px;">Actions</th>
                 </tr>
@@ -330,6 +331,19 @@
                     {{ $item->address ?: '-' }}
                   </td>
                   <td>
+                    @if($item->discount_type === 'amount' && (float)$item->discount_value > 0)
+                      <span class="badge-tag green" style="font-family: var(--font-mono); font-size: 11px; font-weight: 700;">
+                        <i class="fa-solid fa-indian-rupee-sign" style="font-size: 9px;"></i> {{ number_format($item->discount_value, 2) }}
+                      </span>
+                    @elseif((float)$item->discount_value > 0)
+                      <span class="badge-tag purple" style="font-family: var(--font-mono); font-size: 11px; font-weight: 700;">
+                        <i class="fa-solid fa-percent" style="font-size: 9px;"></i> {{ (float)$item->discount_value }}%
+                      </span>
+                    @else
+                      <span style="color: var(--text-muted); font-size: 11px;">0% (None)</span>
+                    @endif
+                  </td>
+                  <td>
                     <span class="badge-tag {{ $item->status === 'Active' ? 'green' : 'yellow' }}">
                       <i class="fa-solid fa-circle-check" style="font-size: 6px; margin-right: 4px;"></i>{{ $item->status }}
                     </span>
@@ -343,7 +357,7 @@
                 </tr>
                 @empty
                 <tr>
-                  <td colspan="8" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                  <td colspan="9" style="text-align: center; padding: 40px; color: var(--text-muted);">
                     <i class="fa-solid fa-inbox" style="font-size: 28px; margin-bottom: 10px; display: block;"></i>
                     No companies found. Click "+ Add Company" to create one.
                   </td>
@@ -405,6 +419,40 @@
           <label class="admin-form-label">Office Address</label>
           <textarea id="form-address" class="admin-form-textarea" placeholder="e.g. Plot No 4, Sector V, Salt Lake City, Kolkata, WB"></textarea>
         </div>
+        <!-- Discount Configuration (Two radio buttons: Percentage / Solid Amount) -->
+        <div class="admin-form-group" style="background: #ffffff; border: 1px solid var(--border-medium); border-radius: var(--radius-md); padding: 14px; margin-bottom: 14px;">
+          <label class="admin-form-label" style="margin-bottom: 8px;">Discount Type <span style="color: var(--accent-rose);">*</span></label>
+          <div style="display: flex; gap: 24px; align-items: center; margin-bottom: 12px;">
+            <label style="display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: var(--text-primary); cursor: pointer;">
+              <input type="radio" name="form_discount_type" id="radio-discount-percentage" value="percentage" checked onchange="handleDiscountTypeChange('percentage')" style="accent-color: var(--accent-primary); width: 16px; height: 16px; cursor: pointer;">
+              <span><i class="fa-solid fa-percent" style="color: var(--accent-primary); font-size: 11px;"></i> Percentage (%)</span>
+            </label>
+            <label style="display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: var(--text-primary); cursor: pointer;">
+              <input type="radio" name="form_discount_type" id="radio-discount-amount" value="amount" onchange="handleDiscountTypeChange('amount')" style="accent-color: var(--accent-primary); width: 16px; height: 16px; cursor: pointer;">
+              <span><i class="fa-solid fa-indian-rupee-sign" style="color: #059669; font-size: 11px;"></i> Solid Amount (₹)</span>
+            </label>
+          </div>
+
+          <!-- Dynamic Input: Percentage -->
+          <div id="container-discount-percentage">
+            <label class="admin-form-label" style="font-size: 10px; color: var(--text-secondary);">Discount Percentage (%)</label>
+            <div style="position: relative;">
+              <input type="number" id="form-discount-percentage" class="admin-form-input" placeholder="e.g. 10.00" min="0" max="100" step="any" style="padding-right: 36px; font-family: var(--font-mono); font-weight: 700;">
+              <span style="position: absolute; right: 14px; top: 50%; transform: translateY(-50%); font-weight: 800; color: var(--text-muted); font-size: 13px;">%</span>
+            </div>
+            <small style="font-size: 11px; color: var(--text-muted); margin-top: 4px; display: block;">Specify applicable percentage discount (0 to 100%).</small>
+          </div>
+
+          <!-- Dynamic Input: Solid Amount -->
+          <div id="container-discount-amount" style="display: none;">
+            <label class="admin-form-label" style="font-size: 10px; color: var(--text-secondary);">Solid Discount Amount (₹)</label>
+            <div style="position: relative;">
+              <span style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-weight: 800; color: #059669; font-size: 13px;">₹</span>
+              <input type="number" id="form-discount-amount" class="admin-form-input" placeholder="e.g. 500.00" min="0" step="any" style="padding-left: 32px; font-family: var(--font-mono); font-weight: 700;">
+            </div>
+            <small style="font-size: 11px; color: var(--text-muted); margin-top: 4px; display: block;">Specify flat solid amount deduction per reservation in INR.</small>
+          </div>
+        </div>
         <div class="admin-form-group" style="margin-bottom: 0;">
           <label class="admin-form-label">Status <span style="color: var(--accent-rose);">*</span></label>
           <select id="form-status" class="admin-form-input" required>
@@ -445,6 +493,18 @@
     window.history.replaceState(null, '', newUrl);
   }
 
+  function handleDiscountTypeChange(type) {
+    const pctWrap = document.getElementById('container-discount-percentage');
+    const amtWrap = document.getElementById('container-discount-amount');
+    if (type === 'amount') {
+      pctWrap.style.display = 'none';
+      amtWrap.style.display = 'block';
+    } else {
+      pctWrap.style.display = 'block';
+      amtWrap.style.display = 'none';
+    }
+  }
+
   function openAddModal() {
     document.getElementById('modal-title').textContent = 'Add Company';
     document.getElementById('item-id').value = '';
@@ -453,6 +513,10 @@
     document.getElementById('form-phone').value = '';
     document.getElementById('form-address').value = '';
     document.getElementById('form-status').value = 'Active';
+    document.getElementById('radio-discount-percentage').checked = true;
+    document.getElementById('form-discount-percentage').value = '';
+    document.getElementById('form-discount-amount').value = '';
+    handleDiscountTypeChange('percentage');
     openModal('crud-modal');
   }
 
@@ -467,6 +531,19 @@
     document.getElementById('form-phone').value = item.phone || '';
     document.getElementById('form-address').value = item.address || '';
     document.getElementById('form-status').value = item.status || 'Active';
+
+    const discType = item.discount_type === 'amount' ? 'amount' : 'percentage';
+    const discVal = item.discount_value !== undefined && item.discount_value !== null ? parseFloat(item.discount_value) : '';
+    if (discType === 'amount') {
+      document.getElementById('radio-discount-amount').checked = true;
+      document.getElementById('form-discount-amount').value = discVal;
+      document.getElementById('form-discount-percentage').value = '';
+    } else {
+      document.getElementById('radio-discount-percentage').checked = true;
+      document.getElementById('form-discount-percentage').value = discVal;
+      document.getElementById('form-discount-amount').value = '';
+    }
+    handleDiscountTypeChange(discType);
     openModal('crud-modal');
   }
 
@@ -479,12 +556,38 @@
     const address = document.getElementById('form-address').value.trim();
     const status = document.getElementById('form-status').value;
 
+    const discountType = document.querySelector('input[name="form_discount_type"]:checked')?.value || 'percentage';
+    let discountValue = 0;
+    if (discountType === 'amount') {
+      const rawVal = document.getElementById('form-discount-amount').value.trim();
+      discountValue = rawVal !== '' ? parseFloat(rawVal) : 0;
+      if (isNaN(discountValue) || discountValue < 0) {
+        PmsAlert.error('Validation Error', 'Please enter a valid discount amount (minimum 0).');
+        return;
+      }
+    } else {
+      const rawVal = document.getElementById('form-discount-percentage').value.trim();
+      discountValue = rawVal !== '' ? parseFloat(rawVal) : 0;
+      if (isNaN(discountValue) || discountValue < 0 || discountValue > 100) {
+        PmsAlert.error('Validation Error', 'Please enter a valid discount percentage (0 to 100).');
+        return;
+      }
+    }
+
     if (!name) {
       PmsAlert.error('Validation Error', 'Please enter a valid company name.');
       return;
     }
 
-    const payload = { name, gstin, phone, address, status };
+    const payload = { 
+      name, 
+      gstin, 
+      phone, 
+      address, 
+      status, 
+      discount_type: discountType, 
+      discount_value: discountValue 
+    };
     const url = id ? `${baseUrl}/${id}` : baseUrl;
     const method = id ? 'PUT' : 'POST';
 
@@ -662,6 +765,7 @@
         (item.gstin && item.gstin.toLowerCase().includes(searchQuery)) ||
         (item.phone && item.phone.toLowerCase().includes(searchQuery)) ||
         (item.address && item.address.toLowerCase().includes(searchQuery)) ||
+        (item.discount_value !== undefined && String(item.discount_value).includes(searchQuery)) ||
         (item.status && item.status.toLowerCase().includes(searchQuery));
 
       const matchStatus = statusFilter === 'all' || item.status === statusFilter;
@@ -685,13 +789,22 @@
 
     const tbody = document.getElementById('table-body');
     if (!pageItems.length) {
-      tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 40px; color: var(--text-muted);"><i class="fa-solid fa-inbox" style="font-size: 28px; margin-bottom: 10px; display: block;"></i>No matching companies found.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; padding: 40px; color: var(--text-muted);"><i class="fa-solid fa-inbox" style="font-size: 28px; margin-bottom: 10px; display: block;"></i>No matching companies found.</td></tr>`;
       updateBulkActionUI();
     } else {
       let html = '';
       pageItems.forEach((item, idx) => {
         const rowNumber = startIdx + idx + 1;
         const badgeClass = item.status === 'Active' ? 'green' : 'yellow';
+        const dVal = parseFloat(item.discount_value) || 0;
+        let discountHtml = '<span style="color: var(--text-muted); font-size: 11px;">0% (None)</span>';
+        if (dVal > 0) {
+          if (item.discount_type === 'amount') {
+            discountHtml = `<span class="badge-tag green" style="font-family: var(--font-mono); font-size: 11px; font-weight: 700;"><i class="fa-solid fa-indian-rupee-sign" style="font-size: 9px;"></i> ${dVal.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>`;
+          } else {
+            discountHtml = `<span class="badge-tag purple" style="font-family: var(--font-mono); font-size: 11px; font-weight: 700;"><i class="fa-solid fa-percent" style="font-size: 9px;"></i> ${dVal}%</span>`;
+          }
+        }
         html += `
           <tr data-id="${item.id}">
             <td style="text-align: center;">
@@ -712,6 +825,9 @@
             </td>
             <td style="color: var(--text-secondary); font-size: 12px; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${escapeHtml(item.address || '')}">
               ${escapeHtml(item.address || '-')}
+            </td>
+            <td>
+              ${discountHtml}
             </td>
             <td>
               <span class="badge-tag ${badgeClass}">
@@ -799,10 +915,12 @@
       PmsAlert.toast('No records to export', 'info');
       return;
     }
-    let csv = '"ID","Company Name","GSTIN","Phone","Address","Status"\n';
+    let csv = '"ID","Company Name","GSTIN","Phone","Address","Discount Type","Discount Value","Status"\n';
     filtered.forEach(r => {
       const cleanAddr = (r.address || '').replace(/"/g, '""');
-      csv += `"${r.id}","${r.name}","${r.gstin || ''}","${r.phone || ''}","${cleanAddr}","${r.status}"\n`;
+      const dType = r.discount_type === 'amount' ? 'Solid Amount' : 'Percentage';
+      const dVal = r.discount_value !== undefined && r.discount_value !== null ? r.discount_value : 0;
+      csv += `"${r.id}","${r.name}","${r.gstin || ''}","${r.phone || ''}","${cleanAddr}","${dType}","${dVal}","${r.status}"\n`;
     });
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);

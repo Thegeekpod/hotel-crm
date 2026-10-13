@@ -48,11 +48,6 @@
         </a>
       </li>
       <li>
-        <a href="{{ route('admin.utilities.frontoffice.discount.index') }}" class="admin-sub-item {{ request()->routeIs('admin.utilities.frontoffice.discount.*') ? 'active' : '' }}">
-          <i class="fa-solid fa-tags"></i> Discount %
-        </a>
-      </li>
-      <li>
         <a href="{{ route('admin.utilities.frontoffice.company.index') }}" class="admin-sub-item {{ request()->routeIs('admin.utilities.frontoffice.company.*') ? 'active' : '' }}">
           <i class="fa-solid fa-building"></i> Company Manage
         </a>

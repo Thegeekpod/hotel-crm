@@ -59,8 +59,6 @@ class GuestController extends Controller
             ];
         }
 
-        $discounts = \App\Models\Discount::where('status', 'Active')->orderBy('discount_percentage', 'asc')->get();
-
         return view('frontoffice.guest.index', compact(
             'guests',
             'categories',
@@ -69,7 +67,6 @@ class GuestController extends Controller
             'idCardTypes',
             'reservationModes',
             'paymentModes',
-            'discounts',
             'rackRooms'
         ));
     }

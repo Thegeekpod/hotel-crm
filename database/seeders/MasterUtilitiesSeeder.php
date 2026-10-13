@@ -11,7 +11,6 @@ use App\Models\Nationality;
 use App\Models\ReservationMode;
 use App\Models\IdCardType;
 use App\Models\PaymentMode;
-use App\Models\Discount;
 use App\Models\GstPercentage;
 use App\Models\Company;
 use App\Models\BeddingConfig;
@@ -135,20 +134,6 @@ class MasterUtilitiesSeeder extends Seeder
             PaymentMode::firstOrCreate(['name' => $item['name']], $item);
         }
 
-        // 8. Discounts Master
-        $discounts = [
-            ['discount_percentage' => 0.00, 'status' => 'Active'],
-            ['discount_percentage' => 5.00, 'status' => 'Active'],
-            ['discount_percentage' => 10.00, 'status' => 'Active'],
-            ['discount_percentage' => 15.00, 'status' => 'Active'],
-            ['discount_percentage' => 20.00, 'status' => 'Active'],
-            ['discount_percentage' => 25.00, 'status' => 'Active'],
-            ['discount_percentage' => 30.00, 'status' => 'Active'],
-            ['discount_percentage' => 50.00, 'status' => 'Active'],
-        ];
-        foreach ($discounts as $item) {
-            Discount::firstOrCreate(['discount_percentage' => $item['discount_percentage']], $item);
-        }
 
         // 9. GST % Slabs
         $gstSlabs = [
@@ -169,6 +154,8 @@ class MasterUtilitiesSeeder extends Seeder
                 'address' => 'TCS House, Raveline Street, Fort, Mumbai - 400001',
                 'gstin' => '27AAACT2727Q1ZW',
                 'phone' => '+91 22 6778 9999',
+                'discount_type' => 'percentage',
+                'discount_value' => 10.00,
                 'status' => 'Active',
             ],
             [
@@ -176,6 +163,8 @@ class MasterUtilitiesSeeder extends Seeder
                 'address' => 'Electronics City, Hosur Road, Bengaluru - 560100',
                 'gstin' => '29AAACI4567M1ZX',
                 'phone' => '+91 80 2852 0261',
+                'discount_type' => 'percentage',
+                'discount_value' => 15.00,
                 'status' => 'Active',
             ],
             [
@@ -183,6 +172,8 @@ class MasterUtilitiesSeeder extends Seeder
                 'address' => 'Maker Chambers IV, 222 Nariman Point, Mumbai - 400021',
                 'gstin' => '27AAACR1234A1ZP',
                 'phone' => '+91 22 3555 5000',
+                'discount_type' => 'amount',
+                'discount_value' => 500.00,
                 'status' => 'Active',
             ],
             [
@@ -190,6 +181,8 @@ class MasterUtilitiesSeeder extends Seeder
                 'address' => 'Doddakannelli, Sarjapur Road, Bengaluru - 560035',
                 'gstin' => '29AAACW0123L1ZK',
                 'phone' => '+91 80 2844 0011',
+                'discount_type' => 'percentage',
+                'discount_value' => 12.50,
                 'status' => 'Active',
             ],
             [
@@ -197,6 +190,8 @@ class MasterUtilitiesSeeder extends Seeder
                 'address' => 'HDFC Bank House, Senapati Bapat Marg, Lower Parel, Mumbai - 400013',
                 'gstin' => '27AAACH2702H1ZX',
                 'phone' => '+91 22 6652 1000',
+                'discount_type' => 'amount',
+                'discount_value' => 750.00,
                 'status' => 'Active',
             ],
             [
@@ -204,11 +199,13 @@ class MasterUtilitiesSeeder extends Seeder
                 'address' => 'L&T House, Ballard Estate, Mumbai - 400001',
                 'gstin' => '27AAACL0149P1ZA',
                 'phone' => '+91 22 6752 5656',
+                'discount_type' => 'percentage',
+                'discount_value' => 20.00,
                 'status' => 'Active',
             ],
         ];
         foreach ($companies as $item) {
-            Company::firstOrCreate(['name' => $item['name']], $item);
+            Company::updateOrCreate(['name' => $item['name']], $item);
         }
 
         // 11. Bedding Configurations

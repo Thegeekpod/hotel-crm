@@ -43,7 +43,6 @@ class Guest extends Model
         'id_card_type_id',
         'id_card_number',
         'payment_mode_id',
-        'discount_id',
         'discount_percentage',
         'discount_amount',
         'payable_amount',
@@ -148,10 +147,6 @@ class Guest extends Model
         return $this->belongsTo(PaymentMode::class, 'payment_mode_id');
     }
 
-    public function discount()
-    {
-        return $this->belongsTo(Discount::class, 'discount_id');
-    }
 
     public function primaryGuest()
     {

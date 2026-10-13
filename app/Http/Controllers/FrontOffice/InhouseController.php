@@ -27,9 +27,6 @@ class InhouseController extends Controller
         $dbInhouse = Guest::with(['room.categoryRelation', 'title'])
             ->whereIn('status', ['Arrived', 'Stay Over'])
             ->get();
-
-        $discounts = \App\Models\Discount::where('status', 'Active')->orderBy('discount_percentage', 'asc')->get();
-
         $inhouseGuests = [];
         foreach ($dbInhouse as $g) {
             $departureStr = $g->checkout_date ? ($g->checkout_date->format('d M') . ' ' . ($g->checkout_time ?: '11:00')) : now()->addDays(1)->format('d M 11:00');
@@ -56,7 +53,6 @@ class InhouseController extends Controller
             'idCardTypes',
             'reservationModes',
             'paymentModes',
-            'discounts',
             'rackRooms'
         ));
     }

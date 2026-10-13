@@ -20,7 +20,6 @@ use App\Models\HousekeepingState;
 use App\Models\OperationalStatus;
 use App\Models\RoomHousekeepingHistory;
 use App\Models\RoomOperationalHistory;
-use App\Models\Discount;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -89,7 +88,6 @@ class DashboardController extends Controller
         $idCardTypes = IdCardType::where('status', 'Active')->get();
         $reservationModes = ReservationMode::where('status', 'Active')->get();
         $paymentModes = PaymentMode::where('status', 'Active')->get();
-        $discounts = Discount::where('status', 'Active')->orderBy('discount_percentage', 'asc')->get();
         $registrationTypes = RegistrationType::where('status', 'Active')->get();
         $titles = Title::where('status', 'Active')->get();
         $nationalities = Nationality::where('status', 'Active')->get();
@@ -387,7 +385,6 @@ class DashboardController extends Controller
             'idCardTypes',
             'reservationModes',
             'paymentModes',
-            'discounts',
             'registrationTypes',
             'titles',
             'nationalities',
@@ -493,6 +490,8 @@ class DashboardController extends Controller
                     'address' => $request->input('new_company_address'),
                     'gstin' => $request->input('new_company_gstin'),
                     'phone' => $request->input('new_company_phone'),
+                    'discount_type' => $request->input('new_company_discount_type', 'percentage'),
+                    'discount_value' => (float)$request->input('new_company_discount_value', 0),
                     'status' => 'Active',
                 ]);
                 $companyId = $newComp->id;
@@ -519,20 +518,19 @@ class DashboardController extends Controller
             $diffNights = (int)$dIn->diff($dOut)->format('%r%a');
             $totalNights = max(1, $diffNights);
 
-            // Discount calculation
-            $discountId = $request->input('discount_id');
+            // Company / Corporate Discount calculation
+            $companyModel = $companyId ? Company::find($companyId) : null;
             $discountPercentage = 0.0;
-            if ($discountId && is_numeric($discountId)) {
-                $discountModel = Discount::find($discountId);
-                if ($discountModel) {
-                    $discountPercentage = (float)$discountModel->discount_percentage;
-                    $discountId = $discountModel->id;
+            $companyDiscountAmount = 0.0;
+            if ($companyModel && (float)$companyModel->discount_value > 0) {
+                if ($companyModel->discount_type === 'amount') {
+                    $companyDiscountAmount = (float)$companyModel->discount_value;
                 } else {
-                    $discountId = null;
+                    $discountPercentage = (float)$companyModel->discount_value;
                 }
             } else {
-                $discountId = null;
                 $discountPercentage = (float)($request->input('discount_percentage', 0));
+                $companyDiscountAmount = (float)($request->input('discount_amount', 0));
             }
 
             // Check if guests data is passed as array or flat inputs
@@ -578,7 +576,12 @@ class DashboardController extends Controller
 
                 $roomRate = (float)($roomObj?->rate ?? 4500);
                 $totalAmount = $roomRate * $totalNights;
-                $discountAmount = round(($totalAmount * $discountPercentage) / 100.0, 2);
+                if ($companyDiscountAmount > 0) {
+                    $discountAmount = min($totalAmount, $companyDiscountAmount);
+                    $discountPercentage = $totalAmount > 0 ? round(($discountAmount / $totalAmount) * 100, 2) : 0.0;
+                } else {
+                    $discountAmount = round(($totalAmount * $discountPercentage) / 100.0, 2);
+                }
                 $payableAmount = max(0, $totalAmount - $discountAmount);
                 $calculatedBalance = max(0, $payableAmount - ($idx === 0 ? $advanceAmount : 0));
                 $folioNo = Guest::generateFolioNumber($roomObj?->room_number ?? '100');
@@ -619,7 +622,6 @@ class DashboardController extends Controller
                     'id_card_type_id' => $idCardTypeId,
                     'id_card_number' => $gData['id_card_number'] ?? null,
                     'payment_mode_id' => ($idx === 0) ? $paymentModeId : null,
-                    'discount_id' => ($idx === 0) ? $discountId : null,
                     'discount_percentage' => ($idx === 0) ? $discountPercentage : 0.0,
                     'discount_amount' => ($idx === 0) ? $discountAmount : 0.00,
                     'payable_amount' => ($idx === 0) ? $payableAmount : 0.00,

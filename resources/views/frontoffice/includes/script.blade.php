@@ -1186,6 +1186,20 @@
     if (newCompDetails) {
       newCompDetails.style.display = (selectElem.value === 'new') ? 'block' : 'none';
     }
+    calculateReservationBilling();
+  }
+
+  function toggleNewCompanyDiscountType(type) {
+    const pctWrap = document.getElementById('new-company-disc-pct-wrap');
+    const amtWrap = document.getElementById('new-company-disc-amt-wrap');
+    if (type === 'amount') {
+      if (pctWrap) pctWrap.style.display = 'none';
+      if (amtWrap) amtWrap.style.display = 'block';
+    } else {
+      if (pctWrap) pctWrap.style.display = 'block';
+      if (amtWrap) amtWrap.style.display = 'none';
+    }
+    calculateReservationBilling();
   }
 
   function setInitialDateTime() {
@@ -1321,18 +1335,50 @@
       totalAmountInp.value = totalGross.toFixed(2);
     }
 
-    // Discount calculation
-    const discSelect = document.getElementById('payment-discount-select');
+    // Company / Corporate Discount calculation
+    const typeBtn = document.querySelector('.type-btn.active');
+    const resType = typeBtn ? typeBtn.dataset.type : 'regular';
+    const compSelect = document.getElementById('company-select');
     let discountPct = 0;
-    if (discSelect && discSelect.selectedIndex >= 0) {
-      const opt = discSelect.options[discSelect.selectedIndex];
-      if (opt && opt.dataset.pct) {
-        discountPct = parseFloat(opt.dataset.pct) || 0;
+    let discountAmount = 0;
+    let appliedText = 'No corporate discount (0%)';
+
+    if (resType === 'company' && compSelect) {
+      const selectedVal = compSelect.value;
+      if (selectedVal === 'new') {
+        const newDiscType = document.querySelector('input[name="new_company_discount_type"]:checked')?.value || 'percentage';
+        if (newDiscType === 'amount') {
+          const solidAmt = parseFloat(document.getElementById('new-comp-disc-amt')?.value) || 0;
+          discountAmount = Math.min(totalGross, solidAmt);
+          discountPct = totalGross > 0 ? Math.round(((discountAmount / totalGross) * 100) * 100) / 100 : 0;
+          appliedText = solidAmt > 0 ? `New Corporate Solid Discount: ₹ ${solidAmt.toFixed(2)}` : 'Corporate Discount: ₹ 0.00';
+        } else {
+          discountPct = parseFloat(document.getElementById('new-comp-disc-pct')?.value) || 0;
+          discountAmount = Math.round(((totalGross * discountPct) / 100) * 100) / 100;
+          appliedText = discountPct > 0 ? `New Corporate Discount: ${discountPct}%` : 'Corporate Discount: 0%';
+        }
+      } else if (compSelect.selectedIndex >= 0) {
+        const opt = compSelect.options[compSelect.selectedIndex];
+        if (opt && opt.value) {
+          const dType = opt.dataset.discountType || 'percentage';
+          const dVal = parseFloat(opt.dataset.discountValue) || 0;
+          if (dType === 'amount') {
+            discountAmount = Math.min(totalGross, dVal);
+            discountPct = totalGross > 0 ? Math.round(((discountAmount / totalGross) * 100) * 100) / 100 : 0;
+            appliedText = dVal > 0 ? `Corporate Solid: ₹ ${dVal.toFixed(2)}` : 'Corporate Discount: ₹ 0.00';
+          } else {
+            discountPct = dVal;
+            discountAmount = Math.round(((totalGross * discountPct) / 100) * 100) / 100;
+            appliedText = dVal > 0 ? `Corporate Rate: ${dVal}%` : 'Corporate Discount: 0%';
+          }
+        }
       }
     }
 
-    const discountAmount = Math.round(((totalGross * discountPct) / 100) * 100) / 100;
     const payableAmount = Math.max(0, totalGross - discountAmount);
+
+    const appliedTextEl = document.getElementById('company-discount-applied-text');
+    if (appliedTextEl) appliedTextEl.textContent = appliedText;
 
     const discValLabel = document.getElementById('calc-discount-val-label');
     if (discValLabel) {
@@ -1472,7 +1518,10 @@
 
     // Collect Payment & Billing Breakdown
     const paymentModeId = form.querySelector('select[name="payment_mode_id"]')?.value;
-    const discountId = form.querySelector('select[name="discount_id"]')?.value || null;
+    const newCompDiscType = form.querySelector('input[name="new_company_discount_type"]:checked')?.value || 'percentage';
+    const newCompDiscValue = newCompDiscType === 'amount'
+      ? (parseFloat(form.querySelector('input[name="new_company_discount_amt"]')?.value) || 0)
+      : (parseFloat(form.querySelector('input[name="new_company_discount_pct"]')?.value) || 0);
     const discountPercentage = form.querySelector('input[name="discount_percentage"]')?.value || 0;
     const discountAmount = form.querySelector('input[name="discount_amount"]')?.value || 0;
     const totalAmount = form.querySelector('input[name="total_amount"]')?.value || 0;
@@ -1493,9 +1542,10 @@
       new_company_address: newCompanyAddress,
       new_company_gstin: newCompanyGstin,
       new_company_phone: newCompanyPhone,
+      new_company_discount_type: newCompDiscType,
+      new_company_discount_value: newCompDiscValue,
       guests: guests,
       payment_mode_id: paymentModeId,
-      discount_id: discountId,
       discount_percentage: discountPercentage,
       discount_amount: discountAmount,
       total_amount: totalAmount,

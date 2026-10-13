@@ -19,6 +19,7 @@ class CompanyController extends Controller
                   ->orWhere('address', 'like', "%{$search}%")
                   ->orWhere('gstin', 'like', "%{$search}%")
                   ->orWhere('phone', 'like', "%{$search}%")
+                  ->orWhere('discount_value', 'like', "%{$search}%")
                   ->orWhere('status', 'like', "%{$search}%");
             });
         }
@@ -47,8 +48,19 @@ class CompanyController extends Controller
             'address' => 'nullable|string',
             'gstin' => 'nullable|string|max:30',
             'phone' => 'nullable|string|max:30',
+            'discount_type' => 'required|string|in:percentage,amount',
+            'discount_value' => 'nullable|numeric|min:0',
             'status' => 'required|string|in:Active,Inactive',
         ]);
+
+        if ($validated['discount_type'] === 'percentage' && ($validated['discount_value'] ?? 0) > 100) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Discount percentage cannot exceed 100%.',
+            ], 422);
+        }
+
+        $validated['discount_value'] = isset($validated['discount_value']) ? (float)$validated['discount_value'] : 0.00;
 
         $item = Company::create($validated);
 
@@ -71,8 +83,19 @@ class CompanyController extends Controller
             'address' => 'nullable|string',
             'gstin' => 'nullable|string|max:30',
             'phone' => 'nullable|string|max:30',
+            'discount_type' => 'required|string|in:percentage,amount',
+            'discount_value' => 'nullable|numeric|min:0',
             'status' => 'required|string|in:Active,Inactive',
         ]);
+
+        if ($validated['discount_type'] === 'percentage' && ($validated['discount_value'] ?? 0) > 100) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Discount percentage cannot exceed 100%.',
+            ], 422);
+        }
+
+        $validated['discount_value'] = isset($validated['discount_value']) ? (float)$validated['discount_value'] : 0.00;
 
         $item->update($validated);
 

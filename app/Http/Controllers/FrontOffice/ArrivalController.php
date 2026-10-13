@@ -28,9 +28,6 @@ class ArrivalController extends Controller
             ->whereIn('status', ['Confirmed', 'Guaranteed', 'Waitlisted', 'Tentative'])
             ->latest('id')
             ->get();
-
-        $discounts = \App\Models\Discount::where('status', 'Active')->orderBy('discount_percentage', 'asc')->get();
-
         $arrivals = [];
         foreach ($dbGuests as $g) {
             $checkInStr = $g->reserve_date ? $g->reserve_date->format('d M') : 'Today';
@@ -72,7 +69,6 @@ class ArrivalController extends Controller
             'idCardTypes',
             'reservationModes',
             'paymentModes',
-            'discounts',
             'rackRooms'
         ));
     }

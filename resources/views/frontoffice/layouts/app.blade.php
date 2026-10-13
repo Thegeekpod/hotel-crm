@@ -212,7 +212,7 @@
                     <select name="company_id" id="company-select" style="width:100%; height:38px; padding:6px 12px; font-size:13px; border:1px solid #10b981; border-radius: 8px; background: #ffffff; color: #1e293b; font-weight: 700; box-sizing: border-box;" onchange="toggleNewCompany(this)">
                       <option value="">-- Select Corporate Account --</option>
                       @foreach($companies ?? \App\Models\Company::where('status', 'Active')->get() as $cmp)
-                        <option value="{{ $cmp->id }}">{{ $cmp->name }}</option>
+                        <option value="{{ $cmp->id }}" data-discount-type="{{ $cmp->discount_type ?? 'percentage' }}" data-discount-value="{{ (float)($cmp->discount_value ?? 0) }}">{{ $cmp->name }}</option>
                       @endforeach
                       <option value="new" style="color: #4f46e5; font-weight: 900;">+ Register New Company</option>
                     </select>
@@ -226,7 +226,7 @@
                       <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 5px; color: #64748b; text-transform: uppercase; letter-spacing: 0.8px;">Company Address</label>
                       <input type="text" name="new_company_address" style="width:100%; height:38px; padding:6px 12px; font-size:13px; border:1px solid #cbd5e1; border-radius: 8px; background: #ffffff; box-sizing: border-box;" placeholder="Billing Address">
                     </div>
-                    <div style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px;">
+                    <div style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; margin-bottom: 12px;">
                       <div style="min-width: 0;">
                         <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 5px; color: #64748b; text-transform: uppercase; letter-spacing: 0.8px;">GSTIN</label>
                         <input type="text" name="new_company_gstin" style="width:100%; height:38px; padding:6px 12px; font-size:13px; border:1px solid #cbd5e1; border-radius: 8px; background: #ffffff; font-family: monospace; box-sizing: border-box;" placeholder="29ABCDE1234F1Z5">
@@ -234,6 +234,26 @@
                       <div style="min-width: 0;">
                         <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 5px; color: #64748b; text-transform: uppercase; letter-spacing: 0.8px;">Corporate Phone</label>
                         <input type="text" name="new_company_phone" style="width:100%; height:38px; padding:6px 12px; font-size:13px; border:1px solid #cbd5e1; border-radius: 8px; background: #ffffff; box-sizing: border-box;" placeholder="Office / Mobile">
+                      </div>
+                    </div>
+                    <!-- New Company Corporate Discount Configuration -->
+                    <div style="padding: 10px 12px; background: #ffffff; border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px;">
+                      <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: #059669; text-transform: uppercase; letter-spacing: 0.8px;">Corporate Discount Rate</label>
+                      <div style="display: flex; gap: 18px; align-items: center; margin-bottom: 8px;">
+                        <label style="display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: #1e293b; cursor: pointer;">
+                          <input type="radio" name="new_company_discount_type" value="percentage" checked onchange="toggleNewCompanyDiscountType(this.value)" style="accent-color: #059669; width: 15px; height: 15px;">
+                          <span>Percentage (%)</span>
+                        </label>
+                        <label style="display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: #1e293b; cursor: pointer;">
+                          <input type="radio" name="new_company_discount_type" value="amount" onchange="toggleNewCompanyDiscountType(this.value)" style="accent-color: #059669; width: 15px; height: 15px;">
+                          <span>Solid Amount (₹)</span>
+                        </label>
+                      </div>
+                      <div id="new-company-disc-pct-wrap">
+                        <input type="number" name="new_company_discount_pct" id="new-comp-disc-pct" oninput="calculateReservationBilling()" min="0" max="100" step="any" style="width:100%; height:36px; padding:6px 12px; font-size:12px; border:1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;" placeholder="Discount Percentage % (e.g. 10)">
+                      </div>
+                      <div id="new-company-disc-amt-wrap" style="display: none;">
+                        <input type="number" name="new_company_discount_amt" id="new-comp-disc-amt" oninput="calculateReservationBilling()" min="0" step="any" style="width:100%; height:36px; padding:6px 12px; font-size:12px; border:1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;" placeholder="Solid Amount in ₹ (e.g. 500)">
                       </div>
                     </div>
                   </div>
@@ -520,21 +540,16 @@
                     <input type="hidden" name="total_amount" id="calc-total-amount" value="4500">
                   </div>
 
-                  <!-- Discount Selection from discounts table -->
+                  <!-- Company / Corporate Discount Display -->
                   <div>
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                      <label style="display:block; font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.8px;">Discount</label>
+                      <label style="display:block; font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.8px;">Company Discount</label>
                       <span id="calc-discount-val-label" style="font-size: 10px; font-weight: 800; color: #059669; font-family: monospace;">- ₹ 0.00</span>
                     </div>
-                    <select name="discount_id" id="payment-discount-select" onchange="calculateReservationBilling()" style="width:100%; height:36px; padding:4px 10px; font-size:12px; border:1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #1e293b; font-weight: 700; box-sizing: border-box;">
-                      <option value="" data-pct="0">No Discount (0%)</option>
-                      @php
-                        $discountsList = $discounts ?? \App\Models\Discount::where('status', 'Active')->orderBy('discount_percentage', 'asc')->get();
-                      @endphp
-                      @foreach($discountsList as $disc)
-                        <option value="{{ $disc->id }}" data-pct="{{ $disc->discount_percentage }}">{{ (float)$disc->discount_percentage }}% Discount</option>
-                      @endforeach
-                    </select>
+                    <div id="company-discount-info-badge" style="display: flex; align-items: center; gap: 8px; padding: 7px 10px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 12px; font-weight: 700; color: #475569; min-height: 36px; box-sizing: border-box;">
+                      <i class="fa-solid fa-tags" style="color: #6366f1;"></i>
+                      <span id="company-discount-applied-text">No corporate discount (0%)</span>
+                    </div>
                     <input type="hidden" name="discount_percentage" id="calc-discount-percentage" value="0">
                     <input type="hidden" name="discount_amount" id="calc-discount-amount" value="0">
                   </div>

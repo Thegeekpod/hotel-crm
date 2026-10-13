@@ -14,7 +14,7 @@
         <span class="ico-box"><i class="fa-solid fa-address-card" style="color: #f59e0b;"></i></span>
         <span class="lbl-box">Guest</span>
       </a>
-      <a href="{{ route('frontoffice.dashboard') }}" class="ribbon-btn {{ request()->routeIs('frontoffice.reserve') ? 'active-btn' : '' }}" onclick="if(typeof openReservationModal === 'function'){ openReservationModal(); return false; }">
+      <a href="{{ route('frontoffice.reserve') }}" class="ribbon-btn {{ request()->routeIs('frontoffice.reserve') ? 'active-btn' : '' }}">
         <span class="ico-box"><i class="fa-solid fa-calendar-check" style="color: #a78bfa;"></i></span>
         <span class="lbl-box">Reserve</span>
       </a>

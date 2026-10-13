@@ -73,9 +73,9 @@ class DashboardController extends Controller
                      ->orWhereNull('checkout_date');
               });
         })
-        ->whereIn('status', ['Confirmed', 'Arrived', 'Stay Over'])
+        ->whereIn('status', ['Confirmed', 'Arrived', 'Stay Over', 'Checked In'])
         ->with(['title', 'nationality', 'idCardType', 'registrationType', 'company'])
-        ->orderByRaw("CASE WHEN status = 'Stay Over' THEN 1 WHEN status = 'Arrived' THEN 2 WHEN status = 'Confirmed' THEN 3 ELSE 4 END")
+        ->orderByRaw("CASE WHEN status = 'Checked In' THEN 1 WHEN status = 'Stay Over' THEN 2 WHEN status = 'Arrived' THEN 3 WHEN status = 'Confirmed' THEN 4 ELSE 5 END")
         ->orderBy('id', 'desc')
         ->get()
         ->groupBy('room_id');
@@ -116,7 +116,7 @@ class DashboardController extends Controller
                     $resId = $firstActiveGuest->reserve_id;
                     $linkedGuests = Guest::where('reserve_id', $resId)
                         ->where('room_id', $r->id)
-                        ->whereIn('status', ['Confirmed', 'Arrived', 'Stay Over'])
+                        ->whereIn('status', ['Confirmed', 'Arrived', 'Stay Over', 'Checked In'])
                         ->with(['title', 'nationality', 'idCardType', 'registrationType', 'company'])
                         ->get();
                     if ($linkedGuests->isNotEmpty()) {
@@ -403,6 +403,397 @@ class DashboardController extends Controller
             'isToday',
             'prevDate',
             'nextDate',
+            'currentShift',
+            'shiftIcon',
+            'shiftColor'
+        ));
+    }
+
+    /**
+     * Dedicated Reserve Page: View only booked / checked-in rooms with From & To date filter
+     */
+    public function reserve(Request $request)
+    {
+        $today = now()->toDateString();
+        $fromDate = $request->query('from_date', $request->query('date', $today));
+        $toDate = $request->query('to_date', $request->query('date', $today));
+
+        try {
+            $fromCarbon = \Carbon\Carbon::parse($fromDate);
+            $fromDate = $fromCarbon->toDateString();
+        } catch (\Exception $e) {
+            $fromDate = $today;
+            $fromCarbon = \Carbon\Carbon::parse($fromDate);
+        }
+
+        try {
+            $toCarbon = \Carbon\Carbon::parse($toDate);
+            $toDate = $toCarbon->toDateString();
+        } catch (\Exception $e) {
+            $toDate = $fromDate;
+            $toCarbon = \Carbon\Carbon::parse($toDate);
+        }
+
+        // Ensure fromDate <= toDate
+        if ($fromDate > $toDate) {
+            $temp = $fromDate;
+            $fromDate = $toDate;
+            $toDate = $temp;
+            $fromCarbon = \Carbon\Carbon::parse($fromDate);
+            $toCarbon = \Carbon\Carbon::parse($toDate);
+        }
+
+        $isToday = ($fromDate === $today && $toDate === $today);
+
+        // Calculate dynamic shift based on current hour
+        $hour = (int)date('H');
+        if ($hour >= 7 && $hour < 15) {
+            $currentShift = 'Morning Shift (07:00 - 15:00)';
+            $shiftIcon = 'fa-sun';
+            $shiftColor = '#fbc531';
+        } elseif ($hour >= 15 && $hour < 23) {
+            $currentShift = 'Evening Shift (15:00 - 23:00)';
+            $shiftIcon = 'fa-cloud-sun';
+            $shiftColor = '#f97316';
+        } else {
+            $currentShift = 'Night Shift (23:00 - 07:00)';
+            $shiftIcon = 'fa-moon';
+            $shiftColor = '#a78bfa';
+        }
+
+        $dbRooms = Room::with([
+            'floorRelation',
+            'categoryRelation',
+            'beddingConfigRelation',
+            'housekeepingHistories.housekeepingStatus',
+            'operationalHistories.operationalStatus',
+        ])->orderByRaw('CAST(room_number AS UNSIGNED) ASC, room_number ASC')->get();
+
+        $totalRoomsCount = $dbRooms->count();
+
+        // Preload all active guests covering the from_date to to_date range grouped by room_id
+        $activeGuestsByRoom = Guest::where(function ($q) use ($fromDate, $toDate) {
+            $q->whereDate('reserve_date', '<=', $toDate)
+              ->where(function ($co) use ($fromDate) {
+                  $co->whereDate('checkout_date', '>=', $fromDate)
+                     ->orWhereNull('checkout_date');
+              });
+        })
+        ->whereIn('status', ['Confirmed', 'Arrived', 'Stay Over', 'Checked In'])
+        ->whereNotNull('room_id')
+        ->with(['title', 'nationality', 'idCardType', 'registrationType', 'company'])
+        ->orderByRaw("CASE WHEN status = 'Checked In' THEN 1 WHEN status = 'Stay Over' THEN 2 WHEN status = 'Arrived' THEN 3 WHEN status = 'Confirmed' THEN 4 ELSE 5 END")
+        ->orderBy('id', 'desc')
+        ->get()
+        ->groupBy('room_id');
+
+        $floors = Floor::where('status', 'Active')->orderBy('floor', 'asc')->get();
+        $categories = RoomCategory::where('status', 'Active')->get();
+        $beddingConfigs = BeddingConfig::where('status', 'Active')->get();
+        $amenitiesList = Amenity::where('status', 'Active')->get();
+        $companies = Company::where('status', 'Active')->get();
+        $idCardTypes = IdCardType::where('status', 'Active')->get();
+        $reservationModes = ReservationMode::where('status', 'Active')->get();
+        $paymentModes = PaymentMode::where('status', 'Active')->get();
+        $registrationTypes = RegistrationType::where('status', 'Active')->get();
+        $titles = Title::where('status', 'Active')->get();
+        $nationalities = Nationality::where('status', 'Active')->get();
+        $housekeepingStates = HousekeepingState::where('status', 'Active')->orderBy('name', 'asc')->get();
+        $operationalStatuses = OperationalStatus::where('status', 'Active')->orderBy('name', 'asc')->get();
+        $amenityMap = Amenity::pluck('name', 'id')->toArray();
+        $nextReserveId = Guest::generateNextReserveId();
+
+        $rackRooms = [];
+        if ($dbRooms->isNotEmpty()) {
+            foreach ($dbRooms as $r) {
+                // In Reserve view: ONLY include rooms that are booked / checked-in!
+                if (!$activeGuestsByRoom->has($r->id)) {
+                    continue;
+                }
+
+                $activeGuests = $activeGuestsByRoom->get($r->id, collect());
+                if ($activeGuests->isEmpty()) {
+                    continue;
+                }
+
+                $roomNum = (string)$r->room_number;
+                $floor = (string)($r->floorRelation?->floor ?? $r->floor ?? '1');
+                $type = strtoupper($r->categoryRelation?->name ?? $r->category ?? 'DELUXE');
+                $rate = (float)($r->rate > 0 ? $r->rate : 4500);
+
+                $latestOp = $r->operationalHistories->sortByDesc('id')->first();
+                $latestHk = $r->housekeepingHistories->sortByDesc('id')->first();
+
+                // If current guest has reserve_id, also find any other linked guests with same reserve_id
+                $firstActiveGuest = $activeGuests->first();
+                if ($firstActiveGuest && $firstActiveGuest->reserve_id) {
+                    $resId = $firstActiveGuest->reserve_id;
+                    $linkedGuests = Guest::where('reserve_id', $resId)
+                        ->where('room_id', $r->id)
+                        ->whereIn('status', ['Confirmed', 'Arrived', 'Stay Over', 'Checked In'])
+                        ->with(['title', 'nationality', 'idCardType', 'registrationType', 'company'])
+                        ->get();
+                    if ($linkedGuests->isNotEmpty()) {
+                        $activeGuests = $linkedGuests;
+                    }
+                }
+
+                $guestsList = [];
+                foreach ($activeGuests as $idx => $gModel) {
+                    $fullName = ($gModel->title?->name ? $gModel->title->name . ' ' : '') . $gModel->guest_name;
+                    $regName = $gModel->registrationType?->name ?? 'New';
+                    $compName = $gModel->company?->name ?? $gModel->new_company_name ?? '';
+
+                    $resDateStr = $gModel->reserve_date ? (is_string($gModel->reserve_date) ? date('d M, Y', strtotime($gModel->reserve_date)) : $gModel->reserve_date->format('d M, Y')) : null;
+                    $resTimeStr = $gModel->reserve_time ? date('h:i A', strtotime($gModel->reserve_time)) : null;
+                    $outDateStr = $gModel->checkout_date ? (is_string($gModel->checkout_date) ? date('d M, Y', strtotime($gModel->checkout_date)) : $gModel->checkout_date->format('d M, Y')) : null;
+                    $outTimeStr = $gModel->checkout_time ? date('h:i A', strtotime($gModel->checkout_time)) : null;
+
+                    $checkinDisplay = $resDateStr ? ($resDateStr . ($resTimeStr ? ' • ' . $resTimeStr : '')) : null;
+                    $checkoutDisplay = $outDateStr ? ($outDateStr . ($outTimeStr ? ' • ' . $outTimeStr : '')) : null;
+
+                    $guestsList[] = [
+                        'id' => $gModel->id,
+                        'name' => $fullName,
+                        'raw_name' => $gModel->guest_name,
+                        'title' => $gModel->title?->name ?? '',
+                        'state' => $gModel->status ?: 'Confirmed',
+                        'folio' => $gModel->folio_number ?: ('FOL-' . $roomNum . '-100'),
+                        'balance' => (float)$gModel->balance,
+                        'mobile' => $gModel->mobile,
+                        'email' => $gModel->email,
+                        'city' => $gModel->city,
+                        'address' => $gModel->guest_address,
+                        'id_card_type' => $gModel->idCardType?->name,
+                        'id_card_number' => $gModel->id_card_number,
+                        'has_privilege_card' => (bool)$gModel->has_privilege_card,
+                        'privilege_card_no' => $gModel->privilege_card_no,
+                        'reserve_id' => $gModel->reserve_id,
+                        'advance' => (float)$gModel->advance_amount,
+                        'is_primary' => empty($gModel->primary_guest_id) || $idx === 0,
+                        'registration_type_id' => $gModel->registration_type_id,
+                        'registration_type' => $regName,
+                        'company' => $compName,
+                        'reserve_date' => $resDateStr,
+                        'reserve_time' => $resTimeStr,
+                        'checkout_date' => $outDateStr,
+                        'checkout_time' => $outTimeStr,
+                        'checkin_display' => $checkinDisplay,
+                        'checkout_display' => $checkoutDisplay,
+                        'total_nights' => $gModel->total_nights,
+                    ];
+                }
+
+                $guest = !empty($guestsList) ? $guestsList[0] : null;
+
+                $opName = $latestOp?->operationalStatus?->name ?? '';
+                $hkName = $latestHk?->housekeepingStatus?->name ?? '';
+
+                $roomAmenitiesNames = [];
+                if (is_array($r->amenities)) {
+                    foreach ($r->amenities as $amnId) {
+                        if (isset($amenityMap[$amnId])) {
+                            $roomAmenitiesNames[] = $amenityMap[$amnId];
+                        } elseif (is_string($amnId)) {
+                            $roomAmenitiesNames[] = $amnId;
+                        }
+                    }
+                }
+
+                $guestState = $guest['state'] ?? 'Occupied';
+
+                $rackRooms[] = [
+                    'id' => $r->id,
+                    'room' => $roomNum,
+                    'floor_id' => $r->floor_id ?? ($r->floorRelation?->id),
+                    'floor' => (string)$floor,
+                    'floor_name' => $r->floorRelation?->name ?? ('Floor ' . $floor),
+                    'category_id' => $r->category_id ?? ($r->categoryRelation?->id),
+                    'category' => $r->categoryRelation?->name ?? $r->category ?? 'Deluxe',
+                    'type' => $type,
+                    'cleaning' => 'Cleaned',
+                    'status' => 'occupied',
+                    'guest_status' => $guestState,
+                    'operational_status_id' => $latestOp?->operational_status_id,
+                    'operational_status' => $opName ?: 'Active In-Service',
+                    'housekeeping_status_id' => $latestHk?->housekeeping_status_id,
+                    'housekeeping_status' => $hkName ?: 'Cleaned & Inspected',
+                    'rate' => $rate,
+                    'guest' => $guest,
+                    'guests' => $guestsList,
+                    'registration_type' => $guest ? ($guest['registration_type'] ?? 'New') : null,
+                    'registration_type_id' => $guest ? ($guest['registration_type_id'] ?? null) : null,
+                    'company' => $guest ? ($guest['company'] ?? null) : null,
+                    'checkin_display' => $guest ? ($guest['checkin_display'] ?? null) : null,
+                    'checkout_display' => $guest ? ($guest['checkout_display'] ?? null) : null,
+                    'reserve_date' => $guest ? ($guest['reserve_date'] ?? null) : null,
+                    'reserve_time' => $guest ? ($guest['reserve_time'] ?? null) : null,
+                    'checkout_date' => $guest ? ($guest['checkout_date'] ?? null) : null,
+                    'checkout_time' => $guest ? ($guest['checkout_time'] ?? null) : null,
+                    'total_nights' => $guest ? ($guest['total_nights'] ?? null) : null,
+                    'bedding' => $r->beddingConfigRelation?->name ?? $r->bedding_config ?? 'King Size Master (72x78)',
+                    'bedding_id' => $r->bedding_config_id,
+                    'max_adults' => (int)($r->beddingConfigRelation?->max_adults ?? 2),
+                    'max_children' => (int)($r->beddingConfigRelation?->max_children ?? 1),
+                    'max_pax' => (int)($r->beddingConfigRelation?->max_total ?? 3),
+                    'amenity_ids' => is_array($r->amenities) ? array_map('strval', $r->amenities) : [],
+                    'amenities' => $roomAmenitiesNames,
+                ];
+            }
+        }
+
+        // Stats for Reserve Page
+        $totalBooked = count($rackRooms);
+        $checkedInCount = count(array_filter($rackRooms, fn($rm) => strtolower($rm['guest_status'] ?? '') === 'checked in'));
+        $stayOverCount = count(array_filter($rackRooms, fn($rm) => strtolower($rm['guest_status'] ?? '') === 'stay over'));
+        $confirmedCount = count(array_filter($rackRooms, fn($rm) => strtolower($rm['guest_status'] ?? '') === 'confirmed'));
+        $arrivedCount = count(array_filter($rackRooms, fn($rm) => strtolower($rm['guest_status'] ?? '') === 'arrived'));
+
+        $totalPax = 0;
+        foreach ($rackRooms as $rm) {
+            $totalPax += !empty($rm['guest']) ? 2 : 1;
+        }
+
+        $stats = [
+            'total_booked' => $totalBooked,
+            'total_rooms' => $totalRoomsCount,
+            'checked_in' => $checkedInCount,
+            'stay_over' => $stayOverCount,
+            'confirmed' => $confirmedCount,
+            'arrived' => $arrivedCount,
+            'total_pax' => $totalPax,
+            'expected_arrival' => Guest::whereDate('reserve_date', '>=', $fromDate)->whereDate('reserve_date', '<=', $toDate)->where('status', 'Confirmed')->count(),
+            'expected_departure' => Guest::whereDate('checkout_date', '>=', $fromDate)->whereDate('checkout_date', '<=', $toDate)->whereIn('status', ['Stay Over', 'Arrived', 'Checked In'])->count(),
+            'occupancy_percentage' => $totalRoomsCount > 0 ? round(($totalBooked / $totalRoomsCount) * 100, 1) : 0,
+            'percentages' => [
+                'checked_in' => $totalBooked > 0 ? round(($checkedInCount / $totalBooked) * 100, 1) : 0,
+                'stay_over' => $totalBooked > 0 ? round(($stayOverCount / $totalBooked) * 100, 1) : 0,
+                'confirmed' => $totalBooked > 0 ? round(($confirmedCount / $totalBooked) * 100, 1) : 0,
+                'arrived' => $totalBooked > 0 ? round(($arrivedCount / $totalBooked) * 100, 1) : 0,
+            ],
+        ];
+
+        $selectedStatus = strtolower($request->query('status', 'all'));
+        $selectedType = strtoupper($request->query('type', 'ALL'));
+        $selectedFloor = $request->query('floor', 'ALL');
+        $selectedBedding = $request->query('bedding', 'ALL');
+        $selectedPax = $request->query('pax', 'ALL');
+        $selectedAmenity = $request->query('amenity', 'ALL');
+        $searchQuery = trim($request->query('search', ''));
+
+        // Apply filters
+        $filteredRooms = array_filter($rackRooms, function($rm) use ($selectedStatus, $selectedType, $selectedFloor, $selectedBedding, $selectedPax, $selectedAmenity, $searchQuery) {
+            // Status Filter (checked in, stay over, confirmed, arrived)
+            if ($selectedStatus !== 'all' && $selectedStatus !== '') {
+                $rmStatus = strtolower($rm['guest_status'] ?? '');
+                if ($rmStatus !== $selectedStatus) {
+                    return false;
+                }
+            }
+
+            // Type Filter
+            if ($selectedType !== 'ALL' && $selectedType !== '') {
+                $rmType = strtoupper($rm['type']);
+                $rmCat = strtoupper($rm['category']);
+                if ($rmType !== $selectedType && $rmCat !== $selectedType && strval($rm['category_id']) !== strval($selectedType)) {
+                    return false;
+                }
+            }
+
+            // Floor Filter
+            if ($selectedFloor !== 'ALL' && $selectedFloor !== '') {
+                if (strval($rm['floor']) !== strval($selectedFloor) && strval($rm['floor_id']) !== strval($selectedFloor)) {
+                    return false;
+                }
+            }
+
+            // Bedding Filter
+            if ($selectedBedding !== 'ALL' && $selectedBedding !== '') {
+                if (strval($rm['bedding_id']) !== strval($selectedBedding) && stripos($rm['bedding'], $selectedBedding) === false) {
+                    return false;
+                }
+            }
+
+            // Pax Filter
+            if ($selectedPax !== 'ALL' && $selectedPax !== '') {
+                if (str_ends_with($selectedPax, '+')) {
+                    $minPax = (int)$selectedPax;
+                    if ($rm['max_pax'] < $minPax) {
+                        return false;
+                    }
+                } else {
+                    if (strval($rm['max_pax']) !== strval($selectedPax)) {
+                        return false;
+                    }
+                }
+            }
+
+            // Amenity Filter
+            if ($selectedAmenity !== 'ALL' && $selectedAmenity !== '') {
+                $hasAmenity = false;
+                if (in_array(strval($selectedAmenity), $rm['amenity_ids'] ?? [], true)) {
+                    $hasAmenity = true;
+                } else {
+                    foreach ($rm['amenities'] as $aName) {
+                        if (stripos($aName, $selectedAmenity) !== false || strval($selectedAmenity) === strval($aName)) {
+                            $hasAmenity = true;
+                            break;
+                        }
+                    }
+                }
+                if (!$hasAmenity) {
+                    return false;
+                }
+            }
+
+            // Search Query
+            if ($searchQuery !== '') {
+                $q = strtolower($searchQuery);
+                $matchRoom = str_contains(strtolower($rm['room']), $q);
+                $matchType = str_contains(strtolower($rm['type']), $q) || str_contains(strtolower($rm['category']), $q);
+                $matchGuest = !empty($rm['guest']['name']) && str_contains(strtolower($rm['guest']['name']), $q);
+                $matchBedding = str_contains(strtolower($rm['bedding']), $q);
+                $matchFolio = !empty($rm['guest']['folio']) && str_contains(strtolower($rm['guest']['folio']), $q);
+                $matchReserveId = !empty($rm['guest']['reserve_id']) && str_contains(strtolower($rm['guest']['reserve_id']), $q);
+
+                if (!$matchRoom && !$matchType && !$matchGuest && !$matchBedding && !$matchFolio && !$matchReserveId) {
+                    return false;
+                }
+            }
+
+            return true;
+        });
+
+        $rackRooms = array_values($filteredRooms);
+
+        return view('frontoffice.reserve.index', compact(
+            'rackRooms',
+            'floors',
+            'categories',
+            'beddingConfigs',
+            'amenitiesList',
+            'companies',
+            'idCardTypes',
+            'reservationModes',
+            'paymentModes',
+            'registrationTypes',
+            'titles',
+            'nationalities',
+            'housekeepingStates',
+            'operationalStatuses',
+            'stats',
+            'nextReserveId',
+            'selectedStatus',
+            'selectedType',
+            'selectedFloor',
+            'selectedBedding',
+            'selectedPax',
+            'selectedAmenity',
+            'searchQuery',
+            'fromDate',
+            'toDate',
+            'today',
+            'isToday',
             'currentShift',
             'shiftIcon',
             'shiftColor'

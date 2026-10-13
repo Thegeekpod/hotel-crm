@@ -10,10 +10,6 @@
         <span class="ico-box"><i class="fa-solid fa-plane-arrival" style="color: #f43f5e;"></i></span>
         <span class="lbl-box">Arrivals</span>
       </a>
-      <a href="{{ route('frontoffice.inhouse') }}" class="ribbon-btn {{ request()->routeIs('frontoffice.inhouse') ? 'active-btn' : '' }}">
-        <span class="ico-box"><i class="fa-solid fa-users" style="color: #0284c7;"></i></span>
-        <span class="lbl-box">Inhouse</span>
-      </a>
       <a href="{{ route('frontoffice.guest') }}" class="ribbon-btn {{ request()->routeIs('frontoffice.guest-crm') || request()->routeIs('frontoffice.guest') ? 'active-btn' : '' }}">
         <span class="ico-box"><i class="fa-solid fa-address-card" style="color: #f59e0b;"></i></span>
         <span class="lbl-box">Guest</span>

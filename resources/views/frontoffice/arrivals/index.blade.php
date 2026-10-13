@@ -86,6 +86,28 @@
     box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
   }
 
+  .pms-filter-date {
+    height: 38px;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 700;
+    border-radius: 10px;
+    border: 1px solid #cbd5e1;
+    background: #f8fafc;
+    color: #1e293b;
+    cursor: pointer;
+    outline: none;
+    transition: all 0.2s;
+    font-family: inherit;
+  }
+
+  .pms-filter-date:focus {
+    background-color: #ffffff;
+    border-color: #6366f1;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+  }
+
   /* Status Badges */
   .status-badge {
     display: inline-flex;
@@ -393,12 +415,25 @@
     <div class="arrivals-header-card">
       <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
         <div>
-          <h2 style="margin: 0; font-size: 18px; font-weight: 800; color: #1e293b; display: flex; align-items: center; gap: 10px;">
+          <h2 style="margin: 0; font-size: 18px; font-weight: 800; color: #1e293b; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
             <i class="fa-solid fa-plane-arrival" style="color: #6366f1;"></i> 
             Guest Arrivals & Advance Bookings
+            @if(!empty($selectedDate))
+              <span style="font-size: 11px; font-weight: 700; background: #e0e7ff; color: #4338ca; border: 1px solid #c7d2fe; padding: 2px 10px; border-radius: 20px; display: inline-flex; align-items: center; gap: 6px;">
+                <i class="fa-regular fa-calendar-check"></i> {{ \Carbon\Carbon::parse($selectedDate)->format('D, d M Y') }}
+              </span>
+            @else
+              <span style="font-size: 11px; font-weight: 700; background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; padding: 2px 10px; border-radius: 20px; display: inline-flex; align-items: center; gap: 6px;">
+                <i class="fa-solid fa-forward-step"></i> Upcoming Future Dates
+              </span>
+            @endif
           </h2>
           <div style="font-size: 12px; color: #64748b; margin-top: 2px;">
-            All registered hotel guests arranged latest first with indexing, search, status filter, and live reservation dossiers.
+            @if(!empty($selectedDate))
+              Showing guests arriving on <strong>{{ \Carbon\Carbon::parse($selectedDate)->format('l, d F Y') }}</strong>.
+            @else
+              Advance & upcoming guest arrivals (Check-in: Future dates after today) arranged latest first with indexing, search, status filter, and live reservation dossiers.
+            @endif
           </div>
         </div>
         <div style="display: flex; gap: 8px; align-items: center;">
@@ -419,6 +454,30 @@
         <div class="search-box-wrap">
           <i class="fa-solid fa-magnifying-glass"></i>
           <input type="text" id="guest-search-input" placeholder="Search by Guest Name, Phone, Room, Reserve ID, Folio..." oninput="onSearchOrFilterChange()">
+        </div>
+
+        <!-- Date Choose Filter -->
+        <div style="display: inline-flex; align-items: center; gap: 6px;">
+          <label for="arrival-date-filter" style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">
+            <i class="fa-regular fa-calendar-days" style="color: #6366f1;"></i> Arrival Date:
+          </label>
+          <div style="display: inline-flex; align-items: center; gap: 6px;">
+            <input type="date" 
+                   id="arrival-date-filter" 
+                   class="pms-filter-date" 
+                   value="{{ $selectedDate ?? '' }}" 
+                   onchange="onArrivalDateFilterChanged(this.value)"
+                   title="Choose date to see guests arriving on that date">
+            @if(!empty($selectedDate))
+              <button type="button" 
+                      class="btn-ui-secondary" 
+                      onclick="clearArrivalDateFilter()" 
+                      style="padding: 6px 10px; font-size: 11px; height: 38px; border-radius: 8px; border: 1px solid #c7d2fe; background: #eef2ff; color: #4338ca; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;" 
+                      title="Clear date & view all upcoming arrivals">
+                <i class="fa-solid fa-xmark"></i> Future Only
+              </button>
+            @endif
+          </div>
         </div>
 
         <!-- Single Status Filter Dropdown -->
@@ -1010,12 +1069,38 @@
     renderTable();
   }
 
-  // Reset all filters
+  // Date Filter Change Handler
+  function onArrivalDateFilterChanged(dateVal) {
+    const url = new URL(window.location.href);
+    if (dateVal) {
+      url.searchParams.set('date', dateVal);
+    } else {
+      url.searchParams.delete('date');
+    }
+    window.location.href = url.toString();
+  }
+
+  // Clear date filter to return to upcoming future dates
+  function clearArrivalDateFilter() {
+    const url = new URL(window.location.href);
+    url.searchParams.delete('date');
+    window.location.href = url.toString();
+  }
+
+  // Reset all filters (search, status, and arrival date)
   function resetFilters() {
     const searchInp = document.getElementById('guest-search-input');
     const statusSelect = document.getElementById('status-filter-select');
     if (searchInp) searchInp.value = '';
     if (statusSelect) statusSelect.value = 'all';
+
+    const url = new URL(window.location.href);
+    if (url.searchParams.has('date')) {
+      url.searchParams.delete('date');
+      window.location.href = url.toString();
+      return;
+    }
+
     currentPage = 1;
     renderTable();
   }

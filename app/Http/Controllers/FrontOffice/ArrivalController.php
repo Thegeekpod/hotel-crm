@@ -28,7 +28,10 @@ class ArrivalController extends Controller
         $paymentModes = PaymentMode::where('status', 'Active')->get();
         $rackRooms = [];
 
-        // Fetch all guests ordered latest first
+        $today = now()->toDateString();
+        $selectedDate = $request->query('date');
+
+        // Fetch guests whose check-in date matches chosen date or strictly future dates
         $query = Guest::with([
             'room.categoryRelation',
             'room.floorRelation',
@@ -40,7 +43,17 @@ class ArrivalController extends Controller
             'paymentMode',
             'registrationType',
             'reservationMode',
-        ])->latest('id');
+        ]);
+
+        if ($request->filled('date')) {
+            $query->whereDate('reserve_date', $selectedDate);
+            $baseQuery = Guest::whereDate('reserve_date', $selectedDate);
+        } else {
+            $query->whereDate('reserve_date', '>', $today);
+            $baseQuery = Guest::whereDate('reserve_date', '>', $today);
+        }
+
+        $query->latest('id');
 
         if ($request->filled('status') && $request->status !== 'All') {
             $query->where('status', $request->status);
@@ -64,18 +77,19 @@ class ArrivalController extends Controller
 
         // Calculate statistics
         $stats = [
-            'total' => Guest::count(),
-            'confirmed' => Guest::where('status', 'Confirmed')->count(),
-            'arrived' => Guest::where('status', 'Arrived')->count(),
-            'checked_in' => Guest::where('status', 'Checked In')->count(),
-            'stay_over' => Guest::where('status', 'Stay Over')->count(),
-            'checked_out' => Guest::where('status', 'Checked Out')->count(),
-            'cancelled' => Guest::where('status', 'Cancelled')->count(),
+            'total' => (clone $baseQuery)->count(),
+            'confirmed' => (clone $baseQuery)->where('status', 'Confirmed')->count(),
+            'arrived' => (clone $baseQuery)->where('status', 'Arrived')->count(),
+            'checked_in' => (clone $baseQuery)->where('status', 'Checked In')->count(),
+            'stay_over' => (clone $baseQuery)->where('status', 'Stay Over')->count(),
+            'checked_out' => (clone $baseQuery)->where('status', 'Checked Out')->count(),
+            'cancelled' => (clone $baseQuery)->where('status', 'Cancelled')->count(),
         ];
 
         return view('frontoffice.arrivals.index', compact(
             'guests',
             'stats',
+            'selectedDate',
             'categories',
             'floors',
             'companies',

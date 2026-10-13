@@ -26,70 +26,6 @@
     font-family: inherit;
   }
 
-  /* Specific Badge & Card Tints for Reserved Room States */
-  .rack-card.c-checkedin {
-    background: linear-gradient(145deg, rgba(16, 185, 129, 0.08), rgba(5, 150, 105, 0.04));
-    border: 1px solid rgba(16, 185, 129, 0.25);
-  }
-  .rack-card.c-checkedin:hover {
-    box-shadow: 0 12px 36px rgba(16, 185, 129, 0.15), inset 0 0 40px rgba(16, 185, 129, 0.04);
-    border-color: rgba(16, 185, 129, 0.45);
-  }
-  .rack-card.c-checkedin .rack-room-num { color: #059669; }
-  .rack-card.c-checkedin .rack-guest-name { color: #047857; }
-  .rack-card.c-checkedin .rack-badge {
-    background: rgba(16, 185, 129, 0.15);
-    color: #047857;
-    border: 1px solid rgba(16, 185, 129, 0.3);
-  }
-
-  .rack-card.c-stayover {
-    background: linear-gradient(145deg, rgba(245, 158, 11, 0.08), rgba(217, 119, 6, 0.04));
-    border: 1px solid rgba(245, 158, 11, 0.25);
-  }
-  .rack-card.c-stayover:hover {
-    box-shadow: 0 12px 36px rgba(245, 158, 11, 0.15), inset 0 0 40px rgba(245, 158, 11, 0.04);
-    border-color: rgba(245, 158, 11, 0.45);
-  }
-  .rack-card.c-stayover .rack-room-num { color: #d97706; }
-  .rack-card.c-stayover .rack-guest-name { color: #b45309; }
-  .rack-card.c-stayover .rack-badge {
-    background: rgba(245, 158, 11, 0.15);
-    color: #b45309;
-    border: 1px solid rgba(245, 158, 11, 0.3);
-  }
-
-  .rack-card.c-confirmed {
-    background: linear-gradient(145deg, rgba(99, 102, 241, 0.08), rgba(79, 70, 229, 0.04));
-    border: 1px solid rgba(99, 102, 241, 0.25);
-  }
-  .rack-card.c-confirmed:hover {
-    box-shadow: 0 12px 36px rgba(99, 102, 241, 0.15), inset 0 0 40px rgba(99, 102, 241, 0.04);
-    border-color: rgba(99, 102, 241, 0.45);
-  }
-  .rack-card.c-confirmed .rack-room-num { color: #4f46e5; }
-  .rack-card.c-confirmed .rack-guest-name { color: #4338ca; }
-  .rack-card.c-confirmed .rack-badge {
-    background: rgba(99, 102, 241, 0.15);
-    color: #4338ca;
-    border: 1px solid rgba(99, 102, 241, 0.3);
-  }
-
-  .rack-card.c-arrived {
-    background: linear-gradient(145deg, rgba(6, 182, 212, 0.08), rgba(8, 145, 178, 0.04));
-    border: 1px solid rgba(6, 182, 212, 0.25);
-  }
-  .rack-card.c-arrived:hover {
-    box-shadow: 0 12px 36px rgba(6, 182, 212, 0.15), inset 0 0 40px rgba(6, 182, 212, 0.04);
-    border-color: rgba(6, 182, 212, 0.45);
-  }
-  .rack-card.c-arrived .rack-room-num { color: #0891b2; }
-  .rack-card.c-arrived .rack-guest-name { color: #0e7490; }
-  .rack-card.c-arrived .rack-badge {
-    background: rgba(6, 182, 212, 0.15);
-    color: #0e7490;
-    border: 1px solid rgba(6, 182, 212, 0.3);
-  }
 </style>
 @endpush
 
@@ -175,19 +111,25 @@
         
         @forelse($rackRooms as $rm)
           @php
-            $rawStatus = strtolower($rm['guest_status'] ?? 'occupied');
-            $statusClass = match($rawStatus) {
-              'checked in', 'checked-in', 'checkedin' => 'c-checkedin',
-              'stay over', 'stayover' => 'c-stayover',
-              'confirmed' => 'c-confirmed',
-              'arrived' => 'c-arrived',
-              default => 'c-occupied'
-            };
-            $badgeText = $rm['guest']['state'] ?? 'Booked';
+            $cardClass = 'c-available';
+            $badgeText = $rm['cleaning'] ?? 'Available';
+            if ($rm['status'] === 'occupied') {
+              $cardClass = 'c-occupied';
+              $badgeText = $rm['guest']['state'] ?? 'Occupied';
+            } elseif ($rm['status'] === 'dirty') {
+              $cardClass = 'c-dirty';
+              $badgeText = 'Dirty';
+            } elseif ($rm['status'] === 'blocked') {
+              $cardClass = 'c-blocked';
+              $badgeText = 'Blocked';
+            } elseif ($rm['status'] === 'available') {
+              $cardClass = 'c-cleaned';
+              $badgeText = 'Cleaned';
+            }
             $roomJsonData = htmlspecialchars(json_encode($rm), ENT_QUOTES, 'UTF-8');
           @endphp
 
-          <div class="rack-card c-occupied {{ $statusClass }}" 
+          <div class="rack-card {{ $cardClass }}" 
                onclick="openRoomDetailsModal(this)" 
                data-room-json="{{ $roomJsonData }}"
                data-room="{{ $rm['room'] }}" 
@@ -198,20 +140,14 @@
                data-status="{{ $rm['status'] }}"
                data-cleaning="{{ $rm['cleaning'] }}"
                data-operational="{{ $rm['operational_status'] ?? '' }}"
-               data-housekeeping="{{ $rm['housekeeping_status'] ?? '' }}"
-               title="Click to view full reservation dossier, stay schedule, and room folio">
+               data-housekeeping="{{ $rm['housekeeping_status'] ?? '' }}">
             <div class="rack-card-top">
               <div class="rack-room-num">{{ $rm['room'] }}</div>
               <div class="rack-room-type" title="{{ $rm['type'] }}">{{ $rm['type'] }}</div>
             </div>
             <div class="rack-card-mid">
-              @if(!empty($rm['guest']['name']))
-                <div class="rack-guest-name" title="{{ $rm['guest']['name'] }}">{{ $rm['guest']['name'] }}</div>
-                @if(!empty($rm['guest']['folio']))
-                  <div style="font-size: 9px; color: #64748b; font-family: var(--font-mono, monospace); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                    {{ $rm['guest']['folio'] }}
-                  </div>
-                @endif
+              @if($rm['status'] === 'blocked')
+                <div class="rack-guest-name" title="Blocked">Blocked</div>
               @endif
             </div>
             <div class="rack-card-bot">

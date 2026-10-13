@@ -849,6 +849,120 @@ class DashboardController extends Controller
     }
 
     /**
+     * Check real-time room availability & conflict for given dates and suggest matching alternative rooms
+     */
+    public function checkRoomAvailability(Request $request)
+    {
+        $roomId = $request->query('room_id');
+        $checkIn = $request->query('checkin_date');
+        $checkOut = $request->query('checkout_date');
+
+        if (empty($checkIn) || empty($checkOut)) {
+            return response()->json(['available' => true]);
+        }
+
+        try {
+            $checkInDate = \Carbon\Carbon::parse($checkIn)->toDateString();
+            $checkOutDate = \Carbon\Carbon::parse($checkOut)->toDateString();
+        } catch (\Exception $e) {
+            return response()->json(['available' => true]);
+        }
+
+        if ($checkInDate >= $checkOutDate) {
+            $checkOutDate = \Carbon\Carbon::parse($checkInDate)->addDay()->toDateString();
+        }
+
+        // Find conflicting bookings across all rooms for this date window
+        $conflictingGuests = Guest::whereNotNull('room_id')
+            ->whereIn('status', ['Confirmed', 'Checked In', 'Arrived', 'Stay Over'])
+            ->where(function ($q) use ($checkInDate, $checkOutDate) {
+                $q->whereDate('reserve_date', '<', $checkOutDate)
+                  ->where(function ($sub) use ($checkInDate) {
+                      $sub->whereDate('checkout_date', '>', $checkInDate)
+                          ->orWhereNull('checkout_date');
+                  });
+            })
+            ->with(['room', 'title'])
+            ->get();
+
+        $conflictingRoomIds = $conflictingGuests->pluck('room_id')->unique()->toArray();
+
+        // Check if the selected room is in conflict
+        $isConflict = false;
+        $targetConflict = null;
+        $targetRoom = null;
+
+        if (!empty($roomId)) {
+            $targetRoom = Room::where('id', $roomId)->orWhere('room_number', (string)$roomId)->first();
+            if ($targetRoom) {
+                $targetConflict = $conflictingGuests->firstWhere('room_id', $targetRoom->id);
+                if ($targetConflict) {
+                    $isConflict = true;
+                }
+            }
+        }
+
+        // Get available alternative rooms (rooms without conflict for this date window)
+        $availableRoomsQuery = Room::with(['categoryRelation', 'floorRelation', 'beddingConfigRelation'])
+            ->where('status', 'Active')
+            ->whereNotIn('id', $conflictingRoomIds);
+
+        // If a specific room category was selected, prioritize same category first
+        if ($targetRoom && $targetRoom->category_id) {
+            $catId = (int)$targetRoom->category_id;
+            $availableRoomsQuery->orderByRaw("CASE WHEN category_id = {$catId} THEN 1 ELSE 2 END");
+        }
+
+        $availableRooms = $availableRoomsQuery
+            ->orderByRaw('CAST(room_number AS UNSIGNED) ASC, room_number ASC')
+            ->get()
+            ->map(function ($r) {
+                return [
+                    'id' => $r->id,
+                    'room' => (string)$r->room_number,
+                    'category' => $r->categoryRelation?->name ?? 'Deluxe',
+                    'category_id' => $r->category_id ?? ($r->categoryRelation?->id),
+                    'floor' => (string)($r->floorRelation?->floor ?? '1'),
+                    'floor_id' => $r->floor_id ?? ($r->floorRelation?->id),
+                    'rate' => (float)($r->rate > 0 ? $r->rate : 4500),
+                    'bedding' => $r->beddingConfigRelation?->name ?? $r->bedding_config ?? 'King Size Master (72x78)',
+                    'max_adults' => (int)($r->beddingConfigRelation?->max_adults ?? 2),
+                    'max_children' => (int)($r->beddingConfigRelation?->max_children ?? 1),
+                    'max_pax' => (int)($r->beddingConfigRelation?->max_total ?? 3),
+                ];
+            });
+
+        if ($isConflict && $targetConflict) {
+            $cInStr = $targetConflict->reserve_date ? \Carbon\Carbon::parse($targetConflict->reserve_date)->format('d M Y') : $checkInDate;
+            $cOutStr = $targetConflict->checkout_date ? \Carbon\Carbon::parse($targetConflict->checkout_date)->format('d M Y') : $checkOutDate;
+            $guestTitle = $targetConflict->title?->name ? $targetConflict->title->name . ' ' : '';
+            $guestName = $guestTitle . ($targetConflict->guest_name ?? 'Another Guest');
+
+            return response()->json([
+                'available' => false,
+                'room' => $targetRoom ? (string)$targetRoom->room_number : (string)$roomId,
+                'conflict' => [
+                    'guest_name' => $guestName,
+                    'reserve_id' => $targetConflict->reserve_id ?: ('RES-' . $targetConflict->id),
+                    'checkin_date' => $cInStr,
+                    'checkout_date' => $cOutStr,
+                    'status' => $targetConflict->status ?? 'Booked',
+                ],
+                'message' => "Room #{$targetRoom->room_number} is already booked from {$cInStr} to {$cOutStr} by {$guestName}.",
+                'available_rooms' => $availableRooms,
+                'available_count' => $availableRooms->count(),
+            ]);
+        }
+
+        return response()->json([
+            'available' => true,
+            'message' => 'Room is available for the selected dates.',
+            'available_rooms' => $availableRooms,
+            'available_count' => $availableRooms->count(),
+        ]);
+    }
+
+    /**
      * Store new check-in / reservation dynamically into guests table
      */
     public function storeReservation(Request $request)
@@ -959,6 +1073,29 @@ class DashboardController extends Controller
                         ? Room::find($roomId) 
                         : Room::where('room_number', (string)$roomId)->first();
                     $roomId = $roomObj?->id;
+                }
+
+                // Verify no double-booking conflict for this room
+                if ($roomId && $roomObj) {
+                    $conflictBooking = Guest::where('room_id', $roomId)
+                        ->whereIn('status', ['Confirmed', 'Checked In', 'Arrived', 'Stay Over'])
+                        ->where(function ($q) use ($reserveDate, $checkoutDate) {
+                            $q->whereDate('reserve_date', '<', $checkoutDate)
+                              ->where(function ($sub) use ($reserveDate) {
+                                  $sub->whereDate('checkout_date', '>', $reserveDate)
+                                      ->orWhereNull('checkout_date');
+                              });
+                        })
+                        ->first();
+                    if ($conflictBooking) {
+                        DB::rollBack();
+                        $cIn = $conflictBooking->reserve_date ? \Carbon\Carbon::parse($conflictBooking->reserve_date)->format('d M Y') : $reserveDate;
+                        $cOut = $conflictBooking->checkout_date ? \Carbon\Carbon::parse($conflictBooking->checkout_date)->format('d M Y') : $checkoutDate;
+                        return response()->json([
+                            'success' => false,
+                            'error' => "Room #{$roomObj->room_number} is already booked from {$cIn} to {$cOut} by {$conflictBooking->guest_name}. Please choose an alternative room."
+                        ], 422);
+                    }
                 }
 
                 $roomRate = (float)($roomObj?->rate ?? 4500);

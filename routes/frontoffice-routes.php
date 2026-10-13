@@ -24,6 +24,7 @@ Route::prefix('front-office')->name('frontoffice.')->group(function () {
     Route::post('/reserve', [DashboardController::class, 'storeReservation'])->name('reserve.store');
     Route::get('/next-reserve-id', [DashboardController::class, 'getNextReserveId'])->name('reserve.next-id');
     Route::get('/search-guest', [DashboardController::class, 'searchGuest'])->name('guest.search');
+    Route::get('/check-room-availability', [DashboardController::class, 'checkRoomAvailability'])->name('room.check-availability');
     Route::post('/room/update-status', [DashboardController::class, 'updateRoomStatus'])->name('room.update-status');
 });
 

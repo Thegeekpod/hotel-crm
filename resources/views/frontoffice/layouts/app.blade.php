@@ -420,6 +420,39 @@
                           </div>
                         </div>
                       </div>
+
+                      <!-- Real-Time Room Booking Conflict & Matching Alternatives Alert Box -->
+                      <div class="room-conflict-alert-box" style="display: none; margin-bottom: 14px; border-radius: 10px; overflow: hidden; border: 1.5px solid #f87171; background: #fff5f5; box-shadow: 0 4px 14px rgba(239, 68, 68, 0.08);">
+                        <!-- Alert Header -->
+                        <div style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: #ffffff; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between;">
+                          <div style="display: flex; align-items: center; gap: 8px;">
+                            <i class="fa-solid fa-triangle-exclamation" style="font-size: 15px;"></i>
+                            <span style="font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">Room Already Booked / Conflict Detected!</span>
+                          </div>
+                          <span class="conflict-badge" style="background: rgba(255,255,255,0.25); font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 4px; text-transform: uppercase;">Not Available</span>
+                        </div>
+                        
+                        <!-- Alert Message -->
+                        <div style="padding: 12px 14px; color: #991b1b; font-size: 12px; line-height: 1.5;">
+                          <div class="conflict-message-text" style="font-weight: 700; margin-bottom: 4px;">
+                            <!-- Injected dynamically -->
+                          </div>
+                          <div class="conflict-sub-text" style="font-size: 11px; color: #b91c1c; opacity: 0.9;">
+                            Please choose an alternative room or adjust your check-in / check-out dates.
+                          </div>
+                        </div>
+
+                        <!-- Alternative Rooms Section -->
+                        <div class="conflict-alternatives-section" style="background: #ffffff; border-top: 1px solid #fecaca; padding: 12px 14px;">
+                          <div style="font-size: 11px; font-weight: 800; color: #1e293b; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px; margin-bottom: 10px;">
+                            <i class="fa-solid fa-wand-magic-sparkles" style="color: #6366f1;"></i>
+                            <span>Available Alternative Rooms Matching Your Stay Schedule:</span>
+                          </div>
+                          <div class="conflict-alt-rooms-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 8px; max-height: 190px; overflow-y: auto; padding-right: 2px;">
+                            <!-- Injected dynamically -->
+                          </div>
+                        </div>
+                      </div>
                     </div>
 
                     <!-- Identity Details -->

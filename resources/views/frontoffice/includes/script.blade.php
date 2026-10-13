@@ -145,6 +145,9 @@
         }
       }
     }
+    setTimeout(() => {
+      checkSelectedRoomAvailability();
+    }, 60);
     openModal('reserve-modal');
   }
 
@@ -923,6 +926,7 @@
     }
 
     calculateReservationBilling();
+    checkSelectedRoomAvailability(roomSelect);
   }
 
   function toggleSameRoom(checkboxElem) {
@@ -1246,6 +1250,7 @@
       }
     }
     calculateReservationBilling();
+    checkSelectedRoomAvailability();
   }
 
   function onCheckOutDateChange() {
@@ -1259,6 +1264,7 @@
       }
     }
     calculateReservationBilling();
+    checkSelectedRoomAvailability();
   }
 
   function calculateReservationBilling() {
@@ -1425,11 +1431,188 @@
     }
   }
 
+  // Real-Time Room Availability & Booking Conflict Detector
+  let roomAvailabilityAbortController = null;
+
+  function checkSelectedRoomAvailability(targetRoomSelect = null) {
+    const checkInInput = document.getElementById('reserve-date-input');
+    const checkoutDateInput = document.getElementById('checkout-date-input');
+    if (!checkInInput || !checkoutDateInput) return;
+
+    const checkInVal = checkInInput.value;
+    const checkOutVal = checkoutDateInput.value;
+    if (!checkInVal || !checkOutVal) return;
+
+    // Room select element (from target or primary guest block)
+    const rmSelect = targetRoomSelect || document.querySelector('.guest-block .select-room-no');
+    if (!rmSelect) return;
+
+    const block = rmSelect.closest('.guest-block') || rmSelect.closest('.section-guest-details') || document.querySelector('.guest-block');
+    const conflictBox = block ? block.querySelector('.room-conflict-alert-box') : document.querySelector('.room-conflict-alert-box');
+    if (!conflictBox) return;
+
+    const roomId = rmSelect.value;
+    if (!roomId) {
+      conflictBox.style.display = 'none';
+      return;
+    }
+
+    if (roomAvailabilityAbortController) {
+      roomAvailabilityAbortController.abort();
+    }
+    roomAvailabilityAbortController = new AbortController();
+
+    const url = `{{ route('frontoffice.room.check-availability') }}?room_id=${encodeURIComponent(roomId)}&checkin_date=${encodeURIComponent(checkInVal)}&checkout_date=${encodeURIComponent(checkOutVal)}`;
+
+    fetch(url, {
+      signal: roomAvailabilityAbortController.signal,
+      headers: {
+        'Accept': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (!data) return;
+
+      if (!data.available && data.conflict) {
+        // Display conflict alert box
+        conflictBox.style.display = 'block';
+
+        const msgEl = conflictBox.querySelector('.conflict-message-text');
+        const subEl = conflictBox.querySelector('.conflict-sub-text');
+        const altContainer = conflictBox.querySelector('.conflict-alt-rooms-list');
+
+        const opt = rmSelect.options[rmSelect.selectedIndex];
+        const roomNoText = opt ? (opt.dataset.roomNo || opt.textContent.trim()) : `Room #${data.room}`;
+
+        if (msgEl) {
+          msgEl.innerHTML = `<span style="font-size: 13px; font-weight: 800; color: #b91c1c;"><i class="fa-solid fa-ban" style="margin-right: 4px;"></i> Room #${escapeHtml(data.room)} is already booked</span> from <strong style="color: #991b1b; text-decoration: underline;">${escapeHtml(data.conflict.checkin_date)}</strong> to <strong style="color: #991b1b; text-decoration: underline;">${escapeHtml(data.conflict.checkout_date)}</strong> by <strong>${escapeHtml(data.conflict.guest_name)}</strong> (Status: <strong>${escapeHtml(data.conflict.status)}</strong> • Dossier: <strong>${escapeHtml(data.conflict.reserve_id)}</strong>).`;
+        }
+
+        if (subEl) {
+          subEl.innerHTML = `Your requested stay duration (<strong>${formatDateDisplay(checkInVal)} &rarr; ${formatDateDisplay(checkOutVal)}</strong>) overlaps with this existing booking. Please select one of the matching available rooms below:`;
+        }
+
+        // Render matching alternative rooms
+        if (altContainer) {
+          if (data.available_rooms && data.available_rooms.length > 0) {
+            altContainer.innerHTML = data.available_rooms.map(r => `
+              <div style="display: flex; align-items: center; justify-content: space-between; background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 7px 10px; transition: all 0.15s ease;">
+                <div style="min-width: 0; flex: 1; padding-right: 8px;">
+                  <div style="font-weight: 800; color: #0f172a; font-size: 12px; display: flex; align-items: center; gap: 6px;">
+                    <i class="fa-solid fa-door-open" style="color: #10b981; font-size: 11px;"></i>
+                    <span>Room #${escapeHtml(r.room)}</span>
+                    <span style="font-size: 9px; font-weight: 700; background: #e0e7ff; color: #4338ca; padding: 1px 6px; border-radius: 4px;">${escapeHtml(r.category)}</span>
+                  </div>
+                  <div style="font-size: 10px; color: #64748b; margin-top: 2px;">
+                    Floor ${escapeHtml(r.floor)} • ₹ ${Number(r.rate).toLocaleString()}/night • Max ${r.max_pax} Pax
+                  </div>
+                </div>
+                <button type="button" class="btn-ui-primary" style="height: 28px; padding: 0 10px; font-size: 10px; font-weight: 800; border-radius: 6px; white-space: nowrap; flex-shrink: 0; cursor: pointer;" onclick="selectAlternativeRoom('${r.id}', '${r.room}', '${r.category_id}', '${r.floor_id}', this)">
+                  <i class="fa-solid fa-check"></i> Select
+                </button>
+              </div>
+            `).join('');
+          } else {
+            altContainer.innerHTML = `
+              <div style="grid-column: 1 / -1; padding: 12px; font-size: 11px; font-weight: 700; color: #94a3b8; text-align: center;">
+                <i class="fa-solid fa-circle-exclamation"></i> No other alternative rooms are completely free for this date range.
+              </div>
+            `;
+          }
+        }
+
+        // Trigger warning notification toast
+        if (typeof PmsAlert !== 'undefined' && PmsAlert.toast) {
+          PmsAlert.toast(`Room #${data.room} is already booked for these dates! Alternative matching rooms are listed below.`, 'warning');
+        }
+      } else {
+        // Room is available with no conflict!
+        conflictBox.style.display = 'none';
+      }
+    })
+    .catch(err => {
+      if (err.name !== 'AbortError') {
+        console.error('Room availability check error:', err);
+      }
+    });
+  }
+
+  function selectAlternativeRoom(roomId, roomNo, categoryId, floorId, btnEl) {
+    const block = btnEl.closest('.guest-block') || btnEl.closest('.section-guest-details') || document.querySelector('.guest-block');
+    if (!block) return;
+
+    const catSel = block.querySelector('.select-room-category');
+    const flSel = block.querySelector('.select-room-floor');
+    const rmSel = block.querySelector('.select-room-no');
+
+    if (catSel && categoryId) {
+      catSel.value = categoryId;
+      onCategoryChange(catSel);
+    }
+    if (flSel && floorId) {
+      flSel.value = floorId;
+      onFloorChange(flSel);
+    }
+
+    if (rmSel) {
+      let found = false;
+      for (let opt of rmSel.options) {
+        if (String(opt.value) === String(roomId) || String(opt.value) === String(roomNo) || String(opt.dataset.roomNo) === String(roomNo)) {
+          rmSel.value = opt.value;
+          found = true;
+          break;
+        }
+      }
+      if (!found) {
+        const opt = document.createElement('option');
+        opt.value = roomId;
+        opt.dataset.roomNo = roomNo;
+        opt.textContent = `Room #${roomNo}`;
+        rmSel.appendChild(opt);
+        rmSel.value = roomId;
+      }
+      onRoomChange(rmSel);
+    }
+
+    // Hide conflict alert box
+    const conflictBox = block.querySelector('.room-conflict-alert-box') || document.querySelector('.room-conflict-alert-box');
+    if (conflictBox) {
+      conflictBox.style.display = 'none';
+    }
+
+    if (typeof PmsAlert !== 'undefined' && PmsAlert.toast) {
+      PmsAlert.toast(`Room #${roomNo} successfully selected for your stay!`, 'success');
+    }
+  }
+
+  function formatDateDisplay(dateStr) {
+    if (!dateStr) return '';
+    try {
+      const d = new Date(dateStr + 'T00:00:00');
+      return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+    } catch(e) {
+      return dateStr;
+    }
+  }
+
   function handleReserve(e) {
     e.preventDefault();
     const form = document.getElementById('reservation-form') || e.target;
     const submitBtn = form.querySelector('button[type="submit"]');
     const origBtnHtml = submitBtn ? submitBtn.innerHTML : '';
+
+    // Guard against submitting double-booked conflict
+    const visibleConflict = document.querySelector('.room-conflict-alert-box');
+    if (visibleConflict && visibleConflict.style.display !== 'none') {
+      if (typeof PmsAlert !== 'undefined' && PmsAlert.toast) {
+        PmsAlert.toast('Please select an available room without booking conflicts before proceeding.', 'error');
+      } else {
+        alert('Please select an available room without booking conflicts before proceeding.');
+      }
+      return;
+    }
 
     // Collect Registration Type ID
     const checkedRadio = form.querySelector('input[name="res_type"]:checked');

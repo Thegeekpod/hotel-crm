@@ -17,6 +17,7 @@ Route::prefix('front-office')->name('frontoffice.')->group(function () {
     Route::get('/arrivals/{id}/details', [ArrivalController::class, 'getDetails'])->name('arrivals.details');
     Route::get('/guest', [GuestController::class, 'index'])->name('guest');
     Route::get('/guest-crm', [GuestController::class, 'index'])->name('guest-crm');
+    Route::get('/guest/{id}/details', [GuestController::class, 'getDetails'])->name('guest.details');
     Route::get('/reserve', [DashboardController::class, 'index'])->name('reserve');
     
     // Dynamic Reservation, Check-in & Room Status Endpoints

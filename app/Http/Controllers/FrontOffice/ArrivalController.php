@@ -46,6 +46,10 @@ class ArrivalController extends Controller
         ]);
 
         if ($request->filled('date')) {
+            if ($selectedDate < $today) {
+                return redirect()->route('frontoffice.arrivals')
+                    ->with('warning', 'Past dates cannot be selected for arrivals.');
+            }
             $query->whereDate('reserve_date', $selectedDate);
             $baseQuery = Guest::whereDate('reserve_date', $selectedDate);
         } else {
@@ -90,6 +94,7 @@ class ArrivalController extends Controller
             'guests',
             'stats',
             'selectedDate',
+            'today',
             'categories',
             'floors',
             'companies',

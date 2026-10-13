@@ -436,14 +436,6 @@
             @endif
           </div>
         </div>
-        <div style="display: flex; gap: 8px; align-items: center;">
-          <button type="button" class="btn-ui-primary" onclick="if(typeof openReservationModal === 'function') openReservationModal(); else openModal('reserve-modal');">
-            <i class="fa-solid fa-calendar-plus"></i> New Reservation
-          </button>
-          <a href="{{ route('frontoffice.dashboard') }}" class="btn-ui-secondary" style="border: 1px solid #cbd5e1; background: #ffffff; color: #334155; text-decoration: none; padding: 7px 16px; border-radius: 20px; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
-            <i class="fa-solid fa-table-cells"></i> View Room Rack
-          </a>
-        </div>
       </div>
     </div>
 
@@ -466,8 +458,9 @@
                    id="arrival-date-filter" 
                    class="pms-filter-date" 
                    value="{{ $selectedDate ?? '' }}" 
+                   min="{{ $today ?? date('Y-m-d') }}" 
                    onchange="onArrivalDateFilterChanged(this.value)"
-                   title="Choose date to see guests arriving on that date">
+                   title="Choose date to see guests arriving on that date (Past dates disabled)">
             @if(!empty($selectedDate))
               <button type="button" 
                       class="btn-ui-secondary" 
@@ -1071,12 +1064,25 @@
 
   // Date Filter Change Handler
   function onArrivalDateFilterChanged(dateVal) {
-    const url = new URL(window.location.href);
-    if (dateVal) {
-      url.searchParams.set('date', dateVal);
-    } else {
-      url.searchParams.delete('date');
+    if (!dateVal) {
+      clearArrivalDateFilter();
+      return;
     }
+
+    const todayStr = '{{ $today ?? date('Y-m-d') }}';
+    if (dateVal < todayStr) {
+      if (typeof PmsAlert !== 'undefined') {
+        PmsAlert.toast('Past dates cannot be selected for arrivals.', 'warning');
+      } else {
+        alert('Past dates cannot be selected for arrivals.');
+      }
+      const el = document.getElementById('arrival-date-filter');
+      if (el) el.value = '';
+      return;
+    }
+
+    const url = new URL(window.location.href);
+    url.searchParams.set('date', dateVal);
     window.location.href = url.toString();
   }
 

@@ -49,6 +49,49 @@
   function closeModal(id) {
     const el = document.getElementById(id);
     if (el) el.classList.remove('open');
+    if (id === 'reserve-modal') {
+      const conflictBox = document.querySelector('.room-conflict-alert-box');
+      if (conflictBox) conflictBox.style.display = 'none';
+    }
+  }
+
+  function setRoomFieldsLocked(block, isLocked, roomNo = null) {
+    if (!block) return;
+    const catSel = block.querySelector('.select-room-category');
+    const flSel = block.querySelector('.select-room-floor');
+    const rmSel = block.querySelector('.select-room-no');
+    const lockIndicator = block.querySelector('.room-lock-indicator') || document.querySelector('.room-lock-indicator');
+
+    [catSel, flSel, rmSel].forEach(el => {
+      if (!el) return;
+      if (isLocked) {
+        el.disabled = true;
+        el.style.backgroundColor = '#f1f5f9';
+        el.style.cursor = 'not-allowed';
+        el.style.color = '#475569';
+        el.style.borderColor = '#cbd5e1';
+        el.setAttribute('title', 'Room details are pre-selected. Cannot be changed manually unless selecting an alternative available room on date conflict.');
+      } else {
+        el.disabled = false;
+        el.style.backgroundColor = '#ffffff';
+        el.style.cursor = 'pointer';
+        el.style.color = '#1e293b';
+        el.style.borderColor = '#cbd5e1';
+        el.removeAttribute('title');
+      }
+    });
+
+    if (lockIndicator) {
+      if (isLocked) {
+        lockIndicator.style.display = 'inline-flex';
+        const lbl = lockIndicator.querySelector('.room-lock-text');
+        if (lbl) {
+          lbl.textContent = roomNo ? `Room #${roomNo} Locked` : 'Room Locked';
+        }
+      } else {
+        lockIndicator.style.display = 'none';
+      }
+    }
   }
 
   function fetchNextReserveId() {
@@ -67,7 +110,12 @@
     setInitialDateTime();
     fetchNextReserveId();
     
+    const firstGuest = document.querySelector('.guest-block');
+
     if (preselectRoomNo || preselectCatId || preselectFloorId) {
+      // Temporarily unlock to apply option selections smoothly
+      if (firstGuest) setRoomFieldsLocked(firstGuest, false);
+
       let match = null;
       if (preselectRoomNo && window.allPmsRooms) {
         match = window.allPmsRooms.find(r => String(r.room) === String(preselectRoomNo) || String(r.id) === String(preselectRoomNo));
@@ -77,7 +125,6 @@
         }
       }
 
-      const firstGuest = document.querySelector('.guest-block');
       if (firstGuest) {
         const catSel = firstGuest.querySelector('.select-room-category');
         const flSel = firstGuest.querySelector('.select-room-floor');
@@ -143,6 +190,15 @@
 
           onRoomChange(rmSel);
         }
+
+        // Lock fields since opened through a specific room
+        const finalRoomNo = match ? match.room : preselectRoomNo;
+        setRoomFieldsLocked(firstGuest, true, finalRoomNo);
+      }
+    } else {
+      // General reservation: unlock fields so staff can choose room freely
+      if (firstGuest) {
+        setRoomFieldsLocked(firstGuest, false);
       }
     }
     setTimeout(() => {
@@ -1135,6 +1191,7 @@
     if (flSel) flSel.innerHTML = '<option value="">Select Floor</option>';
     if (rmSel) rmSel.innerHTML = '<option value="">Select Room No.</option>';
     if (banner) banner.style.display = 'none';
+    setRoomFieldsLocked(newBlock, false);
 
     const headerDiv = newBlock.querySelector('.guest-heading')?.parentElement;
     if (headerDiv && !newBlock.querySelector('.btn-remove-guest')) {
@@ -1543,6 +1600,9 @@
     const block = btnEl.closest('.guest-block') || btnEl.closest('.section-guest-details') || document.querySelector('.guest-block');
     if (!block) return;
 
+    // Temporarily unlock to populate values smoothly
+    setRoomFieldsLocked(block, false);
+
     const catSel = block.querySelector('.select-room-category');
     const flSel = block.querySelector('.select-room-floor');
     const rmSel = block.querySelector('.select-room-no');
@@ -1575,6 +1635,9 @@
       }
       onRoomChange(rmSel);
     }
+
+    // Now re-lock to the newly selected alternative room!
+    setRoomFieldsLocked(block, true, roomNo);
 
     // Hide conflict alert box
     const conflictBox = block.querySelector('.room-conflict-alert-box') || document.querySelector('.room-conflict-alert-box');

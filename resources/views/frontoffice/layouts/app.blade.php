@@ -346,9 +346,14 @@
                     <!-- Dynamic Cascading Room Assign: Category -> Floor -> Room No -->
                     <div style="border-top: 1px solid #f1f5f9; padding-top: 12px; margin-top: 4px;">
                       <div class="room-assign-header-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                        <h4 style="font-size: 11px; color: #4f46e5; margin: 0; text-transform: uppercase; font-weight: 800; letter-spacing: 0.8px; display: flex; align-items: center; gap: 6px;">
-                          <i class="fa-solid fa-hotel"></i> Room Assignment
-                        </h4>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                          <h4 style="font-size: 11px; color: #4f46e5; margin: 0; text-transform: uppercase; font-weight: 800; letter-spacing: 0.8px; display: flex; align-items: center; gap: 6px;">
+                            <i class="fa-solid fa-hotel"></i> Room Assignment
+                          </h4>
+                          <span class="room-lock-indicator" style="display: none; align-items: center; gap: 4px; font-size: 10px; font-weight: 700; color: #4338ca; background: #e0e7ff; border: 1px solid #c7d2fe; padding: 2px 7px; border-radius: 6px;">
+                            <i class="fa-solid fa-lock" style="font-size: 9px;"></i> <span class="room-lock-text">Room Locked</span>
+                          </span>
+                        </div>
                         <div class="same-room-checkbox-wrapper" style="display: none;">
                           <label style="display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 800; color: #4338ca; cursor: pointer; background: #eef2ff; padding: 3px 8px; border-radius: 6px; border: 1px solid #c7d2fe; user-select: none;">
                             <input type="checkbox" class="chk-same-room" onchange="toggleSameRoom(this)" style="width: 13px; height: 13px; accent-color: #4f46e5; cursor: pointer; margin: 0;">

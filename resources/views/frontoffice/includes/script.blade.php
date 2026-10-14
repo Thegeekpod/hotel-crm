@@ -44,6 +44,13 @@
   function openModal(id) {
     const el = document.getElementById(id);
     if (el) el.classList.add('open');
+    if (id === 'reserve-modal') {
+      try {
+        setInitialDateTime();
+      } catch (e) {
+        console.error('Error in setInitialDateTime:', e);
+      }
+    }
   }
 
   function closeModal(id) {
@@ -1520,6 +1527,36 @@
     applyCompanyDiscountFromSelect();
   }
 
+  function getDashboardActiveDate() {
+    const pmsCal = document.getElementById('pms-calendar-input');
+    if (pmsCal && pmsCal.value && pmsCal.value.trim() !== '') {
+      return pmsCal.value.trim();
+    }
+    const filterDate = document.getElementById('filter-date-val');
+    if (filterDate && filterDate.value && filterDate.value.trim() !== '') {
+      return filterDate.value.trim();
+    }
+    const reserveFrom = document.getElementById('reserve-from-date');
+    if (reserveFrom && reserveFrom.value && reserveFrom.value.trim() !== '') {
+      return reserveFrom.value.trim();
+    }
+    return null;
+  }
+
+  function getNextDayStr(dateStr) {
+    if (!dateStr) return null;
+    const parts = dateStr.split('-');
+    if (parts.length === 3) {
+      const d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+      d.setDate(d.getDate() + 1);
+      const yr = d.getFullYear();
+      const mo = String(d.getMonth() + 1).padStart(2, '0');
+      const da = String(d.getDate()).padStart(2, '0');
+      return `${yr}-${mo}-${da}`;
+    }
+    return null;
+  }
+
   function setInitialDateTime() {
     const now = new Date();
     const year = now.getFullYear();
@@ -1527,12 +1564,10 @@
     const day = String(now.getDate()).padStart(2, '0');
     const todayStr = `${year}-${month}-${day}`;
 
-    const tomorrow = new Date(now);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    const tYear = tomorrow.getFullYear();
-    const tMonth = String(tomorrow.getMonth() + 1).padStart(2, '0');
-    const tDay = String(tomorrow.getDate()).padStart(2, '0');
-    const tomStr = `${tYear}-${tMonth}-${tDay}`;
+    // Priority: Active date selected in dashboard navigator (#pms-calendar-input)
+    const activeDashboardDate = getDashboardActiveDate();
+    const checkInStr = activeDashboardDate || todayStr;
+    const checkoutStr = getNextDayStr(checkInStr) || getNextDayStr(todayStr);
 
     const dateInput = document.getElementById('reserve-date-input');
     const timeInput = document.getElementById('reserve-time-input');
@@ -1540,8 +1575,9 @@
     const checkoutTimeInput = document.getElementById('checkout-time-input');
     
     if (dateInput) {
-      dateInput.value = todayStr;
-      dateInput.min = todayStr;
+      dateInput.value = checkInStr;
+      const minDate = (checkInStr < todayStr) ? checkInStr : todayStr;
+      dateInput.min = minDate;
     }
     if (timeInput) {
       const hours = String(now.getHours()).padStart(2, '0');
@@ -1549,8 +1585,8 @@
       timeInput.value = `${hours}:${minutes}`;
     }
     if (checkoutDateInput) {
-      checkoutDateInput.value = tomStr;
-      checkoutDateInput.min = todayStr;
+      checkoutDateInput.value = checkoutStr;
+      checkoutDateInput.min = checkInStr;
     }
     if (checkoutTimeInput && !checkoutTimeInput.value) {
       checkoutTimeInput.value = '11:00';

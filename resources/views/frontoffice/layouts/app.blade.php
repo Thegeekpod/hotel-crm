@@ -181,13 +181,17 @@
                   </div>
 
                   <div style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px;">
+                    @php
+                      $activeCheckInDate = $selectedDate ?? ($fromDate ?? date('Y-m-d'));
+                      $activeCheckOutDate = \Carbon\Carbon::parse($activeCheckInDate)->addDay()->toDateString();
+                    @endphp
                     <!-- Check-In -->
                     <div style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 8px 10px; box-sizing: border-box; min-width: 0;">
                       <label style="display: flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 800; color: #4f46e5; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.5px;">
                         <i class="fa-solid fa-plane-arrival"></i> Check-in (Arrival)
                       </label>
                       <div style="display: flex; gap: 6px; align-items: center;">
-                        <input type="date" id="reserve-date-input" name="reserve_date" min="{{ date('Y-m-d') }}" class="pms-input-field" onchange="onCheckInDateChange()" style="flex: 3; min-width: 0; width: 100%; height: 36px; padding: 4px 8px; font-size: 12px; font-weight: 700; color: #1e293b; border: 1px solid #cbd5e1; border-radius: 6px; background: #ffffff; box-sizing: border-box;">
+                        <input type="date" id="reserve-date-input" name="reserve_date" value="{{ $activeCheckInDate }}" min="{{ $activeCheckInDate }}" class="pms-input-field" onchange="onCheckInDateChange()" style="flex: 3; min-width: 0; width: 100%; height: 36px; padding: 4px 8px; font-size: 12px; font-weight: 700; color: #1e293b; border: 1px solid #cbd5e1; border-radius: 6px; background: #ffffff; box-sizing: border-box;">
                         <input type="time" id="reserve-time-input" name="reserve_time" class="pms-input-field" style="flex: 2; min-width: 0; width: 100%; height: 36px; padding: 4px 6px; font-size: 12px; font-weight: 700; color: #1e293b; border: 1px solid #cbd5e1; border-radius: 6px; background: #ffffff; box-sizing: border-box;">
                       </div>
                     </div>
@@ -198,7 +202,7 @@
                         <i class="fa-solid fa-plane-departure"></i> Check-out (Departure)
                       </label>
                       <div style="display: flex; gap: 6px; align-items: center;">
-                        <input type="date" id="checkout-date-input" name="checkout_date" min="{{ date('Y-m-d') }}" class="pms-input-field" onchange="onCheckOutDateChange()" style="flex: 3; min-width: 0; width: 100%; height: 36px; padding: 4px 8px; font-size: 12px; font-weight: 700; color: #1e293b; border: 1px solid #cbd5e1; border-radius: 6px; background: #ffffff; box-sizing: border-box;">
+                        <input type="date" id="checkout-date-input" name="checkout_date" value="{{ $activeCheckOutDate }}" min="{{ $activeCheckInDate }}" class="pms-input-field" onchange="onCheckOutDateChange()" style="flex: 3; min-width: 0; width: 100%; height: 36px; padding: 4px 8px; font-size: 12px; font-weight: 700; color: #1e293b; border: 1px solid #cbd5e1; border-radius: 6px; background: #ffffff; box-sizing: border-box;">
                         <input type="time" id="checkout-time-input" name="checkout_time" class="pms-input-field" style="flex: 2; min-width: 0; width: 100%; height: 36px; padding: 4px 6px; font-size: 12px; font-weight: 700; color: #1e293b; border: 1px solid #cbd5e1; border-radius: 6px; background: #ffffff; box-sizing: border-box;" value="11:00">
                       </div>
                     </div>

@@ -443,6 +443,9 @@
       'total_amount' => (float)$g->total_amount,
       'discount_percentage' => (float)$g->discount_percentage,
       'discount_amount' => (float)$g->discount_amount,
+      'gst_type' => $g->gst_type ?: 'exclusive',
+      'gst_percentage' => (float)$g->gst_percentage,
+      'gst_amount' => (float)$g->gst_amount,
       'payable_amount' => (float)$g->payable_amount,
       'advance_amount' => (float)$g->advance_amount,
       'balance' => (float)$g->balance,
@@ -1020,8 +1023,12 @@
             <span class="dossier-val mono" id="crm-mdl-bill-calc-row">-</span>
           </div>
           <div class="dossier-field-row">
-            <span class="dossier-label">Discount Applied</span>
+            <span class="dossier-label">Discount</span>
             <span class="dossier-val mono" id="crm-mdl-bill-discount" style="color: #059669;">-</span>
+          </div>
+          <div class="dossier-field-row">
+            <span class="dossier-label">GST / Tax</span>
+            <span class="dossier-val mono" id="crm-mdl-bill-gst" style="color: #6366f1;">-</span>
           </div>
           <div class="dossier-field-row">
             <span class="dossier-label">Net Payable Amount</span>
@@ -1183,11 +1190,22 @@
 
     document.getElementById('crm-mdl-bill-calc-row').textContent = `${formatINR(rate)} × ${guest.total_nights || 1} Night(s) = ${formatINR(rate * (guest.total_nights || 1))}`;
     
-    let discText = 'None';
+    let discText = '₹ 0.00';
     if (discountAmt > 0 || discountPct > 0) {
-      discText = `${formatINR(discountAmt)} (${discountPct}%)`;
+      discText = `- ${formatINR(discountAmt)} (${discountPct}%)`;
     }
     document.getElementById('crm-mdl-bill-discount').textContent = discText;
+
+    const gstAmt = Number(guest.gst_amount || 0);
+    const gstPct = Number(guest.gst_percentage || 0);
+    const gstType = guest.gst_type || 'exclusive';
+    let gstText = '₹ 0.00 (0%)';
+    if (gstAmt > 0) {
+      gstText = `${gstType === 'inclusive' ? 'Incl. ' : '+ '}${formatINR(gstAmt)} (${gstPct}%)`;
+    }
+    const crmGstElem = document.getElementById('crm-mdl-bill-gst');
+    if (crmGstElem) crmGstElem.textContent = gstText;
+
     document.getElementById('crm-mdl-bill-payable').textContent = formatINR(payable);
     document.getElementById('crm-mdl-bill-paymode').textContent = guest.payment_mode || (guest.payment_mode?.name ?? 'Cash / Direct');
     document.getElementById('crm-mdl-bill-remarks').textContent = guest.payment_remarks || 'None';
@@ -1321,8 +1339,12 @@
               <td style="padding: 6px 0; text-align: right; font-weight: 700;">${formatINR(g.total_amount)}</td>
             </tr>
             <tr style="border-bottom: 1px solid #e2e8f0;">
-              <td style="padding: 6px 0; font-weight: 600; color: #64748b;">Corporate / Special Discount:</td>
-              <td style="padding: 6px 0; text-align: right; color: #059669; font-weight: 700;">-${formatINR(g.discount_amount)}</td>
+              <td style="padding: 6px 0; font-weight: 600; color: #64748b;">Discount:</td>
+              <td style="padding: 6px 0; text-align: right; color: #059669; font-weight: 700;">${Number(g.discount_amount || 0) > 0 ? '-' + formatINR(g.discount_amount) + ' (' + (g.discount_percentage || 0) + '%)' : '₹ 0.00'}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #e2e8f0;">
+              <td style="padding: 6px 0; font-weight: 600; color: #64748b;">GST / Tax:</td>
+              <td style="padding: 6px 0; text-align: right; color: #6366f1; font-weight: 700;">${Number(g.gst_amount || 0) > 0 ? (g.gst_type === 'inclusive' ? 'Incl. ' : '+ ') + formatINR(g.gst_amount) + ' (' + (g.gst_percentage || 0) + '%)' : '₹ 0.00 (0%)'}</td>
             </tr>
             <tr style="border-bottom: 1px solid #e2e8f0;">
               <td style="padding: 6px 0; font-weight: 800; color: #1e293b;">Net Payable Amount:</td>

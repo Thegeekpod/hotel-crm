@@ -441,25 +441,57 @@
         </span>
       `;
 
+      const grossAmt = Number(primaryGuest.total_amount || 0);
+      const discAmt = Number(primaryGuest.discount_amount || 0);
+      const discPct = Number(primaryGuest.discount_percentage || 0);
+      const gstType = primaryGuest.gst_type || 'exclusive';
+      const gstPct = Number(primaryGuest.gst_percentage || 0);
+      const gstAmt = Number(primaryGuest.gst_amount || 0);
+      const payableAmt = Number(primaryGuest.payable_amount || (grossAmt > 0 ? (grossAmt - discAmt + (gstType === 'inclusive' ? 0 : gstAmt)) : totalBalance + advancePaid));
+
+      window.currentModalRoomGuest = primaryGuest;
+
       const topReservationSummaryBar = `
-        <div style="background: linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%); border: 1px solid #c7d2fe; border-radius: 10px; padding: 10px 14px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; box-shadow: 0 1px 3px rgba(99,102,241,0.06);">
-          <div style="display: flex; align-items: center; gap: 10px;">
-            <div style="width: 32px; height: 32px; border-radius: 8px; background: #4f46e5; color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 13px; box-shadow: 0 2px 5px rgba(79, 70, 229, 0.25);">
-              <i class="fa-solid fa-receipt"></i>
+        <div style="background: linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%); border: 1px solid #c7d2fe; border-radius: 10px; padding: 12px 14px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(99,102,241,0.06);">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 8px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <div style="width: 30px; height: 30px; border-radius: 8px; background: #4f46e5; color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 13px; box-shadow: 0 2px 5px rgba(79, 70, 229, 0.25);">
+                <i class="fa-solid fa-receipt"></i>
+              </div>
+              <div>
+                <div style="font-size: 9px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.6px;">Reservation ID</div>
+                <div style="font-family: var(--font-mono, monospace); font-size: 14px; font-weight: 900; color: #1e1b4b; letter-spacing: 0.5px;">${escapeHtml(reservationId)}</div>
+              </div>
             </div>
-            <div>
-              <div style="font-size: 9px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.6px;">Reservation ID</div>
-              <div style="font-family: var(--font-mono, monospace); font-size: 15px; font-weight: 900; color: #1e1b4b; letter-spacing: 0.5px;">${escapeHtml(reservationId)}</div>
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <div style="text-align: right;">
+                <div style="font-size: 9px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Advance Paid</div>
+                <div style="font-family: var(--font-mono, monospace); font-size: 13px; font-weight: 800; color: #059669; line-height: 1.1;">₹ ${advancePaid.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+              </div>
+              <div style="text-align: right; border-left: 1px solid #cbd5e1; padding-left: 10px;">
+                <div style="font-size: 9px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Balance Due</div>
+                <div style="font-family: var(--font-mono, monospace); font-size: 15px; font-weight: 900; color: ${totalBalance > 0 ? '#e11d48' : '#059669'}; line-height: 1.1;">₹ ${totalBalance.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+              </div>
             </div>
           </div>
-          <div style="display: flex; align-items: center; gap: 14px;">
-            <div style="text-align: right;">
-              <div style="font-size: 9px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Outstanding Balance</div>
-              <div style="font-family: var(--font-mono, monospace); font-size: 16px; font-weight: 900; color: #e11d48; line-height: 1.1;">₹ ${totalBalance.toLocaleString()}</div>
+
+          <!-- Clean & Simple Billing Breakdown -->
+          <div style="padding-top: 8px; border-top: 1px dashed #cbd5e1; display: grid; grid-template-columns: repeat(auto-fit, minmax(95px, 1fr)); gap: 8px; font-size: 11px;">
+            <div style="background: #ffffff; padding: 5px 8px; border-radius: 6px; border: 1px solid #e2e8f0;">
+              <span style="font-size: 9px; font-weight: 700; color: #64748b; text-transform: uppercase; display: block;">Gross</span>
+              <span style="font-weight: 800; color: #1e293b; font-family: monospace;">₹ ${grossAmt > 0 ? grossAmt.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : rate.toLocaleString('en-IN', {minimumFractionDigits: 2})}</span>
             </div>
-            <div style="text-align: right; border-left: 1px solid #cbd5e1; padding-left: 12px;">
-              <div style="font-size: 9px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Advance Paid</div>
-              <div style="font-family: var(--font-mono, monospace); font-size: 13px; font-weight: 800; color: #059669; line-height: 1.1;">₹ ${advancePaid.toLocaleString()}</div>
+            <div style="background: #ffffff; padding: 5px 8px; border-radius: 6px; border: 1px solid #e2e8f0;">
+              <span style="font-size: 9px; font-weight: 700; color: #059669; text-transform: uppercase; display: block;">Discount</span>
+              <span style="font-weight: 800; color: #059669; font-family: monospace;">${discAmt > 0 ? `- ₹ ${discAmt.toLocaleString('en-IN', {minimumFractionDigits: 2})} (${discPct}%)` : '₹ 0.00'}</span>
+            </div>
+            <div style="background: #ffffff; padding: 5px 8px; border-radius: 6px; border: 1px solid #e2e8f0;">
+              <span style="font-size: 9px; font-weight: 700; color: #6366f1; text-transform: uppercase; display: block;">GST (${gstPct}%)</span>
+              <span style="font-weight: 800; color: #6366f1; font-family: monospace;">${gstAmt > 0 ? `${gstType === 'inclusive' ? 'Incl. ' : '+ '}₹ ${gstAmt.toLocaleString('en-IN', {minimumFractionDigits: 2})}` : '₹ 0.00'}</span>
+            </div>
+            <div style="background: #ffffff; padding: 5px 8px; border-radius: 6px; border: 1px solid #e2e8f0;">
+              <span style="font-size: 9px; font-weight: 800; color: #4338ca; text-transform: uppercase; display: block;">Payable</span>
+              <span style="font-weight: 900; color: #4338ca; font-family: monospace;">₹ ${payableAmt.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
             </div>
           </div>
         </div>
@@ -800,6 +832,18 @@
   function printInvoice(roomNo, guestName, folio, balance) {
     const printArea = document.getElementById('print-area');
     if (!printArea) return;
+    const g = window.currentModalRoomGuest || {};
+    const grossVal = Number(g.total_amount || (Number(balance) + Number(g.advance || 0)));
+    const discVal = Number(g.discount_amount || 0);
+    const discPct = Number(g.discount_percentage || 0);
+    const gstType = g.gst_type || 'exclusive';
+    const gstVal = Number(g.gst_amount || 0);
+    const gstPct = Number(g.gst_percentage || 0);
+    const payableVal = Number(g.payable_amount || (grossVal - discVal + (gstType === 'inclusive' ? 0 : gstVal)));
+    const advVal = Number(g.advance || 0);
+    const balVal = Number(balance !== undefined ? balance : (g.balance || 0));
+    const formatINR = num => '₹ ' + Number(num || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
     printArea.innerHTML = `
       <div style="padding: 40px; font-family: 'Plus Jakarta Sans', sans-serif; color: #1e293b;">
         <div style="border-bottom: 2px solid #6366f1; padding-bottom: 16px; margin-bottom: 24px; display: flex; justify-content: space-between;">
@@ -819,13 +863,41 @@
           <p style="margin: 0;"><strong>GSTIN:</strong> 19AAGCS7712K1Z9</p>
         </div>
         <table style="width: 100%; border-collapse: collapse; margin-bottom: 24px; font-size: 12px;">
-          <thead><tr style="background: #6366f1; color: #fff;"><th style="padding: 10px; text-align:left;">Description</th><th style="padding: 10px; text-align:right;">Amount (₹)</th></tr></thead>
+          <thead>
+            <tr style="background: #4f46e5; color: #fff;">
+              <th style="padding: 10px 12px; text-align:left;">Item / Description</th>
+              <th style="padding: 10px 12px; text-align:right;">Amount</th>
+            </tr>
+          </thead>
           <tbody>
-            <tr style="border-bottom: 1px solid #cbd5e1;"><td style="padding: 10px;">Room Stay & Dining Charges</td><td style="padding: 10px; text-align:right;">${(Number(balance) + 5000).toLocaleString()}.00</td></tr>
-            <tr style="border-bottom: 1px solid #cbd5e1;"><td style="padding: 10px; color: #10b981;">Less: Advance Deposit Paid</td><td style="padding: 10px; text-align:right; color: #10b981;">- 5,000.00</td></tr>
+            <tr style="border-bottom: 1px solid #cbd5e1;">
+              <td style="padding: 10px 12px;">Room Stay Charges</td>
+              <td style="padding: 10px 12px; text-align:right; font-family: monospace; font-weight: 700;">${formatINR(grossVal)}</td>
+            </tr>
+            ${discVal > 0 ? `
+            <tr style="border-bottom: 1px solid #cbd5e1; color: #059669;">
+              <td style="padding: 10px 12px;">Less: Discount (${discPct}%)</td>
+              <td style="padding: 10px 12px; text-align:right; font-family: monospace; font-weight: 700;">- ${formatINR(discVal)}</td>
+            </tr>` : ''}
+            ${gstVal > 0 ? `
+            <tr style="border-bottom: 1px solid #cbd5e1; color: #4f46e5;">
+              <td style="padding: 10px 12px;">GST / Tax (${gstPct}% ${gstType === 'inclusive' ? 'Incl.' : 'Added'})</td>
+              <td style="padding: 10px 12px; text-align:right; font-family: monospace; font-weight: 700;">${gstType === 'inclusive' ? 'Incl. ' : '+ '}${formatINR(gstVal)}</td>
+            </tr>` : ''}
+            <tr style="border-bottom: 1px solid #cbd5e1; font-weight: 800; background: #f8fafc;">
+              <td style="padding: 10px 12px;">Net Payable Amount</td>
+              <td style="padding: 10px 12px; text-align:right; font-family: monospace; font-weight: 800;">${formatINR(payableVal)}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #cbd5e1; color: #059669;">
+              <td style="padding: 10px 12px;">Less: Advance Deposit Paid</td>
+              <td style="padding: 10px 12px; text-align:right; font-family: monospace; font-weight: 700;">- ${formatINR(advVal)}</td>
+            </tr>
           </tbody>
           <tfoot>
-            <tr style="font-size: 14px; font-weight: bold; background: #f1f5f9;"><td style="padding: 10px;">Net Balance Payable:</td><td style="padding: 10px; text-align:right; color: #dc2626;">₹ ${Number(balance).toLocaleString()}.00</td></tr>
+            <tr style="font-size: 14px; font-weight: bold; background: #f1f5f9;">
+              <td style="padding: 10px 12px;">Net Balance Payable:</td>
+              <td style="padding: 10px 12px; text-align:right; color: ${balVal > 0 ? '#dc2626' : '#059669'}; font-family: monospace;">${formatINR(balVal)}</td>
+            </tr>
           </tfoot>
         </table>
         <div style="margin-top: 40px; display: flex; justify-content: space-between; font-size: 12px;">

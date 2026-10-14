@@ -383,6 +383,9 @@
       'total_amount' => (float)$g->total_amount,
       'discount_percentage' => (float)$g->discount_percentage,
       'discount_amount' => (float)$g->discount_amount,
+      'gst_type' => $g->gst_type ?: 'exclusive',
+      'gst_percentage' => (float)$g->gst_percentage,
+      'gst_amount' => (float)$g->gst_amount,
       'payable_amount' => (float)$g->payable_amount,
       'advance_amount' => (float)$g->advance_amount,
       'balance' => (float)$g->balance,
@@ -754,8 +757,12 @@
             <span class="dossier-val mono" id="mdl-bill-calc-row">-</span>
           </div>
           <div class="dossier-field-row">
-            <span class="dossier-label">Discount Applied</span>
+            <span class="dossier-label">Discount</span>
             <span class="dossier-val mono" id="mdl-bill-discount" style="color: #059669;">-</span>
+          </div>
+          <div class="dossier-field-row">
+            <span class="dossier-label">GST / Tax</span>
+            <span class="dossier-val mono" id="mdl-bill-gst" style="color: #6366f1;">-</span>
           </div>
           <div class="dossier-field-row">
             <span class="dossier-label">Net Payable Amount</span>
@@ -1272,11 +1279,19 @@
 
     document.getElementById('mdl-bill-calc-row').textContent = `${formatINR(g.room_rate)} × ${g.total_nights || 1} Night(s) = ${formatINR(g.total_amount)}`;
     
-    let discountStr = 'None (₹ 0.00)';
+    let discountStr = '₹ 0.00';
     if (Number(g.discount_amount || 0) > 0) {
       discountStr = `- ${formatINR(g.discount_amount)} (${g.discount_percentage || 0}%)`;
     }
     document.getElementById('mdl-bill-discount').textContent = discountStr;
+
+    let gstStr = '₹ 0.00 (0%)';
+    if (Number(g.gst_amount || 0) > 0) {
+      gstStr = `${g.gst_type === 'inclusive' ? 'Incl. ' : '+ '}${formatINR(g.gst_amount)} (${g.gst_percentage || 0}%)`;
+    }
+    const gstElem = document.getElementById('mdl-bill-gst');
+    if (gstElem) gstElem.textContent = gstStr;
+
     document.getElementById('mdl-bill-payable').textContent = formatINR(g.payable_amount);
     document.getElementById('mdl-bill-paymode').textContent = g.payment_mode || 'Cash / Direct';
     document.getElementById('mdl-bill-remarks').textContent = g.payment_remarks || 'None';
@@ -1352,7 +1367,8 @@
           <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
             <tr><td style="width: 35%; color: #64748b; font-weight: 600; padding: 4px 6px;">Room Rate:</td><td style="font-weight: 700; color: #0f172a; padding: 4px 6px;">${formatINR(g.room_rate)} / night</td></tr>
             <tr><td style="color: #64748b; font-weight: 600; padding: 4px 6px;">Gross Total:</td><td style="font-weight: 700; color: #0f172a; padding: 4px 6px;">${formatINR(g.total_amount)}</td></tr>
-            <tr><td style="color: #64748b; font-weight: 600; padding: 4px 6px;">Discount:</td><td style="font-weight: 700; color: #0f172a; padding: 4px 6px;">${formatINR(g.discount_amount)} (${g.discount_percentage}%)</td></tr>
+            <tr><td style="color: #64748b; font-weight: 600; padding: 4px 6px;">Discount:</td><td style="font-weight: 700; color: #059669; padding: 4px 6px;">${Number(g.discount_amount || 0) > 0 ? '-' + formatINR(g.discount_amount) + ' (' + (g.discount_percentage || 0) + '%)' : '₹ 0.00'}</td></tr>
+            <tr><td style="color: #64748b; font-weight: 600; padding: 4px 6px;">GST / Tax:</td><td style="font-weight: 700; color: #6366f1; padding: 4px 6px;">${Number(g.gst_amount || 0) > 0 ? (g.gst_type === 'inclusive' ? 'Incl. ' : '+ ') + formatINR(g.gst_amount) + ' (' + (g.gst_percentage || 0) + '%)' : '₹ 0.00 (0%)'}</td></tr>
             <tr><td style="color: #64748b; font-weight: 600; padding: 4px 6px;">Payable Amount:</td><td style="font-weight: 700; color: #0f172a; padding: 4px 6px;">${formatINR(g.payable_amount)}</td></tr>
             <tr><td style="color: #64748b; font-weight: 600; padding: 4px 6px;">Advance Paid:</td><td style="font-weight: 700; color: #0f172a; padding: 4px 6px;">${formatINR(g.advance_amount)}</td></tr>
             <tr><td style="color: #64748b; font-weight: 600; padding: 4px 6px;">Balance Remaining:</td><td style="font-weight: 700; color: #e11d48; padding: 4px 6px;">${formatINR(g.balance)}</td></tr>

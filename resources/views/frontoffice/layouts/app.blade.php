@@ -542,8 +542,8 @@
                   </select>
                 </div>
 
-                <!-- Dynamic Calculation & Billing Breakdown Panel -->
-                <div id="payment-details-container" style="display: none; flex-direction: column; gap: 8px; margin-bottom: 4px;">
+                <!-- Dynamic Calculation & Billing Breakdown Panel (Always visible) -->
+                <div id="payment-details-container" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 4px;">
                   
                   <!-- Total Gross Tariff Card -->
                   <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 10px; box-sizing: border-box;">
@@ -616,6 +616,45 @@
                     <div id="company-discount-applied-text" style="display: none; font-size: 10px; font-weight: 700; color: #059669; margin-top: 6px; line-height: 1.3; align-items: center; gap: 4px;">
                       <i class="fa-solid fa-building-circle-check"></i> <span id="company-discount-note">Corporate discount auto-applied</span>
                     </div>
+                  </div>
+
+                  <!-- GST / Tax Configuration Panel (Dynamic Slabs & Inc./Excluding GST) -->
+                  <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 12px; box-sizing: border-box;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                      <label style="display:block; font-size: 10px; font-weight: 800; color: #475569; text-transform: uppercase; letter-spacing: 0.8px; margin: 0;">
+                        <i class="fa-solid fa-receipt" style="color: #6366f1; margin-right: 4px;"></i> GST / Tax
+                      </label>
+                      <span id="calc-gst-val-label" style="font-size: 11px; font-weight: 900; color: #6366f1; font-family: monospace;">+ ₹ 0.00 (0%)</span>
+                    </div>
+
+                    <!-- GST Type Radio Selector (Inc. GST vs Excluding GST) -->
+                    <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+                      <label id="gst-type-inc-label" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 6px 8px; background: #ffffff; border: 1.5px solid #cbd5e1; border-radius: 6px; font-size: 11px; font-weight: 700; color: #64748b; cursor: pointer; user-select: none; transition: all 0.15s ease;">
+                        <input type="radio" name="gst_type" value="inclusive" onchange="onGstTypeChange(this.value)" style="accent-color: #4f46e5; margin: 0; width: 14px; height: 14px; cursor: pointer;">
+                        <span>Inc. GST</span>
+                      </label>
+                      <label id="gst-type-excl-label" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 6px 8px; background: #eef2ff; border: 1.5px solid #6366f1; border-radius: 6px; font-size: 11px; font-weight: 800; color: #4f46e5; cursor: pointer; user-select: none; transition: all 0.15s ease;">
+                        <input type="radio" name="gst_type" value="exclusive" checked onchange="onGstTypeChange(this.value)" style="accent-color: #4f46e5; margin: 0; width: 14px; height: 14px; cursor: pointer;">
+                        <span>Excluding GST</span>
+                      </label>
+                    </div>
+
+                    <!-- Dynamic GST Slabs Dropdown Selector -->
+                    <div>
+                      <select name="gst_percentage_id" id="calc-gst-rate" onchange="calculateReservationBilling()" style="width: 100%; height: 36px; padding: 6px 12px; font-size: 12px; font-weight: 700; font-family: monospace; border: 1px solid #cbd5e1; border-radius: 6px; background: #f8fafc; color: #1e293b; box-sizing: border-box; cursor: pointer;">
+                        <option value="" data-rate="0">0% (No GST / Exempted)</option>
+                        @foreach($gstPercentages ?? \App\Models\GstPercentage::where('status', 'Active')->orderBy('gst_percentage', 'asc')->get() as $gst)
+                          @if((float)$gst->gst_percentage > 0)
+                            <option value="{{ $gst->id }}" data-rate="{{ (float)$gst->gst_percentage }}">
+                              {{ rtrim(rtrim(number_format($gst->gst_percentage, 2), '0'), '.') }}% GST
+                            </option>
+                          @endif
+                        @endforeach
+                      </select>
+                    </div>
+
+                    <input type="hidden" name="gst_percentage" id="calc-gst-percentage" value="0">
+                    <input type="hidden" name="gst_amount" id="calc-gst-amount" value="0">
                   </div>
 
                   <!-- Net Payable Amount -->

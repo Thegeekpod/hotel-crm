@@ -594,7 +594,7 @@
                 </div>
 
                 <!-- Conditional Advance & Remarks Fields -->
-                <div id="payment-details-container" style="display: none; flex-direction: column; gap: 12px; margin-bottom: 4px;">
+                <div id="payment-details-container" style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 4px;">
                   <div>
                     <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Advance Amount (₹)</label>
                     <input type="number" id="payment-advance-amount" style="width:100%; height:40px; padding:8px 14px; font-size:13px; font-weight: 700; font-family: var(--font-mono); border:1px solid var(--border-medium); border-radius: var(--radius-md); background: #fff; color: var(--text-primary);" placeholder="Enter Advance Amount (e.g. 2000)">
@@ -967,11 +967,7 @@
     function togglePaymentFields(selectElem) {
       const container = document.getElementById('payment-details-container');
       if (container) {
-        if (selectElem.value !== 'None') {
-          container.style.display = 'flex';
-        } else {
-          container.style.display = 'none';
-        }
+        container.style.display = 'flex';
       }
     }
 

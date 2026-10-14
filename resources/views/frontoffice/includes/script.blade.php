@@ -1333,6 +1333,41 @@
     calculateReservationBilling();
   }
 
+  function onGstTypeChange(type) {
+    const incLabel = document.getElementById('gst-type-inc-label');
+    const exclLabel = document.getElementById('gst-type-excl-label');
+
+    if (type === 'inclusive') {
+      if (incLabel) {
+        incLabel.style.background = '#eef2ff';
+        incLabel.style.borderColor = '#6366f1';
+        incLabel.style.color = '#4f46e5';
+        incLabel.style.fontWeight = '800';
+      }
+      if (exclLabel) {
+        exclLabel.style.background = '#ffffff';
+        exclLabel.style.borderColor = '#cbd5e1';
+        exclLabel.style.color = '#64748b';
+        exclLabel.style.fontWeight = '700';
+      }
+    } else {
+      if (exclLabel) {
+        exclLabel.style.background = '#eef2ff';
+        exclLabel.style.borderColor = '#6366f1';
+        exclLabel.style.color = '#4f46e5';
+        exclLabel.style.fontWeight = '800';
+      }
+      if (incLabel) {
+        incLabel.style.background = '#ffffff';
+        incLabel.style.borderColor = '#cbd5e1';
+        incLabel.style.color = '#64748b';
+        incLabel.style.fontWeight = '700';
+      }
+    }
+
+    calculateReservationBilling();
+  }
+
   function applyCompanyDiscountFromSelect() {
     const compSelect = document.getElementById('company-select');
     if (!compSelect) return;
@@ -1573,7 +1608,7 @@
       }
     }
 
-    const payableAmount = Math.max(0, totalGross - discountAmount);
+    const netAfterDiscount = Math.max(0, totalGross - discountAmount);
 
     const discValLabel = document.getElementById('calc-discount-val-label');
     if (discValLabel) {
@@ -1587,6 +1622,45 @@
     if (discAmtInput && discType === 'percentage' && document.activeElement !== discAmtInput) {
       discAmtInput.value = discountAmount > 0 ? discountAmount.toFixed(2) : '0';
     }
+
+    // Dynamic GST / Tax Calculation (Inclusive vs Excluding GST)
+    const gstType = document.querySelector('input[name="gst_type"]:checked')?.value || 'exclusive';
+    const gstSelect = document.getElementById('calc-gst-rate');
+    const selectedGstOpt = gstSelect ? gstSelect.options[gstSelect.selectedIndex] : null;
+    const gstRate = selectedGstOpt ? (parseFloat(selectedGstOpt.dataset.rate) || 0) : 0;
+
+    let gstAmount = 0;
+    let payableAmount = netAfterDiscount;
+
+    if (gstRate > 0) {
+      if (gstType === 'inclusive') {
+        // Room tariff already includes GST: extract GST portion
+        gstAmount = Math.round((netAfterDiscount - (netAfterDiscount / (1 + (gstRate / 100)))) * 100) / 100;
+        payableAmount = netAfterDiscount;
+      } else {
+        // GST is added on top of the discounted tariff
+        gstAmount = Math.round(((netAfterDiscount * gstRate) / 100) * 100) / 100;
+        payableAmount = netAfterDiscount + gstAmount;
+      }
+    }
+
+    const gstValLabel = document.getElementById('calc-gst-val-label');
+    if (gstValLabel) {
+      if (gstRate > 0) {
+        if (gstType === 'inclusive') {
+          gstValLabel.textContent = `Incl. ₹ ${gstAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (${gstRate}%)`;
+        } else {
+          gstValLabel.textContent = `+ ₹ ${gstAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (${gstRate}%)`;
+        }
+      } else {
+        gstValLabel.textContent = `+ ₹ 0.00 (0%)`;
+      }
+    }
+
+    const gstPctInp = document.getElementById('calc-gst-percentage');
+    if (gstPctInp) gstPctInp.value = gstRate;
+    const gstAmtInp = document.getElementById('calc-gst-amount');
+    if (gstAmtInp) gstAmtInp.value = gstAmount.toFixed(2);
 
     const payableDisplay = document.getElementById('calc-payable-display');
     if (payableDisplay) {
@@ -1633,7 +1707,8 @@
   function togglePaymentFields(selectElem) {
     const container = document.getElementById('payment-details-container');
     if (container) {
-      container.style.display = (selectElem.value !== 'None' && selectElem.value !== '') ? 'flex' : 'none';
+      // Keep visible always, even when 'None' is chosen
+      container.style.display = 'flex';
       calculateReservationBilling();
     }
   }
@@ -1903,6 +1978,10 @@
     const discountType = form.querySelector('input[name="discount_type"]:checked')?.value || 'percentage';
     const discountPercentage = parseFloat(form.querySelector('input[name="discount_percentage"]')?.value) || 0;
     const discountAmount = parseFloat(form.querySelector('input[name="discount_amount"]')?.value) || 0;
+    const gstType = form.querySelector('input[name="gst_type"]:checked')?.value || 'exclusive';
+    const gstPercentageId = form.querySelector('select[name="gst_percentage_id"]')?.value || null;
+    const gstPercentage = parseFloat(form.querySelector('input[name="gst_percentage"]')?.value) || 0;
+    const gstAmount = parseFloat(form.querySelector('input[name="gst_amount"]')?.value) || 0;
     const totalAmount = form.querySelector('input[name="total_amount"]')?.value || 0;
     const payableAmount = form.querySelector('input[name="payable_amount"]')?.value || 0;
     const advanceAmount = form.querySelector('input[name="advance_amount"]')?.value || 0;
@@ -1928,6 +2007,10 @@
       discount_type: discountType,
       discount_percentage: discountPercentage,
       discount_amount: discountAmount,
+      gst_type: gstType,
+      gst_percentage_id: gstPercentageId,
+      gst_percentage: gstPercentage,
+      gst_amount: gstAmount,
       total_amount: totalAmount,
       payable_amount: payableAmount,
       advance_amount: advanceAmount,

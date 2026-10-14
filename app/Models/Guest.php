@@ -43,6 +43,10 @@ class Guest extends Model
         'payment_mode_id',
         'discount_percentage',
         'discount_amount',
+        'gst_type',
+        'gst_percentage_id',
+        'gst_percentage',
+        'gst_amount',
         'payable_amount',
         'advance_amount',
         'payment_remarks',
@@ -59,6 +63,8 @@ class Guest extends Model
         'total_amount' => 'decimal:2',
         'discount_percentage' => 'float',
         'discount_amount' => 'decimal:2',
+        'gst_percentage' => 'float',
+        'gst_amount' => 'decimal:2',
         'payable_amount' => 'decimal:2',
         'has_privilege_card' => 'boolean',
         'advance_amount' => 'decimal:2',
@@ -141,6 +147,11 @@ class Guest extends Model
     public function paymentMode()
     {
         return $this->belongsTo(PaymentMode::class, 'payment_mode_id');
+    }
+
+    public function gstPercentage()
+    {
+        return $this->belongsTo(GstPercentage::class, 'gst_percentage_id');
     }
 
 

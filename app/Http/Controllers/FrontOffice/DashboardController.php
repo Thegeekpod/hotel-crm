@@ -20,6 +20,7 @@ use App\Models\HousekeepingState;
 use App\Models\OperationalStatus;
 use App\Models\RoomHousekeepingHistory;
 use App\Models\RoomOperationalHistory;
+use App\Models\GstPercentage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -374,6 +375,7 @@ class DashboardController extends Controller
         });
 
         $rackRooms = array_values($filteredRooms);
+        $gstPercentages = GstPercentage::where('status', 'Active')->orderBy('gst_percentage', 'asc')->get();
 
         return view('frontoffice.dashboard.index', compact(
             'rackRooms',
@@ -385,6 +387,7 @@ class DashboardController extends Controller
             'idCardTypes',
             'reservationModes',
             'paymentModes',
+            'gstPercentages',
             'registrationTypes',
             'titles',
             'nationalities',
@@ -765,6 +768,7 @@ class DashboardController extends Controller
         });
 
         $rackRooms = array_values($filteredRooms);
+        $gstPercentages = GstPercentage::where('status', 'Active')->orderBy('gst_percentage', 'asc')->get();
 
         return view('frontoffice.reserve.index', compact(
             'rackRooms',
@@ -776,6 +780,7 @@ class DashboardController extends Controller
             'idCardTypes',
             'reservationModes',
             'paymentModes',
+            'gstPercentages',
             'registrationTypes',
             'titles',
             'nationalities',
@@ -1026,6 +1031,12 @@ class DashboardController extends Controller
             $reqDiscountPct = (float)$request->input('discount_percentage', 0);
             $reqDiscountAmt = (float)$request->input('discount_amount', 0);
 
+            // GST configuration (Inclusive vs Exclusive, dynamic GST percentage)
+            $gstType = $request->input('gst_type', 'exclusive');
+            $gstPercentageId = $request->input('gst_percentage_id');
+            $gstPercentageModel = ($gstPercentageId && is_numeric($gstPercentageId)) ? GstPercentage::find($gstPercentageId) : null;
+            $gstPercentage = $gstPercentageModel ? (float)$gstPercentageModel->gst_percentage : (float)($request->input('gst_percentage', 0));
+
             $companyModel = $companyId ? Company::find($companyId) : null;
             if ($reqDiscountAmt <= 0 && $reqDiscountPct <= 0 && $companyModel && (float)$companyModel->discount_value > 0) {
                 $discountType = $companyModel->discount_type ?? 'percentage';
@@ -1110,7 +1121,20 @@ class DashboardController extends Controller
                     $discountAmount = 0.0;
                     $discountPercentage = 0.0;
                 }
-                $payableAmount = max(0, $totalAmount - $discountAmount);
+                $netAfterDiscount = max(0, $totalAmount - $discountAmount);
+                if ($gstPercentage > 0) {
+                    if ($gstType === 'inclusive') {
+                        $gstAmount = round(($netAfterDiscount - ($netAfterDiscount / (1 + ($gstPercentage / 100)))), 2);
+                        $payableAmount = $netAfterDiscount;
+                    } else {
+                        $gstAmount = round((($netAfterDiscount * $gstPercentage) / 100), 2);
+                        $payableAmount = $netAfterDiscount + $gstAmount;
+                    }
+                } else {
+                    $gstAmount = 0.00;
+                    $payableAmount = $netAfterDiscount;
+                }
+
                 $calculatedBalance = max(0, $payableAmount - ($idx === 0 ? $advanceAmount : 0));
                 $folioNo = Guest::generateFolioNumber($roomObj?->room_number ?? '100');
 
@@ -1150,6 +1174,10 @@ class DashboardController extends Controller
                     'payment_mode_id' => ($idx === 0) ? $paymentModeId : null,
                     'discount_percentage' => ($idx === 0) ? $discountPercentage : 0.0,
                     'discount_amount' => ($idx === 0) ? $discountAmount : 0.00,
+                    'gst_type' => ($idx === 0) ? $gstType : null,
+                    'gst_percentage_id' => ($idx === 0 && $gstPercentageModel) ? $gstPercentageModel->id : null,
+                    'gst_percentage' => ($idx === 0) ? $gstPercentage : 0.0,
+                    'gst_amount' => ($idx === 0) ? $gstAmount : 0.00,
                     'payable_amount' => ($idx === 0) ? $payableAmount : 0.00,
                     'advance_amount' => ($idx === 0) ? $advanceAmount : 0.00,
                     'payment_remarks' => ($idx === 0) ? $paymentRemarks : null,

@@ -59,6 +59,8 @@
     if (id === 'reserve-modal') {
       const conflictBox = document.querySelector('.room-conflict-alert-box');
       if (conflictBox) conflictBox.style.display = 'none';
+      const datesAlert = document.getElementById('dates-conflict-alert');
+      if (datesAlert) datesAlert.style.display = 'none';
     }
   }
 
@@ -1593,6 +1595,8 @@
     }
 
     calculateReservationBilling();
+    const datesAlert = document.getElementById('dates-conflict-alert');
+    if (datesAlert) datesAlert.style.display = 'none';
   }
 
   function onCheckInDateChange() {
@@ -1844,6 +1848,8 @@
     const roomId = rmSelect.value;
     if (!roomId) {
       conflictBox.style.display = 'none';
+      const datesAlert = document.getElementById('dates-conflict-alert');
+      if (datesAlert) datesAlert.style.display = 'none';
       return;
     }
 
@@ -1882,6 +1888,14 @@
 
         if (subEl) {
           subEl.innerHTML = `Your requested stay duration (<strong>${formatDateDisplay(checkInVal)} &rarr; ${formatDateDisplay(checkOutVal)}</strong>) overlaps with this existing booking. Please select one of the matching available rooms below:`;
+        }
+
+        // Display dates conflict alert right below checkin & checkout dates
+        const datesAlert = document.getElementById('dates-conflict-alert');
+        const datesAlertText = document.getElementById('dates-conflict-text');
+        if (datesAlert && datesAlertText) {
+          datesAlert.style.display = 'block';
+          datesAlertText.innerHTML = `Room #${escapeHtml(data.room)} is already booked from <strong style="text-decoration: underline;">${escapeHtml(data.conflict.checkin_date)}</strong> to <strong style="text-decoration: underline;">${escapeHtml(data.conflict.checkout_date)}</strong> by <strong>${escapeHtml(data.conflict.guest_name)}</strong>! Please change stay dates or select an alternative room.`;
         }
 
         // Render matching alternative rooms grouped floor-wise
@@ -1968,6 +1982,8 @@
       } else {
         // Room is available with no conflict!
         conflictBox.style.display = 'none';
+        const datesAlert = document.getElementById('dates-conflict-alert');
+        if (datesAlert) datesAlert.style.display = 'none';
       }
     })
     .catch(err => {
@@ -2024,6 +2040,10 @@
     const conflictBox = block.querySelector('.room-conflict-alert-box') || document.querySelector('.room-conflict-alert-box');
     if (conflictBox) {
       conflictBox.style.display = 'none';
+    }
+    const datesAlert = document.getElementById('dates-conflict-alert');
+    if (datesAlert) {
+      datesAlert.style.display = 'none';
     }
 
     if (typeof PmsAlert !== 'undefined' && PmsAlert.toast) {

@@ -204,6 +204,21 @@
                       </div>
                     </div>
                   </div>
+
+                  <!-- Date Selection Conflict Alert (Shown in RED right below Check-in & Check-out) -->
+                  <div id="dates-conflict-alert" style="display: none; margin-top: 10px; background: #fef2f2; border: 1.5px solid #ef4444; border-radius: 8px; padding: 9px 12px; box-shadow: 0 2px 8px rgba(239, 68, 68, 0.12);">
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                      <div style="display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1;">
+                        <i class="fa-solid fa-triangle-exclamation" style="color: #dc2626; font-size: 15px; flex-shrink: 0;"></i>
+                        <span id="dates-conflict-text" style="font-size: 11px; font-weight: 800; color: #b91c1c; line-height: 1.4;">
+                          <!-- Dynamic text -->
+                        </span>
+                      </div>
+                      <span style="font-size: 9px; font-weight: 800; background: #ef4444; color: #ffffff; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; white-space: nowrap; flex-shrink: 0; letter-spacing: 0.5px;">
+                        Dates Conflict
+                      </span>
+                    </div>
+                  </div>
                 </div>
 
                 <!-- Company Specific Fields -->

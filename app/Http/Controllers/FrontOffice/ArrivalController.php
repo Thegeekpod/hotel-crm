@@ -41,6 +41,7 @@ class ArrivalController extends Controller
             'idCardType',
             'company',
             'paymentMode',
+            'plan',
             'registrationType',
             'reservationMode',
         ]);

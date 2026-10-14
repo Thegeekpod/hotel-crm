@@ -47,6 +47,7 @@
     if (id === 'reserve-modal') {
       try {
         setInitialDateTime();
+        initPlanSelect2();
       } catch (e) {
         console.error('Error in setInitialDateTime:', e);
       }
@@ -2146,6 +2147,7 @@
     }
 
     // Collect Payment & Billing Breakdown
+    const planId = form.querySelector('select[name="plan_id"]')?.value || null;
     const paymentModeId = form.querySelector('select[name="payment_mode_id"]')?.value;
     const newCompDiscType = form.querySelector('input[name="new_company_discount_type"]:checked')?.value || 'percentage';
     const newCompDiscValue = newCompDiscType === 'amount'
@@ -2180,6 +2182,7 @@
       new_company_discount_value: newCompDiscValue,
       guests: guests,
       payment_mode_id: paymentModeId,
+      plan_id: planId,
       discount_type: discountType,
       discount_percentage: discountPercentage,
       discount_amount: discountAmount,
@@ -2244,6 +2247,9 @@
             window.location.reload();
           }
           form.reset();
+          if (typeof $ !== 'undefined' && $('#plan-id-select').data('select2')) {
+            $('#plan-id-select').val('').trigger('change');
+          }
           setInitialDateTime();
 
           const resIdInp = document.getElementById('reserve-id-input');
@@ -2309,7 +2315,24 @@
       .replace(/'/g, '&#039;');
   }
 
+  function initPlanSelect2() {
+    if (typeof $ !== 'undefined' && $.fn.select2) {
+      const planSelect = $('#plan-id-select');
+      if (planSelect.length) {
+        if (!planSelect.hasClass('select2-hidden-accessible')) {
+          planSelect.select2({
+            dropdownParent: $('#reserve-modal'),
+            placeholder: '-- Select Meal Plan --',
+            allowClear: true,
+            width: '100%'
+          });
+        }
+      }
+    }
+  }
+
   window.addEventListener('DOMContentLoaded', () => {
     setInitialDateTime();
+    initPlanSelect2();
   });
 </script>

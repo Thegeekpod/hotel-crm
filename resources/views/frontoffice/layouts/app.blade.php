@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="{{ asset('css/style.css') }}">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css">
   <style>
     .legend-chip.active-chip {
       outline: 2px solid var(--accent-primary, #6366f1) !important;
@@ -21,6 +22,78 @@
     }
     body.swal2-height-auto, html.swal2-height-auto {
       height: 100vh !important;
+    }
+    /* Select2 Luxury Theme Enhancements for Modal */
+    .modal-window .select2-container {
+      width: 100% !important;
+    }
+    .select2-container--default .select2-selection--single {
+      height: 38px !important;
+      padding: 4px 12px !important;
+      border: 1px solid #cbd5e1 !important;
+      border-radius: 8px !important;
+      background: #ffffff !important;
+      font-size: 12px !important;
+      font-weight: 700 !important;
+      color: #1e293b !important;
+      display: flex !important;
+      align-items: center !important;
+      box-sizing: border-box !important;
+      transition: all 0.2s ease !important;
+    }
+    .select2-container--default .select2-selection--single:focus,
+    .select2-container--default.select2-container--open .select2-selection--single {
+      border-color: #6366f1 !important;
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15) !important;
+      outline: none !important;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+      height: 36px !important;
+      right: 8px !important;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+      padding-left: 0 !important;
+      color: #1e293b !important;
+      line-height: normal !important;
+      font-weight: 700 !important;
+    }
+    .select2-dropdown {
+      border: 1px solid #cbd5e1 !important;
+      border-radius: 8px !important;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12) !important;
+      z-index: 999999 !important;
+      background: #ffffff !important;
+      overflow: hidden !important;
+    }
+    .select2-search--dropdown {
+      padding: 8px 10px !important;
+      background: #f8fafc !important;
+      border-bottom: 1px solid #e2e8f0 !important;
+    }
+    .select2-search--dropdown .select2-search__field {
+      height: 34px !important;
+      padding: 6px 12px !important;
+      border-radius: 6px !important;
+      border: 1px solid #cbd5e1 !important;
+      font-size: 12px !important;
+      background: #ffffff !important;
+      outline: none !important;
+    }
+    .select2-results__option {
+      padding: 8px 14px !important;
+      font-size: 12px !important;
+      color: #334155 !important;
+      font-weight: 600 !important;
+      transition: background 0.15s ease !important;
+    }
+    .select2-results__option--highlighted[aria-selected] {
+      background: rgba(99, 102, 241, 0.1) !important;
+      color: #6366f1 !important;
+      font-weight: 700 !important;
+    }
+    .select2-results__option[aria-selected=true] {
+      background: #6366f1 !important;
+      color: #ffffff !important;
     }
   </style>
   @stack('styles')
@@ -548,6 +621,20 @@
               <!-- Payment & Advance Collection Section -->
               <div style="width: 100%; border-top: 1px solid #f1f5f9; padding-top: 12px; margin-bottom: 14px;">
                 
+                <!-- Plan Searchable Dropdown (Before Payment Type) -->
+                <div style="margin-bottom: 10px;">
+                  <label style="display: flex; align-items: center; justify-content: space-between; font-size: 10px; font-weight: 800; margin-bottom: 5px; color: #475569; text-transform: uppercase; letter-spacing: 0.8px;">
+                    <span><i class="fa-solid fa-list-check" style="color: #6366f1; margin-right: 4px;"></i> Meal Plan</span>
+                    <span style="font-size: 9px; font-weight: 700; color: #6366f1; text-transform: none;"><i class="fa-solid fa-magnifying-glass"></i> Searchable</span>
+                  </label>
+                  <select name="plan_id" id="plan-id-select" style="width:100%; height:38px; padding:6px 12px; font-size:12px; border:1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #1e293b; font-weight: 700; box-sizing: border-box;">
+                    <option value="">-- Select Meal Plan --</option>
+                    @foreach($plans ?? \App\Models\Plan::where('status', 'Active')->get() as $p)
+                      <option value="{{ $p->id }}">{{ $p->plan_name }}</option>
+                    @endforeach
+                  </select>
+                </div>
+
                 <div style="margin-bottom: 10px;">
                   <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 5px; color: #64748b; text-transform: uppercase; letter-spacing: 0.8px;">Payment Type</label>
                   <select name="payment_mode_id" id="payment-type-select" onchange="togglePaymentFields(this)" style="width:100%; height:38px; padding:6px 12px; font-size:12px; border:1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #1e293b; font-weight: 700; box-sizing: border-box;">
@@ -723,6 +810,7 @@
 
   <!-- SweetAlert2 and Scripts -->
   <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script>
     const PmsAlert = {

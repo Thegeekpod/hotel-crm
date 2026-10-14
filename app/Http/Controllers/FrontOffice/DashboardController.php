@@ -21,6 +21,7 @@ use App\Models\OperationalStatus;
 use App\Models\RoomHousekeepingHistory;
 use App\Models\RoomOperationalHistory;
 use App\Models\GstPercentage;
+use App\Models\Plan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -75,7 +76,7 @@ class DashboardController extends Controller
               });
         })
         ->whereIn('status', ['Confirmed', 'Arrived', 'Stay Over', 'Checked In'])
-        ->with(['title', 'nationality', 'idCardType', 'registrationType', 'company'])
+        ->with(['title', 'nationality', 'idCardType', 'registrationType', 'company', 'plan'])
         ->orderByRaw("CASE WHEN status = 'Checked In' THEN 1 WHEN status = 'Stay Over' THEN 2 WHEN status = 'Arrived' THEN 3 WHEN status = 'Confirmed' THEN 4 ELSE 5 END")
         ->orderBy('id', 'desc')
         ->get()
@@ -89,6 +90,7 @@ class DashboardController extends Controller
         $idCardTypes = IdCardType::where('status', 'Active')->get();
         $reservationModes = ReservationMode::where('status', 'Active')->get();
         $paymentModes = PaymentMode::where('status', 'Active')->get();
+        $plans = Plan::where('status', 'Active')->get();
         $registrationTypes = RegistrationType::where('status', 'Active')->get();
         $titles = Title::where('status', 'Active')->get();
         $nationalities = Nationality::where('status', 'Active')->get();
@@ -168,6 +170,8 @@ class DashboardController extends Controller
                         'registration_type_id' => $gModel->registration_type_id,
                         'registration_type' => $regName,
                         'company' => $compName,
+                        'plan_id' => $gModel->plan_id,
+                        'plan_name' => $gModel->plan?->plan_name ?? '',
                         'reserve_date' => $resDateStr,
                         'reserve_time' => $resTimeStr,
                         'checkout_date' => $outDateStr,
@@ -394,6 +398,7 @@ class DashboardController extends Controller
             'idCardTypes',
             'reservationModes',
             'paymentModes',
+            'plans',
             'gstPercentages',
             'registrationTypes',
             'titles',
@@ -491,7 +496,7 @@ class DashboardController extends Controller
         })
         ->whereIn('status', ['Confirmed', 'Arrived', 'Stay Over', 'Checked In'])
         ->whereNotNull('room_id')
-        ->with(['title', 'nationality', 'idCardType', 'registrationType', 'company'])
+        ->with(['title', 'nationality', 'idCardType', 'registrationType', 'company', 'plan'])
         ->orderByRaw("CASE WHEN status = 'Checked In' THEN 1 WHEN status = 'Stay Over' THEN 2 WHEN status = 'Arrived' THEN 3 WHEN status = 'Confirmed' THEN 4 ELSE 5 END")
         ->orderBy('id', 'desc')
         ->get()
@@ -505,6 +510,7 @@ class DashboardController extends Controller
         $idCardTypes = IdCardType::where('status', 'Active')->get();
         $reservationModes = ReservationMode::where('status', 'Active')->get();
         $paymentModes = PaymentMode::where('status', 'Active')->get();
+        $plans = Plan::where('status', 'Active')->get();
         $registrationTypes = RegistrationType::where('status', 'Active')->get();
         $titles = Title::where('status', 'Active')->get();
         $nationalities = Nationality::where('status', 'Active')->get();
@@ -591,6 +597,8 @@ class DashboardController extends Controller
                         'registration_type_id' => $gModel->registration_type_id,
                         'registration_type' => $regName,
                         'company' => $compName,
+                        'plan_id' => $gModel->plan_id,
+                        'plan_name' => $gModel->plan?->plan_name ?? '',
                         'reserve_date' => $resDateStr,
                         'reserve_time' => $resTimeStr,
                         'checkout_date' => $outDateStr,
@@ -794,6 +802,7 @@ class DashboardController extends Controller
             'idCardTypes',
             'reservationModes',
             'paymentModes',
+            'plans',
             'gstPercentages',
             'registrationTypes',
             'titles',
@@ -1027,6 +1036,9 @@ class DashboardController extends Controller
             $paymentModeId = $request->input('payment_mode_id');
             $paymentModeId = ($paymentModeId && is_numeric($paymentModeId) && PaymentMode::where('id', $paymentModeId)->exists()) ? (int)$paymentModeId : null;
 
+            $planId = $request->input('plan_id');
+            $planId = ($planId && is_numeric($planId) && Plan::where('id', $planId)->exists()) ? (int)$planId : null;
+
             $advanceAmount = (float)($request->input('advance_amount', 0));
             $paymentRemarks = $request->input('payment_remarks');
             $reserveDate = $request->input('reserve_date', date('Y-m-d'));
@@ -1186,6 +1198,7 @@ class DashboardController extends Controller
                     'id_card_type_id' => $idCardTypeId,
                     'id_card_number' => $gData['id_card_number'] ?? null,
                     'payment_mode_id' => ($idx === 0) ? $paymentModeId : null,
+                    'plan_id' => $planId,
                     'discount_percentage' => ($idx === 0) ? $discountPercentage : 0.0,
                     'discount_amount' => ($idx === 0) ? $discountAmount : 0.00,
                     'gst_type' => ($idx === 0) ? $gstType : null,

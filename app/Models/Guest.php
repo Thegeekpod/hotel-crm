@@ -41,6 +41,7 @@ class Guest extends Model
         'id_card_type_id',
         'id_card_number',
         'payment_mode_id',
+        'plan_id',
         'discount_percentage',
         'discount_amount',
         'gst_type',
@@ -152,6 +153,11 @@ class Guest extends Model
     public function gstPercentage()
     {
         return $this->belongsTo(GstPercentage::class, 'gst_percentage_id');
+    }
+
+    public function plan()
+    {
+        return $this->belongsTo(Plan::class, 'plan_id');
     }
 
 

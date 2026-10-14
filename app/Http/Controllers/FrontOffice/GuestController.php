@@ -34,6 +34,7 @@ class GuestController extends Controller
             'idCardType',
             'company',
             'paymentMode',
+            'plan',
             'registrationType',
             'reservationMode',
         ])

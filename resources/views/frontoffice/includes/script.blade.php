@@ -651,44 +651,6 @@
       <!-- Residing Guest Info (if any) -->
       ${guestSectionHtml}
 
-      <!-- Dynamic Operational & Housekeeping Status Controls -->
-      <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 16px; margin-bottom: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-          <div style="font-size: 11px; font-weight: 800; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px;">
-            <i class="fa-solid fa-sliders" style="color: #6366f1;"></i> Update Room Status
-          </div>
-          <span id="modal-status-spinner-${roomNo}" style="display: none; font-size: 11px; font-weight: 700; color: #6366f1;">
-            <i class="fa-solid fa-spinner fa-spin"></i> Updating...
-          </span>
-        </div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-          <div>
-            <label style="display: block; font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 4px; letter-spacing: 0.5px;">
-              <i class="fa-solid fa-broom" style="color: #f59e0b;"></i> Housekeeping Status
-            </label>
-            <select id="modal-hk-select-${roomNo}" onchange="updateRoomStatusAjax('${roomNo}', '${roomData.id || ''}')" style="width: 100%; height: 36px; padding: 6px 12px; font-size: 12px; font-weight: 700; border: 1px solid #cbd5e1; border-radius: 6px; background: #f8fafc; color: #0f172a; cursor: pointer;">
-              <option value="">Select Housekeeping Status</option>
-              ${(window.allHousekeepingStates || []).map(hk => {
-                const isSelected = String(hk.id) === String(roomData.housekeeping_status_id) || (hk.name && hk.name.toLowerCase() === (hkDisplay || '').toLowerCase());
-                return `<option value="${hk.id}" ${isSelected ? 'selected' : ''}>${escapeHtml(hk.name)}</option>`;
-              }).join('')}
-            </select>
-          </div>
-          <div>
-            <label style="display: block; font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 4px; letter-spacing: 0.5px;">
-              <i class="fa-solid fa-shield-halved" style="color: #6366f1;"></i> Operational Status
-            </label>
-            <select id="modal-op-select-${roomNo}" onchange="updateRoomStatusAjax('${roomNo}', '${roomData.id || ''}')" style="width: 100%; height: 36px; padding: 6px 12px; font-size: 12px; font-weight: 700; border: 1px solid #cbd5e1; border-radius: 6px; background: #f8fafc; color: #0f172a; cursor: pointer;">
-              <option value="">Select Operational Status</option>
-              ${(window.allOperationalStatuses || []).map(op => {
-                const isSelected = String(op.id) === String(roomData.operational_status_id) || (op.name && op.name.toLowerCase() === (opDisplay || '').toLowerCase());
-                return `<option value="${op.id}" ${isSelected ? 'selected' : ''}>${escapeHtml(op.name)}</option>`;
-              }).join('')}
-            </select>
-          </div>
-        </div>
-      </div>
-
       <!-- Amenities Section -->
       <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 14px;">
         <div style="font-size: 11px; font-weight: 800; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
@@ -723,16 +685,176 @@
   window.checkInFromRoomModal = checkInFromRoomModal;
   window.openReservationModal = openReservationModal;
   window.openRoomDetails = openRoomDetailsModal;
+  window.openRoomStatusPopover = openRoomStatusPopover;
+  window.closeRoomStatusPopover = closeRoomStatusPopover;
+  window.onRspSelectChanged = onRspSelectChanged;
+  window.rspQuickSet = rspQuickSet;
 
-  function updateRoomStatusAjax(roomNo, roomId) {
-    const hkSel = document.getElementById(`modal-hk-select-${roomNo}`);
-    const opSel = document.getElementById(`modal-op-select-${roomNo}`);
-    const spinner = document.getElementById(`modal-status-spinner-${roomNo}`);
+  function openRoomStatusPopover(event, triggerEl) {
+    if (event) {
+      event.stopPropagation();
+      event.preventDefault();
+    }
 
-    const hkId = hkSel ? hkSel.value : '';
-    const opId = opSel ? opSel.value : '';
+    const card = triggerEl ? triggerEl.closest('.rack-card') : null;
+    if (!card) return;
 
-    if (spinner) spinner.style.display = 'inline-flex';
+    const popover = document.getElementById('room-card-status-popover');
+    if (!popover) return;
+
+    // Remove active state from other cards
+    document.querySelectorAll('.rack-card.is-popover-active').forEach(c => c.classList.remove('is-popover-active'));
+    card.classList.add('is-popover-active');
+
+    const roomNo = card.getAttribute('data-room') || '';
+    const roomId = card.getAttribute('data-room-id') || '';
+    const roomType = card.querySelector('.rack-room-type')?.textContent?.trim() || card.getAttribute('data-type') || '';
+    const curHkId = card.getAttribute('data-housekeeping-id') || '';
+    const curHkName = card.getAttribute('data-housekeeping') || '';
+    const curOpId = card.getAttribute('data-operational-id') || '';
+    const curOpName = card.getAttribute('data-operational') || '';
+
+    popover.dataset.roomNo = roomNo;
+    popover.dataset.roomId = roomId;
+
+    const numEl = document.getElementById('rsp-room-num');
+    const typeEl = document.getElementById('rsp-room-type');
+    if (numEl) numEl.textContent = roomNo;
+    if (typeEl) typeEl.textContent = roomType;
+
+    // Populate Housekeeping Dropdown
+    const hkSel = document.getElementById('rsp-hk-select');
+    if (hkSel) {
+      const hkList = window.allHousekeepingStates || [];
+      let hkHtml = '<option value="">Select Housekeeping Status</option>';
+      hkList.forEach(hk => {
+        const isSel = (String(hk.id) === String(curHkId)) || (hk.name && hk.name.toLowerCase() === curHkName.toLowerCase());
+        hkHtml += `<option value="${hk.id}" ${isSel ? 'selected' : ''}>${escapeHtml(hk.name)}</option>`;
+      });
+      hkSel.innerHTML = hkHtml;
+    }
+
+    // Populate Operational Dropdown
+    const opSel = document.getElementById('rsp-op-select');
+    if (opSel) {
+      const opList = window.allOperationalStatuses || [];
+      let opHtml = '<option value="">Select Operational Status</option>';
+      opList.forEach(op => {
+        const isSel = (String(op.id) === String(curOpId)) || (op.name && op.name.toLowerCase() === curOpName.toLowerCase());
+        opHtml += `<option value="${op.id}" ${isSel ? 'selected' : ''}>${escapeHtml(op.name)}</option>`;
+      });
+      opSel.innerHTML = opHtml;
+    }
+
+    // Position Popover
+    popover.style.display = 'block';
+    popover.style.visibility = 'hidden';
+    popover.style.position = 'fixed';
+    popover.style.zIndex = '999999';
+
+    const triggerRect = triggerEl.getBoundingClientRect();
+    const cardRect = card.getBoundingClientRect();
+    const popWidth = 285;
+    const popHeight = popover.offsetHeight || 270;
+
+    // Calculate left: align center with trigger or card
+    let left = triggerRect.left + (triggerRect.width / 2) - (popWidth / 2);
+    if (left + popWidth > window.innerWidth - 12) {
+      left = window.innerWidth - popWidth - 12;
+    }
+    if (left < 12) left = 12;
+
+    // Calculate top: open below if space allows, otherwise open above
+    let top = triggerRect.bottom + 6;
+    if (top + popHeight > window.innerHeight - 12) {
+      top = triggerRect.top - popHeight - 6;
+      if (top < 12) {
+        top = Math.max(12, Math.min(window.innerHeight - popHeight - 12, cardRect.top));
+      }
+    }
+
+    popover.style.left = `${Math.round(left)}px`;
+    popover.style.top = `${Math.round(top)}px`;
+    popover.style.visibility = 'visible';
+  }
+
+  function closeRoomStatusPopover(event) {
+    if (event) event.stopPropagation();
+    const popover = document.getElementById('room-card-status-popover');
+    if (popover) {
+      popover.style.display = 'none';
+      popover.dataset.roomNo = '';
+      popover.dataset.roomId = '';
+    }
+    const spinner = document.getElementById('rsp-spinner');
+    if (spinner) spinner.style.display = 'none';
+    document.querySelectorAll('.rack-card.is-popover-active').forEach(c => c.classList.remove('is-popover-active'));
+  }
+
+  function onRspSelectChanged(type) {
+    const popover = document.getElementById('room-card-status-popover');
+    if (!popover) return;
+    const roomNo = popover.dataset.roomNo;
+    const roomId = popover.dataset.roomId;
+    if (!roomNo) return;
+
+    const hkId = document.getElementById('rsp-hk-select')?.value || null;
+    const opId = document.getElementById('rsp-op-select')?.value || null;
+
+    updateRoomStatusAjax(roomNo, roomId, hkId, opId, true);
+  }
+
+  function rspQuickSet(action, event) {
+    if (event) {
+      event.stopPropagation();
+      event.preventDefault();
+    }
+    const popover = document.getElementById('room-card-status-popover');
+    if (!popover) return;
+    const roomNo = popover.dataset.roomNo;
+    const roomId = popover.dataset.roomId;
+    if (!roomNo) return;
+
+    const hkList = window.allHousekeepingStates || [];
+    const opList = window.allOperationalStatuses || [];
+
+    let targetHkId = null;
+    let targetOpId = null;
+
+    if (action === 'clean') {
+      // Find Cleaned / Clean
+      const cleanHk = hkList.find(h => /cleaned|clean|inspected/i.test(h.name)) || hkList.find(h => !/dirty/i.test(h.name));
+      const activeOp = opList.find(o => /active/i.test(o.name)) || opList[0];
+      if (cleanHk) targetHkId = cleanHk.id;
+      if (activeOp) targetOpId = activeOp.id;
+    } else if (action === 'dirty') {
+      const dirtyHk = hkList.find(h => /dirty/i.test(h.name));
+      if (dirtyHk) targetHkId = dirtyHk.id;
+    } else if (action === 'maintenance') {
+      const maintOp = opList.find(o => /maintenance/i.test(o.name));
+      if (maintOp) targetOpId = maintOp.id;
+    } else if (action === 'blocked') {
+      const blockOp = opList.find(o => /blocked|order/i.test(o.name)) || opList.find(o => /inactive/i.test(o.name));
+      if (blockOp) targetOpId = blockOp.id;
+    }
+
+    if (targetHkId) {
+      const hkSel = document.getElementById('rsp-hk-select');
+      if (hkSel) hkSel.value = targetHkId;
+    }
+    if (targetOpId) {
+      const opSel = document.getElementById('rsp-op-select');
+      if (opSel) opSel.value = targetOpId;
+    }
+
+    updateRoomStatusAjax(roomNo, roomId, targetHkId, targetOpId, true);
+  }
+
+  function updateRoomStatusAjax(roomNo, roomId, hkId, opId, isFromPopover) {
+    const popSpinner = document.getElementById('rsp-spinner');
+    if (isFromPopover && popSpinner) {
+      popSpinner.style.display = 'inline-flex';
+    }
 
     fetch("{{ route('frontoffice.room.update-status') }}", {
       method: 'POST',
@@ -750,12 +872,14 @@
     })
     .then(res => res.json())
     .then(data => {
-      if (spinner) spinner.style.display = 'none';
+      if (popSpinner) popSpinner.style.display = 'none';
+
       if (data.success && data.room) {
         const rData = data.room;
-        // Update live rack card on dashboard
-        const card = document.querySelector(`.rack-card[data-room="${roomNo}"]`);
-        if (card) {
+
+        // Update live rack cards on dashboard / reserve page
+        const cards = document.querySelectorAll(`.rack-card[data-room="${roomNo}"]`);
+        cards.forEach(card => {
           let cardClass = 'c-available';
           if (rData.status === 'occupied') cardClass = 'c-occupied';
           else if (rData.status === 'dirty') cardClass = 'c-dirty';
@@ -765,13 +889,23 @@
           card.className = `rack-card ${cardClass}`;
           card.setAttribute('data-status', rData.status);
           card.setAttribute('data-cleaning', rData.cleaning);
-          card.setAttribute('data-operational', rData.operational_status);
-          card.setAttribute('data-housekeeping', rData.housekeeping_status);
+          card.setAttribute('data-operational', rData.operational_status || '');
+          card.setAttribute('data-operational-id', rData.operational_status_id || '');
+          card.setAttribute('data-housekeeping', rData.housekeeping_status || '');
+          card.setAttribute('data-housekeeping-id', rData.housekeeping_status_id || '');
 
           const badge = card.querySelector('.rack-badge');
-          if (badge) badge.textContent = rData.cleaning || rData.status;
+          if (badge) {
+            const label = badge.querySelector('.rack-badge-label');
+            const displayText = rData.cleaning || rData.status;
+            if (label) {
+              label.textContent = displayText;
+            } else {
+              badge.innerHTML = `<span class="rack-badge-label">${escapeHtml(displayText)}</span> <i class="fa-solid fa-chevron-down rack-badge-arrow"></i>`;
+            }
+          }
 
-          // Update data-room-json if exists
+          // Update data-room-json attribute
           try {
             const curJson = JSON.parse(card.getAttribute('data-room-json') || '{}');
             curJson.status = rData.status;
@@ -782,9 +916,9 @@
             curJson.housekeeping_status_id = rData.housekeeping_status_id;
             card.setAttribute('data-room-json', JSON.stringify(curJson));
           } catch(e) {}
-        }
+        });
 
-        // Update in window.allPmsRooms
+        // Update in global memory window.allPmsRooms
         if (window.allPmsRooms) {
           const m = window.allPmsRooms.find(r => String(r.room) === String(roomNo) || String(r.id) === String(roomId));
           if (m) {
@@ -802,6 +936,12 @@
         } else {
           alert(data.message || `Room #${roomNo} status updated!`);
         }
+
+        if (isFromPopover) {
+          setTimeout(() => {
+            closeRoomStatusPopover();
+          }, 350);
+        }
       } else {
         if (typeof PmsAlert !== 'undefined') {
           PmsAlert.toast(data.message || 'Error updating status', 'error');
@@ -811,13 +951,29 @@
       }
     })
     .catch(err => {
-      if (spinner) spinner.style.display = 'none';
+      if (popSpinner) popSpinner.style.display = 'none';
       console.error('Status update error:', err);
       if (typeof PmsAlert !== 'undefined') {
         PmsAlert.toast('Network error updating room status', 'error');
       }
     });
   }
+
+  // Global listeners for status popover
+  document.addEventListener('click', function(e) {
+    const pop = document.getElementById('room-card-status-popover');
+    if (pop && pop.style.display !== 'none') {
+      if (!pop.contains(e.target) && !e.target.closest('.rack-badge') && !e.target.closest('.rack-status-quick-btn')) {
+        closeRoomStatusPopover();
+      }
+    }
+  });
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      closeRoomStatusPopover();
+    }
+  });
 
   function checkoutGuest(roomNo, guestName) {
     if (confirm(`Check out ${guestName} from Room ${roomNo}?`)) {
@@ -834,7 +990,14 @@
         const mid = card.querySelector('.rack-card-mid');
         if (mid) mid.innerHTML = '';
         const badge = card.querySelector('.rack-badge');
-        if (badge) badge.textContent = 'Dirty';
+        if (badge) {
+          const label = badge.querySelector('.rack-badge-label');
+          if (label) {
+            label.textContent = 'Dirty';
+          } else {
+            badge.innerHTML = `<span class="rack-badge-label">Dirty</span> <i class="fa-solid fa-chevron-down rack-badge-arrow"></i>`;
+          }
+        }
       }
     }
   }

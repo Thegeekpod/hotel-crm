@@ -5,11 +5,229 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>@yield('title', 'Front Office - Hotel Sagar Sonnet CRM / PMS')</title>
-  <link rel="stylesheet" href="{{ asset('css/style.css') }}">
+  <link rel="stylesheet" href="{{ asset('css/style.css') }}?v={{ time() }}">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css">
   <style>
+    /* Room Card Status Badge & Popover */
+    .rack-badge {
+      cursor: pointer !important;
+      gap: 4px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }
+    .rack-badge:hover {
+      filter: brightness(0.92) !important;
+      transform: translateY(-1px) !important;
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12) !important;
+    }
+    .rack-badge-arrow {
+      font-size: 8px !important;
+      opacity: 0.65 !important;
+      transition: transform 0.2s ease !important;
+    }
+    .rack-card.is-popover-active {
+      box-shadow: 0 0 0 2.5px #6366f1, 0 12px 30px rgba(99, 102, 241, 0.25) !important;
+      transform: translateY(-3px) scale(1.02) !important;
+      z-index: 100 !important;
+    }
+    .rack-card.is-popover-active .rack-badge-arrow {
+      transform: rotate(180deg) !important;
+    }
+
+    /* Fixed Floating Popover */
+    .room-status-popover {
+      position: fixed !important;
+      z-index: 999999 !important;
+      width: 285px !important;
+      background: #ffffff !important;
+      border: 1px solid #cbd5e1 !important;
+      border-radius: 14px !important;
+      box-shadow: 0 20px 45px -8px rgba(15, 23, 42, 0.32), 0 0 0 1px rgba(0, 0, 0, 0.05) !important;
+      overflow: hidden !important;
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif !important;
+      animation: rspPopIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    }
+    @keyframes rspPopIn {
+      from { opacity: 0; transform: scale(0.92) translateY(-6px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    .rsp-header {
+      background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%) !important;
+      color: #ffffff !important;
+      padding: 10px 14px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+      box-shadow: 0 2px 8px rgba(79, 70, 229, 0.25) !important;
+    }
+    .rsp-title {
+      display: flex !important;
+      align-items: center !important;
+      gap: 7px !important;
+      font-size: 12px !important;
+      font-weight: 700 !important;
+      color: #ffffff !important;
+    }
+    .rsp-title strong {
+      font-family: var(--font-mono, monospace) !important;
+      font-size: 14px !important;
+      letter-spacing: 0.5px !important;
+    }
+    .rsp-room-type {
+      font-size: 9px !important;
+      font-weight: 800 !important;
+      background: rgba(255, 255, 255, 0.22) !important;
+      padding: 2px 7px !important;
+      border-radius: 5px !important;
+      text-transform: uppercase !important;
+      letter-spacing: 0.5px !important;
+    }
+    .rsp-close {
+      background: rgba(255, 255, 255, 0.2) !important;
+      border: none !important;
+      color: #ffffff !important;
+      width: 22px !important;
+      height: 22px !important;
+      border-radius: 50% !important;
+      font-size: 14px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      cursor: pointer !important;
+      transition: background 0.15s !important;
+    }
+    .rsp-close:hover {
+      background: rgba(255, 255, 255, 0.4) !important;
+    }
+    .rsp-body {
+      padding: 12px 14px !important;
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 10px !important;
+      background: #ffffff !important;
+    }
+    .rsp-field {
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 4px !important;
+    }
+    .rsp-label {
+      font-size: 10px !important;
+      font-weight: 800 !important;
+      color: #64748b !important;
+      text-transform: uppercase !important;
+      letter-spacing: 0.5px !important;
+      display: flex !important;
+      align-items: center !important;
+      gap: 5px !important;
+      margin: 0 !important;
+    }
+    .rsp-select {
+      width: 100% !important;
+      height: 34px !important;
+      padding: 4px 10px !important;
+      font-size: 12px !important;
+      font-weight: 700 !important;
+      color: #0f172a !important;
+      background: #f8fafc !important;
+      border: 1.5px solid #cbd5e1 !important;
+      border-radius: 7px !important;
+      cursor: pointer !important;
+      outline: none !important;
+      transition: all 0.15s ease !important;
+    }
+    .rsp-select:focus {
+      border-color: #6366f1 !important;
+      background: #ffffff !important;
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15) !important;
+    }
+    .rsp-quick-section {
+      border-top: 1px dashed #e2e8f0 !important;
+      padding-top: 8px !important;
+      margin-top: 2px !important;
+    }
+    .rsp-quick-title {
+      font-size: 9px !important;
+      font-weight: 800 !important;
+      color: #94a3b8 !important;
+      text-transform: uppercase !important;
+      letter-spacing: 0.6px !important;
+      margin-bottom: 6px !important;
+    }
+    .rsp-quick-chips {
+      display: grid !important;
+      grid-template-columns: 1fr 1fr !important;
+      gap: 6px !important;
+    }
+    .rsp-chip {
+      height: 28px !important;
+      border-radius: 6px !important;
+      font-size: 11px !important;
+      font-weight: 800 !important;
+      border: 1px solid transparent !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      gap: 5px !important;
+      cursor: pointer !important;
+      transition: all 0.15s ease !important;
+    }
+    .rsp-chip.chip-clean {
+      background: #ecfdf5 !important;
+      color: #059669 !important;
+      border-color: #a7f3d0 !important;
+    }
+    .rsp-chip.chip-clean:hover {
+      background: #059669 !important;
+      color: #ffffff !important;
+    }
+    .rsp-chip.chip-dirty {
+      background: #fffbeb !important;
+      color: #d97706 !important;
+      border-color: #fde68a !important;
+    }
+    .rsp-chip.chip-dirty:hover {
+      background: #d97706 !important;
+      color: #ffffff !important;
+    }
+    .rsp-chip.chip-maint {
+      background: #eff6ff !important;
+      color: #2563eb !important;
+      border-color: #bfdbfe !important;
+    }
+    .rsp-chip.chip-maint:hover {
+      background: #2563eb !important;
+      color: #ffffff !important;
+    }
+    .rsp-chip.chip-block {
+      background: #fff1f2 !important;
+      color: #e11d48 !important;
+      border-color: #fecdd3 !important;
+    }
+    .rsp-chip.chip-block:hover {
+      background: #e11d48 !important;
+      color: #ffffff !important;
+    }
+    .rsp-footer {
+      padding: 7px 14px !important;
+      background: #f8fafc !important;
+      border-top: 1px solid #f1f5f9 !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+      font-size: 9.5px !important;
+      color: #94a3b8 !important;
+      font-weight: 600 !important;
+    }
+    .rsp-spinner {
+      color: #6366f1 !important;
+      font-weight: 800 !important;
+    }
+
     .legend-chip.active-chip {
       outline: 2px solid var(--accent-primary, #6366f1) !important;
       transform: translateY(-2px);
@@ -165,6 +383,64 @@
       <div class="modal-bot" id="m-footer" style="padding: 12px 20px; background: #ffffff; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; gap: 8px;">
         <button type="button" class="btn-ui-secondary" onclick="closeModal('room-modal')">Close</button>
       </div>
+    </div>
+  </div>
+
+  <!-- ROOM STATUS QUICK POPOVER (HOUSEKEEPING & OPERATIONAL) -->
+  <div id="room-card-status-popover" class="room-status-popover" style="position: fixed; display: none; z-index: 999999; width: 285px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 14px; box-shadow: 0 20px 45px -8px rgba(15, 23, 42, 0.32), 0 0 0 1px rgba(0, 0, 0, 0.05); overflow: hidden;" onclick="event.stopPropagation()">
+    <div class="rsp-header">
+      <div class="rsp-title">
+        <i class="fa-solid fa-door-open"></i>
+        <span>Room <strong id="rsp-room-num">--</strong></span>
+        <span class="rsp-room-type" id="rsp-room-type">--</span>
+      </div>
+      <button type="button" class="rsp-close" onclick="closeRoomStatusPopover(event)">&times;</button>
+    </div>
+    <div class="rsp-body">
+      <!-- Housekeeping Status -->
+      <div class="rsp-field">
+        <label class="rsp-label">
+          <i class="fa-solid fa-broom" style="color: #f59e0b;"></i> Housekeeping Status
+        </label>
+        <select id="rsp-hk-select" class="rsp-select" onchange="onRspSelectChanged('hk')">
+          <option value="">Select Housekeeping Status</option>
+        </select>
+      </div>
+
+      <!-- Operational Status -->
+      <div class="rsp-field">
+        <label class="rsp-label">
+          <i class="fa-solid fa-shield-halved" style="color: #6366f1;"></i> Operational Status
+        </label>
+        <select id="rsp-op-select" class="rsp-select" onchange="onRspSelectChanged('op')">
+          <option value="">Select Operational Status</option>
+        </select>
+      </div>
+
+      <!-- Quick Shortcuts -->
+      <div class="rsp-quick-section">
+        <div class="rsp-quick-title">Quick Actions</div>
+        <div class="rsp-quick-chips">
+          <button type="button" class="rsp-chip chip-clean" onclick="rspQuickSet('clean', event)" title="Mark Clean & Active">
+            <i class="fa-solid fa-check"></i> Clean
+          </button>
+          <button type="button" class="rsp-chip chip-dirty" onclick="rspQuickSet('dirty', event)" title="Mark Dirty">
+            <i class="fa-solid fa-broom"></i> Dirty
+          </button>
+          <button type="button" class="rsp-chip chip-maint" onclick="rspQuickSet('maintenance', event)" title="Under Maintenance">
+            <i class="fa-solid fa-wrench"></i> Maint.
+          </button>
+          <button type="button" class="rsp-chip chip-block" onclick="rspQuickSet('blocked', event)" title="Out of Order / Blocked">
+            <i class="fa-solid fa-ban"></i> Block
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="rsp-footer">
+      <span class="rsp-status-hint"><i class="fa-solid fa-clock-rotate-left"></i> Updates status history</span>
+      <span class="rsp-spinner" id="rsp-spinner" style="display: none;">
+        <i class="fa-solid fa-spinner fa-spin"></i> Saving...
+      </span>
     </div>
   </div>
 

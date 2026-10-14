@@ -133,6 +133,7 @@
                onclick="openRoomDetailsModal(this)" 
                data-room-json="{{ $roomJsonData }}"
                data-room="{{ $rm['room'] }}" 
+               data-room-id="{{ $rm['id'] ?? '' }}"
                data-floor="{{ $rm['floor'] }}" 
                data-type="{{ $rm['type'] }}" 
                data-category="{{ $rm['category'] }}"
@@ -140,7 +141,9 @@
                data-status="{{ $rm['status'] }}"
                data-cleaning="{{ $rm['cleaning'] }}"
                data-operational="{{ $rm['operational_status'] ?? '' }}"
-               data-housekeeping="{{ $rm['housekeeping_status'] ?? '' }}">
+               data-operational-id="{{ $rm['operational_status_id'] ?? '' }}"
+               data-housekeeping="{{ $rm['housekeeping_status'] ?? '' }}"
+               data-housekeeping-id="{{ $rm['housekeeping_status_id'] ?? '' }}">
             <div class="rack-card-top">
               <div class="rack-room-num">{{ $rm['room'] }}</div>
               <div class="rack-room-type" title="{{ $rm['type'] }}">{{ $rm['type'] }}</div>
@@ -151,7 +154,10 @@
               @endif
             </div>
             <div class="rack-card-bot">
-              <div class="rack-badge">{{ $badgeText }}</div>
+              <div class="rack-badge" onclick="openRoomStatusPopover(event, this)" title="Click to update Housekeeping / Operational status">
+                <span class="rack-badge-label">{{ $badgeText }}</span>
+                <i class="fa-solid fa-chevron-down rack-badge-arrow"></i>
+              </div>
             </div>
           </div>
         @empty

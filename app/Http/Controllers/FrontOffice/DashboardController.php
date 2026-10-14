@@ -1330,7 +1330,7 @@ class DashboardController extends Controller
             $hasActiveGuests = $room->activeGuests()->exists();
             if ($hasActiveGuests) {
                 $calculatedStatus = 'occupied';
-                $cleaningText = 'Cleaned';
+                $cleaningText = (stripos($hkName, 'Dirty') !== false) ? 'Dirty' : 'Cleaned';
             } elseif (stripos($opName, 'Blocked') !== false || stripos($opName, 'Maintenance') !== false || stripos($opName, 'Order') !== false) {
                 $calculatedStatus = 'blocked';
                 $cleaningText = 'Blocked';
@@ -1355,6 +1355,9 @@ class DashboardController extends Controller
 
             DB::commit();
 
+            $currentHkId = !empty($validated['housekeeping_status_id']) ? $validated['housekeeping_status_id'] : ($latestHk?->housekeeping_status_id ?? null);
+            $currentOpId = !empty($validated['operational_status_id']) ? $validated['operational_status_id'] : ($latestOp?->operational_status_id ?? null);
+
             return response()->json([
                 'success' => true,
                 'message' => "Room #{$room->room_number} status updated successfully!",
@@ -1363,9 +1366,9 @@ class DashboardController extends Controller
                     'room' => (string)$room->room_number,
                     'status' => $calculatedStatus,
                     'cleaning' => $cleaningText,
-                    'housekeeping_status_id' => $validated['housekeeping_status_id'] ?? null,
+                    'housekeeping_status_id' => $currentHkId,
                     'housekeeping_status' => $hkName,
-                    'operational_status_id' => $validated['operational_status_id'] ?? null,
+                    'operational_status_id' => $currentOpId,
                     'operational_status' => $opName,
                 ]
             ]);

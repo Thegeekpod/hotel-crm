@@ -14,18 +14,7 @@
         <span class="ico-box"><i class="fa-solid fa-address-card" style="color: #f59e0b;"></i></span>
         <span class="lbl-box">Guest</span>
       </a>
-       <!--     <a href="{{ route('frontoffice.reserve') }}" class="ribbon-btn {{ request()->routeIs('frontoffice.reserve') ? 'active-btn' : '' }}">
-        <span class="ico-box"><i class="fa-solid fa-calendar-check" style="color: #a78bfa;"></i></span>
-        <span class="lbl-box">Reserve</span>
-      </a>
-<button type="button" class="ribbon-btn" onclick="openReservationModal()">
-        <span class="ico-box"><i class="fa-solid fa-key" style="color: #6366f1;"></i></span>
-        <span class="lbl-box">Check In</span>
-      </button> 
-      <a href="#" class="ribbon-btn">
-        <span class="ico-box"><i class="fa-solid fa-right-from-bracket" style="color: #f43f5e;"></i></span>
-        <span class="lbl-box">Check Out</span>
-      </a> -->
+     
     </div>
   </div>
   <div style="font-size: 11px; font-weight: 700; color: var(--accent-emerald); display: flex; align-items: center; gap: 6px;">

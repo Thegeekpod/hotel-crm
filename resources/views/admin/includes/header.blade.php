@@ -21,9 +21,7 @@
   <a href="{{ route('frontoffice.dashboard') }}" class="pms-tab-link {{ request()->routeIs('frontoffice.*') ? 'active' : '' }}">
     <i class="fa-solid fa-desktop tab-ico" style="color: #6366f1;"></i> Front Office
   </a>
-    <!-- <a href="{{ route('admin.roommanagement.index') }}" class="pms-tab-link {{ request()->routeIs('admin.roommanagement.*') ? 'active' : '' }}">
-    <i class="fa-solid fa-door-open tab-ico" style="color: #ec4899;"></i> Room Management
-  </a> -->
+
   <a href="#" class="pms-tab-link" onclick="if(typeof PmsAlert !== 'undefined') PmsAlert.toast('POS Sales master module queued for client review.', 'info')">
     <i class="fa-solid fa-utensils tab-ico" style="color: #10b981;"></i> POS Sales
   </a>

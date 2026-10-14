@@ -1884,30 +1884,78 @@
           subEl.innerHTML = `Your requested stay duration (<strong>${formatDateDisplay(checkInVal)} &rarr; ${formatDateDisplay(checkOutVal)}</strong>) overlaps with this existing booking. Please select one of the matching available rooms below:`;
         }
 
-        // Render matching alternative rooms
+        // Render matching alternative rooms grouped floor-wise
         if (altContainer) {
           if (data.available_rooms && data.available_rooms.length > 0) {
-            altContainer.innerHTML = data.available_rooms.map(r => `
-              <div style="display: flex; align-items: center; justify-content: space-between; background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 7px 10px; transition: all 0.15s ease;">
-                <div style="min-width: 0; flex: 1; padding-right: 8px;">
-                  <div style="font-weight: 800; color: #0f172a; font-size: 12px; display: flex; align-items: center; gap: 6px;">
-                    <i class="fa-solid fa-door-open" style="color: #10b981; font-size: 11px;"></i>
-                    <span>Room #${escapeHtml(r.room)}</span>
-                    <span style="font-size: 9px; font-weight: 700; background: #e0e7ff; color: #4338ca; padding: 1px 6px; border-radius: 4px;">${escapeHtml(r.category)}</span>
+            // Group rooms by floor
+            const floorGroups = {};
+            data.available_rooms.forEach(r => {
+              const floorVal = (r.floor !== null && r.floor !== undefined && String(r.floor).trim() !== '') ? String(r.floor).trim() : '1';
+              if (!floorGroups[floorVal]) {
+                floorGroups[floorVal] = [];
+              }
+              floorGroups[floorVal].push(r);
+            });
+
+            // Sort floors numerically if possible
+            const sortedFloors = Object.keys(floorGroups).sort((a, b) => {
+              const numA = parseFloat(a);
+              const numB = parseFloat(b);
+              if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
+              return a.localeCompare(b);
+            });
+
+            altContainer.innerHTML = sortedFloors.map(floorKey => {
+              const rooms = floorGroups[floorKey];
+              // Sort rooms numerically by room number
+              rooms.sort((a, b) => {
+                const ra = parseFloat(a.room);
+                const rb = parseFloat(b.room);
+                if (!isNaN(ra) && !isNaN(rb)) return ra - rb;
+                return String(a.room).localeCompare(String(b.room));
+              });
+
+              const floorTitle = (String(floorKey).toLowerCase().includes('floor'))
+                ? floorKey
+                : `Floor ${floorKey}`;
+
+              return `
+                <div class="conflict-floor-group" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 12px;">
+                  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; padding-bottom: 5px; border-bottom: 1.5px dashed #cbd5e1;">
+                    <div style="font-size: 11px; font-weight: 800; color: #1e293b; text-transform: uppercase; letter-spacing: 0.6px; display: flex; align-items: center; gap: 6px;">
+                      <i class="fa-solid fa-layer-group" style="color: #6366f1; font-size: 12px;"></i>
+                      <span>${escapeHtml(floorTitle)}</span>
+                    </div>
+                    <span style="font-size: 10px; font-weight: 700; color: #059669; background: #ecfdf5; border: 1px solid #a7f3d0; padding: 1px 8px; border-radius: 12px;">
+                      ${rooms.length} ${rooms.length === 1 ? 'Room' : 'Rooms'} Available
+                    </span>
                   </div>
-                  <div style="font-size: 10px; color: #64748b; margin-top: 2px;">
-                    Floor ${escapeHtml(r.floor)} • ₹ ${Number(r.rate).toLocaleString()}/night • Max ${r.max_pax} Pax
+                  <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 8px;">
+                    ${rooms.map(r => `
+                      <div style="display: flex; align-items: center; justify-content: space-between; background: #ffffff; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 7px 10px; transition: all 0.15s ease; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
+                        <div style="min-width: 0; flex: 1; padding-right: 8px;">
+                          <div style="font-weight: 800; color: #0f172a; font-size: 12px; display: flex; align-items: center; gap: 6px;">
+                            <i class="fa-solid fa-door-open" style="color: #10b981; font-size: 11px;"></i>
+                            <span>Room #${escapeHtml(r.room)}</span>
+                            <span style="font-size: 9px; font-weight: 700; background: #e0e7ff; color: #4338ca; padding: 1px 6px; border-radius: 4px;">${escapeHtml(r.category)}</span>
+                          </div>
+                          <div style="font-size: 10px; color: #64748b; margin-top: 2px;">
+                            ₹${Number(r.rate).toLocaleString()}/night • Max ${r.max_pax} Pax
+                          </div>
+                        </div>
+                        <button type="button" class="btn-ui-primary" style="height: 28px; padding: 0 12px; font-size: 10px; font-weight: 800; border-radius: 6px; white-space: nowrap; flex-shrink: 0; cursor: pointer;" onclick="selectAlternativeRoom('${r.id}', '${r.room}', '${r.category_id}', '${r.floor_id}', this)">
+                          <i class="fa-solid fa-check"></i> Select
+                        </button>
+                      </div>
+                    `).join('')}
                   </div>
                 </div>
-                <button type="button" class="btn-ui-primary" style="height: 28px; padding: 0 10px; font-size: 10px; font-weight: 800; border-radius: 6px; white-space: nowrap; flex-shrink: 0; cursor: pointer;" onclick="selectAlternativeRoom('${r.id}', '${r.room}', '${r.category_id}', '${r.floor_id}', this)">
-                  <i class="fa-solid fa-check"></i> Select
-                </button>
-              </div>
-            `).join('');
+              `;
+            }).join('');
           } else {
             altContainer.innerHTML = `
-              <div style="grid-column: 1 / -1; padding: 12px; font-size: 11px; font-weight: 700; color: #94a3b8; text-align: center;">
-                <i class="fa-solid fa-circle-exclamation"></i> No other alternative rooms are completely free for this date range.
+              <div style="padding: 14px; font-size: 11px; font-weight: 700; color: #94a3b8; text-align: center; background: #f8fafc; border-radius: 8px; border: 1px dashed #cbd5e1;">
+                <i class="fa-solid fa-circle-exclamation" style="margin-right: 4px;"></i> No other alternative rooms are completely free for this date range.
               </div>
             `;
           }

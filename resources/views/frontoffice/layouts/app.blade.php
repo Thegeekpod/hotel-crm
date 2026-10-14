@@ -454,8 +454,8 @@
                             <i class="fa-solid fa-wand-magic-sparkles" style="color: #6366f1;"></i>
                             <span>Available Alternative Rooms Matching Your Stay Schedule:</span>
                           </div>
-                          <div class="conflict-alt-rooms-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 8px; max-height: 190px; overflow-y: auto; padding-right: 2px;">
-                            <!-- Injected dynamically -->
+                          <div class="conflict-alt-rooms-list" style="display: flex; flex-direction: column; gap: 10px; max-height: 240px; overflow-y: auto; padding-right: 4px;">
+                            <!-- Injected dynamically grouped floor-wise -->
                           </div>
                         </div>
                       </div>

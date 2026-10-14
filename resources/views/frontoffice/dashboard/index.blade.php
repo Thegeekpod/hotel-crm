@@ -224,7 +224,7 @@
 <footer class="pms-bottom-bar">
   <div class="legend-chips">
     <div class="legend-chip chip-occ {{ $selectedStatus === 'occupied' ? 'active-chip' : '' }}" onclick="applyBackendFilter('occupied')" style="cursor: pointer;">
-      <div class="chip-lbl">Occupied</div>
+      <div class="chip-lbl">Reserved</div>
       <div class="chip-cnt">{{ $stats['occupied'] }}</div>
     </div>
     <div class="legend-chip chip-blk {{ $selectedStatus === 'blocked' ? 'active-chip' : '' }}" onclick="applyBackendFilter('blocked')" style="cursor: pointer;">

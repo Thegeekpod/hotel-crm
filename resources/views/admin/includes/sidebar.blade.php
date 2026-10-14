@@ -52,6 +52,11 @@
           <i class="fa-solid fa-building"></i> Company Manage
         </a>
       </li>
+      <li>
+        <a href="{{ route('admin.utilities.frontoffice.plans.index') }}" class="admin-sub-item {{ request()->routeIs('admin.utilities.frontoffice.plans.*') ? 'active' : '' }}">
+          <i class="fa-solid fa-list-check"></i> Plans Master
+        </a>
+      </li>
     </ul>
   </div>
 

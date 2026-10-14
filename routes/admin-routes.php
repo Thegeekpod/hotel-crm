@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\Utilities\IdCardTypeController;
 use App\Http\Controllers\Admin\Utilities\PaymentModeController;
 use App\Http\Controllers\Admin\Utilities\GstPercentageController;
 use App\Http\Controllers\Admin\Utilities\CompanyController;
+use App\Http\Controllers\Admin\Utilities\PlanController;
 use App\Http\Controllers\Admin\Utilities\RoomCategoryController;
 use App\Http\Controllers\Admin\Utilities\FloorController;
 use App\Http\Controllers\Admin\Utilities\BeddingConfigController;
@@ -79,6 +80,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
             Route::post('company/bulk-delete', [CompanyController::class, 'bulkDestroy'])->name('company.bulk-delete');
             Route::resource('company', CompanyController::class)->except(['create', 'edit', 'show']);
+
+            Route::post('plans/bulk-delete', [PlanController::class, 'bulkDestroy'])->name('plans.bulk-destroy');
+            Route::resource('plans', PlanController::class)->except(['create', 'edit', 'show']);
         });
 
         // Room Management Utilities

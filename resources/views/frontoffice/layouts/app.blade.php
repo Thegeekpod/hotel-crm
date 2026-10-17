@@ -906,7 +906,7 @@
                   <select name="plan_id" id="plan-id-select" style="width:100%; height:38px; padding:6px 12px; font-size:12px; border:1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #1e293b; font-weight: 700; box-sizing: border-box;">
                     <option value="">-- Select Meal Plan --</option>
                     @foreach($plans ?? \App\Models\Plan::where('status', 'Active')->get() as $p)
-                      <option value="{{ $p->id }}">{{ $p->plan_name }}</option>
+                      <option value="{{ $p->id }}" data-price="{{ $p->price }}">{{ $p->plan_name }}{{ (float)($p->price ?? 0) > 0 ? ' (₹' . number_format($p->price, 2) . ')' : '' }}</option>
                     @endforeach
                   </select>
                 </div>

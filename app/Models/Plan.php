@@ -13,6 +13,11 @@ class Plan extends Model
 
     protected $fillable = [
         'plan_name',
+        'price',
         'status',
+    ];
+
+    protected $casts = [
+        'price' => 'decimal:2',
     ];
 }

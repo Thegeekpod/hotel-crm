@@ -40,8 +40,11 @@ class PlanController extends Controller
     {
         $validated = $request->validate([
             'plan_name' => 'required|string|max:255|unique:plans,plan_name',
+            'price' => 'nullable|numeric|min:0',
             'status' => 'nullable|string|in:Active,Inactive',
         ]);
+
+        $validated['price'] = isset($validated['price']) && is_numeric($validated['price']) ? (float)$validated['price'] : 0.00;
 
         if (empty($validated['status'])) {
             $validated['status'] = 'Active';
@@ -65,8 +68,13 @@ class PlanController extends Controller
 
         $validated = $request->validate([
             'plan_name' => 'required|string|max:255|unique:plans,plan_name,' . $id,
+            'price' => 'nullable|numeric|min:0',
             'status' => 'nullable|string|in:Active,Inactive',
         ]);
+
+        if (array_key_exists('price', $validated)) {
+            $validated['price'] = is_numeric($validated['price']) ? (float)$validated['price'] : 0.00;
+        }
 
         if (empty($validated['status'])) {
             $validated['status'] = 'Active';

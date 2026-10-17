@@ -211,6 +211,9 @@
               opt.dataset.maxAdults = match.max_adults || 2;
               opt.dataset.maxChildren = match.max_children || 1;
               opt.dataset.maxPax = match.max_pax || 3;
+              opt.dataset.planId = match.plan_id || '';
+              opt.dataset.planName = match.plan_name || '';
+              opt.dataset.planPrice = match.plan_price || 0;
               opt.textContent = `Room #${match.room} (₹${Number(match.rate).toLocaleString()}) • ${(match.status || 'available').toUpperCase()}`;
               opt.style.fontWeight = 'bold';
               opt.style.color = (match.status === 'available') ? '#059669' : '#ef4444';
@@ -1207,6 +1210,9 @@
         opt.dataset.maxAdults = r.max_adults || 2;
         opt.dataset.maxChildren = r.max_children || 1;
         opt.dataset.maxPax = r.max_pax || 3;
+        opt.dataset.planId = r.plan_id || '';
+        opt.dataset.planName = r.plan_name || '';
+        opt.dataset.planPrice = r.plan_price || 0;
 
         const isAvail = (r.status === 'available');
         opt.textContent = `Room #${r.room} (₹${Number(r.rate).toLocaleString()}) • ${r.status.toUpperCase()}`;
@@ -1264,6 +1270,17 @@
       }
       if (flSel && !flSel.value && (match.floor_id || match.floor)) {
         flSel.value = match.floor_id || match.floor;
+      }
+    }
+
+    // Auto-select room's associated meal plan if configured (remains fully choosable / changeable by user)
+    const roomPlanId = selectedOpt.dataset.planId || match?.plan_id;
+    const planSelect = $('#plan-id-select');
+    if (planSelect.length) {
+      if (roomPlanId) {
+        planSelect.val(String(roomPlanId)).trigger('change');
+      } else {
+        planSelect.val('').trigger('change');
       }
     }
 
@@ -1842,7 +1859,57 @@
       totalNightlyRate = fallbackRate;
     }
 
-    const totalGross = totalNightlyRate * nights;
+    const totalRoomTariff = totalNightlyRate * nights;
+
+    // Meal Plan Calculation
+    const planSel = document.getElementById('plan-id-select');
+    const selectedPlanOpt = (planSel && planSel.selectedIndex >= 0) ? planSel.options[planSel.selectedIndex] : null;
+    const planIdVal = planSel ? planSel.value : '';
+    const planPrice = (selectedPlanOpt && selectedPlanOpt.dataset.price) ? parseFloat(selectedPlanOpt.dataset.price) : 0;
+    const planName = (selectedPlanOpt && planIdVal) ? (selectedPlanOpt.dataset.name || selectedPlanOpt.text.split('(')[0].trim()) : '';
+
+    const roomCount = assignedRooms.size > 0 ? assignedRooms.size : 1;
+    let totalMealPlan = 0;
+    const mealCard = document.getElementById('calc-meal-plan-card');
+    const mealRateLabel = document.getElementById('calc-meal-plan-rate-label');
+    const mealDisplay = document.getElementById('calc-meal-plan-display');
+    const mealAmtInp = document.getElementById('calc-meal-plan-amount');
+    const mealNameEl = document.getElementById('calc-meal-plan-name');
+    const combinedCard = document.getElementById('calc-combined-gross-card');
+    const combinedDisplay = document.getElementById('calc-combined-gross-display');
+
+    if (planIdVal && planName) {
+      totalMealPlan = planPrice * nights * roomCount;
+      if (mealCard) mealCard.style.display = 'block';
+      if (mealNameEl) mealNameEl.textContent = planName;
+      if (mealRateLabel) {
+        const rmStr = roomCount > 1 ? ` (${roomCount} Rooms)` : '';
+        if (planPrice > 0) {
+          mealRateLabel.textContent = `₹ ${planPrice.toLocaleString('en-IN')} x ${nights} ${nights === 1 ? 'Night' : 'Nights'}${rmStr}`;
+        } else {
+          mealRateLabel.textContent = `Complimentary / Included`;
+        }
+      }
+      if (mealDisplay) {
+        mealDisplay.textContent = planPrice > 0 
+          ? `+ ₹ ${totalMealPlan.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+          : `₹ 0.00`;
+      }
+      if (mealAmtInp) mealAmtInp.value = totalMealPlan.toFixed(2);
+
+      if (planPrice > 0 && combinedCard && combinedDisplay) {
+        combinedCard.style.display = 'block';
+        combinedDisplay.textContent = `₹ ${(totalRoomTariff + totalMealPlan).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      } else if (combinedCard) {
+        combinedCard.style.display = 'none';
+      }
+    } else {
+      if (mealCard) mealCard.style.display = 'none';
+      if (combinedCard) combinedCard.style.display = 'none';
+      if (mealAmtInp) mealAmtInp.value = '0';
+    }
+
+    const totalGross = totalRoomTariff + totalMealPlan;
 
     // Update Nights & Gross UI
     const nightsRateLabel = document.getElementById('calc-nights-rate-label');
@@ -1852,7 +1919,7 @@
     }
     const grossDisplay = document.getElementById('calc-gross-display');
     if (grossDisplay) {
-      grossDisplay.textContent = `₹ ${totalGross.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      grossDisplay.textContent = `₹ ${totalRoomTariff.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     }
     const totalAmountInp = document.getElementById('calc-total-amount');
     if (totalAmountInp) {
@@ -2490,6 +2557,9 @@
             width: '100%'
           });
         }
+        planSelect.off('change.planCalc').on('change.planCalc', function() {
+          calculateReservationBilling();
+        });
       }
     }
   }

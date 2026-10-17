@@ -65,7 +65,7 @@ class AppServiceProvider extends ServiceProvider
                 $view->with('nationalities', Nationality::where('status', 'Active')->get());
             }
             if (!isset($view->allRoomsData)) {
-                $rooms = Room::with(['floorRelation', 'categoryRelation', 'beddingConfigRelation'])->orderByRaw('CAST(room_number AS UNSIGNED) ASC, room_number ASC')->get();
+                $rooms = Room::with(['floorRelation', 'categoryRelation', 'beddingConfigRelation', 'planRelation'])->orderByRaw('CAST(room_number AS UNSIGNED) ASC, room_number ASC')->get();
                 $allRoomsList = $rooms->map(function ($r) {
                     return [
                         'id' => $r->id,
@@ -76,6 +76,9 @@ class AppServiceProvider extends ServiceProvider
                         'category_id' => $r->category_id ?? ($r->categoryRelation?->id),
                         'category' => $r->categoryRelation?->name ?? 'Deluxe',
                         'rate' => (float)$r->rate,
+                        'plan_id' => $r->plan_id,
+                        'plan_name' => $r->planRelation?->plan_name,
+                        'plan_price' => (float)($r->planRelation?->price ?? 0),
                         'status' => $r->status === 'Inactive' ? 'blocked' : 'available',
                         'bedding' => $r->beddingConfigRelation?->name ?? $r->bedding_config ?? 'King Size Master (72x78)',
                         'max_adults' => $r->beddingConfigRelation?->max_adults ?? 2,

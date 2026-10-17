@@ -67,6 +67,7 @@ class DashboardController extends Controller
             'floorRelation',
             'categoryRelation',
             'beddingConfigRelation',
+            'planRelation',
             'housekeepingHistories.housekeepingStatus',
             'operationalHistories.operationalStatus',
         ])->orderByRaw('CAST(room_number AS UNSIGNED) ASC, room_number ASC')->get();
@@ -227,6 +228,9 @@ class DashboardController extends Controller
                     'floor_name' => $r->floorRelation?->name ?? ('Floor ' . $floor),
                     'category_id' => $r->category_id ?? ($r->categoryRelation?->id),
                     'category' => $r->categoryRelation?->name ?? $r->category ?? 'Deluxe',
+                    'plan_id' => $r->plan_id,
+                    'plan_name' => $r->planRelation?->plan_name,
+                    'plan_price' => (float)($r->planRelation?->price ?? 0),
                     'type' => $type,
                     'cleaning' => $cleaning,
                     'status' => $status,
@@ -484,6 +488,7 @@ class DashboardController extends Controller
             'floorRelation',
             'categoryRelation',
             'beddingConfigRelation',
+            'planRelation',
             'housekeepingHistories.housekeepingStatus',
             'operationalHistories.operationalStatus',
         ])->orderByRaw('CAST(room_number AS UNSIGNED) ASC, room_number ASC')->get();
@@ -639,6 +644,9 @@ class DashboardController extends Controller
                     'floor_name' => $r->floorRelation?->name ?? ('Floor ' . $floor),
                     'category_id' => $r->category_id ?? ($r->categoryRelation?->id),
                     'category' => $r->categoryRelation?->name ?? $r->category ?? 'Deluxe',
+                    'plan_id' => $r->plan_id,
+                    'plan_name' => $r->planRelation?->plan_name,
+                    'plan_price' => (float)($r->planRelation?->price ?? 0),
                     'type' => $type,
                     'cleaning' => 'Cleaned',
                     'status' => 'occupied',
@@ -1142,7 +1150,9 @@ class DashboardController extends Controller
                 }
 
                 $roomRate = (float)($roomObj?->rate ?? 4500);
-                $totalAmount = $roomRate * $totalNights;
+                $planModel = $planId ? Plan::find($planId) : null;
+                $planPrice = (float)($planModel?->price ?? 0);
+                $totalAmount = ($roomRate + $planPrice) * $totalNights;
                 if ($discountType === 'amount' && $reqDiscountAmt > 0) {
                     $discountAmount = min($totalAmount, $reqDiscountAmt);
                     $discountPercentage = $totalAmount > 0 ? round(($discountAmount / $totalAmount) * 100, 2) : 0.0;

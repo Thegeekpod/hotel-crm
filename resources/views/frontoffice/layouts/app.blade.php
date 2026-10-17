@@ -751,7 +751,7 @@
                           <select name="room_id" class="select-room-no" onchange="onRoomChange(this)" style="width:100%; height:38px; padding:6px 10px; font-size:12px; border:1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #1e293b; font-weight: 700; box-sizing: border-box;">
                             <option value="">Select Room No.</option>
                             @foreach($rackRooms ?? [] as $rm)
-                              <option value="{{ $rm['id'] ?? $rm['room'] }}" data-room-no="{{ $rm['room'] }}" data-rate="{{ $rm['rate'] }}" data-bedding="{{ $rm['bedding'] ?? 'King Size Master (72x78)' }}" data-max-adults="{{ $rm['max_adults'] ?? 2 }}" data-max-children="{{ $rm['max_children'] ?? 1 }}" data-max-pax="{{ $rm['max_pax'] ?? 3 }}">{{ $rm['room'] }} ({{ $rm['type'] }})</option>
+                              <option value="{{ $rm['id'] ?? $rm['room'] }}" data-room-no="{{ $rm['room'] }}" data-rate="{{ $rm['rate'] }}" data-bedding="{{ $rm['bedding'] ?? 'King Size Master (72x78)' }}" data-max-adults="{{ $rm['max_adults'] ?? 2 }}" data-max-children="{{ $rm['max_children'] ?? 1 }}" data-max-pax="{{ $rm['max_pax'] ?? 3 }}" data-plan-id="{{ $rm['plan_id'] ?? '' }}" data-plan-name="{{ $rm['plan_name'] ?? '' }}" data-plan-price="{{ $rm['plan_price'] ?? 0 }}">{{ $rm['room'] }} ({{ $rm['type'] }})</option>
                             @endforeach
                           </select>
                         </div>
@@ -903,10 +903,10 @@
                     <span><i class="fa-solid fa-list-check" style="color: #6366f1; margin-right: 4px;"></i> Meal Plan</span>
                     <span style="font-size: 9px; font-weight: 700; color: #6366f1; text-transform: none;"><i class="fa-solid fa-magnifying-glass"></i> Searchable</span>
                   </label>
-                  <select name="plan_id" id="plan-id-select" style="width:100%; height:38px; padding:6px 12px; font-size:12px; border:1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #1e293b; font-weight: 700; box-sizing: border-box;">
-                    <option value="">-- Select Meal Plan --</option>
+                  <select name="plan_id" id="plan-id-select" onchange="calculateReservationBilling()" style="width:100%; height:38px; padding:6px 12px; font-size:12px; border:1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #1e293b; font-weight: 700; box-sizing: border-box;">
+                    <option value="" data-price="0">-- Select Meal Plan --</option>
                     @foreach($plans ?? \App\Models\Plan::where('status', 'Active')->get() as $p)
-                      <option value="{{ $p->id }}" data-price="{{ $p->price }}">{{ $p->plan_name }}{{ (float)($p->price ?? 0) > 0 ? ' (₹' . number_format($p->price, 2) . ')' : '' }}</option>
+                      <option value="{{ $p->id }}" data-price="{{ (float)($p->price ?? 0) }}" data-name="{{ $p->plan_name }}">{{ $p->plan_name }}{{ (float)($p->price ?? 0) > 0 ? ' (₹' . number_format($p->price, 2) . ')' : '' }}</option>
                     @endforeach
                   </select>
                 </div>
@@ -931,10 +931,33 @@
                       <span id="calc-nights-rate-label" style="font-size: 10px; font-weight: 700; color: #64748b; font-family: monospace;">₹ 4,500 x 1 Night</span>
                     </div>
                     <div style="display: flex; justify-content: space-between; align-items: baseline;">
-                      <span style="font-size: 11px; font-weight: 700; color: #1e293b;">Total Gross:</span>
+                      <span style="font-size: 11px; font-weight: 700; color: #1e293b;">Total Room Tariff:</span>
                       <span id="calc-gross-display" style="font-size: 14px; font-weight: 900; color: #1e293b; font-family: monospace;">₹ 4,500.00</span>
                     </div>
                     <input type="hidden" name="total_amount" id="calc-total-amount" value="4500">
+                  </div>
+
+                  <!-- Meal Plan Price Card -->
+                  <div id="calc-meal-plan-card" style="display: none; background: #fffdf5; border: 1px solid #fef08a; border-radius: 8px; padding: 8px 10px; box-sizing: border-box; transition: all 0.2s ease;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
+                      <span style="font-size: 9px; font-weight: 800; color: #854d0e; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 4px;">
+                        <i class="fa-solid fa-utensils" style="color: #ca8a04;"></i> <span id="calc-meal-plan-name">Meal Plan</span>
+                      </span>
+                      <span id="calc-meal-plan-rate-label" style="font-size: 10px; font-weight: 700; color: #a16207; font-family: monospace;">₹ 0.00 x 1 Night</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                      <span style="font-size: 11px; font-weight: 700; color: #713f12;">Meal Plan Total:</span>
+                      <span id="calc-meal-plan-display" style="font-size: 13px; font-weight: 900; color: #b45309; font-family: monospace;">+ ₹ 0.00</span>
+                    </div>
+                    <input type="hidden" name="meal_plan_amount" id="calc-meal-plan-amount" value="0">
+                  </div>
+
+                  <!-- Combined Gross (When Meal Plan with price is active) -->
+                  <div id="calc-combined-gross-card" style="display: none; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 8px; padding: 6px 10px; box-sizing: border-box;">
+                    <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                      <span style="font-size: 10px; font-weight: 800; color: #475569; text-transform: uppercase; letter-spacing: 0.5px;">Gross Total (Room + Meals):</span>
+                      <span id="calc-combined-gross-display" style="font-size: 13px; font-weight: 900; color: #0f172a; font-family: monospace;">₹ 4,500.00</span>
+                    </div>
                   </div>
 
                   <!-- Discount Configuration Panel (For all registration types & auto-synced with Company) -->

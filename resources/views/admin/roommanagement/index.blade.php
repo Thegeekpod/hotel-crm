@@ -922,6 +922,26 @@
           </div>
         </div>
 
+        <!-- Section: Room Plan / Meal Package -->
+        <div style="display: flex; flex-direction: column; background: #fff; padding: 20px 22px; border: 1px solid var(--border-medium); border-radius: var(--radius-md); box-shadow: 0 4px 12px rgba(0,0,0,0.02); margin-bottom: 18px;">
+          <h4 style="font-size: 12px; color: var(--accent-primary); margin: 0 0 16px 0; text-transform: uppercase; font-weight: 900; letter-spacing: 1px; display: flex; align-items: center; gap: 8px;">
+            <i class="fa-solid fa-utensils"></i> Meal Plan / Package
+          </h4>
+          <div>
+            <label style="display:block; font-size: 11px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.6px;">
+              Plan <span style="font-size: 10px; color: var(--text-muted); font-weight: 600; text-transform: none;">(Searchable Dropdown)</span>
+            </label>
+            <select id="new-room-plan" class="select2-field" style="width:100%;">
+              <option value="">-- No Plan / Room Only (EP) --</option>
+              @if(isset($plans))
+                @foreach($plans as $plan)
+                  <option value="{{ $plan->id }}">{{ $plan->plan_name }} @if(!empty($plan->short_code))({{ $plan->short_code }})@endif @if($plan->price !== null && $plan->price > 0)- ₹{{ number_format($plan->price, 2) }}@endif</option>
+                @endforeach
+              @endif
+            </select>
+          </div>
+        </div>
+
         <!-- Section 3: Amenities & Features (Dynamic from Amenities Master) -->
         <div style="display: flex; flex-direction: column; background: #fff; padding: 20px 22px; border: 1px solid var(--border-medium); border-radius: var(--radius-md); box-shadow: 0 4px 12px rgba(0,0,0,0.02);">
           <h4 style="font-size: 12px; color: var(--accent-primary); margin: 0 0 16px 0; text-transform: uppercase; font-weight: 900; letter-spacing: 1px; display: flex; align-items: center; gap: 8px;">
@@ -1052,6 +1072,26 @@
                 </span>
               </div>
             </div>
+          </div>
+        </div>
+
+        <!-- Section: Room Plan / Meal Package -->
+        <div style="display: flex; flex-direction: column; background: #fff; padding: 20px 22px; border: 1px solid var(--border-medium); border-radius: var(--radius-md); box-shadow: 0 4px 12px rgba(0,0,0,0.02); margin-bottom: 18px;">
+          <h4 style="font-size: 12px; color: var(--accent-primary); margin: 0 0 16px 0; text-transform: uppercase; font-weight: 900; letter-spacing: 1px; display: flex; align-items: center; gap: 8px;">
+            <i class="fa-solid fa-utensils"></i> Meal Plan / Package
+          </h4>
+          <div>
+            <label style="display:block; font-size: 11px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.6px;">
+              Plan <span style="font-size: 10px; color: var(--text-muted); font-weight: 600; text-transform: none;">(Searchable Dropdown)</span>
+            </label>
+            <select id="edit-room-plan" class="select2-field" style="width:100%;">
+              <option value="">-- No Plan / Room Only (EP) --</option>
+              @if(isset($plans))
+                @foreach($plans as $plan)
+                  <option value="{{ $plan->id }}">{{ $plan->plan_name }} @if(!empty($plan->short_code))({{ $plan->short_code }})@endif @if($plan->price !== null && $plan->price > 0)- ₹{{ number_format($plan->price, 2) }}@endif</option>
+                @endforeach
+              @endif
+            </select>
           </div>
         </div>
 
@@ -1295,10 +1335,10 @@
         handleAmenityFilter(this.value);
       });
 
-      $('#new-room-floor, #new-room-cat, #new-room-bed, #new-room-status').select2({
+      $('#new-room-floor, #new-room-cat, #new-room-bed, #new-room-status, #new-room-plan').select2({
         dropdownParent: $('#add-room-modal')
       });
-      $('#edit-room-floor, #edit-room-cat, #edit-room-bed, #edit-room-status').select2({
+      $('#edit-room-floor, #edit-room-cat, #edit-room-bed, #edit-room-status, #edit-room-plan').select2({
         dropdownParent: $('#edit-room-modal')
       });
 
@@ -1324,6 +1364,7 @@
       $('#new-room-bed').val(defaultBed).trigger('change');
       updateNewRoomPaxCapacity(defaultBed);
       $('#new-room-status').val('Active').trigger('change');
+      $('#new-room-plan').val('').trigger('change');
     }
 
     // Default checkboxes
@@ -1374,6 +1415,7 @@
       $('#edit-room-bed').val(room.bedding_config).trigger('change');
       updateEditRoomPaxCapacity(room.bedding_config);
       $('#edit-room-status').val(room.status || 'Active').trigger('change');
+      $('#edit-room-plan').val(room.plan_id ? String(room.plan_id) : '').trigger('change');
     }
 
     // Check amenities
@@ -1392,6 +1434,7 @@
     const category = document.getElementById('new-room-cat').value;
     const rate = document.getElementById('new-room-rate').value;
     const bedding_config = document.getElementById('new-room-bed').value;
+    const plan_id = document.getElementById('new-room-plan') ? document.getElementById('new-room-plan').value : null;
     const status = document.getElementById('new-room-status').value || 'Active';
 
     const checkedAmenities = [];
@@ -1410,6 +1453,7 @@
       category,
       rate,
       bedding_config,
+      plan_id: plan_id || null,
       status,
       amenities: checkedAmenities
     };
@@ -1446,6 +1490,7 @@
     const category = document.getElementById('edit-room-cat').value;
     const rate = document.getElementById('edit-room-rate').value;
     const bedding_config = document.getElementById('edit-room-bed').value;
+    const plan_id = document.getElementById('edit-room-plan') ? document.getElementById('edit-room-plan').value : null;
     const status = document.getElementById('edit-room-status').value || 'Active';
 
     const checkedAmenities = [];
@@ -1464,6 +1509,7 @@
       category,
       rate,
       bedding_config,
+      plan_id: plan_id || null,
       status,
       amenities: checkedAmenities
     };

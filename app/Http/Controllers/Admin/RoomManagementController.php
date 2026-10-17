@@ -11,13 +11,14 @@ use App\Models\Amenity;
 use App\Models\HousekeepingState;
 use App\Models\OperationalStatus;
 use App\Models\RoomMaintenance;
+use App\Models\Plan;
 use Illuminate\Http\Request;
 
 class RoomManagementController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Room::with(['floorRelation', 'categoryRelation', 'beddingConfigRelation', 'latestMaintenance'])
+        $query = Room::with(['floorRelation', 'categoryRelation', 'beddingConfigRelation', 'planRelation', 'latestMaintenance'])
             ->orderBy('room_number', 'asc');
 
         // Filters
@@ -81,6 +82,7 @@ class RoomManagementController extends Controller
         $housekeepingStates = HousekeepingState::where('status', 'Active')->get();
         $operationalStatuses = OperationalStatus::where('status', 'Active')->get();
         $amenities = Amenity::where('status', 'Active')->get();
+        $plans = Plan::where('status', 'Active')->orderBy('plan_name', 'asc')->get();
 
         // Dynamic stats computed on filtered rooms
         $totalRooms = $rooms->count();
@@ -163,6 +165,7 @@ class RoomManagementController extends Controller
             'housekeepingStates',
             'operationalStatuses',
             'amenities',
+            'plans',
             'totalRooms',
             'activeRooms',
             'inactiveRooms',
@@ -178,7 +181,7 @@ class RoomManagementController extends Controller
 
     public function show($id)
     {
-        $room = Room::with(['floorRelation', 'categoryRelation', 'beddingConfigRelation'])->findOrFail($id);
+        $room = Room::with(['floorRelation', 'categoryRelation', 'beddingConfigRelation', 'planRelation'])->findOrFail($id);
         return response()->json([
             'success' => true,
             'data' => $room,
@@ -196,6 +199,7 @@ class RoomManagementController extends Controller
             'rate' => 'required|numeric|min:0',
             'bedding_config' => 'nullable|string|max:255',
             'bedding_config_id' => 'nullable|exists:bedding_configs,id',
+            'plan_id' => 'nullable|exists:plans,id',
             'amenities' => 'nullable|array',
             'status' => 'nullable|string|max:50',
             'notes' => 'nullable|string',
@@ -233,6 +237,7 @@ class RoomManagementController extends Controller
             'floor_id' => $fl ? $fl->id : null,
             'category_id' => $cat ? $cat->id : null,
             'bedding_config_id' => $bed ? $bed->id : null,
+            'plan_id' => !empty($validated['plan_id']) ? $validated['plan_id'] : null,
             'rate' => $validated['rate'],
             'status' => $status,
             'amenities' => array_values(array_unique($amenityIds)),
@@ -248,7 +253,7 @@ class RoomManagementController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Room #' . $room->room_number . ' registered successfully.',
-            'data' => $room->load(['floorRelation', 'categoryRelation', 'beddingConfigRelation']),
+            'data' => $room->load(['floorRelation', 'categoryRelation', 'beddingConfigRelation', 'planRelation']),
         ]);
     }
 
@@ -266,6 +271,7 @@ class RoomManagementController extends Controller
             'rate' => 'required|numeric|min:0',
             'bedding_config' => 'nullable|string|max:255',
             'bedding_config_id' => 'nullable|exists:bedding_configs,id',
+            'plan_id' => 'nullable|exists:plans,id',
             'amenities' => 'nullable|array',
             'status' => 'nullable|string|max:50',
             'notes' => 'nullable|string',
@@ -303,6 +309,7 @@ class RoomManagementController extends Controller
             'floor_id' => $fl ? $fl->id : null,
             'category_id' => $cat ? $cat->id : null,
             'bedding_config_id' => $bed ? $bed->id : null,
+            'plan_id' => !empty($validated['plan_id']) ? $validated['plan_id'] : null,
             'rate' => $validated['rate'],
             'status' => $status,
             'amenities' => array_values(array_unique($amenityIds)),
@@ -325,7 +332,7 @@ class RoomManagementController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Room #' . $room->room_number . ' updated successfully.',
-            'data' => $room->load(['floorRelation', 'categoryRelation', 'beddingConfigRelation']),
+            'data' => $room->load(['floorRelation', 'categoryRelation', 'beddingConfigRelation', 'planRelation']),
         ]);
     }
 

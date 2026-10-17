@@ -19,6 +19,7 @@ class Room extends Model
         'floor_id',
         'category_id',
         'bedding_config_id',
+        'plan_id',
         'rate',
         'status',
         'amenities',
@@ -34,6 +35,7 @@ class Room extends Model
         'floor',
         'category',
         'bedding_config',
+        'plan',
         'amenities_names',
         'pax_capacity',
     ];
@@ -54,6 +56,11 @@ class Room extends Model
     public function getBeddingConfigAttribute(): ?string
     {
         return $this->beddingConfigRelation?->name ?? null;
+    }
+
+    public function getPlanAttribute(): ?string
+    {
+        return $this->planRelation?->plan_name ?? null;
     }
 
     public function getPaxCapacityAttribute(): string
@@ -95,6 +102,11 @@ class Room extends Model
     public function beddingConfigRelation(): BelongsTo
     {
         return $this->belongsTo(BeddingConfig::class, 'bedding_config_id');
+    }
+
+    public function planRelation(): BelongsTo
+    {
+        return $this->belongsTo(Plan::class, 'plan_id');
     }
 
     public function maintenances(): HasMany

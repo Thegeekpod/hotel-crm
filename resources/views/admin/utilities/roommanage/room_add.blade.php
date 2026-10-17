@@ -889,6 +889,24 @@
           </div>
         </div>
 
+        <!-- Section: Room Plan / Meal Package -->
+        <div style="display: flex; flex-direction: column; background: #fff; padding: 20px 22px; border: 1px solid var(--border-medium); border-radius: var(--radius-md); box-shadow: 0 4px 12px rgba(0,0,0,0.02); margin-bottom: 18px;">
+          <h4 style="font-size: 12px; color: var(--accent-primary); margin: 0 0 16px 0; text-transform: uppercase; font-weight: 900; letter-spacing: 1px; display: flex; align-items: center; gap: 8px;">
+            <i class="fa-solid fa-utensils"></i> Meal Plan / Package
+          </h4>
+          <div>
+            <label style="display:block; font-size: 11px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.6px;">
+              Plan <span style="font-size: 10px; color: var(--text-muted); font-weight: 600; text-transform: none;">(Searchable Dropdown)</span>
+            </label>
+            <select id="new-room-plan" class="select2-field" style="width:100%;">
+              <option value="">-- No Plan / Room Only (EP) --</option>
+              @foreach($plans as $plan)
+                <option value="{{ $plan->id }}">{{ $plan->plan_name }} @if(!empty($plan->short_code))({{ $plan->short_code }})@endif @if($plan->price !== null && $plan->price > 0)- ₹{{ number_format($plan->price, 2) }}@endif</option>
+              @endforeach
+            </select>
+          </div>
+        </div>
+
         <!-- Section 3: Amenities & Features (Dynamic from Amenities Master) -->
         <div style="display: flex; flex-direction: column; background: #fff; padding: 20px 22px; border: 1px solid var(--border-medium); border-radius: var(--radius-md); box-shadow: 0 4px 12px rgba(0,0,0,0.02);">
           <h4 style="font-size: 12px; color: var(--accent-primary); margin: 0 0 16px 0; text-transform: uppercase; font-weight: 900; letter-spacing: 1px; display: flex; align-items: center; gap: 8px;">
@@ -1019,6 +1037,24 @@
                 </span>
               </div>
             </div>
+          </div>
+        </div>
+
+        <!-- Section: Room Plan / Meal Package -->
+        <div style="display: flex; flex-direction: column; background: #fff; padding: 20px 22px; border: 1px solid var(--border-medium); border-radius: var(--radius-md); box-shadow: 0 4px 12px rgba(0,0,0,0.02); margin-bottom: 18px;">
+          <h4 style="font-size: 12px; color: var(--accent-primary); margin: 0 0 16px 0; text-transform: uppercase; font-weight: 900; letter-spacing: 1px; display: flex; align-items: center; gap: 8px;">
+            <i class="fa-solid fa-utensils"></i> Meal Plan / Package
+          </h4>
+          <div>
+            <label style="display:block; font-size: 11px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.6px;">
+              Plan <span style="font-size: 10px; color: var(--text-muted); font-weight: 600; text-transform: none;">(Searchable Dropdown)</span>
+            </label>
+            <select id="edit-room-plan" class="select2-field" style="width:100%;">
+              <option value="">-- No Plan / Room Only (EP) --</option>
+              @foreach($plans as $plan)
+                <option value="{{ $plan->id }}">{{ $plan->plan_name }} @if(!empty($plan->short_code))({{ $plan->short_code }})@endif @if($plan->price !== null && $plan->price > 0)- ₹{{ number_format($plan->price, 2) }}@endif</option>
+              @endforeach
+            </select>
           </div>
         </div>
 
@@ -1262,10 +1298,10 @@
         handleAmenityFilter(this.value);
       });
 
-      $('#new-room-floor, #new-room-cat, #new-room-bed, #new-room-status').select2({
+      $('#new-room-floor, #new-room-cat, #new-room-bed, #new-room-status, #new-room-plan').select2({
         dropdownParent: $('#add-room-modal')
       });
-      $('#edit-room-floor, #edit-room-cat, #edit-room-bed, #edit-room-status').select2({
+      $('#edit-room-floor, #edit-room-cat, #edit-room-bed, #edit-room-status, #edit-room-plan').select2({
         dropdownParent: $('#edit-room-modal')
       });
 
@@ -1291,6 +1327,7 @@
       $('#new-room-bed').val(defaultBed).trigger('change');
       updateNewRoomPaxCapacity(defaultBed);
       $('#new-room-status').val('Active').trigger('change');
+      $('#new-room-plan').val('').trigger('change');
     }
 
     // Default checkboxes
@@ -1341,6 +1378,7 @@
       $('#edit-room-bed').val(room.bedding_config).trigger('change');
       updateEditRoomPaxCapacity(room.bedding_config);
       $('#edit-room-status').val(room.status || 'Active').trigger('change');
+      $('#edit-room-plan').val(room.plan_id ? String(room.plan_id) : '').trigger('change');
     }
 
     // Check amenities
@@ -1359,6 +1397,7 @@
     const category = document.getElementById('new-room-cat').value;
     const rate = document.getElementById('new-room-rate').value;
     const bedding_config = document.getElementById('new-room-bed').value;
+    const plan_id = document.getElementById('new-room-plan') ? document.getElementById('new-room-plan').value : null;
     const status = document.getElementById('new-room-status').value || 'Active';
 
     const checkedAmenities = [];
@@ -1377,6 +1416,7 @@
       category,
       rate,
       bedding_config,
+      plan_id: plan_id || null,
       status,
       amenities: checkedAmenities
     };
@@ -1413,6 +1453,7 @@
     const category = document.getElementById('edit-room-cat').value;
     const rate = document.getElementById('edit-room-rate').value;
     const bedding_config = document.getElementById('edit-room-bed').value;
+    const plan_id = document.getElementById('edit-room-plan') ? document.getElementById('edit-room-plan').value : null;
     const status = document.getElementById('edit-room-status').value || 'Active';
 
     const checkedAmenities = [];
@@ -1431,6 +1472,7 @@
       category,
       rate,
       bedding_config,
+      plan_id: plan_id || null,
       status,
       amenities: checkedAmenities
     };
@@ -1909,6 +1951,7 @@
             <td>
               <div style="font-size: 12px; font-weight: 700; color: var(--text-primary);">${room.bedding_config || 'Standard Bed'}</div>
               <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;"><i class="fa-solid fa-user-group" style="font-size: 10px; margin-right: 4px;"></i>${room.pax_capacity || '2 Adults'}</div>
+              ${(room.plan_relation || room.planRelation) ? `<div style="font-size: 11px; color: var(--accent-primary); font-weight: 700; margin-top: 3px;"><i class="fa-solid fa-utensils" style="font-size: 9px; margin-right: 4px;"></i>${(room.plan_relation || room.planRelation).plan_name}</div>` : ''}
             </td>
             <td>
               <div style="font-family: var(--font-mono); font-weight: 900; font-size: 13px; color: var(--accent-primary);">₹ ${Number(room.rate).toLocaleString()}</div>
@@ -1971,6 +2014,10 @@
               <div style="font-size: 12px; font-weight: 700; color: var(--text-secondary); margin-top: 8px;">
                 <i class="fa-solid fa-bed" style="margin-right: 4px; color: var(--accent-primary);"></i> ${room.bedding_config || 'Standard'} • ${room.pax_capacity || '2 Adults'}
               </div>
+              ${(room.plan_relation || room.planRelation) ? `
+              <div style="font-size: 11px; font-weight: 700; color: var(--accent-primary); margin-top: 4px;">
+                <i class="fa-solid fa-utensils" style="font-size: 10px; margin-right: 4px;"></i> ${(room.plan_relation || room.planRelation).plan_name}
+              </div>` : ''}
 
               <div class="room-amenity-tags">
                 ${amenitiesHtml || '<span style="color: var(--text-muted); font-size: 10px;">No amenities</span>'}
@@ -2178,6 +2225,28 @@
             </div>
           </div>
         </div>
+
+        <!-- Meal Plan Tile -->
+        ${(room.plan_relation || room.planRelation) ? `
+        <div style="grid-column: 1 / -1; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px 16px; box-shadow: 0 2px 6px rgba(0,0,0,0.02); display: flex; align-items: center; justify-content: space-between; gap: 14px;">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <div style="width: 38px; height: 38px; border-radius: 10px; background: #fffbeb; color: #d97706; display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0;">
+              <i class="fa-solid fa-utensils"></i>
+            </div>
+            <div>
+              <div style="font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">Meal Plan / Package</div>
+              <div style="font-size: 13px; font-weight: 800; color: #1e293b;">
+                ${(room.plan_relation || room.planRelation).plan_name} ${(room.plan_relation || room.planRelation).short_code ? '(' + (room.plan_relation || room.planRelation).short_code + ')' : ''}
+              </div>
+            </div>
+          </div>
+          ${(room.plan_relation || room.planRelation).price ? `
+            <span style="font-family: var(--font-mono); font-size: 13px; font-weight: 800; color: #059669; background: #ecfdf5; padding: 4px 10px; border-radius: 6px; border: 1px solid #a7f3d0;">
+              ₹${Number((room.plan_relation || room.planRelation).price).toLocaleString()}
+            </span>
+          ` : ''}
+        </div>
+        ` : ''}
       </div>
 
       <!-- Configured Amenities Card -->

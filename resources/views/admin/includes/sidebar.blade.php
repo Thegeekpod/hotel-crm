@@ -54,7 +54,7 @@
       </li>
       <li>
         <a href="{{ route('admin.utilities.frontoffice.plans.index') }}" class="admin-sub-item {{ request()->routeIs('admin.utilities.frontoffice.plans.*') ? 'active' : '' }}">
-          <i class="fa-solid fa-list-check"></i> Plans Master
+          <i class="fa-solid fa-list-check"></i> Meal Plans
         </a>
       </li>
     </ul>

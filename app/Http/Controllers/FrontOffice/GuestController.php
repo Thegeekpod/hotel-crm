@@ -10,6 +10,10 @@ use App\Models\IdCardType;
 use App\Models\ReservationMode;
 use App\Models\PaymentMode;
 use App\Models\Guest;
+use App\Models\Booking;
+use App\Models\Payment;
+use App\Models\Settlement;
+use App\Models\Checkout;
 use Illuminate\Http\Request;
 
 class GuestController extends Controller
@@ -26,24 +30,25 @@ class GuestController extends Controller
         $rackRooms = [];
 
         $query = Guest::with([
-            'room.categoryRelation',
-            'room.floorRelation',
-            'room.beddingConfigRelation',
             'title',
             'nationality',
             'idCardType',
             'company',
-            'paymentMode',
-            'plan',
-            'registrationType',
-            'reservationMode',
+            'latestBooking.room.categoryRelation',
+            'latestBooking.room.floorRelation',
+            'latestBooking.room.beddingConfigRelation',
+            'latestBooking.registrationType',
+            'latestBooking.reservationMode',
+            'latestBooking.plan',
+            'latestBooking.payments.paymentMode',
+            'bookings.room.categoryRelation',
+            'payments.paymentMode',
         ])
         ->orderBy('id', 'desc');
 
         $today = now()->toDateString();
 
-        // From & To Date Filter (based on check-in date: reserve_date)
-        // By default today is selected if no date parameters are present
+        // From & To Date Filter (based on booking check-in date: reserve_date)
         if ($request->has('all_dates')) {
             $fromDate = null;
             $toDate = null;
@@ -56,20 +61,26 @@ class GuestController extends Controller
         }
 
         if (!empty($fromDate)) {
-            $query->whereDate('reserve_date', '>=', $fromDate);
+            $query->whereHas('bookings', function ($bq) use ($fromDate) {
+                $bq->whereDate('reserve_date', '>=', $fromDate);
+            });
         }
         if (!empty($toDate)) {
-            $query->whereDate('reserve_date', '<=', $toDate);
+            $query->whereHas('bookings', function ($bq) use ($toDate) {
+                $bq->whereDate('reserve_date', '<=', $toDate);
+            });
         }
 
         // Backend Filter: Status
         if ($request->filled('status') && $request->status !== 'all') {
-            $query->where('status', $request->status);
+            $query->whereHas('bookings', function ($bq) use ($request) {
+                $bq->where('status', $request->status);
+            });
         }
 
         // Backend Filter: Registration Type
         if ($request->filled('registration_type') && $request->registration_type !== 'all') {
-            $query->whereHas('registrationType', function ($q) use ($request) {
+            $query->whereHas('bookings.registrationType', function ($q) use ($request) {
                 $q->where('name', $request->registration_type);
             });
         }
@@ -81,12 +92,14 @@ class GuestController extends Controller
                 $q->where('guest_name', 'like', "%{$s}%")
                   ->orWhere('mobile', 'like', "%{$s}%")
                   ->orWhere('email', 'like', "%{$s}%")
-                  ->orWhere('reserve_id', 'like', "%{$s}%")
-                  ->orWhere('folio_number', 'like', "%{$s}%")
                   ->orWhere('city', 'like', "%{$s}%")
                   ->orWhere('id_card_number', 'like', "%{$s}%")
-                  ->orWhereHas('registrationType', function ($rq) use ($s) {
-                      $rq->where('name', 'like', "%{$s}%");
+                  ->orWhereHas('bookings', function ($bq) use ($s) {
+                      $bq->where('reserve_id', 'like', "%{$s}%")
+                         ->orWhere('folio_number', 'like', "%{$s}%")
+                         ->orWhereHas('registrationType', function ($rq) use ($s) {
+                             $rq->where('name', 'like', "%{$s}%");
+                         });
                   });
             });
         }
@@ -103,12 +116,12 @@ class GuestController extends Controller
         // Overall stats from Database
         $stats = [
             'total' => Guest::count(),
-            'confirmed' => Guest::where('status', 'Confirmed')->count(),
-            'checked_in' => Guest::where('status', 'Checked In')->count(),
-            'arrived' => Guest::where('status', 'Arrived')->count(),
-            'stay_over' => Guest::where('status', 'Stay Over')->count(),
-            'checked_out' => Guest::where('status', 'Checked Out')->count(),
-            'cancelled' => Guest::where('status', 'Cancelled')->count(),
+            'confirmed' => Booking::where('status', 'Confirmed')->count(),
+            'checked_in' => Booking::where('status', 'Checked In')->count(),
+            'arrived' => Booking::where('status', 'Arrived')->count(),
+            'stay_over' => Booking::where('status', 'Stay Over')->count(),
+            'checked_out' => Booking::where('status', 'Checked Out')->count(),
+            'cancelled' => Booking::where('status', 'Cancelled')->count(),
             'vip' => Guest::where('has_privilege_card', true)->count(),
             'corporate' => Guest::where(function($q) {
                 $q->whereNotNull('company_id')->orWhereNotNull('new_company_name');
@@ -135,16 +148,21 @@ class GuestController extends Controller
     public function getDetails($id)
     {
         $guest = Guest::with([
-            'room.categoryRelation',
-            'room.floorRelation',
-            'room.beddingConfigRelation',
             'title',
             'nationality',
             'idCardType',
             'company',
-            'paymentMode',
-            'registrationType',
-            'reservationMode',
+            'latestBooking.room.categoryRelation',
+            'latestBooking.room.floorRelation',
+            'latestBooking.room.beddingConfigRelation',
+            'latestBooking.registrationType',
+            'latestBooking.reservationMode',
+            'latestBooking.plan',
+            'latestBooking.payments.paymentMode',
+            'bookings.room',
+            'payments.paymentMode',
+            'checkouts',
+            'settlements',
         ])->find($id);
 
         if (!$guest) {

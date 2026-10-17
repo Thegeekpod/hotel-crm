@@ -10,6 +10,8 @@ use App\Models\IdCardType;
 use App\Models\ReservationMode;
 use App\Models\PaymentMode;
 use App\Models\Guest;
+use App\Models\Booking;
+use App\Models\Checkout;
 use App\Models\HousekeepingState;
 use App\Models\OperationalStatus;
 use App\Models\RoomHousekeepingHistory;
@@ -31,16 +33,16 @@ class ArrivalController extends Controller
         $today = now()->toDateString();
         $selectedDate = $request->query('date');
 
-        // Fetch guests whose check-in date matches chosen date or strictly future dates
-        $query = Guest::with([
+        // Fetch bookings whose check-in date matches chosen date or strictly future dates
+        $query = Booking::with([
+            'guest.title',
+            'guest.nationality',
+            'guest.idCardType',
             'room.categoryRelation',
             'room.floorRelation',
             'room.beddingConfigRelation',
-            'title',
-            'nationality',
-            'idCardType',
             'company',
-            'paymentMode',
+            'payments.paymentMode',
             'plan',
             'registrationType',
             'reservationMode',
@@ -52,10 +54,10 @@ class ArrivalController extends Controller
                     ->with('warning', 'Past dates cannot be selected for arrivals.');
             }
             $query->whereDate('reserve_date', $selectedDate);
-            $baseQuery = Guest::whereDate('reserve_date', $selectedDate);
+            $baseQuery = Booking::whereDate('reserve_date', $selectedDate);
         } else {
             $query->whereDate('reserve_date', '>', $today);
-            $baseQuery = Guest::whereDate('reserve_date', '>', $today);
+            $baseQuery = Booking::whereDate('reserve_date', '>', $today);
         }
 
         $query->latest('id');
@@ -67,11 +69,13 @@ class ArrivalController extends Controller
         if ($request->filled('search')) {
             $s = trim($request->search);
             $query->where(function ($q) use ($s) {
-                $q->where('guest_name', 'like', "%{$s}%")
-                  ->orWhere('mobile', 'like', "%{$s}%")
-                  ->orWhere('email', 'like', "%{$s}%")
-                  ->orWhere('reserve_id', 'like', "%{$s}%")
+                $q->where('reserve_id', 'like', "%{$s}%")
                   ->orWhere('folio_number', 'like', "%{$s}%")
+                  ->orWhereHas('guest', function ($gq) use ($s) {
+                      $gq->where('guest_name', 'like', "%{$s}%")
+                         ->orWhere('mobile', 'like', "%{$s}%")
+                         ->orWhere('email', 'like', "%{$s}%");
+                  })
                   ->orWhereHas('room', function ($rq) use ($s) {
                       $rq->where('room_number', 'like', "%{$s}%");
                   });
@@ -112,21 +116,45 @@ class ArrivalController extends Controller
             'status' => 'required|string|max:50',
         ]);
 
-        $guest = Guest::with(['room'])->findOrFail($id);
-        $oldStatus = $guest->status ?: 'Confirmed';
+        $booking = Booking::with(['room', 'guest'])->findOrFail($id);
+        $oldStatus = $booking->status ?: 'Confirmed';
         $newStatus = $validated['status'];
 
-        $guest->status = $newStatus;
-        $guest->save();
+        $booking->status = $newStatus;
+        $booking->save();
 
-        if (in_array($newStatus, ['Arrived', 'Checked In']) && $guest->room) {
+        if (in_array($newStatus, ['Arrived', 'Checked In']) && $booking->room) {
             $activeOp = OperationalStatus::where('name', 'like', '%Active%')->first();
             if ($activeOp) {
                 RoomOperationalHistory::create([
-                    'room_id' => $guest->room->id,
+                    'room_id' => $booking->room->id,
                     'operational_status_id' => $activeOp->id,
                 ]);
             }
+        }
+
+        if ($newStatus === 'Checked Out') {
+            Checkout::firstOrCreate(
+                ['booking_id' => $booking->id],
+                [
+                    'guest_id' => $booking->guest_id,
+                    'room_id' => $booking->room_id,
+                    'checkout_date' => now()->toDateString(),
+                    'checkout_time' => now()->format('H:i'),
+                    'actual_checkout_at' => now(),
+                    'total_nights' => $booking->total_nights,
+                    'room_charges' => $booking->total_amount,
+                    'extra_charges' => 0.00,
+                    'late_checkout_charge' => 0.00,
+                    'discount_amount' => $booking->discount_amount,
+                    'tax_amount' => $booking->gst_amount,
+                    'grand_total' => $booking->payable_amount,
+                    'paid_amount' => $booking->advance_amount,
+                    'balance_amount' => $booking->balance,
+                    'status' => 'Completed',
+                    'remarks' => 'Checked out via Arrivals manager',
+                ]
+            );
         }
 
         $badgeClass = match ($newStatus) {
@@ -139,9 +167,11 @@ class ArrivalController extends Controller
             default => 'gray',
         };
 
+        $guestName = $booking->guest?->guest_name ?? 'Guest';
+
         return response()->json([
             'success' => true,
-            'message' => "Guest {$guest->guest_name}'s status successfully updated from '{$oldStatus}' to '{$newStatus}'.",
+            'message' => "Guest {$guestName}'s status successfully updated from '{$oldStatus}' to '{$newStatus}'.",
             'status' => $newStatus,
             'badge_class' => $badgeClass,
         ]);
@@ -149,24 +179,25 @@ class ArrivalController extends Controller
 
     public function getDetails($id)
     {
-        $guest = Guest::with([
+        $booking = Booking::with([
+            'guest.title',
+            'guest.nationality',
+            'guest.idCardType',
             'room.categoryRelation',
             'room.floorRelation',
             'room.beddingConfigRelation',
-            'title',
-            'nationality',
-            'idCardType',
             'company',
-            'paymentMode',
+            'payments.paymentMode',
+            'plan',
             'registrationType',
             'reservationMode',
-            'primaryGuest',
-            'additionalGuests',
+            'primaryBooking.guest',
+            'additionalBookings.guest',
         ])->findOrFail($id);
 
         return response()->json([
             'success' => true,
-            'guest' => $guest,
+            'guest' => $booking,
         ]);
     }
 }

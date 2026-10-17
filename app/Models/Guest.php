@@ -4,6 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Guest extends Model
 {
@@ -12,21 +15,6 @@ class Guest extends Model
     protected $table = 'guests';
 
     protected $fillable = [
-        'reserve_id',
-        'registration_type_id',
-        'reservation_mode_id',
-        'company_id',
-        'new_company_name',
-        'new_company_address',
-        'new_company_gstin',
-        'new_company_phone',
-        'reserve_date',
-        'reserve_time',
-        'checkout_date',
-        'checkout_time',
-        'total_nights',
-        'room_rate',
-        'total_amount',
         'title_id',
         'guest_name',
         'guest_address',
@@ -34,140 +22,219 @@ class Guest extends Model
         'city',
         'mobile',
         'email',
-        'status',
-        'has_privilege_card',
-        'privilege_card_no',
-        'room_id',
         'id_card_type_id',
         'id_card_number',
-        'payment_mode_id',
-        'plan_id',
-        'discount_percentage',
-        'discount_amount',
-        'gst_type',
-        'gst_percentage_id',
-        'gst_percentage',
-        'gst_amount',
-        'payable_amount',
-        'advance_amount',
-        'payment_remarks',
-        'primary_guest_id',
-        'folio_number',
-        'balance',
+        'has_privilege_card',
+        'privilege_card_no',
+        'company_id',
+        'new_company_name',
+        'new_company_address',
+        'new_company_gstin',
+        'new_company_phone',
     ];
 
     protected $casts = [
-        'reserve_date' => 'date',
-        'checkout_date' => 'date',
-        'total_nights' => 'integer',
-        'room_rate' => 'decimal:2',
-        'total_amount' => 'decimal:2',
-        'discount_percentage' => 'float',
-        'discount_amount' => 'decimal:2',
-        'gst_percentage' => 'float',
-        'gst_amount' => 'decimal:2',
-        'payable_amount' => 'decimal:2',
         'has_privilege_card' => 'boolean',
-        'advance_amount' => 'decimal:2',
-        'balance' => 'decimal:2',
     ];
 
     /**
-     * Generate auto Reserve ID (e.g., 830\2026-2027)
+     * Backward-compatible delegation to latestBooking
      */
-    public static function generateNextReserveId(): string
+    public function getReserveIdAttribute()
     {
-        $currentMonth = (int)date('n');
-        $currentYear = (int)date('Y');
-        
-        $finYear = ($currentMonth >= 4) 
-            ? $currentYear . '-' . ($currentYear + 1) 
-            : ($currentYear - 1) . '-' . $currentYear;
+        return $this->latestBooking?->reserve_id;
+    }
 
-        $latest = self::where('reserve_id', 'like', "%\\{$finYear}")
-            ->orWhere('reserve_id', 'like', "%/{$finYear}")
-            ->orderBy('id', 'desc')
-            ->first();
+    public function getFolioNumberAttribute()
+    {
+        return $this->latestBooking?->folio_number;
+    }
 
-        $nextNum = 830;
-        if ($latest && preg_match('/^(\d+)/', $latest->reserve_id, $matches)) {
-            $nextNum = ((int)$matches[1]) + 1;
-        } else {
-            $count = self::count();
-            $nextNum = max(830, 829 + $count + 1);
-        }
+    public function getStatusAttribute()
+    {
+        return $this->latestBooking?->status ?? 'Confirmed';
+    }
 
-        return "{$nextNum}\\{$finYear}";
+    public function getRoomIdAttribute()
+    {
+        return $this->latestBooking?->room_id;
+    }
+
+    public function getRoomAttribute()
+    {
+        return $this->latestBooking?->room;
+    }
+
+    public function getReserveDateAttribute()
+    {
+        return $this->latestBooking?->reserve_date;
+    }
+
+    public function getReserveTimeAttribute()
+    {
+        return $this->latestBooking?->reserve_time;
+    }
+
+    public function getCheckoutDateAttribute()
+    {
+        return $this->latestBooking?->checkout_date;
+    }
+
+    public function getCheckoutTimeAttribute()
+    {
+        return $this->latestBooking?->checkout_time;
+    }
+
+    public function getTotalNightsAttribute()
+    {
+        return $this->latestBooking?->total_nights ?? 1;
+    }
+
+    public function getRoomRateAttribute()
+    {
+        return $this->latestBooking?->room_rate ?? 0.00;
+    }
+
+    public function getTotalAmountAttribute()
+    {
+        return $this->latestBooking?->total_amount ?? 0.00;
+    }
+
+    public function getDiscountPercentageAttribute()
+    {
+        return $this->latestBooking?->discount_percentage ?? 0.00;
+    }
+
+    public function getDiscountAmountAttribute()
+    {
+        return $this->latestBooking?->discount_amount ?? 0.00;
+    }
+
+    public function getGstTypeAttribute()
+    {
+        return $this->latestBooking?->gst_type ?? 'exclusive';
+    }
+
+    public function getGstPercentageAttribute()
+    {
+        return $this->latestBooking?->gst_percentage ?? 0.00;
+    }
+
+    public function getGstAmountAttribute()
+    {
+        return $this->latestBooking?->gst_amount ?? 0.00;
+    }
+
+    public function getPayableAmountAttribute()
+    {
+        return $this->latestBooking?->payable_amount ?? 0.00;
+    }
+
+    public function getAdvanceAmountAttribute()
+    {
+        return $this->latestBooking?->advance_amount ?? 0.00;
+    }
+
+    public function getBalanceAttribute()
+    {
+        return $this->latestBooking?->balance ?? 0.00;
+    }
+
+    public function getRegistrationTypeAttribute()
+    {
+        return $this->latestBooking?->registrationType;
+    }
+
+    public function getReservationModeAttribute()
+    {
+        return $this->latestBooking?->reservationMode;
+    }
+
+    public function getPlanAttribute()
+    {
+        return $this->latestBooking?->plan;
+    }
+
+    public function getPaymentModeAttribute()
+    {
+        return $this->payments()->latest()->first()?->paymentMode;
     }
 
     /**
-     * Generate Folio Number (e.g., FOL-101-492)
+     * Generate auto Reserve ID (forwards to Booking)
+     */
+    public static function generateNextReserveId(): string
+    {
+        return Booking::generateNextReserveId();
+    }
+
+    /**
+     * Generate Folio Number (forwards to Booking)
      */
     public static function generateFolioNumber(?string $roomNumber = null): string
     {
-        $room = $roomNumber ?: 'G';
-        $rand = rand(100, 999);
-        return "FOL-{$room}-{$rand}";
+        return Booking::generateFolioNumber($roomNumber);
     }
 
-    public function registrationType()
+    /* -------------------------------------------------------------------------- */
+    /*                                Relationships                               */
+    /* -------------------------------------------------------------------------- */
+
+    public function bookings(): HasMany
     {
-        return $this->belongsTo(RegistrationType::class, 'registration_type_id');
+        return $this->hasMany(Booking::class, 'guest_id');
     }
 
-    public function reservationMode()
+    public function latestBooking(): HasOne
     {
-        return $this->belongsTo(ReservationMode::class, 'reservation_mode_id');
+        return $this->hasOne(Booking::class, 'guest_id')->latestOfMany();
     }
 
-    public function company()
+    public function currentBooking(): HasOne
+    {
+        return $this->hasOne(Booking::class, 'guest_id')
+            ->whereIn('status', ['Confirmed', 'Arrived', 'Checked In', 'Stay Over'])
+            ->latestOfMany();
+    }
+
+    public function activeBookings(): HasMany
+    {
+        return $this->hasMany(Booking::class, 'guest_id')
+            ->whereIn('status', ['Confirmed', 'Arrived', 'Checked In', 'Stay Over']);
+    }
+
+    public function payments(): HasMany
+    {
+        return $this->hasMany(Payment::class, 'guest_id');
+    }
+
+    public function settlements(): HasMany
+    {
+        return $this->hasMany(Settlement::class, 'guest_id');
+    }
+
+    public function checkouts(): HasMany
+    {
+        return $this->hasMany(Checkout::class, 'guest_id');
+    }
+
+    public function company(): BelongsTo
     {
         return $this->belongsTo(Company::class, 'company_id');
     }
 
-    public function title()
+    public function title(): BelongsTo
     {
         return $this->belongsTo(Title::class, 'title_id');
     }
 
-    public function nationality()
+    public function nationality(): BelongsTo
     {
         return $this->belongsTo(Nationality::class, 'nationality_id');
     }
 
-    public function room()
-    {
-        return $this->belongsTo(Room::class, 'room_id');
-    }
-
-    public function idCardType()
+    public function idCardType(): BelongsTo
     {
         return $this->belongsTo(IdCardType::class, 'id_card_type_id');
-    }
-
-    public function paymentMode()
-    {
-        return $this->belongsTo(PaymentMode::class, 'payment_mode_id');
-    }
-
-    public function gstPercentage()
-    {
-        return $this->belongsTo(GstPercentage::class, 'gst_percentage_id');
-    }
-
-    public function plan()
-    {
-        return $this->belongsTo(Plan::class, 'plan_id');
-    }
-
-
-    public function primaryGuest()
-    {
-        return $this->belongsTo(Guest::class, 'primary_guest_id');
-    }
-
-    public function additionalGuests()
-    {
-        return $this->hasMany(Guest::class, 'primary_guest_id');
     }
 }

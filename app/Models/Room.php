@@ -117,22 +117,38 @@ class Room extends Model
         return $this->hasMany(RoomOperationalHistory::class, 'room_id');
     }
 
-    public function guests(): HasMany
+    public function bookings(): HasMany
     {
-        return $this->hasMany(Guest::class, 'room_id');
+        return $this->hasMany(Booking::class, 'room_id');
     }
 
-    public function activeGuests(): HasMany
+    public function activeBookings(): HasMany
     {
-        return $this->hasMany(Guest::class, 'room_id')
-            ->whereIn('status', ['Confirmed', 'Arrived', 'Stay Over']);
+        return $this->hasMany(Booking::class, 'room_id')
+            ->whereIn('status', ['Confirmed', 'Arrived', 'Checked In', 'Stay Over']);
     }
 
-    public function currentGuest(): HasOne
+    public function currentBooking(): HasOne
     {
-        return $this->hasOne(Guest::class, 'room_id')
-            ->whereIn('status', ['Confirmed', 'Arrived', 'Stay Over'])
+        return $this->hasOne(Booking::class, 'room_id')
+            ->whereIn('status', ['Confirmed', 'Arrived', 'Checked In', 'Stay Over'])
             ->latestOfMany();
+    }
+
+    public function guests(): \Illuminate\Database\Eloquent\Relations\HasManyThrough
+    {
+        return $this->hasManyThrough(Guest::class, Booking::class, 'room_id', 'id', 'id', 'guest_id');
+    }
+
+    public function activeGuests()
+    {
+        return $this->hasManyThrough(Guest::class, Booking::class, 'room_id', 'id', 'id', 'guest_id')
+            ->whereIn('bookings.status', ['Confirmed', 'Arrived', 'Checked In', 'Stay Over']);
+    }
+
+    public function getCurrentGuestAttribute()
+    {
+        return $this->currentBooking?->guest;
     }
 }
 

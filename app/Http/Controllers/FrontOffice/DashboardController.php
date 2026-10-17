@@ -16,6 +16,10 @@ use App\Models\Nationality;
 use App\Models\Amenity;
 use App\Models\BeddingConfig;
 use App\Models\Guest;
+use App\Models\Booking;
+use App\Models\Payment;
+use App\Models\Settlement;
+use App\Models\Checkout;
 use App\Models\HousekeepingState;
 use App\Models\OperationalStatus;
 use App\Models\RoomHousekeepingHistory;
@@ -67,8 +71,8 @@ class DashboardController extends Controller
             'operationalHistories.operationalStatus',
         ])->orderByRaw('CAST(room_number AS UNSIGNED) ASC, room_number ASC')->get();
 
-        // Preload all active guests covering selectedDate grouped by room_id
-        $activeGuestsByRoom = Guest::where(function ($q) use ($selectedDate) {
+        // Preload all active bookings covering selectedDate grouped by room_id
+        $activeGuestsByRoom = Booking::where(function ($q) use ($selectedDate) {
             $q->whereDate('reserve_date', '<=', $selectedDate)
               ->where(function ($co) use ($selectedDate) {
                   $co->whereDate('checkout_date', '>=', $selectedDate)
@@ -76,7 +80,7 @@ class DashboardController extends Controller
               });
         })
         ->whereIn('status', ['Confirmed', 'Arrived', 'Stay Over', 'Checked In'])
-        ->with(['title', 'nationality', 'idCardType', 'registrationType', 'company', 'plan'])
+        ->with(['guest.title', 'guest.nationality', 'guest.idCardType', 'registrationType', 'company', 'plan'])
         ->orderByRaw("CASE WHEN status = 'Checked In' THEN 1 WHEN status = 'Stay Over' THEN 2 WHEN status = 'Arrived' THEN 3 WHEN status = 'Confirmed' THEN 4 ELSE 5 END")
         ->orderBy('id', 'desc')
         ->get()
@@ -97,7 +101,7 @@ class DashboardController extends Controller
         $housekeepingStates = HousekeepingState::where('status', 'Active')->orderBy('name', 'asc')->get();
         $operationalStatuses = OperationalStatus::where('status', 'Active')->orderBy('name', 'asc')->get();
         $amenityMap = Amenity::pluck('name', 'id')->toArray();
-        $nextReserveId = Guest::generateNextReserveId();
+        $nextReserveId = Booking::generateNextReserveId();
 
         $rackRooms = [];
         if ($dbRooms->isNotEmpty()) {
@@ -117,10 +121,10 @@ class DashboardController extends Controller
                 $firstActiveGuest = $activeGuests->first();
                 if ($firstActiveGuest && $firstActiveGuest->reserve_id) {
                     $resId = $firstActiveGuest->reserve_id;
-                    $linkedGuests = Guest::where('reserve_id', $resId)
+                    $linkedGuests = Booking::where('reserve_id', $resId)
                         ->where('room_id', $r->id)
                         ->whereIn('status', ['Confirmed', 'Arrived', 'Stay Over', 'Checked In'])
-                        ->with(['title', 'nationality', 'idCardType', 'registrationType', 'company'])
+                        ->with(['guest.title', 'guest.nationality', 'guest.idCardType', 'registrationType', 'company'])
                         ->get();
                     if ($linkedGuests->isNotEmpty()) {
                         $activeGuests = $linkedGuests;
@@ -278,11 +282,11 @@ class DashboardController extends Controller
             'dirty' => $dirtyCount,
             'available' => $availableCount,
             'vacant' => $vacantCount,
-            'expected_arrival' => Guest::whereDate('reserve_date', $selectedDate)->where('status', 'Confirmed')->count(),
-            'expected_departure' => Guest::whereDate('checkout_date', $selectedDate)->whereIn('status', ['Stay Over', 'Arrived'])->count(),
+            'expected_arrival' => Booking::whereDate('reserve_date', $selectedDate)->where('status', 'Confirmed')->count(),
+            'expected_departure' => Booking::whereDate('checkout_date', $selectedDate)->whereIn('status', ['Stay Over', 'Arrived', 'Checked In'])->count(),
             'rooms_to_sale' => $vacantCount,
-            'checked_in' => Guest::whereDate('reserve_date', $selectedDate)->whereIn('status', ['Arrived', 'Stay Over'])->count(),
-            'checked_out' => Guest::whereDate('checkout_date', $selectedDate)->where('status', 'Checked Out')->count(),
+            'checked_in' => Booking::whereDate('reserve_date', $selectedDate)->whereIn('status', ['Arrived', 'Stay Over', 'Checked In'])->count(),
+            'checked_out' => Booking::whereDate('checkout_date', $selectedDate)->where('status', 'Checked Out')->count(),
             'total_pax' => $totalPax > 0 ? $totalPax : 0,
             'cleaned_ratio' => $cleanRatio,
             'percentages' => [
@@ -486,8 +490,8 @@ class DashboardController extends Controller
 
         $totalRoomsCount = $dbRooms->count();
 
-        // Preload all active guests covering the from_date to to_date range grouped by room_id
-        $activeGuestsByRoom = Guest::where(function ($q) use ($fromDate, $toDate) {
+        // Preload all active bookings covering the from_date to to_date range grouped by room_id
+        $activeGuestsByRoom = Booking::where(function ($q) use ($fromDate, $toDate) {
             $q->whereDate('reserve_date', '<=', $toDate)
               ->where(function ($co) use ($fromDate) {
                   $co->whereDate('checkout_date', '>=', $fromDate)
@@ -496,7 +500,7 @@ class DashboardController extends Controller
         })
         ->whereIn('status', ['Confirmed', 'Arrived', 'Stay Over', 'Checked In'])
         ->whereNotNull('room_id')
-        ->with(['title', 'nationality', 'idCardType', 'registrationType', 'company', 'plan'])
+        ->with(['guest.title', 'guest.nationality', 'guest.idCardType', 'registrationType', 'company', 'plan'])
         ->orderByRaw("CASE WHEN status = 'Checked In' THEN 1 WHEN status = 'Stay Over' THEN 2 WHEN status = 'Arrived' THEN 3 WHEN status = 'Confirmed' THEN 4 ELSE 5 END")
         ->orderBy('id', 'desc')
         ->get()
@@ -517,7 +521,7 @@ class DashboardController extends Controller
         $housekeepingStates = HousekeepingState::where('status', 'Active')->orderBy('name', 'asc')->get();
         $operationalStatuses = OperationalStatus::where('status', 'Active')->orderBy('name', 'asc')->get();
         $amenityMap = Amenity::pluck('name', 'id')->toArray();
-        $nextReserveId = Guest::generateNextReserveId();
+        $nextReserveId = Booking::generateNextReserveId();
 
         $rackRooms = [];
         if ($dbRooms->isNotEmpty()) {
@@ -544,10 +548,10 @@ class DashboardController extends Controller
                 $firstActiveGuest = $activeGuests->first();
                 if ($firstActiveGuest && $firstActiveGuest->reserve_id) {
                     $resId = $firstActiveGuest->reserve_id;
-                    $linkedGuests = Guest::where('reserve_id', $resId)
+                    $linkedGuests = Booking::where('reserve_id', $resId)
                         ->where('room_id', $r->id)
                         ->whereIn('status', ['Confirmed', 'Arrived', 'Stay Over', 'Checked In'])
-                        ->with(['title', 'nationality', 'idCardType', 'registrationType', 'company'])
+                        ->with(['guest.title', 'guest.nationality', 'guest.idCardType', 'registrationType', 'company'])
                         ->get();
                     if ($linkedGuests->isNotEmpty()) {
                         $activeGuests = $linkedGuests;
@@ -687,8 +691,8 @@ class DashboardController extends Controller
             'confirmed' => $confirmedCount,
             'arrived' => $arrivedCount,
             'total_pax' => $totalPax,
-            'expected_arrival' => Guest::whereDate('reserve_date', '>=', $fromDate)->whereDate('reserve_date', '<=', $toDate)->where('status', 'Confirmed')->count(),
-            'expected_departure' => Guest::whereDate('checkout_date', '>=', $fromDate)->whereDate('checkout_date', '<=', $toDate)->whereIn('status', ['Stay Over', 'Arrived', 'Checked In'])->count(),
+            'expected_arrival' => Booking::whereDate('reserve_date', '>=', $fromDate)->whereDate('reserve_date', '<=', $toDate)->where('status', 'Confirmed')->count(),
+            'expected_departure' => Booking::whereDate('checkout_date', '>=', $fromDate)->whereDate('checkout_date', '<=', $toDate)->whereIn('status', ['Stay Over', 'Arrived', 'Checked In'])->count(),
             'occupancy_percentage' => $totalRoomsCount > 0 ? round(($totalBooked / $totalRoomsCount) * 100, 1) : 0,
             'percentages' => [
                 'checked_in' => $totalBooked > 0 ? round(($checkedInCount / $totalBooked) * 100, 1) : 0,
@@ -901,7 +905,7 @@ class DashboardController extends Controller
         }
 
         // Find conflicting bookings across all rooms for this date window
-        $conflictingGuests = Guest::whereNotNull('room_id')
+        $conflictingGuests = Booking::whereNotNull('room_id')
             ->whereIn('status', ['Confirmed', 'Checked In', 'Arrived', 'Stay Over'])
             ->where(function ($q) use ($checkInDate, $checkOutDate) {
                 $q->whereDate('reserve_date', '<', $checkOutDate)
@@ -910,7 +914,7 @@ class DashboardController extends Controller
                           ->orWhereNull('checkout_date');
                   });
             })
-            ->with(['room', 'title'])
+            ->with(['room', 'guest.title'])
             ->get();
 
         $conflictingRoomIds = $conflictingGuests->pluck('room_id')->unique()->toArray();
@@ -998,7 +1002,7 @@ class DashboardController extends Controller
         DB::beginTransaction();
         try {
             // Auto generate reserve_id if not provided or to ensure strict sequence
-            $reserveId = Guest::generateNextReserveId();
+            $reserveId = Booking::generateNextReserveId();
 
             $registrationTypeId = $request->input('registration_type_id') ?? $request->input('res_type');
             if ($registrationTypeId && is_numeric($registrationTypeId)) {
@@ -1095,7 +1099,7 @@ class DashboardController extends Controller
                 ];
             }
 
-            $primaryGuest = null;
+            $primaryBooking = null;
             $savedGuests = [];
 
             foreach ($rawGuests as $idx => $gData) {
@@ -1114,7 +1118,7 @@ class DashboardController extends Controller
 
                 // Verify no double-booking conflict for this room
                 if ($roomId && $roomObj) {
-                    $conflictBooking = Guest::where('room_id', $roomId)
+                    $conflictBooking = Booking::where('room_id', $roomId)
                         ->whereIn('status', ['Confirmed', 'Checked In', 'Arrived', 'Stay Over'])
                         ->where(function ($q) use ($reserveDate, $checkoutDate) {
                             $q->whereDate('reserve_date', '<', $checkoutDate)
@@ -1123,14 +1127,16 @@ class DashboardController extends Controller
                                       ->orWhereNull('checkout_date');
                               });
                         })
+                        ->with(['guest'])
                         ->first();
                     if ($conflictBooking) {
                         DB::rollBack();
                         $cIn = $conflictBooking->reserve_date ? \Carbon\Carbon::parse($conflictBooking->reserve_date)->format('d M Y') : $reserveDate;
                         $cOut = $conflictBooking->checkout_date ? \Carbon\Carbon::parse($conflictBooking->checkout_date)->format('d M Y') : $checkoutDate;
+                        $gName = $conflictBooking->guest?->guest_name ?? 'Another guest';
                         return response()->json([
                             'success' => false,
-                            'error' => "Room #{$roomObj->room_number} is already booked from {$cIn} to {$cOut} by {$conflictBooking->guest_name}. Please choose an alternative room."
+                            'error' => "Room #{$roomObj->room_number} is already booked from {$cIn} to {$cOut} by {$gName}. Please choose an alternative room."
                         ], 422);
                     }
                 }
@@ -1162,14 +1168,46 @@ class DashboardController extends Controller
                 }
 
                 $calculatedBalance = max(0, $payableAmount - ($idx === 0 ? $advanceAmount : 0));
-                $folioNo = Guest::generateFolioNumber($roomObj?->room_number ?? '100');
+                $folioNo = Booking::generateFolioNumber($roomObj?->room_number ?? '100');
 
                 $titleId = (!empty($gData['title_id']) && Title::where('id', $gData['title_id'])->exists()) ? (int)$gData['title_id'] : null;
                 $nationalityId = (!empty($gData['nationality_id']) && Nationality::where('id', $gData['nationality_id'])->exists()) ? (int)$gData['nationality_id'] : null;
                 $idCardTypeId = (!empty($gData['id_card_type_id']) && IdCardType::where('id', $gData['id_card_type_id'])->exists()) ? (int)$gData['id_card_type_id'] : null;
 
-                $guestModel = Guest::create([
+                // 1. Find or create the Guest profile
+                $guestFields = [
+                    'title_id' => $titleId,
+                    'guest_name' => $gData['guest_name'],
+                    'guest_address' => $gData['guest_address'] ?? null,
+                    'nationality_id' => $nationalityId,
+                    'city' => $gData['city'] ?? null,
+                    'email' => $gData['email'] ?? null,
+                    'has_privilege_card' => !empty($gData['has_privilege_card']),
+                    'privilege_card_no' => $gData['privilege_card_no'] ?? null,
+                    'id_card_type_id' => $idCardTypeId,
+                    'id_card_number' => $gData['id_card_number'] ?? null,
+                    'company_id' => $companyId,
+                    'new_company_name' => $request->input('new_company_name'),
+                    'new_company_address' => $request->input('new_company_address'),
+                    'new_company_gstin' => $request->input('new_company_gstin'),
+                    'new_company_phone' => $request->input('new_company_phone'),
+                ];
+
+                if (!empty($gData['mobile'])) {
+                    $guestModel = Guest::firstOrCreate(
+                        ['mobile' => $gData['mobile']],
+                        $guestFields
+                    );
+                } else {
+                    $guestModel = Guest::create($guestFields);
+                }
+
+                // 2. Create the Booking record linked with guest_id & room_id
+                $bookingModel = Booking::create([
                     'reserve_id' => $reserveId,
+                    'folio_number' => $folioNo,
+                    'guest_id' => $guestModel->id,
+                    'room_id' => $roomId,
                     'registration_type_id' => $registrationTypeId,
                     'reservation_mode_id' => $reservationModeId,
                     'company_id' => $companyId,
@@ -1177,6 +1215,9 @@ class DashboardController extends Controller
                     'new_company_address' => $request->input('new_company_address'),
                     'new_company_gstin' => $request->input('new_company_gstin'),
                     'new_company_phone' => $request->input('new_company_phone'),
+                    'plan_id' => $planId,
+                    'checkin_date' => $reserveDate,
+                    'checkin_time' => $reserveTime,
                     'reserve_date' => $reserveDate,
                     'reserve_time' => $reserveTime,
                     'checkout_date' => $checkoutDate,
@@ -1184,39 +1225,66 @@ class DashboardController extends Controller
                     'total_nights' => $totalNights,
                     'room_rate' => $roomRate,
                     'total_amount' => $totalAmount,
-                    'title_id' => $titleId,
-                    'guest_name' => $gData['guest_name'],
-                    'guest_address' => $gData['guest_address'] ?? null,
-                    'nationality_id' => $nationalityId,
-                    'city' => $gData['city'] ?? null,
-                    'mobile' => $gData['mobile'] ?? null,
-                    'email' => $gData['email'] ?? null,
-                    'status' => $gData['status'] ?? 'Confirmed',
-                    'has_privilege_card' => !empty($gData['has_privilege_card']),
-                    'privilege_card_no' => $gData['privilege_card_no'] ?? null,
-                    'room_id' => $roomId,
-                    'id_card_type_id' => $idCardTypeId,
-                    'id_card_number' => $gData['id_card_number'] ?? null,
-                    'payment_mode_id' => ($idx === 0) ? $paymentModeId : null,
-                    'plan_id' => $planId,
                     'discount_percentage' => ($idx === 0) ? $discountPercentage : 0.0,
                     'discount_amount' => ($idx === 0) ? $discountAmount : 0.00,
-                    'gst_type' => ($idx === 0) ? $gstType : null,
+                    'gst_type' => ($idx === 0) ? $gstType : 'exclusive',
                     'gst_percentage_id' => ($idx === 0 && $gstPercentageModel) ? $gstPercentageModel->id : null,
                     'gst_percentage' => ($idx === 0) ? $gstPercentage : 0.0,
                     'gst_amount' => ($idx === 0) ? $gstAmount : 0.00,
                     'payable_amount' => ($idx === 0) ? $payableAmount : 0.00,
                     'advance_amount' => ($idx === 0) ? $advanceAmount : 0.00,
-                    'payment_remarks' => ($idx === 0) ? $paymentRemarks : null,
-                    'primary_guest_id' => $primaryGuest ? $primaryGuest->id : null,
-                    'folio_number' => $folioNo,
                     'balance' => $calculatedBalance,
+                    'status' => $gData['status'] ?? 'Confirmed',
+                    'primary_booking_id' => $primaryBooking ? $primaryBooking->id : null,
+                    'remarks' => ($idx === 0) ? $paymentRemarks : null,
                 ]);
 
+                // 3. Create Payment record if advance paid
                 if ($idx === 0) {
-                    $primaryGuest = $guestModel;
+                    $primaryBooking = $bookingModel;
+
+                    if ($advanceAmount > 0 || $paymentModeId) {
+                        Payment::create([
+                            'guest_id' => $guestModel->id,
+                            'booking_id' => $bookingModel->id,
+                            'payment_mode_id' => $paymentModeId,
+                            'amount' => $advanceAmount,
+                            'advance_amount' => $advanceAmount,
+                            'balance' => $calculatedBalance,
+                            'folio_number' => $folioNo,
+                            'payment_remarks' => $paymentRemarks,
+                            'payment_date' => $reserveDate,
+                            'payment_time' => $reserveTime,
+                            'payment_type' => 'Advance',
+                            'status' => 'Success',
+                        ]);
+                    }
                 }
-                $savedGuests[] = $guestModel;
+
+                // 4. Create Checkout record if Checked Out
+                if (($gData['status'] ?? '') === 'Checked Out') {
+                    Checkout::create([
+                        'guest_id' => $guestModel->id,
+                        'booking_id' => $bookingModel->id,
+                        'room_id' => $roomId,
+                        'checkout_date' => $checkoutDate,
+                        'checkout_time' => $checkoutTime,
+                        'actual_checkout_at' => now(),
+                        'total_nights' => $totalNights,
+                        'room_charges' => $totalAmount,
+                        'extra_charges' => 0.00,
+                        'late_checkout_charge' => 0.00,
+                        'discount_amount' => $discountAmount,
+                        'tax_amount' => $gstAmount,
+                        'grand_total' => $payableAmount,
+                        'paid_amount' => $advanceAmount,
+                        'balance_amount' => $calculatedBalance,
+                        'status' => 'Completed',
+                        'remarks' => $paymentRemarks,
+                    ]);
+                }
+
+                $savedGuests[] = $bookingModel;
 
                 // If room is assigned, update housekeeping & operational state to ready/in-service
                 if ($roomObj) {
@@ -1248,7 +1316,7 @@ class DashboardController extends Controller
                 'success' => true,
                 'message' => 'Reservation #' . $reserveId . ' saved successfully for ' . count($savedGuests) . ' guest(s)!',
                 'reserve_id' => $reserveId,
-                'next_reserve_id' => Guest::generateNextReserveId(),
+                'next_reserve_id' => Booking::generateNextReserveId(),
                 'guests' => $savedGuests,
             ]);
 

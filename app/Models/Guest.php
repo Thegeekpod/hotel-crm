@@ -215,14 +215,14 @@ class Guest extends Model
     public function currentBooking(): HasOne
     {
         return $this->hasOne(Booking::class, 'guest_id')
-            ->whereIn('status', ['Confirmed', 'Arrived', 'Checked In', 'Stay Over'])
+            ->whereIn('status', ['Confirmed', 'Arrived', 'Checked In', 'Stay Over', 'Settlement Done'])
             ->latestOfMany();
     }
 
     public function activeBookings(): HasMany
     {
         return $this->hasMany(Booking::class, 'guest_id')
-            ->whereIn('status', ['Confirmed', 'Arrived', 'Checked In', 'Stay Over']);
+            ->whereIn('status', ['Confirmed', 'Arrived', 'Checked In', 'Stay Over', 'Settlement Done']);
     }
 
     public function payments(): HasMany

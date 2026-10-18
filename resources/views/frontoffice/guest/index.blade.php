@@ -212,6 +212,33 @@
     border: 1px solid rgba(239, 68, 68, 0.25);
   }
 
+  .status-badge.settlement-done, .status-badge.settled, .status-badge.settlement_done {
+    background: #ede9fe;
+    color: #5b21b6;
+    border: 1px solid #ddd6fe;
+    font-weight: 800;
+  }
+
+  .badge-locked {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 800;
+    background: #f1f5f9;
+    color: #475569;
+    border: 1px solid #cbd5e1;
+    white-space: nowrap;
+  }
+
+  .badge-locked.settled {
+    background: #ede9fe;
+    color: #5b21b6;
+    border-color: #ddd6fe;
+  }
+
   /* Action buttons */
   .btn-action-view {
     width: 32px;
@@ -449,6 +476,8 @@
       'gst_amount' => (float)$g->gst_amount,
       'payable_amount' => (float)$g->payable_amount,
       'advance_amount' => (float)$g->advance_amount,
+      'settlement_paid' => (float)($g->settlements?->sum('paid_amount') ?: $g->latestBooking?->payments?->where('payment_type', 'Settlement')->sum('amount')),
+      'total_paid' => round((float)$g->advance_amount + (float)($g->settlements?->sum('paid_amount') ?: $g->latestBooking?->payments?->where('payment_type', 'Settlement')->sum('amount')), 2),
       'balance' => (float)$g->balance,
       'payment_mode' => $g->paymentMode?->name ?? 'Cash / Direct',
       'payment_remarks' => $g->payment_remarks ?: 'None',
@@ -576,6 +605,7 @@
               <option value="Checked In" {{ request('status') === 'Checked In' ? 'selected' : '' }}>Checked In</option>
               <option value="Arrived" {{ request('status') === 'Arrived' ? 'selected' : '' }}>Arrived</option>
               <option value="Stay Over" {{ request('status') === 'Stay Over' ? 'selected' : '' }}>Stay Over</option>
+              <option value="Settlement Done" {{ request('status') === 'Settlement Done' ? 'selected' : '' }}>Settlement Done</option>
               <option value="Checked Out" {{ request('status') === 'Checked Out' ? 'selected' : '' }}>Checked Out</option>
               <option value="Cancelled" {{ request('status') === 'Cancelled' ? 'selected' : '' }}>Cancelled</option>
             </select>
@@ -654,6 +684,7 @@
                 $sl = ($guests->currentPage() - 1) * $guests->perPage() + $loop->iteration;
                 $statusNormalized = strtolower($item->status ?? 'confirmed');
                 $statusClass = match($statusNormalized) {
+                  'settlement done', 'settled' => 'settled',
                   'confirmed' => 'confirmed',
                   'arrived' => 'arrived',
                   'checked in', 'checked-in', 'checkedin' => 'checkedin',
@@ -669,8 +700,10 @@
                 $rRoomDisplay = $cleanRoomNum ? ('R' . $cleanRoomNum) : null;
                 $floorDisplay = $item->room?->floorRelation?->floor ?? ($item->room?->floor ?? null);
 
-                // Financials (Paid & Remaining)
-                $paidVal = (float)($item->latestBooking?->payments?->sum('amount') ?: $item->advance_amount);
+                // Financials: Paid (Advance + Settlement from settlement table) & Remaining
+                $advVal = (float)$item->advance_amount;
+                $settleVal = (float)($item->settlements?->sum('paid_amount') ?: $item->latestBooking?->payments?->where('payment_type', 'Settlement')->sum('amount'));
+                $paidVal = round($advVal + $settleVal, 2);
                 $balanceVal = (float)($item->balance ?? 0);
               @endphp
               <tr class="guest-row" id="row-guest-{{ $item->id }}">
@@ -787,7 +820,11 @@
                 <!-- 9. Status -->
                 <td style="text-align: center; white-space: nowrap;">
                   <span class="status-badge {{ $statusClass }}">
-                    <i class="fa-solid fa-circle" style="font-size: 6px;"></i>
+                    @if(in_array($item->status, ['Settlement Done', 'Checked Out']))
+                      <i class="fa-solid fa-lock" style="font-size: 8px;"></i>
+                    @else
+                      <i class="fa-solid fa-circle" style="font-size: 6px;"></i>
+                    @endif
                     <span>{{ $item->status ?? 'Confirmed' }}</span>
                   </span>
                 </td>
@@ -1054,7 +1091,7 @@
           </div>
 
           <div class="bill-stat-item">
-            <div class="bill-stat-label">Advance Paid</div>
+            <div class="bill-stat-label">Advance Deposit</div>
             <div class="bill-stat-value" id="crm-mdl-bill-advance" style="color: #059669;">₹ 0.00</div>
           </div>
 
@@ -1068,6 +1105,18 @@
           <div class="dossier-field-row">
             <span class="dossier-label">Room Rate × Nights</span>
             <span class="dossier-val mono" id="crm-mdl-bill-calc-row">-</span>
+          </div>
+          <div class="dossier-field-row">
+            <span class="dossier-label">Advance Deposit Paid</span>
+            <span class="dossier-val mono" id="crm-mdl-bill-advance-row" style="color: #059669;">-</span>
+          </div>
+          <div class="dossier-field-row" id="crm-mdl-settle-field-row">
+            <span class="dossier-label">Settlement Amount Paid</span>
+            <span class="dossier-val mono" id="crm-mdl-bill-settle-row" style="color: #6366f1; font-weight: 800;">-</span>
+          </div>
+          <div class="dossier-field-row">
+            <span class="dossier-label">Total Amount Paid</span>
+            <span class="dossier-val mono" id="crm-mdl-bill-totalpaid-row" style="color: #059669; font-weight: 800;">-</span>
           </div>
           <div class="dossier-field-row">
             <span class="dossier-label">Discount</span>
@@ -1278,6 +1327,7 @@
   // Status badge color mapper
   function getStatusBadgeColor(status) {
     switch ((status || '').toLowerCase()) {
+      case 'settlement done': case 'settled': return 'settled';
       case 'confirmed': return 'confirmed';
       case 'arrived': return 'arrived';
       case 'checked in': case 'checked-in': case 'checkedin': return 'checkedin';
@@ -1300,7 +1350,8 @@
 
     const statusBadge = document.getElementById('crm-mdl-status-badge');
     if (statusBadge) {
-      statusBadge.textContent = guest.status || 'Confirmed';
+      const isLocked = ['settlement done', 'checked out', 'settled'].includes((guest.status || '').toLowerCase());
+      statusBadge.innerHTML = (isLocked ? '<i class="fa-solid fa-lock" style="font-size: 8px;"></i> ' : '<i class="fa-solid fa-circle" style="font-size: 6px;"></i> ') + escapeHtml(guest.status || 'Confirmed');
       statusBadge.className = `status-badge ${getStatusBadgeColor(guest.status)}`;
     }
 
@@ -1367,6 +1418,8 @@
     const rate = Number(guest.room_rate || 0);
     const gross = Number(guest.total_amount || 0);
     const advance = Number(guest.advance_amount || 0);
+    const settlePaid = Number(guest.settlement_paid || 0);
+    const totalPaid = Number(guest.total_paid || (advance + settlePaid));
     const balance = Number(guest.balance || 0);
     const discountAmt = Number(guest.discount_amount || 0);
     const discountPct = Number(guest.discount_percentage || 0);
@@ -1375,6 +1428,15 @@
     document.getElementById('crm-mdl-bill-rate').textContent = formatINR(rate);
     document.getElementById('crm-mdl-bill-gross').textContent = formatINR(gross);
     document.getElementById('crm-mdl-bill-advance').textContent = formatINR(advance);
+
+    const advRow = document.getElementById('crm-mdl-bill-advance-row');
+    if (advRow) advRow.textContent = formatINR(advance);
+
+    const settleRow = document.getElementById('crm-mdl-bill-settle-row');
+    if (settleRow) settleRow.textContent = formatINR(settlePaid);
+
+    const totalPaidRow = document.getElementById('crm-mdl-bill-totalpaid-row');
+    if (totalPaidRow) totalPaidRow.textContent = formatINR(totalPaid);
 
     const balElem = document.getElementById('crm-mdl-bill-balance');
     balElem.textContent = formatINR(balance);
@@ -1416,12 +1478,14 @@
     const badgeLocked = document.getElementById('crm-badge-locked');
 
     const isCheckedOut = (guest.status || '').toLowerCase() === 'checked out';
+    const isSettled = (guest.status || '').toLowerCase() === 'settlement done' || balance <= 0.01;
 
     if (isCheckedOut) {
       if (btnSettle) btnSettle.style.display = 'none';
       if (btnCheckout) btnCheckout.style.display = 'none';
       if (badgeLocked) {
         badgeLocked.style.display = 'inline-flex';
+        badgeLocked.className = 'badge-locked';
         badgeLocked.innerHTML = '<i class="fa-solid fa-lock" style="color: #64748b;"></i> Stay Finalized &amp; Checked Out (Locked)';
       }
     } else if (balance > 0.01) {
@@ -1433,14 +1497,18 @@
       if (btnCheckout) btnCheckout.style.display = 'none';
       if (badgeLocked) badgeLocked.style.display = 'none';
     } else {
-      // Balance is 0 or cleared: Settlement complete! Check Out button is shown!
+      // Balance is 0 or cleared: Settlement complete! Status is Settlement Done and locked!
       if (btnSettle) btnSettle.style.display = 'none';
       if (btnCheckout) {
         btnCheckout.style.display = 'inline-flex';
         btnCheckout.disabled = false;
         btnCheckout.innerHTML = '<i class="fa-solid fa-right-from-bracket"></i> Check Out';
       }
-      if (badgeLocked) badgeLocked.style.display = 'none';
+      if (badgeLocked) {
+        badgeLocked.style.display = 'inline-flex';
+        badgeLocked.className = 'badge-locked settled';
+        badgeLocked.innerHTML = '<i class="fa-solid fa-lock"></i> Settlement Done (Locked)';
+      }
     }
 
     // Show modal
@@ -1462,7 +1530,7 @@
     document.getElementById('crm-settle-folio-num').textContent = g.folio_number || g.reserve_id || '-';
     document.getElementById('crm-settle-balance-display').textContent = formatINR(balance);
     document.getElementById('crm-settle-payable-display').textContent = formatINR(g.payable_amount);
-    document.getElementById('crm-settle-paid-display').textContent = formatINR(g.advance_amount);
+    document.getElementById('crm-settle-paid-display').textContent = formatINR(g.total_paid || g.advance_amount);
 
     const amountInput = document.getElementById('crm-settle-amount-input');
     amountInput.value = balance.toFixed(2);
@@ -1534,20 +1602,29 @@
 
       // Update current active guest data
       g.balance = data.new_balance;
-      g.advance_amount = data.new_advance;
+      g.advance_amount = data.advance_amount;
+      g.settlement_paid = data.settlement_paid;
+      g.total_paid = data.total_paid;
+      if (data.status) g.status = data.status;
 
       // Update in memory list
       const cached = (window.allCrmGuests || []).find(x => String(x.id) === String(g.id));
       if (cached) {
         cached.balance = data.new_balance;
-        cached.advance_amount = data.new_advance;
+        cached.advance_amount = data.advance_amount;
+        cached.settlement_paid = data.settlement_paid;
+        cached.total_paid = data.total_paid;
+        if (data.status) cached.status = data.status;
       }
 
       // Re-populate dossier modal with updated financials and switch buttons
       populateAndOpenModal(g);
 
       // Update table row in UI
-      updateTableRowFinancials(g.id, data.new_advance, data.new_balance);
+      updateTableRowFinancials(g.id, data.total_paid, data.new_balance);
+      if (data.status) {
+        updateTableRowStatus(g.id, data.status);
+      }
 
       if (typeof PmsAlert !== 'undefined') {
         PmsAlert.toast(data.message || 'Settlement processed successfully!', 'success');
@@ -1666,7 +1743,7 @@
     }
   }
 
-  // Helper to dynamically update table row status after checkout
+  // Helper to dynamically update table row status after checkout / settlement
   function updateTableRowStatus(guestId, newStatus) {
     const row = document.getElementById(`row-guest-${guestId}`);
     if (!row) return;
@@ -1674,10 +1751,12 @@
     // Status cell (9th index in row)
     const statusCell = row.children[9];
     if (statusCell) {
+      const isLocked = ['settlement done', 'checked out', 'settled'].includes((newStatus || '').toLowerCase());
+      const icon = isLocked ? '<i class="fa-solid fa-lock" style="font-size: 8px;"></i>' : '<i class="fa-solid fa-circle" style="font-size: 6px;"></i>';
       statusCell.innerHTML = `
-        <span class="status-badge checkedout">
-          <i class="fa-solid fa-circle" style="font-size: 6px;"></i>
-          <span>${newStatus}</span>
+        <span class="status-badge ${getStatusBadgeColor(newStatus)}">
+          ${icon}
+          <span>${escapeHtml(newStatus)}</span>
         </span>
       `;
     }

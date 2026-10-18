@@ -137,13 +137,13 @@ class Room extends Model
     public function activeBookings(): HasMany
     {
         return $this->hasMany(Booking::class, 'room_id')
-            ->whereIn('status', ['Confirmed', 'Arrived', 'Checked In', 'Stay Over']);
+            ->whereIn('status', ['Confirmed', 'Arrived', 'Checked In', 'Stay Over', 'Settlement Done']);
     }
 
     public function currentBooking(): HasOne
     {
         return $this->hasOne(Booking::class, 'room_id')
-            ->whereIn('status', ['Confirmed', 'Arrived', 'Checked In', 'Stay Over'])
+            ->whereIn('status', ['Confirmed', 'Arrived', 'Checked In', 'Stay Over', 'Settlement Done'])
             ->latestOfMany();
     }
 
@@ -155,7 +155,7 @@ class Room extends Model
     public function activeGuests()
     {
         return $this->hasManyThrough(Guest::class, Booking::class, 'room_id', 'id', 'id', 'guest_id')
-            ->whereIn('bookings.status', ['Confirmed', 'Arrived', 'Checked In', 'Stay Over']);
+            ->whereIn('bookings.status', ['Confirmed', 'Arrived', 'Checked In', 'Stay Over', 'Settlement Done']);
     }
 
     public function getCurrentGuestAttribute()

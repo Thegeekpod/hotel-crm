@@ -11,6 +11,8 @@ use App\Models\ReservationMode;
 use App\Models\PaymentMode;
 use App\Models\Guest;
 use App\Models\Booking;
+use App\Models\Payment;
+use App\Models\Settlement;
 use App\Models\Checkout;
 use App\Models\HousekeepingState;
 use App\Models\OperationalStatus;
@@ -120,6 +122,24 @@ class ArrivalController extends Controller
         $oldStatus = $booking->status ?: 'Confirmed';
         $newStatus = $validated['status'];
 
+        // Strict Lock: Disallow modifying record once Settlement Done or Checked Out
+        if (in_array($booking->status, ['Settlement Done', 'Checked Out'])) {
+            return response()->json([
+                'success' => false,
+                'message' => "Record is locked. This guest reservation is already in '{$booking->status}' status and cannot be modified.",
+                'error' => "Record is locked. This guest reservation is already in '{$booking->status}' status and cannot be modified."
+            ], 403);
+        }
+
+        // Prevent checkout if there is still outstanding balance
+        if ($newStatus === 'Checked Out' && (float)$booking->balance > 0.01) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Cannot check out guest with outstanding balance of ₹ ' . number_format($booking->balance, 2) . '. Complete settlement first.',
+                'error' => 'Cannot check out guest with outstanding balance of ₹ ' . number_format($booking->balance, 2) . '. Complete settlement first.'
+            ], 422);
+        }
+
         $booking->status = $newStatus;
         $booking->save();
 
@@ -134,11 +154,14 @@ class ArrivalController extends Controller
         }
 
         if ($newStatus === 'Checked Out') {
+            $totalPaid = round((float)$booking->advance_amount + (float)Payment::where('booking_id', $booking->id)->where('payment_type', 'Settlement')->sum('amount'), 2);
+            $latestSettlement = Settlement::where('booking_id', $booking->id)->latest('id')->first();
             Checkout::firstOrCreate(
                 ['booking_id' => $booking->id],
                 [
                     'guest_id' => $booking->guest_id,
                     'room_id' => $booking->room_id,
+                    'settlement_id' => $latestSettlement?->id,
                     'checkout_date' => now()->toDateString(),
                     'checkout_time' => now()->format('H:i'),
                     'actual_checkout_at' => now(),
@@ -149,15 +172,28 @@ class ArrivalController extends Controller
                     'discount_amount' => $booking->discount_amount,
                     'tax_amount' => $booking->gst_amount,
                     'grand_total' => $booking->payable_amount,
-                    'paid_amount' => $booking->advance_amount,
-                    'balance_amount' => $booking->balance,
+                    'paid_amount' => $totalPaid ?: $booking->payable_amount,
+                    'balance_amount' => 0.00,
                     'status' => 'Completed',
                     'remarks' => 'Checked out via Arrivals manager',
                 ]
             );
+
+            if ($booking->room_id) {
+                $dirtyState = HousekeepingState::where('name', 'like', '%dirty%')->first();
+                if ($dirtyState) {
+                    RoomHousekeepingHistory::create([
+                        'room_id' => $booking->room_id,
+                        'housekeeping_status_id' => $dirtyState->id,
+                        'start_time' => now(),
+                        'status' => 'pending',
+                    ]);
+                }
+            }
         }
 
         $badgeClass = match ($newStatus) {
+            'Settlement Done' => 'settled',
             'Confirmed' => 'blue',
             'Arrived' => 'green',
             'Checked In' => 'cyan',

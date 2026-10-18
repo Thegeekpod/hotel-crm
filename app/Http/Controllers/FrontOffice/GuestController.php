@@ -140,7 +140,9 @@ class GuestController extends Controller
         $serializedGuests = $guests->getCollection()->map(function($item) {
             $lb = $item->latestBooking;
             $room = $lb?->room;
-            $paidVal = (float)($lb?->payments?->sum('amount') ?: $item->advance_amount);
+            $advanceAmount = (float)$item->advance_amount;
+            $settlePayments = (float)($item->settlements?->sum('paid_amount') ?: $lb?->payments?->where('payment_type', 'Settlement')->sum('amount'));
+            $totalPaid = round($advanceAmount + $settlePayments, 2);
             $balVal = (float)($item->balance ?? 0);
             $planObj = $lb?->plan;
             $planName = $planObj?->plan_name ?: 'Room Only (EP)';
@@ -186,7 +188,9 @@ class GuestController extends Controller
                 ] : null,
                 'room_rate' => (float)$item->room_rate,
                 'total_amount' => (float)$item->total_amount,
-                'advance_amount' => $paidVal,
+                'advance_amount' => $advanceAmount,
+                'settlement_paid' => $settlePayments,
+                'total_paid' => $totalPaid,
                 'balance' => $balVal,
                 'discount_amount' => (float)$item->discount_amount,
                 'discount_percentage' => (float)$item->discount_percentage,
@@ -243,7 +247,9 @@ class GuestController extends Controller
 
         $lb = $guest->latestBooking;
         $room = $lb?->room;
-        $paidVal = (float)($lb?->payments?->sum('amount') ?: $guest->advance_amount);
+        $advanceAmount = (float)$guest->advance_amount;
+        $settlePayments = (float)($guest->settlements?->sum('paid_amount') ?: $lb?->payments?->where('payment_type', 'Settlement')->sum('amount'));
+        $totalPaid = round($advanceAmount + $settlePayments, 2);
         $balVal = (float)($guest->balance ?? 0);
         $planObj = $lb?->plan;
 
@@ -286,7 +292,9 @@ class GuestController extends Controller
             ] : null,
             'room_rate' => (float)$guest->room_rate,
             'total_amount' => (float)$guest->total_amount,
-            'advance_amount' => $paidVal,
+            'advance_amount' => $advanceAmount,
+            'settlement_paid' => $settlePayments,
+            'total_paid' => $totalPaid,
             'balance' => $balVal,
             'discount_amount' => (float)$guest->discount_amount,
             'discount_percentage' => (float)$guest->discount_percentage,
@@ -317,6 +325,10 @@ class GuestController extends Controller
             return response()->json(['success' => false, 'error' => 'No booking record found for this guest'], 400);
         }
 
+        if (in_array($booking->status, ['Settlement Done', 'Checked Out'])) {
+            return response()->json(['success' => false, 'error' => 'This reservation has already completed settlement and is locked.'], 400);
+        }
+
         $request->validate([
             'amount' => 'required|numeric|min:0.01',
             'payment_mode_id' => 'nullable|exists:payment_modes,id',
@@ -338,21 +350,32 @@ class GuestController extends Controller
         DB::beginTransaction();
         try {
             $newBalance = max(0, round($currentBalance - $settleAmount, 2));
-            $newAdvance = round((float)$booking->advance_amount + $settleAmount, 2);
 
-            // 1. Update Booking financials
-            $booking->advance_amount = $newAdvance;
+            // 1. Update Booking balance & status (advance_amount is preserved!)
             $booking->balance = $newBalance;
+            if ($newBalance <= 0) {
+                $booking->status = 'Settlement Done';
+            }
             $booking->save();
 
-            // 2. Create Payment Record
+            // Also update any secondary bookings under the same reservation
+            if ($booking->reserve_id && $newBalance <= 0) {
+                Booking::where('reserve_id', $booking->reserve_id)
+                    ->where('id', '!=', $booking->id)
+                    ->update([
+                        'balance' => 0.00,
+                        'status' => 'Settlement Done',
+                    ]);
+            }
+
+            // 2. Create Payment Record (payment_type = 'Settlement')
             $paymentModeId = $request->input('payment_mode_id') ?: PaymentMode::where('name', 'Cash')->value('id');
             Payment::create([
                 'guest_id' => $guest->id,
                 'booking_id' => $booking->id,
                 'payment_mode_id' => $paymentModeId,
                 'amount' => $settleAmount,
-                'advance_amount' => $newAdvance,
+                'advance_amount' => (float)$booking->advance_amount, // Preserves initial advance
                 'balance' => $newBalance,
                 'folio_number' => $booking->folio_number,
                 'payment_remarks' => $request->input('remarks', 'Settlement payment'),
@@ -363,7 +386,7 @@ class GuestController extends Controller
                 'status' => 'Success',
             ]);
 
-            // 3. Create Settlement Record
+            // 3. Create Settlement Record in settlements table
             $settlementNumber = 'SET-' . date('Ymd') . '-' . sprintf('%04d', $guest->id);
             Settlement::create([
                 'settlement_number' => $settlementNumber,
@@ -376,8 +399,8 @@ class GuestController extends Controller
                 'discount_amount' => $booking->discount_amount,
                 'tax_amount' => $booking->gst_amount,
                 'payable_amount' => $booking->payable_amount,
-                'advance_adjusted' => round($newAdvance - $settleAmount, 2),
-                'paid_amount' => $settleAmount,
+                'advance_adjusted' => (float)$booking->advance_amount, // The actual advance adjusted
+                'paid_amount' => $settleAmount, // The settlement amount paid now!
                 'balance_amount' => $newBalance,
                 'settlement_date' => now()->toDateString(),
                 'settlement_time' => now()->format('H:i:s'),
@@ -387,11 +410,17 @@ class GuestController extends Controller
 
             DB::commit();
 
+            $totalSettled = (float)Payment::where('booking_id', $booking->id)->where('payment_type', 'Settlement')->sum('amount');
+            $totalPaid = round((float)$booking->advance_amount + $totalSettled, 2);
+
             return response()->json([
                 'success' => true,
-                'message' => 'Settlement of ₹ ' . number_format($settleAmount, 2) . ' processed successfully!',
+                'message' => 'Settlement of ₹ ' . number_format($settleAmount, 2) . ' processed successfully! Status is now Settlement Done (Locked).',
                 'new_balance' => $newBalance,
-                'new_advance' => $newAdvance,
+                'advance_amount' => (float)$booking->advance_amount,
+                'settlement_paid' => $totalSettled,
+                'total_paid' => $totalPaid,
+                'status' => $booking->status,
                 'is_fully_settled' => ($newBalance <= 0),
                 'settlement_number' => $settlementNumber,
             ]);
@@ -438,6 +467,7 @@ class GuestController extends Controller
 
             // 2. Create Checkout record
             $latestSettlement = Settlement::where('booking_id', $booking->id)->latest('id')->first();
+            $totalPaid = round((float)$booking->advance_amount + (float)Payment::where('booking_id', $booking->id)->where('payment_type', 'Settlement')->sum('amount'), 2);
             Checkout::create([
                 'guest_id' => $guest->id,
                 'booking_id' => $booking->id,
@@ -453,7 +483,7 @@ class GuestController extends Controller
                 'discount_amount' => $booking->discount_amount,
                 'tax_amount' => $booking->gst_amount,
                 'grand_total' => $booking->payable_amount,
-                'paid_amount' => $booking->advance_amount,
+                'paid_amount' => $totalPaid ?: $booking->payable_amount,
                 'balance_amount' => 0.00,
                 'status' => 'Completed',
                 'remarks' => $request->input('remarks', 'Checked out via Front Desk CRM'),

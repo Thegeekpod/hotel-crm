@@ -80,7 +80,7 @@ class DashboardController extends Controller
                      ->orWhereNull('checkout_date');
               });
         })
-        ->whereIn('status', ['Confirmed', 'Arrived', 'Stay Over', 'Checked In'])
+        ->whereIn('status', ['Confirmed', 'Arrived', 'Stay Over', 'Checked In', 'Settlement Done'])
         ->with(['guest.title', 'guest.nationality', 'guest.idCardType', 'registrationType', 'company', 'plan'])
         ->orderByRaw("CASE WHEN status = 'Checked In' THEN 1 WHEN status = 'Stay Over' THEN 2 WHEN status = 'Arrived' THEN 3 WHEN status = 'Confirmed' THEN 4 ELSE 5 END")
         ->orderBy('id', 'desc')
@@ -124,7 +124,7 @@ class DashboardController extends Controller
                     $resId = $firstActiveGuest->reserve_id;
                     $linkedGuests = Booking::where('reserve_id', $resId)
                         ->where('room_id', $r->id)
-                        ->whereIn('status', ['Confirmed', 'Arrived', 'Stay Over', 'Checked In'])
+                        ->whereIn('status', ['Confirmed', 'Arrived', 'Stay Over', 'Checked In', 'Settlement Done'])
                         ->with(['guest.title', 'guest.nationality', 'guest.idCardType', 'registrationType', 'company', 'plan'])
                         ->get();
                     if ($linkedGuests->isNotEmpty()) {
@@ -288,9 +288,9 @@ class DashboardController extends Controller
             'available' => $availableCount,
             'vacant' => $vacantCount,
             'expected_arrival' => Booking::whereDate('reserve_date', $selectedDate)->where('status', 'Confirmed')->count(),
-            'expected_departure' => Booking::whereDate('checkout_date', $selectedDate)->whereIn('status', ['Stay Over', 'Arrived', 'Checked In'])->count(),
+            'expected_departure' => Booking::whereDate('checkout_date', $selectedDate)->whereIn('status', ['Stay Over', 'Arrived', 'Checked In', 'Settlement Done'])->count(),
             'rooms_to_sale' => $vacantCount,
-            'checked_in' => Booking::whereDate('reserve_date', $selectedDate)->whereIn('status', ['Arrived', 'Stay Over', 'Checked In'])->count(),
+            'checked_in' => Booking::whereDate('reserve_date', $selectedDate)->whereIn('status', ['Arrived', 'Stay Over', 'Checked In', 'Settlement Done'])->count(),
             'checked_out' => Booking::whereDate('checkout_date', $selectedDate)->where('status', 'Checked Out')->count(),
             'total_pax' => $totalPax > 0 ? $totalPax : 0,
             'cleaned_ratio' => $cleanRatio,
@@ -504,7 +504,7 @@ class DashboardController extends Controller
                      ->orWhereNull('checkout_date');
               });
         })
-        ->whereIn('status', ['Confirmed', 'Arrived', 'Stay Over', 'Checked In'])
+        ->whereIn('status', ['Confirmed', 'Arrived', 'Stay Over', 'Checked In', 'Settlement Done'])
         ->whereNotNull('room_id')
         ->with(['guest.title', 'guest.nationality', 'guest.idCardType', 'registrationType', 'company', 'plan'])
         ->orderByRaw("CASE WHEN status = 'Checked In' THEN 1 WHEN status = 'Stay Over' THEN 2 WHEN status = 'Arrived' THEN 3 WHEN status = 'Confirmed' THEN 4 ELSE 5 END")
@@ -556,7 +556,7 @@ class DashboardController extends Controller
                     $resId = $firstActiveGuest->reserve_id;
                     $linkedGuests = Booking::where('reserve_id', $resId)
                         ->where('room_id', $r->id)
-                        ->whereIn('status', ['Confirmed', 'Arrived', 'Stay Over', 'Checked In'])
+                        ->whereIn('status', ['Confirmed', 'Arrived', 'Stay Over', 'Checked In', 'Settlement Done'])
                         ->with(['guest.title', 'guest.nationality', 'guest.idCardType', 'registrationType', 'company'])
                         ->get();
                     if ($linkedGuests->isNotEmpty()) {
@@ -701,7 +701,7 @@ class DashboardController extends Controller
             'arrived' => $arrivedCount,
             'total_pax' => $totalPax,
             'expected_arrival' => Booking::whereDate('reserve_date', '>=', $fromDate)->whereDate('reserve_date', '<=', $toDate)->where('status', 'Confirmed')->count(),
-            'expected_departure' => Booking::whereDate('checkout_date', '>=', $fromDate)->whereDate('checkout_date', '<=', $toDate)->whereIn('status', ['Stay Over', 'Arrived', 'Checked In'])->count(),
+            'expected_departure' => Booking::whereDate('checkout_date', '>=', $fromDate)->whereDate('checkout_date', '<=', $toDate)->whereIn('status', ['Stay Over', 'Arrived', 'Checked In', 'Settlement Done'])->count(),
             'occupancy_percentage' => $totalRoomsCount > 0 ? round(($totalBooked / $totalRoomsCount) * 100, 1) : 0,
             'percentages' => [
                 'checked_in' => $totalBooked > 0 ? round(($checkedInCount / $totalBooked) * 100, 1) : 0,

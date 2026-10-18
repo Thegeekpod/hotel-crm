@@ -158,6 +158,33 @@
     border: 1px solid rgba(239, 68, 68, 0.25);
   }
 
+  .status-badge.settlement-done, .status-badge.settled, .status-badge.settlement_done {
+    background: #ede9fe;
+    color: #5b21b6;
+    border: 1px solid #ddd6fe;
+    font-weight: 800;
+  }
+
+  .badge-locked {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 800;
+    background: #f1f5f9;
+    color: #475569;
+    border: 1px solid #cbd5e1;
+    white-space: nowrap;
+  }
+
+  .badge-locked.settled {
+    background: #ede9fe;
+    color: #5b21b6;
+    border-color: #ddd6fe;
+  }
+
   /* Action buttons */
   .action-flex-wrap {
     display: inline-flex;
@@ -487,6 +514,7 @@
             <option value="Arrived">Arrived</option>
             <option value="Checked In">Checked In</option>
             <option value="Stay Over">Stay Over</option>
+            <option value="Settlement Done">Settlement Done</option>
             <option value="Checked Out">Checked Out</option>
             <option value="Cancelled">Cancelled</option>
           </select>
@@ -833,6 +861,7 @@
   // Status badge color mapper
   function getStatusBadgeColor(status) {
     switch (status) {
+      case 'Settlement Done': return 'settled';
       case 'Confirmed': return 'confirmed';
       case 'Arrived': return 'arrived';
       case 'Checked In': return 'checkedin';
@@ -971,7 +1000,7 @@
           <!-- Status Badge -->
           <td style="text-align: center;">
             <span id="badge-status-${item.id}" class="status-badge ${badgeColor}">
-              <i class="fa-solid fa-circle" style="font-size: 6px;"></i>
+              ${(item.status === 'Settlement Done' || item.status === 'Checked Out') ? '<i class="fa-solid fa-lock" style="font-size: 8px;"></i>' : '<i class="fa-solid fa-circle" style="font-size: 6px;"></i>'}
               <span class="status-text">${escapeHtml(item.status)}</span>
             </span>
           </td>
@@ -979,17 +1008,23 @@
           <!-- Actions: Quick Status Selector + Eye View Button -->
           <td style="text-align: center;">
             <div class="action-flex-wrap">
-              <select class="status-quick-select" 
-                      id="status-select-${item.id}" 
-                      onchange="updateGuestStatus(${item.id}, this.value, this)" 
-                      title="Change Guest Status">
-                <option value="Confirmed" ${item.status === 'Confirmed' ? 'selected' : ''}>Confirmed (Active)</option>
-                <option value="Arrived" ${item.status === 'Arrived' ? 'selected' : ''}>Arrived</option>
-                <option value="Checked In" ${item.status === 'Checked In' ? 'selected' : ''}>Checked In</option>
-                <option value="Stay Over" ${item.status === 'Stay Over' ? 'selected' : ''}>Stay Over</option>
-                <option value="Checked Out" ${item.status === 'Checked Out' ? 'selected' : ''}>Checked Out</option>
-                <option value="Cancelled" ${item.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
-              </select>
+              ${(item.status === 'Settlement Done' || item.status === 'Checked Out') ? `
+                <span class="badge-locked ${item.status === 'Settlement Done' ? 'settled' : ''}" title="Guest status is locked.">
+                  <i class="fa-solid fa-lock" style="font-size: 10px;"></i> ${escapeHtml(item.status)}
+                </span>
+              ` : `
+                <select class="status-quick-select" 
+                        id="status-select-${item.id}" 
+                        onchange="updateGuestStatus(${item.id}, this.value, this)" 
+                        title="Change Guest Status">
+                  <option value="Confirmed" ${item.status === 'Confirmed' ? 'selected' : ''}>Confirmed (Active)</option>
+                  <option value="Arrived" ${item.status === 'Arrived' ? 'selected' : ''}>Arrived</option>
+                  <option value="Checked In" ${item.status === 'Checked In' ? 'selected' : ''}>Checked In</option>
+                  <option value="Stay Over" ${item.status === 'Stay Over' ? 'selected' : ''}>Stay Over</option>
+                  <option value="Checked Out" ${item.status === 'Checked Out' ? 'selected' : ''}>Checked Out</option>
+                  <option value="Cancelled" ${item.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
+                </select>
+              `}
 
               <button type="button" 
                       class="btn-action-view" 
@@ -1120,6 +1155,13 @@
 
   // Update guest status via AJAX
   function updateGuestStatus(guestId, newStatus, selectElement) {
+    const item = (window.allArrivalGuests || []).find(g => String(g.id) === String(guestId));
+    if (item && (item.status === 'Settlement Done' || item.status === 'Checked Out')) {
+      alert(`This reservation is locked in '${item.status}' status and cannot be modified.`);
+      if (selectElement) selectElement.value = item.status;
+      return;
+    }
+
     const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
     if (selectElement) selectElement.disabled = true;
 
@@ -1298,7 +1340,12 @@
 
     // Set quick status changer in modal footer
     const modalSelect = document.getElementById('mdl-quick-status-select');
-    if (modalSelect) modalSelect.value = g.status || 'Confirmed';
+    if (modalSelect) {
+      modalSelect.value = g.status || 'Confirmed';
+      const isLocked = (g.status === 'Settlement Done' || g.status === 'Checked Out');
+      modalSelect.disabled = isLocked;
+      modalSelect.title = isLocked ? `Locked in ${g.status} status` : 'Change Guest Status';
+    }
 
     // Show modal
     openModal('guest-details-modal');

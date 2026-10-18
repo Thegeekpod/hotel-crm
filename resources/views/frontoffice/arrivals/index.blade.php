@@ -1230,6 +1230,11 @@
         } else {
           alert(data.message);
         }
+
+        // Must reload page on status change as required
+        setTimeout(() => {
+          window.location.reload();
+        }, 600);
       } else {
         if (typeof PmsAlert !== 'undefined') {
           PmsAlert.toast(data.message || data.error || 'Error updating status', 'error');

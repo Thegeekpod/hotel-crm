@@ -74,7 +74,7 @@
 
           <div class="rack-card {{ $cardClass }}" 
                onclick="openRoomDetailsModal(this)" 
-               data-room-json="{{ $roomJsonData }}"
+               data-room-json="{!! $roomJsonData !!}"
                data-room="{{ $rm['room'] }}" 
                data-room-id="{{ $rm['id'] ?? '' }}"
                data-floor="{{ $rm['floor'] }}" 

@@ -984,10 +984,13 @@
         }
 
         if (isFromPopover) {
-          setTimeout(() => {
-            closeRoomStatusPopover();
-          }, 350);
+          closeRoomStatusPopover();
         }
+
+        // Must reload page on status change as required
+        setTimeout(() => {
+          window.location.reload();
+        }, 500);
       } else {
         if (typeof PmsAlert !== 'undefined') {
           PmsAlert.toast(data.message || 'Error updating status', 'error');
@@ -1022,7 +1025,7 @@
   });
 
   function checkoutGuest(roomNo, guestName) {
-    if (confirm(`Check out ${guestName} from Room ${roomNo}?`)) {
+    const performCheckout = () => {
       if (typeof PmsAlert !== 'undefined') {
         PmsAlert.toast(`Room ${roomNo} checked out successfully. Marked as Dirty.`, 'success');
       } else {
@@ -1045,6 +1048,42 @@
           }
         }
       }
+      setTimeout(() => window.location.reload(), 500);
+    };
+
+    if (typeof Swal !== 'undefined') {
+      Swal.fire({
+        title: 'Confirm Room Check-Out',
+        html: `
+          <div style="font-size: 13px; color: #475569; line-height: 1.6; text-align: left; padding: 4px;">
+            <p style="margin: 0 0 10px 0;">Are you sure you want to check out this guest?</p>
+            <div style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 10px 14px; margin-bottom: 8px;">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                <span style="color: #64748b; font-size: 11px; font-weight: 700;">Guest:</span>
+                <strong style="color: #0f172a; font-size: 12px;">${escapeHtml(guestName)}</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between;">
+                <span style="color: #64748b; font-size: 11px; font-weight: 700;">Room:</span>
+                <span style="font-weight: 800; color: #4f46e5; font-size: 12px;">Room ${escapeHtml(roomNo)}</span>
+              </div>
+            </div>
+            <p style="margin: 0; font-size: 11px; color: #94a3b8;"><i class="fa-solid fa-broom" style="color: #f59e0b;"></i> Room will be marked as Dirty and scheduled for housekeeping.</p>
+          </div>
+        `,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#4f46e5',
+        cancelButtonColor: '#94a3b8',
+        confirmButtonText: '<i class="fa-solid fa-right-from-bracket" style="margin-right: 6px;"></i> Yes, Check Out',
+        cancelButtonText: 'Cancel',
+        reverseButtons: true,
+        heightAuto: false,
+        scrollbarPadding: false
+      }).then(res => {
+        if (res.isConfirmed) performCheckout();
+      });
+    } else if (confirm(`Check out ${guestName} from Room ${roomNo}?`)) {
+      performCheckout();
     }
   }
 
@@ -2557,14 +2596,15 @@
           }
 
         } else {
+          const errMsg = data.message || data.error || (data.errors ? Object.values(data.errors).flat().join('<br>') : 'Unable to store reservation. Please try again.');
           if (typeof Swal !== 'undefined') {
             Swal.fire({
               icon: 'error',
               title: 'Reservation Failed',
-              text: data.message || 'Unable to store reservation. Please try again.',
+              html: errMsg,
             });
           } else {
-            alert('Error: ' + (data.message || 'Unable to store reservation.'));
+            alert('Error: ' + errMsg);
           }
         }
       })

@@ -1110,6 +1110,13 @@ class DashboardController extends Controller
 
             $primaryBooking = null;
             $savedGuests = [];
+            $createdBookingIds = [];
+
+            // Captured overall reservation totals from client if present
+            $reqTotalAmount = $request->filled('total_amount') ? (float)$request->input('total_amount') : null;
+            $reqPayableAmount = $request->filled('payable_amount') ? (float)$request->input('payable_amount') : null;
+            $reqAdvanceAmount = (float)($request->input('advance_amount', 0));
+            $reqGstAmount = $request->filled('gst_amount') ? (float)$request->input('gst_amount') : null;
 
             foreach ($rawGuests as $idx => $gData) {
                 if (empty($gData['guest_name'])) {
@@ -1125,9 +1132,13 @@ class DashboardController extends Controller
                     $roomId = $roomObj?->id;
                 }
 
-                // Verify no double-booking conflict for this room
+                // Verify no double-booking conflict for this room from OTHER reservations
                 if ($roomId && $roomObj) {
                     $conflictBooking = Booking::where('room_id', $roomId)
+                        ->where('reserve_id', '!=', $reserveId)
+                        ->when(!empty($createdBookingIds), function ($q) use ($createdBookingIds) {
+                            $q->whereNotIn('id', $createdBookingIds);
+                        })
                         ->whereIn('status', ['Confirmed', 'Checked In', 'Arrived', 'Stay Over'])
                         ->where(function ($q) use ($reserveDate, $checkoutDate) {
                             $q->whereDate('reserve_date', '<', $checkoutDate)
@@ -1143,9 +1154,11 @@ class DashboardController extends Controller
                         $cIn = $conflictBooking->reserve_date ? \Carbon\Carbon::parse($conflictBooking->reserve_date)->format('d M Y') : $reserveDate;
                         $cOut = $conflictBooking->checkout_date ? \Carbon\Carbon::parse($conflictBooking->checkout_date)->format('d M Y') : $checkoutDate;
                         $gName = $conflictBooking->guest?->guest_name ?? 'Another guest';
+                        $errMsg = "Room #{$roomObj->room_number} is already booked from {$cIn} to {$cOut} by {$gName}. Please choose an alternative room.";
                         return response()->json([
                             'success' => false,
-                            'error' => "Room #{$roomObj->room_number} is already booked from {$cIn} to {$cOut} by {$gName}. Please choose an alternative room."
+                            'message' => $errMsg,
+                            'error' => $errMsg
                         ], 422);
                     }
                 }
@@ -1153,32 +1166,54 @@ class DashboardController extends Controller
                 $roomRate = (float)($roomObj?->rate ?? 4500);
                 $planModel = $planId ? Plan::find($planId) : null;
                 $planPrice = (float)($planModel?->price ?? 0);
-                $totalAmount = ($roomRate + $planPrice) * $totalNights;
-                if ($discountType === 'amount' && $reqDiscountAmt > 0) {
-                    $discountAmount = min($totalAmount, $reqDiscountAmt);
-                    $discountPercentage = $totalAmount > 0 ? round(($discountAmount / $totalAmount) * 100, 2) : 0.0;
-                } elseif ($reqDiscountPct > 0) {
-                    $discountPercentage = $reqDiscountPct;
-                    $discountAmount = round(($totalAmount * $discountPercentage) / 100.0, 2);
-                } else {
-                    $discountAmount = 0.0;
-                    $discountPercentage = 0.0;
-                }
-                $netAfterDiscount = max(0, $totalAmount - $discountAmount);
-                if ($gstPercentage > 0) {
-                    if ($gstType === 'inclusive') {
-                        $gstAmount = round(($netAfterDiscount - ($netAfterDiscount / (1 + ($gstPercentage / 100)))), 2);
-                        $payableAmount = $netAfterDiscount;
+                $singleRoomTotal = ($roomRate + $planPrice) * $totalNights;
+
+                if ($idx === 0) {
+                    // Primary guest booking holds the billing folio for the entire reservation
+                    $totalAmount = $reqTotalAmount !== null ? $reqTotalAmount : $singleRoomTotal;
+                    if ($discountType === 'amount' && $reqDiscountAmt > 0) {
+                        $discountAmount = min($totalAmount, $reqDiscountAmt);
+                        $discountPercentage = $totalAmount > 0 ? round(($discountAmount / $totalAmount) * 100, 2) : 0.0;
+                    } elseif ($reqDiscountPct > 0) {
+                        $discountPercentage = $reqDiscountPct;
+                        $discountAmount = round(($totalAmount * $discountPercentage) / 100.0, 2);
                     } else {
-                        $gstAmount = round((($netAfterDiscount * $gstPercentage) / 100), 2);
-                        $payableAmount = $netAfterDiscount + $gstAmount;
+                        $discountAmount = 0.0;
+                        $discountPercentage = 0.0;
                     }
+
+                    $netAfterDiscount = max(0, $totalAmount - $discountAmount);
+                    if ($gstPercentage > 0) {
+                        if ($gstType === 'inclusive') {
+                            $gstAmount = round(($netAfterDiscount - ($netAfterDiscount / (1 + ($gstPercentage / 100)))), 2);
+                            $payableAmount = $netAfterDiscount;
+                        } else {
+                            $gstAmount = round((($netAfterDiscount * $gstPercentage) / 100), 2);
+                            $payableAmount = $netAfterDiscount + $gstAmount;
+                        }
+                    } else {
+                        $gstAmount = 0.00;
+                        $payableAmount = $netAfterDiscount;
+                    }
+
+                    if ($reqPayableAmount !== null) {
+                        $payableAmount = $reqPayableAmount;
+                    }
+                    if ($reqGstAmount !== null) {
+                        $gstAmount = $reqGstAmount;
+                    }
+
+                    $calculatedBalance = max(0, $payableAmount - $advanceAmount);
                 } else {
+                    // Secondary guests sharing room or grouped in same reservation have 0 billing balance attached
+                    $totalAmount = 0.00;
+                    $discountPercentage = 0.0;
+                    $discountAmount = 0.00;
                     $gstAmount = 0.00;
-                    $payableAmount = $netAfterDiscount;
+                    $payableAmount = 0.00;
+                    $calculatedBalance = 0.00;
                 }
 
-                $calculatedBalance = max(0, $payableAmount - ($idx === 0 ? $advanceAmount : 0));
                 $folioNo = Booking::generateFolioNumber($roomObj?->room_number ?? '100');
 
                 $titleId = (!empty($gData['title_id']) && Title::where('id', $gData['title_id'])->exists()) ? (int)$gData['title_id'] : null;
@@ -1249,6 +1284,8 @@ class DashboardController extends Controller
                     'primary_booking_id' => $primaryBooking ? $primaryBooking->id : null,
                     'remarks' => ($idx === 0) ? $paymentRemarks : null,
                 ]);
+
+                $createdBookingIds[] = $bookingModel->id;
 
                 // 3. Create Payment record if advance paid
                 if ($idx === 0) {

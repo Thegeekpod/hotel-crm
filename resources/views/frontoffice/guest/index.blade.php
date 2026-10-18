@@ -239,6 +239,34 @@
     border-color: #ddd6fe;
   }
 
+  /* Custom Checkout SweetAlert2 Dialog */
+  .pms-swal-checkout-popup {
+    border-radius: 18px !important;
+    padding: 22px 24px !important;
+    box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25) !important;
+    border: 1px solid #e2e8f0 !important;
+    font-family: inherit !important;
+  }
+  .pms-swal-checkout-title {
+    font-size: 18px !important;
+    font-weight: 800 !important;
+    color: #0f172a !important;
+    padding: 10px 0 0 0 !important;
+  }
+  .pms-swal-checkout-confirm-btn {
+    border-radius: 10px !important;
+    padding: 10px 22px !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3) !important;
+  }
+  .pms-swal-checkout-cancel-btn {
+    border-radius: 10px !important;
+    padding: 10px 20px !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+  }
+
   /* Action buttons */
   .btn-action-view {
     width: 32px;
@@ -1632,6 +1660,11 @@
         alert(data.message || 'Settlement processed successfully!');
       }
 
+      // Must reload page on settlement as required
+      setTimeout(() => {
+        window.location.reload();
+      }, 700);
+
     } catch (err) {
       alert(err.message || 'Error processing settlement');
     } finally {
@@ -1646,13 +1679,84 @@
     const g = currentActiveCrmGuest;
 
     if (Number(g.balance || 0) > 0.01) {
-      alert(`Cannot check out with outstanding balance of ${formatINR(g.balance)}. Please complete settlement first.`);
+      if (typeof Swal !== 'undefined') {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Outstanding Balance Due',
+          html: `<div style="font-size: 13px; color: #475569; line-height: 1.6;">Cannot check out with outstanding balance of <strong style="color: #e11d48;">${formatINR(g.balance)}</strong>.<br><br>Please complete folio settlement first before checkout.</div>`,
+          confirmButtonColor: '#e11d48',
+          confirmButtonText: '<i class="fa-solid fa-calculator" style="margin-right: 6px;"></i> Settle Folio Now',
+          showCancelButton: true,
+          cancelButtonText: 'Dismiss',
+          heightAuto: false,
+          scrollbarPadding: false
+        }).then(res => {
+          if (res.isConfirmed) {
+            openCrmSettlementModal();
+          }
+        });
+      } else {
+        alert(`Cannot check out with outstanding balance of ${formatINR(g.balance)}. Please complete settlement first.`);
+      }
       return;
     }
 
-    if (!confirm(`Are you sure you want to Check Out ${g.guest_name || 'this guest'}?\n\nThis will update status to 'Checked Out' and schedule the room for housekeeping.`)) {
-      return;
+    let isConfirmed = false;
+    if (typeof Swal !== 'undefined') {
+      const result = await Swal.fire({
+        title: 'Confirm Guest Check-Out',
+        html: `
+          <div style="font-size: 13px; color: #334155; line-height: 1.6; text-align: left; padding: 4px 2px;">
+            <p style="margin: 0 0 12px 0; font-size: 13px; color: #475569;">Are you sure you want to proceed with checking out this guest?</p>
+            <div style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 12px 14px; margin-bottom: 12px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <span style="color: #64748b; font-size: 11px; font-weight: 700; text-transform: uppercase;">Guest Name</span>
+                <strong style="color: #0f172a; font-size: 13px;">${escapeHtml(g.guest_name)}</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <span style="color: #64748b; font-size: 11px; font-weight: 700; text-transform: uppercase;">Room & Category</span>
+                <span style="color: #4f46e5; font-weight: 800; font-size: 12px;">${escapeHtml(g.room_number || '-')} (${escapeHtml(g.room_category || 'Standard')})</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <span style="color: #64748b; font-size: 11px; font-weight: 700; text-transform: uppercase;">Folio / Reserve ID</span>
+                <span style="font-family: monospace; font-size: 12px; font-weight: 700; color: #334155;">${escapeHtml(g.reserve_id || '-')}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed #cbd5e1; padding-top: 6px;">
+                <span style="color: #64748b; font-size: 11px; font-weight: 700; text-transform: uppercase;">Billing Status</span>
+                <span style="color: #059669; font-weight: 800; font-size: 11px; display: inline-flex; align-items: center; gap: 4px;">
+                  <i class="fa-solid fa-circle-check"></i> Fully Settled (₹ 0.00 Due)
+                </span>
+              </div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px; font-size: 11px; color: #b45309; background: #fef3c7; padding: 9px 12px; border-radius: 8px; border: 1px solid #fde68a;">
+              <i class="fa-solid fa-triangle-exclamation" style="font-size: 14px; color: #d97706;"></i>
+              <span>Status will be marked as <strong>'Checked Out'</strong> and room scheduled for housekeeping.</span>
+            </div>
+          </div>
+        `,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#4f46e5',
+        cancelButtonColor: '#94a3b8',
+        confirmButtonText: '<i class="fa-solid fa-right-from-bracket" style="margin-right: 6px;"></i> Yes, Check Out',
+        cancelButtonText: 'Cancel',
+        reverseButtons: true,
+        focusCancel: false,
+        heightAuto: false,
+        scrollbarPadding: false,
+        customClass: {
+          popup: 'pms-swal-checkout-popup',
+          title: 'pms-swal-checkout-title',
+          confirmButton: 'pms-swal-checkout-confirm-btn',
+          cancelButton: 'pms-swal-checkout-cancel-btn'
+        }
+      });
+      isConfirmed = result.isConfirmed;
+    } else {
+      isConfirmed = confirm(`Are you sure you want to Check Out ${g.guest_name || 'this guest'}?\n\nThis will update status to 'Checked Out' and schedule the room for housekeeping.`);
     }
+
+    if (!isConfirmed) return;
 
     const btnCheckout = document.getElementById('crm-btn-checkout');
     if (btnCheckout) {
@@ -1702,8 +1806,22 @@
         alert(data.message || 'Guest checked out successfully!');
       }
 
+      // Must reload page on checkout as required
+      setTimeout(() => {
+        window.location.reload();
+      }, 700);
+
     } catch (err) {
-      alert(err.message || 'Error during checkout');
+      if (typeof Swal !== 'undefined') {
+        Swal.fire({
+          icon: 'error',
+          title: 'Check Out Failed',
+          text: err.message || 'Error during checkout',
+          confirmButtonColor: '#4f46e5'
+        });
+      } else {
+        alert(err.message || 'Error during checkout');
+      }
       if (btnCheckout) {
         btnCheckout.disabled = false;
         btnCheckout.innerHTML = '<i class="fa-solid fa-right-from-bracket"></i> Check Out';

@@ -712,9 +712,7 @@
     if (isOccupied && guestObj) {
       footerEl.innerHTML = `
         <button type="button" class="btn-ui-success" onclick="checkInFromRoomModal('${roomNo}')"><i class="fa-solid fa-key"></i> New Check-In</button>
-        <button type="button" class="btn-ui-secondary" onclick="printInvoice('${roomNo}', '${escapeHtml(guestObj.name)}', '${escapeHtml(guestObj.folio || '')}', ${guestObj.balance || 0})"><i class="fa-solid fa-print"></i> Print Invoice</button>
         <button type="button" class="btn-ui-primary" onclick="if(typeof PmsAlert !== 'undefined') PmsAlert.toast('POS charge panel opened for Room ${roomNo}', 'info'); else alert('POS charge panel opened for Room ${roomNo}');"><i class="fa-solid fa-utensils"></i> Add POS Charge</button>
-        <button type="button" class="btn-ui-danger" onclick="checkoutGuest('${roomNo}', '${escapeHtml(guestObj.name)}')"><i class="fa-solid fa-right-from-bracket"></i> Check Out</button>
         <button type="button" class="btn-ui-secondary" onclick="closeModal('room-modal')">Close</button>
       `;
     } else {

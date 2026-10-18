@@ -95,10 +95,15 @@ class GuestController extends Controller
                   ->orWhere('city', 'like', "%{$s}%")
                   ->orWhere('id_card_number', 'like', "%{$s}%")
                   ->orWhereHas('bookings', function ($bq) use ($s) {
+                      $cleanRoom = ltrim(ltrim($s, 'Rr'), '-');
                       $bq->where('reserve_id', 'like', "%{$s}%")
                          ->orWhere('folio_number', 'like', "%{$s}%")
                          ->orWhereHas('registrationType', function ($rq) use ($s) {
                              $rq->where('name', 'like', "%{$s}%");
+                         })
+                         ->orWhereHas('room', function ($rq) use ($s, $cleanRoom) {
+                             $rq->where('room_number', 'like', "%{$s}%")
+                                ->orWhere('room_number', 'like', "%{$cleanRoom}%");
                          });
                   });
             });

@@ -611,14 +611,14 @@
                         </label>
                         <label style="display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: #1e293b; cursor: pointer;">
                           <input type="radio" name="new_company_discount_type" value="amount" onchange="toggleNewCompanyDiscountType(this.value)" style="accent-color: #059669; width: 15px; height: 15px;">
-                          <span>Solid Amount (₹)</span>
+                          <span>Amount (₹)</span>
                         </label>
                       </div>
                       <div id="new-company-disc-pct-wrap">
                         <input type="number" name="new_company_discount_pct" id="new-comp-disc-pct" oninput="calculateReservationBilling()" min="0" max="100" step="any" style="width:100%; height:36px; padding:6px 12px; font-size:12px; border:1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;" placeholder="Discount Percentage % (e.g. 10)">
                       </div>
                       <div id="new-company-disc-amt-wrap" style="display: none;">
-                        <input type="number" name="new_company_discount_amt" id="new-comp-disc-amt" oninput="calculateReservationBilling()" min="0" step="any" style="width:100%; height:36px; padding:6px 12px; font-size:12px; border:1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;" placeholder="Solid Amount in ₹ (e.g. 500)">
+                        <input type="number" name="new_company_discount_amt" id="new-comp-disc-amt" oninput="calculateReservationBilling()" min="0" step="any" style="width:100%; height:36px; padding:6px 12px; font-size:12px; border:1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;" placeholder="Amount in ₹ (e.g. 500)">
                       </div>
                     </div>
                   </div>
@@ -969,7 +969,7 @@
                       <span id="calc-discount-val-label" style="font-size: 11px; font-weight: 900; color: #059669; font-family: monospace;">- ₹ 0.00</span>
                     </div>
 
-                    <!-- Discount Type Radio Selector (% vs Solid Amount) -->
+                    <!-- Discount Type Radio Selector (% vs Amount) -->
                     <div style="display: flex; gap: 8px; margin-bottom: 8px;">
                       <label id="discount-type-pct-label" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 6px 8px; background: #eef2ff; border: 1.5px solid #6366f1; border-radius: 6px; font-size: 11px; font-weight: 800; color: #4f46e5; cursor: pointer; user-select: none; transition: all 0.15s ease;">
                         <input type="radio" name="discount_type" value="percentage" checked onchange="onDiscountTypeChange(this.value)" style="accent-color: #4f46e5; margin: 0; width: 14px; height: 14px; cursor: pointer;">
@@ -977,7 +977,7 @@
                       </label>
                       <label id="discount-type-amt-label" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 6px 8px; background: #ffffff; border: 1.5px solid #cbd5e1; border-radius: 6px; font-size: 11px; font-weight: 700; color: #64748b; cursor: pointer; user-select: none; transition: all 0.15s ease;">
                         <input type="radio" name="discount_type" value="amount" onchange="onDiscountTypeChange(this.value)" style="accent-color: #4f46e5; margin: 0; width: 14px; height: 14px; cursor: pointer;">
-                        <span>Solid Amount (₹)</span>
+                        <span>Amount (₹)</span>
                       </label>
                     </div>
 
@@ -998,7 +998,7 @@
                       </div>
                     </div>
 
-                    <!-- Solid Amount Input Box -->
+                    <!-- Amount Input Box -->
                     <div id="disc-amount-input-wrapper" style="display: none;">
                       <div style="position: relative;">
                         <span style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-size: 11px; font-weight: 800; color: #64748b; pointer-events: none;">₹</span>
@@ -1010,7 +1010,7 @@
                                step="any" 
                                value="0"
                                style="width: 100%; height: 36px; padding: 6px 12px 6px 24px; font-size: 12px; font-weight: 700; font-family: monospace; border: 1px solid #cbd5e1; border-radius: 6px; background: #f8fafc; color: #1e293b; box-sizing: border-box;" 
-                               placeholder="Solid Amount in ₹ (e.g. 500)">
+                               placeholder="Amount in ₹ (e.g. 500)">
                       </div>
                     </div>
 

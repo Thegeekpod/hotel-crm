@@ -635,13 +635,14 @@
           <thead>
             <tr>
               <th style="width: 45px; text-align: center; white-space: nowrap;">SL</th>
-              <th style="min-width: 140px; white-space: nowrap;">Guest ID</th>
               <th style="min-width: 130px; text-align: left; white-space: nowrap;">Registration Type</th>
               <th style="min-width: 160px; white-space: nowrap;">Name</th>
               <th style="min-width: 130px; white-space: nowrap;">Phone</th>
-              <th style="min-width: 160px; white-space: nowrap;">Email</th>
-              <th style="min-width: 130px; white-space: nowrap;">Check-in</th>
-              <th style="min-width: 130px; white-space: nowrap;">ID Proof</th>
+              <th style="min-width: 130px; white-space: nowrap;">Room &amp; Floor</th>
+              <th style="min-width: 140px; white-space: nowrap;">Check-in</th>
+              <th style="min-width: 140px; white-space: nowrap;">Check-out</th>
+              <th style="min-width: 110px; text-align: right; white-space: nowrap;">Paid</th>
+              <th style="min-width: 130px; text-align: right; white-space: nowrap;">Remaining</th>
               <th style="min-width: 100px; text-align: center; white-space: nowrap;">Status</th>
               <th style="width: 70px; text-align: center; white-space: nowrap;">Action</th>
             </tr>
@@ -660,6 +661,16 @@
                   'cancelled' => 'cancelled',
                   default => 'confirmed'
                 };
+
+                // Room & Floor (Start from R then number)
+                $rawRoom = $item->room?->room_number ?? null;
+                $cleanRoomNum = $rawRoom ? preg_replace('/^r[-_\s]?/i', '', trim($rawRoom)) : null;
+                $rRoomDisplay = $cleanRoomNum ? ('R' . $cleanRoomNum) : null;
+                $floorDisplay = $item->room?->floorRelation?->floor ?? ($item->room?->floor ?? null);
+
+                // Financials (Paid & Remaining)
+                $paidVal = (float)($item->latestBooking?->payments?->sum('amount') ?: $item->advance_amount);
+                $balanceVal = (float)($item->balance ?? 0);
               @endphp
               <tr class="guest-row" id="row-guest-{{ $item->id }}">
                 <!-- SL Indexing -->
@@ -667,17 +678,7 @@
                   {{ $sl }}
                 </td>
 
-                <!-- Guest ID (Reserve ID & Folio) - NO WRAP -->
-                <td style="white-space: nowrap; min-width: 140px;">
-                  <div class="guest-id-text">
-                    {{ $item->reserve_id ?: ('RES-' . $item->id) }}
-                  </div>
-                  <div class="guest-folio-text">
-                    <i class="fa-regular fa-file-lines"></i> {{ $item->folio_number ?: ('FOL-' . ($item->room?->room_number ?? '100') . '-' . $item->id) }}
-                  </div>
-                </td>
-
-                <!-- Registration Type - Left Aligned -->
+                <!-- 1. Registration Type -->
                 <td style="text-align: left; white-space: nowrap;">
                   <span style="font-size: 10px; padding: 3px 9px; border-radius: 6px; background: #f1f5f9; color: #334155; font-weight: 700; border: 1px solid #cbd5e1; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;">
                     <i class="fa-solid fa-id-badge" style="font-size: 9px; color: #6366f1;"></i>
@@ -685,19 +686,21 @@
                   </span>
                 </td>
 
-                <!-- Name -->
+                <!-- 2. Name -->
                 <td style="white-space: nowrap;">
                   <div style="font-weight: 800; color: #0f172a; font-size: 13px; white-space: nowrap;">
                     {{ ($item->title?->name ? $item->title->name . ' ' : '') . $item->guest_name }}
                   </div>
-                  @if($item->city)
-                    <div style="font-size: 10px; color: #94a3b8; margin-top: 2px; white-space: nowrap;">
-                      <i class="fa-solid fa-location-dot" style="font-size: 9px;"></i> {{ $item->city }}
-                    </div>
-                  @endif
+                  <div style="font-size: 10px; color: #64748b; margin-top: 2px; display: flex; align-items: center; gap: 6px; font-family: var(--font-mono, monospace);">
+                    <span style="color: #6366f1; font-weight: 700;">{{ $item->reserve_id ?: ('RES-' . $item->id) }}</span>
+                    @if($item->city)
+                      <span style="color: #cbd5e1;">•</span>
+                      <span style="color: #94a3b8;"><i class="fa-solid fa-location-dot" style="font-size: 9px;"></i> {{ $item->city }}</span>
+                    @endif
+                  </div>
                 </td>
 
-                <!-- Phone -->
+                <!-- 3. Phone -->
                 <td style="white-space: nowrap;">
                   <div style="font-family: var(--font-mono, monospace); font-weight: 700; font-size: 12px; color: #1e293b; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap;">
                     <i class="fa-solid fa-phone" style="font-size: 10px; color: #10b981;"></i>
@@ -705,21 +708,33 @@
                   </div>
                 </td>
 
-                <!-- Email -->
+                <!-- 4. Room & Floor (Start from R then number) -->
                 <td style="white-space: nowrap;">
-                  <div style="font-size: 11px; color: #475569; white-space: nowrap;">
-                    @if($item->email)
-                      <i class="fa-regular fa-envelope" style="font-size: 10px; color: #6366f1; margin-right: 4px;"></i>{{ $item->email }}
-                    @else
-                      <span style="color: #94a3b8;">N/A</span>
-                    @endif
-                  </div>
+                  @if($rRoomDisplay)
+                    <div style="display: inline-flex; align-items: center; gap: 6px;">
+                      <span style="background: #eef2ff; color: #4338ca; border: 1px solid #c7d2fe; padding: 2px 8px; border-radius: 6px; font-weight: 800; font-size: 12px; font-family: var(--font-mono, monospace); letter-spacing: 0.3px;">
+                        <i class="fa-solid fa-door-open" style="font-size: 10px; margin-right: 4px;"></i>{{ $rRoomDisplay }}
+                      </span>
+                    </div>
+                    <div style="font-size: 10px; color: #64748b; font-weight: 700; margin-top: 3px; display: flex; align-items: center; gap: 4px;">
+                      <i class="fa-solid fa-stairs" style="font-size: 9px; color: #94a3b8;"></i>
+                      <span>{{ $floorDisplay ? 'Floor ' . $floorDisplay : 'Floor 1' }}</span>
+                      @if($item->room?->categoryRelation?->name || $item->room?->category)
+                        <span style="color: #cbd5e1;">•</span>
+                        <span style="color: #94a3b8;">{{ $item->room?->categoryRelation?->name ?? $item->room?->category }}</span>
+                      @endif
+                    </div>
+                  @else
+                    <span style="font-size: 11px; color: #94a3b8; font-style: italic;">
+                      <i class="fa-solid fa-hourglass-half" style="font-size: 10px;"></i> Unassigned
+                    </span>
+                  @endif
                 </td>
 
-                <!-- Check-in Date -->
+                <!-- 5. Checkin (date & time) -->
                 <td style="white-space: nowrap;">
                   <div style="font-weight: 700; color: #1e293b; font-size: 12px; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap;">
-                    <i class="fa-regular fa-calendar-days" style="color: #6366f1; font-size: 11px;"></i>
+                    <i class="fa-regular fa-calendar-check" style="color: #6366f1; font-size: 11px;"></i>
                     <span>{{ $item->reserve_date ? \Carbon\Carbon::parse($item->reserve_date)->format('d M Y') : 'N/A' }}</span>
                   </div>
                   @if($item->reserve_time)
@@ -729,17 +744,46 @@
                   @endif
                 </td>
 
-                <!-- ID Proof -->
+                <!-- 6. Checkout (date & time) -->
                 <td style="white-space: nowrap;">
-                  <div style="font-size: 11px; font-weight: 700; color: #334155; white-space: nowrap;">
-                    {{ $item->idCardType?->name ?? 'N/A' }}
+                  <div style="font-weight: 700; color: #1e293b; font-size: 12px; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap;">
+                    <i class="fa-regular fa-calendar-xmark" style="color: #e11d48; font-size: 11px;"></i>
+                    <span>{{ $item->checkout_date ? \Carbon\Carbon::parse($item->checkout_date)->format('d M Y') : 'N/A' }}</span>
                   </div>
-                  <div style="font-size: 10px; color: #64748b; font-family: var(--font-mono, monospace); margin-top: 2px; white-space: nowrap;">
-                    {{ $item->id_card_number ?: 'N/A' }}
+                  @if($item->checkout_time)
+                    <div style="font-size: 10px; color: #64748b; font-family: var(--font-mono, monospace); margin-top: 2px; white-space: nowrap;">
+                      <i class="fa-regular fa-clock" style="font-size: 9px; color: #94a3b8;"></i> {{ date('h:i A', strtotime($item->checkout_time)) }}
+                    </div>
+                  @endif
+                </td>
+
+                <!-- 7. Paid -->
+                <td style="text-align: right; white-space: nowrap;">
+                  <div style="font-family: var(--font-mono, monospace); font-weight: 800; font-size: 12px; color: #059669;">
+                    ₹ {{ number_format($paidVal, 2) }}
+                  </div>
+                  @if($item->paymentMode?->name)
+                    <div style="font-size: 10px; color: #64748b; margin-top: 2px; white-space: nowrap;">
+                      {{ $item->paymentMode->name }}
+                    </div>
+                  @endif
+                </td>
+
+                <!-- 8. Remaining (outstanding) -->
+                <td style="text-align: right; white-space: nowrap;">
+                  <div style="font-family: var(--font-mono, monospace); font-weight: 800; font-size: 12px; color: {{ $balanceVal > 0 ? '#e11d48' : '#059669' }};">
+                    ₹ {{ number_format($balanceVal, 2) }}
+                  </div>
+                  <div style="font-size: 10px; font-weight: 700; margin-top: 2px;">
+                    @if($balanceVal > 0)
+                      <span style="color: #e11d48; background: #ffe4e6; padding: 1px 6px; border-radius: 4px; font-size: 9px; font-weight: 800;">Due</span>
+                    @else
+                      <span style="color: #059669; background: #ecfdf5; padding: 1px 6px; border-radius: 4px; font-size: 9px; font-weight: 800;">Cleared</span>
+                    @endif
                   </div>
                 </td>
 
-                <!-- Status Badge -->
+                <!-- 9. Status -->
                 <td style="text-align: center; white-space: nowrap;">
                   <span class="status-badge {{ $statusClass }}">
                     <i class="fa-solid fa-circle" style="font-size: 6px;"></i>
@@ -759,7 +803,7 @@
               </tr>
             @empty
               <tr>
-                <td colspan="10" style="text-align: center; color: var(--text-muted); padding: 36px 20px;">
+                <td colspan="11" style="text-align: center; color: var(--text-muted); padding: 36px 20px;">
                   <div style="font-size: 28px; color: #cbd5e1; margin-bottom: 8px;"><i class="fa-solid fa-users-slash"></i></div>
                   <div style="font-size: 13px; font-weight: 700; color: #64748b;">No matching guests found.</div>
                   <div style="font-size: 11px; color: #94a3b8; margin-top: 4px;">Try modifying your search query or filter options.</div>

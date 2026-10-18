@@ -1078,6 +1078,10 @@
             <span class="dossier-val mono" id="crm-mdl-bill-gst" style="color: #6366f1;">-</span>
           </div>
           <div class="dossier-field-row">
+            <span class="dossier-label">Meal Plan Package</span>
+            <span class="dossier-val" id="crm-mdl-bill-mealplan" style="color: #c2410c; font-weight: 700;">-</span>
+          </div>
+          <div class="dossier-field-row">
             <span class="dossier-label">Net Payable Amount</span>
             <span class="dossier-val mono" id="crm-mdl-bill-payable" style="font-size: 13px; font-weight: 900; color: #0f172a;">-</span>
           </div>
@@ -1100,7 +1104,29 @@
         <i class="fa-solid fa-clock-rotate-left"></i> Record Registered: <span id="crm-mdl-registered-at">-</span>
       </div>
 
-      <div style="display: flex; gap: 8px; align-items: center;">
+      <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+        <!-- Settle Balance Button: shown when balance > 0 -->
+        <button type="button" 
+                id="crm-btn-settle" 
+                onclick="openCrmSettlementModal()" 
+                style="padding: 7px 18px; border-radius: 8px; background: linear-gradient(135deg, #059669 0%, #047857 100%); color: #ffffff; border: none; font-size: 12px; font-weight: 800; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; box-shadow: 0 4px 12px rgba(5,150,105,0.25);">
+          <i class="fa-solid fa-calculator"></i> Settle Balance
+        </button>
+
+        <!-- Check Out Button: shown ONLY after settlement complete (balance <= 0) and not Checked Out -->
+        <button type="button" 
+                id="crm-btn-checkout" 
+                onclick="executeCrmCheckout()" 
+                style="padding: 7px 18px; border-radius: 8px; background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); color: #ffffff; border: none; font-size: 12px; font-weight: 800; display: none; align-items: center; gap: 6px; cursor: pointer; box-shadow: 0 4px 12px rgba(99,102,241,0.25);">
+          <i class="fa-solid fa-right-from-bracket"></i> Check Out
+        </button>
+
+        <!-- Locked / Finalized Badge: shown when guest status is 'Checked Out' -->
+        <div id="crm-badge-locked" 
+             style="display: none; padding: 6px 14px; border-radius: 8px; background: #f1f5f9; border: 1px solid #cbd5e1; color: #475569; font-size: 12px; font-weight: 800; align-items: center; gap: 6px;">
+          <i class="fa-solid fa-lock" style="color: #64748b;"></i> Stay Finalized &amp; Checked Out (Locked)
+        </div>
+
         <button type="button" class="btn-ui-secondary" onclick="printCrmGuestDossier()" style="padding: 7px 16px; border-radius: 8px; border: 1px solid #cbd5e1; background: #ffffff; font-size: 12px; font-weight: 700; color: #334155; display: inline-flex; align-items: center; gap: 6px;">
           <i class="fa-solid fa-print"></i> Print Dossier
         </button>
@@ -1108,6 +1134,116 @@
           Close
         </button>
       </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ========================================== -->
+<!-- GUEST FOLIO SETTLEMENT MODAL               -->
+<!-- ========================================== -->
+<div class="modal-backdrop" id="guest-crm-settlement-modal" style="z-index: 100050;">
+  <div class="modal-window" style="width: 520px; max-width: 95vw; border-radius: 16px; overflow: hidden; box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.4); border: none; box-sizing: border-box; background: #ffffff;">
+    
+    <!-- Modal Header -->
+    <div style="background: linear-gradient(135deg, #059669 0%, #047857 100%); color: #ffffff; padding: 14px 20px; display: flex; justify-content: space-between; align-items: center;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <div style="width: 36px; height: 36px; border-radius: 8px; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 16px;">
+          <i class="fa-solid fa-calculator"></i>
+        </div>
+        <div>
+          <h3 style="margin: 0; font-size: 15px; font-weight: 800; color: #ffffff;">Guest Folio Settlement</h3>
+          <div style="font-size: 11px; opacity: 0.9; margin-top: 1px;">
+            <span id="crm-settle-guest-name">Guest</span> • Folio: <span id="crm-settle-folio-num">-</span>
+          </div>
+        </div>
+      </div>
+      <button type="button" class="modal-close" onclick="closeModal('guest-crm-settlement-modal')" style="background: rgba(255,255,255,0.2); border: none; color: #ffffff; width: 30px; height: 30px; border-radius: 50%; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center;">&times;</button>
+    </div>
+
+    <!-- Modal Body -->
+    <div style="padding: 20px; background: #f8fafc; overflow-y: auto;">
+      <!-- Outstanding Balance Highlight -->
+      <div style="background: linear-gradient(135deg, #fff1f2 0%, #ffe4e6 100%); border: 1px solid #fecdd3; border-radius: 12px; padding: 16px; text-align: center; margin-bottom: 18px;">
+        <div style="font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: #9f1239;">Outstanding Due Balance</div>
+        <div id="crm-settle-balance-display" style="font-size: 26px; font-weight: 900; color: #e11d48; margin-top: 4px; font-family: var(--font-mono, monospace);">
+          ₹ 0.00
+        </div>
+        <div style="font-size: 11px; color: #64748b; margin-top: 4px; display: flex; justify-content: center; gap: 14px;">
+          <span>Payable: <strong id="crm-settle-payable-display">₹ 0.00</strong></span>
+          <span>•</span>
+          <span>Paid So Far: <strong id="crm-settle-paid-display" style="color: #059669;">₹ 0.00</strong></span>
+        </div>
+      </div>
+
+      <!-- Settlement Form Fields -->
+      <div style="display: flex; flex-direction: column; gap: 14px;">
+        <div>
+          <label style="display: block; font-size: 11px; font-weight: 800; color: #334155; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.3px;">
+            Settlement Amount (₹) <span style="color: #e11d48;">*</span>
+          </label>
+          <div style="position: relative;">
+            <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-weight: 800; color: #64748b; font-size: 14px;">₹</span>
+            <input type="number" 
+                   step="0.01" 
+                   min="0.01" 
+                   id="crm-settle-amount-input" 
+                   style="width: 100%; box-sizing: border-box; padding: 9px 12px 9px 30px; border-radius: 8px; border: 1.5px solid #cbd5e1; font-size: 14px; font-weight: 800; font-family: var(--font-mono, monospace); color: #0f172a; outline: none;" 
+                   placeholder="0.00">
+          </div>
+          <div style="font-size: 10px; color: #64748b; margin-top: 4px; display: flex; justify-content: space-between;">
+            <span>Enter exact or partial settlement amount</span>
+            <button type="button" onclick="setFullSettlementAmount()" style="background: none; border: none; color: #059669; font-weight: 800; cursor: pointer; text-decoration: underline; font-size: 10px; padding: 0;">Pay Full Due</button>
+          </div>
+        </div>
+
+        <div>
+          <label style="display: block; font-size: 11px; font-weight: 800; color: #334155; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.3px;">
+            Payment Mode <span style="color: #e11d48;">*</span>
+          </label>
+          <select id="crm-settle-mode-select" style="width: 100%; box-sizing: border-box; padding: 9px 12px; border-radius: 8px; border: 1.5px solid #cbd5e1; font-size: 12px; font-weight: 700; color: #1e293b; background: #ffffff; outline: none;">
+            @foreach($paymentModes ?? [] as $pm)
+              <option value="{{ $pm->id }}" {{ strtolower($pm->name) === 'cash' ? 'selected' : '' }}>{{ $pm->name }}</option>
+            @endforeach
+          </select>
+        </div>
+
+        <div>
+          <label style="display: block; font-size: 11px; font-weight: 800; color: #334155; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.3px;">
+            Transaction / Reference ID (Optional)
+          </label>
+          <input type="text" 
+                 id="crm-settle-txn-ref" 
+                 placeholder="e.g. UPI-12345678, CARD-REF-998" 
+                 style="width: 100%; box-sizing: border-box; padding: 9px 12px; border-radius: 8px; border: 1.5px solid #cbd5e1; font-size: 12px; font-family: var(--font-mono, monospace); outline: none;">
+        </div>
+
+        <div>
+          <label style="display: block; font-size: 11px; font-weight: 800; color: #334155; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.3px;">
+            Settlement Remarks / Note (Optional)
+          </label>
+          <textarea id="crm-settle-remarks" 
+                    rows="2" 
+                    placeholder="e.g. Final balance cleared at front desk counter." 
+                    style="width: 100%; box-sizing: border-box; padding: 8px 12px; border-radius: 8px; border: 1.5px solid #cbd5e1; font-size: 12px; outline: none; resize: vertical;"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Footer -->
+    <div style="padding: 12px 20px; background: #ffffff; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; align-items: center; gap: 8px;">
+      <button type="button" 
+              class="btn-ui-secondary" 
+              onclick="closeModal('guest-crm-settlement-modal')" 
+              style="padding: 8px 16px; border-radius: 8px; border: 1px solid #cbd5e1; background: #ffffff; font-size: 12px; font-weight: 700; color: #64748b;">
+        Cancel
+      </button>
+      <button type="button" 
+              id="crm-btn-confirm-settlement" 
+              onclick="submitCrmSettlement()" 
+              style="padding: 8px 20px; border-radius: 8px; background: linear-gradient(135deg, #059669 0%, #047857 100%); color: #ffffff; border: none; font-size: 12px; font-weight: 800; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; box-shadow: 0 4px 12px rgba(5,150,105,0.25);">
+        <i class="fa-solid fa-check-circle"></i> Confirm Settlement
+      </button>
     </div>
 
   </div>
@@ -1202,7 +1338,13 @@
     document.getElementById('crm-mdl-card-duration').textContent = `${guest.total_nights || 1} Night(s)`;
     document.getElementById('crm-mdl-card-resmode').textContent = guest.reservation_mode || (guest.reservation_mode?.name ?? 'Front Desk');
     
-    const mealPlanVal = guest.plan_name || (guest.plan?.plan_name ?? 'Room Only (EP)');
+    const rawPlanName = guest.plan_name || (guest.plan?.plan_name ?? 'None');
+    const rawPlanPrice = Number(guest.plan_price || 0);
+    const isNonePlanCrm = !rawPlanName || rawPlanName.trim().toLowerCase() === 'none' || rawPlanName.trim().toLowerCase() === 'room only (ep)' || rawPlanName.trim().toLowerCase() === 'ep' || rawPlanPrice <= 0;
+    const mealPlanVal = (!isNonePlanCrm && rawPlanPrice > 0)
+      ? `${rawPlanName} (+₹${rawPlanPrice.toLocaleString('en-IN')})`
+      : rawPlanName;
+
     const mealPlanElem = document.getElementById('crm-mdl-meal-plan');
     if (mealPlanElem) mealPlanElem.textContent = mealPlanVal;
     const cardMealPlanElem = document.getElementById('crm-mdl-card-mealplan');
@@ -1259,12 +1401,286 @@
     const crmGstElem = document.getElementById('crm-mdl-bill-gst');
     if (crmGstElem) crmGstElem.textContent = gstText;
 
+    const billMealPlanElem = document.getElementById('crm-mdl-bill-mealplan');
+    if (billMealPlanElem) {
+      billMealPlanElem.textContent = mealPlanVal;
+    }
+
     document.getElementById('crm-mdl-bill-payable').textContent = formatINR(payable);
     document.getElementById('crm-mdl-bill-paymode').textContent = guest.payment_mode || (guest.payment_mode?.name ?? 'Cash / Direct');
     document.getElementById('crm-mdl-bill-remarks').textContent = guest.payment_remarks || 'None';
 
+    // Configure Action Buttons: Settle vs Check Out vs Locked
+    const btnSettle = document.getElementById('crm-btn-settle');
+    const btnCheckout = document.getElementById('crm-btn-checkout');
+    const badgeLocked = document.getElementById('crm-badge-locked');
+
+    const isCheckedOut = (guest.status || '').toLowerCase() === 'checked out';
+
+    if (isCheckedOut) {
+      if (btnSettle) btnSettle.style.display = 'none';
+      if (btnCheckout) btnCheckout.style.display = 'none';
+      if (badgeLocked) {
+        badgeLocked.style.display = 'inline-flex';
+        badgeLocked.innerHTML = '<i class="fa-solid fa-lock" style="color: #64748b;"></i> Stay Finalized &amp; Checked Out (Locked)';
+      }
+    } else if (balance > 0.01) {
+      // Balance still due: Settlement button active, Checkout hidden
+      if (btnSettle) {
+        btnSettle.style.display = 'inline-flex';
+        btnSettle.innerHTML = `<i class="fa-solid fa-calculator"></i> Settle Balance (${formatINR(balance)})`;
+      }
+      if (btnCheckout) btnCheckout.style.display = 'none';
+      if (badgeLocked) badgeLocked.style.display = 'none';
+    } else {
+      // Balance is 0 or cleared: Settlement complete! Check Out button is shown!
+      if (btnSettle) btnSettle.style.display = 'none';
+      if (btnCheckout) {
+        btnCheckout.style.display = 'inline-flex';
+        btnCheckout.disabled = false;
+        btnCheckout.innerHTML = '<i class="fa-solid fa-right-from-bracket"></i> Check Out';
+      }
+      if (badgeLocked) badgeLocked.style.display = 'none';
+    }
+
     // Show modal
     openModal('guest-crm-details-modal');
+  }
+
+  // Open Settlement Modal
+  function openCrmSettlementModal() {
+    if (!currentActiveCrmGuest) return;
+    const g = currentActiveCrmGuest;
+    const balance = Number(g.balance || 0);
+
+    if (balance <= 0) {
+      alert('This guest has already cleared all outstanding balance.');
+      return;
+    }
+
+    document.getElementById('crm-settle-guest-name').textContent = g.guest_name || g.name;
+    document.getElementById('crm-settle-folio-num').textContent = g.folio_number || g.reserve_id || '-';
+    document.getElementById('crm-settle-balance-display').textContent = formatINR(balance);
+    document.getElementById('crm-settle-payable-display').textContent = formatINR(g.payable_amount);
+    document.getElementById('crm-settle-paid-display').textContent = formatINR(g.advance_amount);
+
+    const amountInput = document.getElementById('crm-settle-amount-input');
+    amountInput.value = balance.toFixed(2);
+    amountInput.max = balance.toFixed(2);
+
+    document.getElementById('crm-settle-txn-ref').value = '';
+    document.getElementById('crm-settle-remarks').value = '';
+
+    openModal('guest-crm-settlement-modal');
+  }
+
+  function setFullSettlementAmount() {
+    if (!currentActiveCrmGuest) return;
+    const balance = Number(currentActiveCrmGuest.balance || 0);
+    document.getElementById('crm-settle-amount-input').value = balance.toFixed(2);
+  }
+
+  // Submit Settlement
+  async function submitCrmSettlement() {
+    if (!currentActiveCrmGuest) return;
+    const g = currentActiveCrmGuest;
+    const amountInput = document.getElementById('crm-settle-amount-input');
+    const settleAmount = parseFloat(amountInput.value);
+    const maxBalance = Number(g.balance || 0);
+
+    if (isNaN(settleAmount) || settleAmount <= 0) {
+      alert('Please enter a valid settlement amount greater than 0.');
+      return;
+    }
+
+    if (settleAmount > (maxBalance + 0.01)) {
+      alert(`Settlement amount cannot exceed outstanding balance of ${formatINR(maxBalance)}.`);
+      return;
+    }
+
+    const modeSelect = document.getElementById('crm-settle-mode-select');
+    const txnRefInput = document.getElementById('crm-settle-txn-ref');
+    const remarksInput = document.getElementById('crm-settle-remarks');
+    const confirmBtn = document.getElementById('crm-btn-confirm-settlement');
+
+    confirmBtn.disabled = true;
+    confirmBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
+
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+    try {
+      const response = await fetch(`{{ url('front-office/guest') }}/${g.id}/settle`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-CSRF-TOKEN': csrfToken || ''
+        },
+        body: JSON.stringify({
+          amount: settleAmount,
+          payment_mode_id: modeSelect.value,
+          transaction_id: txnRefInput.value,
+          remarks: remarksInput.value
+        })
+      });
+
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'Failed to process settlement');
+      }
+
+      // Close settlement modal
+      closeModal('guest-crm-settlement-modal');
+
+      // Update current active guest data
+      g.balance = data.new_balance;
+      g.advance_amount = data.new_advance;
+
+      // Update in memory list
+      const cached = (window.allCrmGuests || []).find(x => String(x.id) === String(g.id));
+      if (cached) {
+        cached.balance = data.new_balance;
+        cached.advance_amount = data.new_advance;
+      }
+
+      // Re-populate dossier modal with updated financials and switch buttons
+      populateAndOpenModal(g);
+
+      // Update table row in UI
+      updateTableRowFinancials(g.id, data.new_advance, data.new_balance);
+
+      if (typeof PmsAlert !== 'undefined') {
+        PmsAlert.toast(data.message || 'Settlement processed successfully!', 'success');
+      } else {
+        alert(data.message || 'Settlement processed successfully!');
+      }
+
+    } catch (err) {
+      alert(err.message || 'Error processing settlement');
+    } finally {
+      confirmBtn.disabled = false;
+      confirmBtn.innerHTML = '<i class="fa-solid fa-check-circle"></i> Confirm Settlement';
+    }
+  }
+
+  // Execute Check Out
+  async function executeCrmCheckout() {
+    if (!currentActiveCrmGuest) return;
+    const g = currentActiveCrmGuest;
+
+    if (Number(g.balance || 0) > 0.01) {
+      alert(`Cannot check out with outstanding balance of ${formatINR(g.balance)}. Please complete settlement first.`);
+      return;
+    }
+
+    if (!confirm(`Are you sure you want to Check Out ${g.guest_name || 'this guest'}?\n\nThis will update status to 'Checked Out' and schedule the room for housekeeping.`)) {
+      return;
+    }
+
+    const btnCheckout = document.getElementById('crm-btn-checkout');
+    if (btnCheckout) {
+      btnCheckout.disabled = true;
+      btnCheckout.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Checking Out...';
+    }
+
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+    try {
+      const response = await fetch(`{{ url('front-office/guest') }}/${g.id}/checkout`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-CSRF-TOKEN': csrfToken || ''
+        },
+        body: JSON.stringify({
+          remarks: 'Checked out via Front Desk Master CRM'
+        })
+      });
+
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'Failed to complete check out');
+      }
+
+      // Update guest in state
+      g.status = 'Checked Out';
+      if (data.checkout_date) g.checkout_date = data.checkout_date;
+      if (data.checkout_time) g.checkout_time = data.checkout_time;
+
+      const cached = (window.allCrmGuests || []).find(x => String(x.id) === String(g.id));
+      if (cached) {
+        cached.status = 'Checked Out';
+      }
+
+      // Re-populate modal: this automatically locks and shows Checked Out badge
+      populateAndOpenModal(g);
+
+      // Update table row in UI
+      updateTableRowStatus(g.id, 'Checked Out');
+
+      if (typeof PmsAlert !== 'undefined') {
+        PmsAlert.toast(data.message || 'Guest checked out successfully!', 'success');
+      } else {
+        alert(data.message || 'Guest checked out successfully!');
+      }
+
+    } catch (err) {
+      alert(err.message || 'Error during checkout');
+      if (btnCheckout) {
+        btnCheckout.disabled = false;
+        btnCheckout.innerHTML = '<i class="fa-solid fa-right-from-bracket"></i> Check Out';
+      }
+    }
+  }
+
+  // Helper to dynamically update table row financials after settlement
+  function updateTableRowFinancials(guestId, paid, balance) {
+    const row = document.getElementById(`row-guest-${guestId}`);
+    if (!row) return;
+
+    // Paid cell (7th index in row)
+    const paidCell = row.children[7];
+    if (paidCell) {
+      paidCell.innerHTML = `
+        <div style="font-family: var(--font-mono, monospace); font-weight: 800; font-size: 12px; color: #059669;">
+          ₹ ${Number(paid || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+        </div>
+      `;
+    }
+
+    // Remaining cell (8th index in row)
+    const remCell = row.children[8];
+    if (remCell) {
+      const isDue = Number(balance || 0) > 0;
+      remCell.innerHTML = `
+        <div style="font-family: var(--font-mono, monospace); font-weight: 800; font-size: 12px; color: ${isDue ? '#e11d48' : '#059669'};">
+          ₹ ${Number(balance || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+        </div>
+        <div style="font-size: 10px; font-weight: 700; margin-top: 2px;">
+          ${isDue 
+            ? '<span style="color: #e11d48; background: #ffe4e6; padding: 1px 6px; border-radius: 4px; font-size: 9px; font-weight: 800;">Due</span>' 
+            : '<span style="color: #059669; background: #ecfdf5; padding: 1px 6px; border-radius: 4px; font-size: 9px; font-weight: 800;">Cleared</span>'}
+        </div>
+      `;
+    }
+  }
+
+  // Helper to dynamically update table row status after checkout
+  function updateTableRowStatus(guestId, newStatus) {
+    const row = document.getElementById(`row-guest-${guestId}`);
+    if (!row) return;
+
+    // Status cell (9th index in row)
+    const statusCell = row.children[9];
+    if (statusCell) {
+      statusCell.innerHTML = `
+        <span class="status-badge checkedout">
+          <i class="fa-solid fa-circle" style="font-size: 6px;"></i>
+          <span>${newStatus}</span>
+        </span>
+      `;
+    }
   }
 
   // Open Uniform Guest Dossier Modal by Guest ID (with fallback to backend JSON API)

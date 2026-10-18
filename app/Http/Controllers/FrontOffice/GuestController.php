@@ -14,7 +14,10 @@ use App\Models\Booking;
 use App\Models\Payment;
 use App\Models\Settlement;
 use App\Models\Checkout;
+use App\Models\RoomHousekeepingHistory;
+use App\Models\HousekeepingState;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class GuestController extends Controller
 {
@@ -133,8 +136,72 @@ class GuestController extends Controller
             })->count(),
         ];
 
+        // Serialized guests for instant client-side dossier rendering
+        $serializedGuests = $guests->getCollection()->map(function($item) {
+            $lb = $item->latestBooking;
+            $room = $lb?->room;
+            $paidVal = (float)($lb?->payments?->sum('amount') ?: $item->advance_amount);
+            $balVal = (float)($item->balance ?? 0);
+            $planObj = $lb?->plan;
+            $planName = $planObj?->plan_name ?: 'Room Only (EP)';
+            $planCode = $planObj?->plan_code ?: '';
+            $planPrice = (float)($planObj?->price ?? 0);
+
+            return [
+                'id' => $item->id,
+                'guest_name' => ($item->title?->name ? $item->title->name . ' ' : '') . $item->guest_name,
+                'reserve_id' => $item->reserve_id ?: ('RES-' . $item->id),
+                'folio_number' => $item->folio_number ?: '-',
+                'created_at_fmt' => $item->created_at ? $item->created_at->format('d M Y, h:i A') : 'N/A',
+                'status' => $item->status ?: 'Confirmed',
+                'room_id' => $item->room_id,
+                'room_number' => $room?->room_number ? ('R' . preg_replace('/^r[-_\s]?/i', '', trim($room->room_number))) : 'Unassigned',
+                'room_category' => $room?->categoryRelation?->name ?? ($room?->category ?? 'Standard'),
+                'room_floor' => $room?->floorRelation?->floor ?? ($room?->floor ?? '1'),
+                'room_bedding' => $room?->beddingConfigRelation?->name ?? 'Standard',
+                'total_nights' => (int)($item->total_nights ?: 1),
+                'registration_type' => $lb?->registrationType?->name ?? ($item->registrationType?->name ?? 'Regular'),
+                'mobile' => $item->mobile ?: 'N/A',
+                'email' => $item->email ?: 'N/A',
+                'city' => $item->city ?: 'N/A',
+                'guest_address' => $item->guest_address ?: 'N/A',
+                'nationality' => $item->nationality?->name ?? 'Indian',
+                'id_card_type' => $item->idCardType?->name ?? 'ID Proof',
+                'id_card_number' => $item->id_card_number ?: 'N/A',
+                'has_privilege_card' => (bool)$item->has_privilege_card,
+                'privilege_card_no' => $item->privilege_card_no ?: '',
+                'reserve_date' => $item->reserve_date ? \Carbon\Carbon::parse($item->reserve_date)->format('d M Y') : 'N/A',
+                'reserve_time' => $item->reserve_time ? date('h:i A', strtotime($item->reserve_time)) : '12:00 PM',
+                'checkout_date' => $item->checkout_date ? \Carbon\Carbon::parse($item->checkout_date)->format('d M Y') : 'N/A',
+                'checkout_time' => $item->checkout_time ? date('h:i A', strtotime($item->checkout_time)) : '11:00 AM',
+                'reservation_mode' => $lb?->reservationMode?->name ?? 'Front Desk',
+                'plan_name' => $planName,
+                'plan_code' => $planCode,
+                'plan_price' => $planPrice,
+                'company' => $item->company ? [
+                    'name' => $item->company->name,
+                    'gstin' => $item->company->gstin,
+                    'discount_type' => $item->company->discount_type,
+                    'discount_value' => $item->company->discount_value,
+                ] : null,
+                'room_rate' => (float)$item->room_rate,
+                'total_amount' => (float)$item->total_amount,
+                'advance_amount' => $paidVal,
+                'balance' => $balVal,
+                'discount_amount' => (float)$item->discount_amount,
+                'discount_percentage' => (float)$item->discount_percentage,
+                'gst_amount' => (float)$item->gst_amount,
+                'gst_percentage' => (float)$item->gst_percentage,
+                'gst_type' => $item->gst_type ?: 'exclusive',
+                'payable_amount' => (float)$item->payable_amount,
+                'payment_mode' => $lb?->payments?->last()?->paymentMode?->name ?? ($item->paymentMode?->name ?? 'Cash / Direct'),
+                'payment_remarks' => $lb?->remarks ?: ($item->payments?->last()?->payment_remarks ?? 'None'),
+            ];
+        });
+
         return view('frontoffice.guest.index', compact(
             'guests',
+            'serializedGuests',
             'stats',
             'fromDate',
             'toDate',
@@ -174,9 +241,249 @@ class GuestController extends Controller
             return response()->json(['error' => 'Guest record not found'], 404);
         }
 
+        $lb = $guest->latestBooking;
+        $room = $lb?->room;
+        $paidVal = (float)($lb?->payments?->sum('amount') ?: $guest->advance_amount);
+        $balVal = (float)($guest->balance ?? 0);
+        $planObj = $lb?->plan;
+
+        $serialized = [
+            'id' => $guest->id,
+            'guest_name' => ($guest->title?->name ? $guest->title->name . ' ' : '') . $guest->guest_name,
+            'reserve_id' => $guest->reserve_id ?: ('RES-' . $guest->id),
+            'folio_number' => $guest->folio_number ?: '-',
+            'created_at_fmt' => $guest->created_at ? $guest->created_at->format('d M Y, h:i A') : 'N/A',
+            'status' => $guest->status ?: 'Confirmed',
+            'room_id' => $guest->room_id,
+            'room_number' => $room?->room_number ? ('R' . preg_replace('/^r[-_\s]?/i', '', trim($room->room_number))) : 'Unassigned',
+            'room_category' => $room?->categoryRelation?->name ?? ($room?->category ?? 'Standard'),
+            'room_floor' => $room?->floorRelation?->floor ?? ($room?->floor ?? '1'),
+            'room_bedding' => $room?->beddingConfigRelation?->name ?? 'Standard',
+            'total_nights' => (int)($guest->total_nights ?: 1),
+            'registration_type' => $lb?->registrationType?->name ?? ($guest->registrationType?->name ?? 'Regular'),
+            'mobile' => $guest->mobile ?: 'N/A',
+            'email' => $guest->email ?: 'N/A',
+            'city' => $guest->city ?: 'N/A',
+            'guest_address' => $guest->guest_address ?: 'N/A',
+            'nationality' => $guest->nationality?->name ?? 'Indian',
+            'id_card_type' => $guest->idCardType?->name ?? 'ID Proof',
+            'id_card_number' => $guest->id_card_number ?: 'N/A',
+            'has_privilege_card' => (bool)$guest->has_privilege_card,
+            'privilege_card_no' => $guest->privilege_card_no ?: '',
+            'reserve_date' => $guest->reserve_date ? \Carbon\Carbon::parse($guest->reserve_date)->format('d M Y') : 'N/A',
+            'reserve_time' => $guest->reserve_time ? date('h:i A', strtotime($guest->reserve_time)) : '12:00 PM',
+            'checkout_date' => $guest->checkout_date ? \Carbon\Carbon::parse($guest->checkout_date)->format('d M Y') : 'N/A',
+            'checkout_time' => $guest->checkout_time ? date('h:i A', strtotime($guest->checkout_time)) : '11:00 AM',
+            'reservation_mode' => $lb?->reservationMode?->name ?? 'Front Desk',
+            'plan_name' => $planObj?->plan_name ?? 'Room Only (EP)',
+            'plan_code' => $planObj?->plan_code ?? '',
+            'plan_price' => (float)($planObj?->price ?? 0),
+            'company' => $guest->company ? [
+                'name' => $guest->company->name,
+                'gstin' => $guest->company->gstin,
+                'discount_type' => $guest->company->discount_type,
+                'discount_value' => $guest->company->discount_value,
+            ] : null,
+            'room_rate' => (float)$guest->room_rate,
+            'total_amount' => (float)$guest->total_amount,
+            'advance_amount' => $paidVal,
+            'balance' => $balVal,
+            'discount_amount' => (float)$guest->discount_amount,
+            'discount_percentage' => (float)$guest->discount_percentage,
+            'gst_amount' => (float)$guest->gst_amount,
+            'gst_percentage' => (float)$guest->gst_percentage,
+            'gst_type' => $guest->gst_type ?: 'exclusive',
+            'payable_amount' => (float)$guest->payable_amount,
+            'payment_mode' => $lb?->payments?->last()?->paymentMode?->name ?? ($guest->paymentMode?->name ?? 'Cash / Direct'),
+            'payment_remarks' => $lb?->remarks ?: ($guest->payments?->last()?->payment_remarks ?? 'None'),
+        ];
+
         return response()->json([
             'success' => true,
-            'guest' => $guest
+            'guest' => $serialized,
+            'raw_guest' => $guest
         ]);
+    }
+
+    public function settle(Request $request, $id)
+    {
+        $guest = Guest::with(['latestBooking.payments', 'company'])->find($id);
+        if (!$guest) {
+            return response()->json(['success' => false, 'error' => 'Guest record not found'], 404);
+        }
+
+        $booking = $guest->latestBooking;
+        if (!$booking) {
+            return response()->json(['success' => false, 'error' => 'No booking record found for this guest'], 400);
+        }
+
+        $request->validate([
+            'amount' => 'required|numeric|min:0.01',
+            'payment_mode_id' => 'nullable|exists:payment_modes,id',
+            'remarks' => 'nullable|string|max:500',
+            'transaction_id' => 'nullable|string|max:100',
+        ]);
+
+        $settleAmount = (float)$request->input('amount');
+        $currentBalance = (float)$booking->balance;
+
+        if ($currentBalance <= 0) {
+            return response()->json(['success' => false, 'error' => 'This booking balance has already been fully settled.'], 400);
+        }
+
+        if ($settleAmount > ($currentBalance + 0.01)) {
+            return response()->json(['success' => false, 'error' => 'Settlement amount cannot exceed outstanding balance of ₹ ' . number_format($currentBalance, 2)], 422);
+        }
+
+        DB::beginTransaction();
+        try {
+            $newBalance = max(0, round($currentBalance - $settleAmount, 2));
+            $newAdvance = round((float)$booking->advance_amount + $settleAmount, 2);
+
+            // 1. Update Booking financials
+            $booking->advance_amount = $newAdvance;
+            $booking->balance = $newBalance;
+            $booking->save();
+
+            // 2. Create Payment Record
+            $paymentModeId = $request->input('payment_mode_id') ?: PaymentMode::where('name', 'Cash')->value('id');
+            Payment::create([
+                'guest_id' => $guest->id,
+                'booking_id' => $booking->id,
+                'payment_mode_id' => $paymentModeId,
+                'amount' => $settleAmount,
+                'advance_amount' => $newAdvance,
+                'balance' => $newBalance,
+                'folio_number' => $booking->folio_number,
+                'payment_remarks' => $request->input('remarks', 'Settlement payment'),
+                'payment_date' => now()->toDateString(),
+                'payment_time' => now()->format('H:i:s'),
+                'payment_type' => 'Settlement',
+                'transaction_id' => $request->input('transaction_id') ?: ('TXN-' . strtoupper(uniqid())),
+                'status' => 'Success',
+            ]);
+
+            // 3. Create Settlement Record
+            $settlementNumber = 'SET-' . date('Ymd') . '-' . sprintf('%04d', $guest->id);
+            Settlement::create([
+                'settlement_number' => $settlementNumber,
+                'folio_number' => $booking->folio_number,
+                'guest_id' => $guest->id,
+                'booking_id' => $booking->id,
+                'payment_mode_id' => $paymentModeId,
+                'total_room_charges' => $booking->total_amount,
+                'total_extra_charges' => 0.00,
+                'discount_amount' => $booking->discount_amount,
+                'tax_amount' => $booking->gst_amount,
+                'payable_amount' => $booking->payable_amount,
+                'advance_adjusted' => round($newAdvance - $settleAmount, 2),
+                'paid_amount' => $settleAmount,
+                'balance_amount' => $newBalance,
+                'settlement_date' => now()->toDateString(),
+                'settlement_time' => now()->format('H:i:s'),
+                'status' => $newBalance <= 0 ? 'Settled' : 'Partial',
+                'remarks' => $request->input('remarks', 'Settlement received'),
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Settlement of ₹ ' . number_format($settleAmount, 2) . ' processed successfully!',
+                'new_balance' => $newBalance,
+                'new_advance' => $newAdvance,
+                'is_fully_settled' => ($newBalance <= 0),
+                'settlement_number' => $settlementNumber,
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['success' => false, 'error' => 'Settlement failed: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function checkout(Request $request, $id)
+    {
+        $guest = Guest::with(['latestBooking.room', 'company'])->find($id);
+        if (!$guest) {
+            return response()->json(['success' => false, 'error' => 'Guest record not found'], 404);
+        }
+
+        $booking = $guest->latestBooking;
+        if (!$booking) {
+            return response()->json(['success' => false, 'error' => 'No active booking found for this guest'], 400);
+        }
+
+        if ($booking->status === 'Checked Out') {
+            return response()->json(['success' => false, 'error' => 'This reservation is already Checked Out and locked.'], 400);
+        }
+
+        $currentBalance = (float)$booking->balance;
+        if ($currentBalance > 0.01) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Cannot check out guest with outstanding balance of ₹ ' . number_format($currentBalance, 2) . '. Complete settlement first.'
+            ], 422);
+        }
+
+        DB::beginTransaction();
+        try {
+            $checkoutDate = now()->toDateString();
+            $checkoutTime = now()->format('H:i:s');
+
+            // 1. Update Booking status to Checked Out
+            $booking->status = 'Checked Out';
+            $booking->checkout_date = $checkoutDate;
+            $booking->checkout_time = $checkoutTime;
+            $booking->save();
+
+            // 2. Create Checkout record
+            $latestSettlement = Settlement::where('booking_id', $booking->id)->latest('id')->first();
+            Checkout::create([
+                'guest_id' => $guest->id,
+                'booking_id' => $booking->id,
+                'room_id' => $booking->room_id,
+                'settlement_id' => $latestSettlement?->id,
+                'checkout_date' => $checkoutDate,
+                'checkout_time' => $checkoutTime,
+                'actual_checkout_at' => now(),
+                'total_nights' => $booking->total_nights,
+                'room_charges' => $booking->total_amount,
+                'extra_charges' => 0.00,
+                'late_checkout_charge' => 0.00,
+                'discount_amount' => $booking->discount_amount,
+                'tax_amount' => $booking->gst_amount,
+                'grand_total' => $booking->payable_amount,
+                'paid_amount' => $booking->advance_amount,
+                'balance_amount' => 0.00,
+                'status' => 'Completed',
+                'remarks' => $request->input('remarks', 'Checked out via Front Desk CRM'),
+            ]);
+
+            // 3. Update room housekeeping state to dirty
+            if ($booking->room_id) {
+                $dirtyState = HousekeepingState::where('name', 'like', '%dirty%')->first();
+                if ($dirtyState) {
+                    RoomHousekeepingHistory::create([
+                        'room_id' => $booking->room_id,
+                        'housekeeping_status_id' => $dirtyState->id,
+                        'start_time' => now(),
+                        'status' => 'pending',
+                    ]);
+                }
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Guest successfully checked out! Room has been scheduled for housekeeping.',
+                'status' => 'Checked Out',
+                'checkout_date' => \Carbon\Carbon::parse($checkoutDate)->format('d M Y'),
+                'checkout_time' => date('h:i A', strtotime($checkoutTime)),
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['success' => false, 'error' => 'Checkout failed: ' . $e->getMessage()], 500);
+        }
     }
 }

@@ -401,12 +401,35 @@
     const guestRegType = (guestsList.length > 0 ? guestsList[0].registration_type : null) || roomData.registration_type || 'New';
     const primaryGuest = (isOccupied && guestsList.length > 0) ? guestsList[0] : null;
 
-    // Meal Plan Extraction (Guest-selected plan has precedence, otherwise room's assigned plan)
-    const mealPlanName = primaryGuest?.plan_name || roomData.plan_name || 'Room Only (EP)';
-    const mealPlanPrice = Number(primaryGuest?.plan_price || roomData.plan_price || 0);
-    const mealPlanDisplay = mealPlanPrice > 0 
-      ? `${mealPlanName} (+₹${mealPlanPrice.toLocaleString('en-IN')})` 
-      : mealPlanName;
+    // Meal Plan Extraction (Guest-selected plan has definitive precedence when guest is residing)
+    let mealPlanName = '';
+    let mealPlanPrice = 0;
+
+    if (primaryGuest && primaryGuest.plan_name !== undefined && primaryGuest.plan_name !== null && primaryGuest.plan_name !== '') {
+      mealPlanName = primaryGuest.plan_name;
+      mealPlanPrice = Number(primaryGuest.plan_price || 0);
+    } else if (primaryGuest) {
+      mealPlanName = 'None';
+      mealPlanPrice = 0;
+    } else if (roomData.plan_name) {
+      mealPlanName = roomData.plan_name;
+      mealPlanPrice = Number(roomData.plan_price || 0);
+    } else {
+      mealPlanName = 'None';
+      mealPlanPrice = 0;
+    }
+
+    function formatMealPlanDisplay(name, price) {
+      if (!name) return 'None';
+      const clean = String(name).trim();
+      const lower = clean.toLowerCase();
+      if (lower === 'none' || lower === 'no meal plan' || lower === 'room only (ep)' || lower === 'ep' || Number(price || 0) <= 0) {
+        return clean;
+      }
+      return `${clean} (+₹${Number(price).toLocaleString('en-IN')})`;
+    }
+
+    const mealPlanDisplay = formatMealPlanDisplay(mealPlanName, mealPlanPrice);
 
     const checkInDisplay = primaryGuest?.checkin_display || roomData.checkin_display || (primaryGuest?.reserve_date ? `${primaryGuest.reserve_date}${primaryGuest.reserve_time ? ' • ' + primaryGuest.reserve_time : ''}` : '');
     const checkOutDisplay = primaryGuest?.checkout_display || roomData.checkout_display || (primaryGuest?.checkout_date ? `${primaryGuest.checkout_date}${primaryGuest.checkout_time ? ' • ' + primaryGuest.checkout_time : ''}` : '');
@@ -552,7 +575,7 @@
                 ${g.email ? `<div><strong style="color: #475569;"><i class="fa-solid fa-envelope" style="color: #6366f1; width: 14px;"></i> Email:</strong> <span style="color: #1e293b; font-weight: 600;">${escapeHtml(g.email)}</span></div>` : ''}
                 ${g.id_card_number ? `<div><strong style="color: #475569;"><i class="fa-solid fa-id-card" style="color: #6366f1; width: 14px;"></i> ${escapeHtml(g.id_card_type || 'ID Card')}:</strong> <span style="font-family: var(--font-mono); font-weight: 700; color: #0f172a;">${escapeHtml(g.id_card_number)}</span></div>` : ''}
                 ${g.city || g.address ? `<div><strong style="color: #475569;"><i class="fa-solid fa-location-dot" style="color: #6366f1; width: 14px;"></i> City / Address:</strong> <span style="color: #1e293b; font-weight: 600;">${escapeHtml(g.city || g.address)}</span></div>` : ''}
-                <div><strong style="color: #475569;"><i class="fa-solid fa-utensils" style="color: #ea580c; width: 14px;"></i> Meal Plan:</strong> <span style="color: #c2410c; font-weight: 800; background: #fff7ed; padding: 1px 7px; border-radius: 4px; border: 1px solid #fed7aa;">${escapeHtml(g.plan_name || mealPlanDisplay)}</span></div>
+                <div><strong style="color: #475569;"><i class="fa-solid fa-utensils" style="color: #ea580c; width: 14px;"></i> Meal Plan:</strong> <span style="color: #c2410c; font-weight: 800; background: #fff7ed; padding: 1px 7px; border-radius: 4px; border: 1px solid #fed7aa;">${escapeHtml(formatMealPlanDisplay(g.plan_name, g.plan_price))}</span></div>
                 ${g.has_privilege_card && g.privilege_card_no ? `<div><strong style="color: #475569;"><i class="fa-solid fa-star" style="color: #f59e0b; width: 14px;"></i> Privilege:</strong> <span style="color: #d97706; font-weight: 700;">${escapeHtml(g.privilege_card_no)}</span></div>` : ''}
               </div>
             </div>
@@ -579,7 +602,7 @@
               ${g.email ? `<div><strong style="color: #475569;"><i class="fa-solid fa-envelope" style="color: #6366f1; width: 14px;"></i> Email:</strong> <span style="font-weight: 600; color: #1e293b;">${escapeHtml(g.email)}</span></div>` : ''}
               ${g.id_card_number ? `<div><strong style="color: #475569;"><i class="fa-solid fa-id-card" style="color: #6366f1; width: 14px;"></i> ${escapeHtml(g.id_card_type || 'ID Card')}:</strong> <span style="font-family: var(--font-mono); font-weight: 700; color: #0f172a;">${escapeHtml(g.id_card_number)}</span></div>` : ''}
               ${g.city || g.address ? `<div><strong style="color: #475569;"><i class="fa-solid fa-location-dot" style="color: #6366f1; width: 14px;"></i> City / Address:</strong> <span style="font-weight: 600; color: #1e293b;">${escapeHtml(g.city || g.address)}</span></div>` : ''}
-              <div><strong style="color: #475569;"><i class="fa-solid fa-utensils" style="color: #ea580c; width: 14px;"></i> Meal Plan:</strong> <span style="color: #c2410c; font-weight: 800; background: #fff7ed; padding: 1px 7px; border-radius: 4px; border: 1px solid #fed7aa;">${escapeHtml(g.plan_name || mealPlanDisplay)}</span></div>
+              <div><strong style="color: #475569;"><i class="fa-solid fa-utensils" style="color: #ea580c; width: 14px;"></i> Meal Plan:</strong> <span style="color: #c2410c; font-weight: 800; background: #fff7ed; padding: 1px 7px; border-radius: 4px; border: 1px solid #fed7aa;">${escapeHtml(formatMealPlanDisplay(g.plan_name, g.plan_price))}</span></div>
               ${g.has_privilege_card && g.privilege_card_no ? `<div><strong style="color: #475569;"><i class="fa-solid fa-star" style="color: #f59e0b; width: 14px;"></i> Privilege:</strong> <span style="color: #d97706; font-weight: 700;">${escapeHtml(g.privilege_card_no)}</span></div>` : ''}
             </div>
           </div>

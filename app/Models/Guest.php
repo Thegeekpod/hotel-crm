@@ -37,6 +37,28 @@ class Guest extends Model
         'has_privilege_card' => 'boolean',
     ];
 
+    protected $appends = [
+        'reserve_id',
+        'folio_number',
+        'status',
+        'room_id',
+        'reserve_date',
+        'reserve_time',
+        'checkout_date',
+        'checkout_time',
+        'total_nights',
+        'room_rate',
+        'total_amount',
+        'discount_percentage',
+        'discount_amount',
+        'gst_type',
+        'gst_percentage',
+        'gst_amount',
+        'payable_amount',
+        'advance_amount',
+        'balance',
+    ];
+
     /**
      * Backward-compatible delegation to latestBooking
      */

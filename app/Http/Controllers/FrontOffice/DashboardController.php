@@ -125,7 +125,7 @@ class DashboardController extends Controller
                     $linkedGuests = Booking::where('reserve_id', $resId)
                         ->where('room_id', $r->id)
                         ->whereIn('status', ['Confirmed', 'Arrived', 'Stay Over', 'Checked In'])
-                        ->with(['guest.title', 'guest.nationality', 'guest.idCardType', 'registrationType', 'company'])
+                        ->with(['guest.title', 'guest.nationality', 'guest.idCardType', 'registrationType', 'company', 'plan'])
                         ->get();
                     if ($linkedGuests->isNotEmpty()) {
                         $activeGuests = $linkedGuests;
@@ -177,6 +177,7 @@ class DashboardController extends Controller
                         'company' => $compName,
                         'plan_id' => $gModel->plan_id,
                         'plan_name' => $gModel->plan?->plan_name ?? '',
+                        'plan_price' => (float)($gModel->plan?->price ?? 0),
                         'reserve_date' => $resDateStr,
                         'reserve_time' => $resTimeStr,
                         'checkout_date' => $outDateStr,

@@ -401,6 +401,13 @@
     const guestRegType = (guestsList.length > 0 ? guestsList[0].registration_type : null) || roomData.registration_type || 'New';
     const primaryGuest = (isOccupied && guestsList.length > 0) ? guestsList[0] : null;
 
+    // Meal Plan Extraction (Guest-selected plan has precedence, otherwise room's assigned plan)
+    const mealPlanName = primaryGuest?.plan_name || roomData.plan_name || 'Room Only (EP)';
+    const mealPlanPrice = Number(primaryGuest?.plan_price || roomData.plan_price || 0);
+    const mealPlanDisplay = mealPlanPrice > 0 
+      ? `${mealPlanName} (+₹${mealPlanPrice.toLocaleString('en-IN')})` 
+      : mealPlanName;
+
     const checkInDisplay = primaryGuest?.checkin_display || roomData.checkin_display || (primaryGuest?.reserve_date ? `${primaryGuest.reserve_date}${primaryGuest.reserve_time ? ' • ' + primaryGuest.reserve_time : ''}` : '');
     const checkOutDisplay = primaryGuest?.checkout_display || roomData.checkout_display || (primaryGuest?.checkout_date ? `${primaryGuest.checkout_date}${primaryGuest.checkout_time ? ' • ' + primaryGuest.checkout_time : ''}` : '');
     const totalNights = primaryGuest?.total_nights || roomData.total_nights || '';
@@ -452,6 +459,9 @@
         <span style="background: #eef2ff; color: #4338ca; border: 1px solid #c7d2fe; padding: 2px 8px; border-radius: 6px; font-family: var(--font-mono, monospace); font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; gap: 4px;" title="Reservation ID">
           <i class="fa-solid fa-receipt" style="color: #6366f1;"></i> ${escapeHtml(reservationId)}
         </span>
+        <span style="background: #fff7ed; color: #c2410c; border: 1px solid #fed7aa; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; gap: 4px;" title="Meal Plan">
+          <i class="fa-solid fa-utensils" style="color: #ea580c; font-size: 10px;"></i> ${escapeHtml(mealPlanDisplay)}
+        </span>
       `;
 
       const grossAmt = Number(primaryGuest.total_amount || 0);
@@ -502,6 +512,10 @@
               <span style="font-size: 9px; font-weight: 700; color: #6366f1; text-transform: uppercase; display: block;">GST (${gstPct}%)</span>
               <span style="font-weight: 800; color: #6366f1; font-family: monospace;">${gstAmt > 0 ? `${gstType === 'inclusive' ? 'Incl. ' : '+ '}₹ ${gstAmt.toLocaleString('en-IN', {minimumFractionDigits: 2})}` : '₹ 0.00'}</span>
             </div>
+            <div style="background: #fff7ed; padding: 5px 8px; border-radius: 6px; border: 1px solid #fed7aa;">
+              <span style="font-size: 9px; font-weight: 800; color: #c2410c; text-transform: uppercase; display: block;"><i class="fa-solid fa-utensils"></i> Meal Plan</span>
+              <span style="font-weight: 800; color: #9a3412; font-family: inherit; font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;" title="${escapeHtml(mealPlanDisplay)}">${escapeHtml(mealPlanDisplay)}</span>
+            </div>
             <div style="background: #ffffff; padding: 5px 8px; border-radius: 6px; border: 1px solid #e2e8f0;">
               <span style="font-size: 9px; font-weight: 800; color: #4338ca; text-transform: uppercase; display: block;">Payable</span>
               <span style="font-weight: 900; color: #4338ca; font-family: monospace;">₹ ${payableAmt.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
@@ -538,6 +552,7 @@
                 ${g.email ? `<div><strong style="color: #475569;"><i class="fa-solid fa-envelope" style="color: #6366f1; width: 14px;"></i> Email:</strong> <span style="color: #1e293b; font-weight: 600;">${escapeHtml(g.email)}</span></div>` : ''}
                 ${g.id_card_number ? `<div><strong style="color: #475569;"><i class="fa-solid fa-id-card" style="color: #6366f1; width: 14px;"></i> ${escapeHtml(g.id_card_type || 'ID Card')}:</strong> <span style="font-family: var(--font-mono); font-weight: 700; color: #0f172a;">${escapeHtml(g.id_card_number)}</span></div>` : ''}
                 ${g.city || g.address ? `<div><strong style="color: #475569;"><i class="fa-solid fa-location-dot" style="color: #6366f1; width: 14px;"></i> City / Address:</strong> <span style="color: #1e293b; font-weight: 600;">${escapeHtml(g.city || g.address)}</span></div>` : ''}
+                <div><strong style="color: #475569;"><i class="fa-solid fa-utensils" style="color: #ea580c; width: 14px;"></i> Meal Plan:</strong> <span style="color: #c2410c; font-weight: 800; background: #fff7ed; padding: 1px 7px; border-radius: 4px; border: 1px solid #fed7aa;">${escapeHtml(g.plan_name || mealPlanDisplay)}</span></div>
                 ${g.has_privilege_card && g.privilege_card_no ? `<div><strong style="color: #475569;"><i class="fa-solid fa-star" style="color: #f59e0b; width: 14px;"></i> Privilege:</strong> <span style="color: #d97706; font-weight: 700;">${escapeHtml(g.privilege_card_no)}</span></div>` : ''}
               </div>
             </div>
@@ -564,6 +579,7 @@
               ${g.email ? `<div><strong style="color: #475569;"><i class="fa-solid fa-envelope" style="color: #6366f1; width: 14px;"></i> Email:</strong> <span style="font-weight: 600; color: #1e293b;">${escapeHtml(g.email)}</span></div>` : ''}
               ${g.id_card_number ? `<div><strong style="color: #475569;"><i class="fa-solid fa-id-card" style="color: #6366f1; width: 14px;"></i> ${escapeHtml(g.id_card_type || 'ID Card')}:</strong> <span style="font-family: var(--font-mono); font-weight: 700; color: #0f172a;">${escapeHtml(g.id_card_number)}</span></div>` : ''}
               ${g.city || g.address ? `<div><strong style="color: #475569;"><i class="fa-solid fa-location-dot" style="color: #6366f1; width: 14px;"></i> City / Address:</strong> <span style="font-weight: 600; color: #1e293b;">${escapeHtml(g.city || g.address)}</span></div>` : ''}
+              <div><strong style="color: #475569;"><i class="fa-solid fa-utensils" style="color: #ea580c; width: 14px;"></i> Meal Plan:</strong> <span style="color: #c2410c; font-weight: 800; background: #fff7ed; padding: 1px 7px; border-radius: 4px; border: 1px solid #fed7aa;">${escapeHtml(g.plan_name || mealPlanDisplay)}</span></div>
               ${g.has_privilege_card && g.privilege_card_no ? `<div><strong style="color: #475569;"><i class="fa-solid fa-star" style="color: #f59e0b; width: 14px;"></i> Privilege:</strong> <span style="color: #d97706; font-weight: 700;">${escapeHtml(g.privilege_card_no)}</span></div>` : ''}
             </div>
           </div>
@@ -631,11 +647,15 @@
         </div>
       </div>
 
-      <!-- Uniform Specifications & Capacity 4-Grid -->
-      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 14px;">
+      <!-- Uniform Specifications & Capacity 5-Grid (Including Meal Plan) -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 14px;">
         <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 12px;">
           <div style="font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;"><i class="fa-solid fa-bed" style="color: #6366f1; margin-right: 4px;"></i> Bedding</div>
           <div style="font-size: 12px; font-weight: 800; color: #0f172a; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${escapeHtml(bedding)}">${escapeHtml(bedding)}</div>
+        </div>
+        <div style="background: #fff7ed; border: 1px solid #fed7aa; border-radius: 8px; padding: 10px 12px;">
+          <div style="font-size: 10px; font-weight: 800; color: #c2410c; text-transform: uppercase; letter-spacing: 0.5px;"><i class="fa-solid fa-utensils" style="color: #ea580c; margin-right: 4px;"></i> Meal Plan</div>
+          <div style="font-size: 12px; font-weight: 800; color: #9a3412; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${escapeHtml(mealPlanDisplay)}">${escapeHtml(mealPlanDisplay)}</div>
         </div>
         <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 12px;">
           <div style="font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;"><i class="fa-solid fa-users" style="color: #10b981; margin-right: 4px;"></i> Pax Capacity</div>

@@ -434,6 +434,7 @@
       'room_category' => strtoupper($g->room?->categoryRelation?->name ?? ($g->room?->category ?? 'DELUXE')),
       'room_floor' => (string)($g->room?->floorRelation?->floor ?? ($g->room?->floor ?? '1')),
       'room_bedding' => $g->room?->beddingConfigRelation?->name ?? 'Standard',
+      'plan_name' => $g->plan?->plan_name ?? ($g->latestBooking?->plan?->plan_name ?? 'Room Only (EP)'),
       'room_rate' => (float)($g->room_rate ?: ($g->room?->rate ?: 0)),
       'reserve_date' => $g->reserve_date ? $g->reserve_date->format('d M Y') : date('d M Y'),
       'reserve_time' => $g->reserve_time ? date('h:i A', strtotime($g->reserve_time)) : '12:00 PM',
@@ -917,6 +918,9 @@
           <span style="font-size: 11px; font-weight: 800; background: #ffffff; border: 1px solid #cbd5e1; padding: 4px 10px; border-radius: 6px; color: #475569;">
             <i class="fa-solid fa-bed" style="color: #6366f1;"></i> <span id="crm-mdl-room-bedding">-</span>
           </span>
+          <span style="font-size: 11px; font-weight: 800; background: #fff7ed; border: 1px solid #fed7aa; padding: 4px 10px; border-radius: 6px; color: #c2410c;">
+            <i class="fa-solid fa-utensils" style="color: #ea580c;"></i> <span id="crm-mdl-meal-plan">-</span>
+          </span>
           <span style="font-size: 11px; font-weight: 800; background: #e0e7ff; border: 1px solid #c7d2fe; padding: 4px 10px; border-radius: 6px; color: #4338ca;">
             <i class="fa-solid fa-moon"></i> <span id="crm-mdl-total-nights">1</span> Night(s) Stay
           </span>
@@ -1002,6 +1006,11 @@
           <div class="dossier-field-row">
             <span class="dossier-label">Reservation Mode</span>
             <span class="dossier-val" id="crm-mdl-card-resmode">-</span>
+          </div>
+
+          <div class="dossier-field-row">
+            <span class="dossier-label">Meal Plan</span>
+            <span class="dossier-val" id="crm-mdl-card-mealplan" style="color: #c2410c; font-weight: 800;">-</span>
           </div>
 
           <!-- Corporate Account Block -->
@@ -1192,6 +1201,12 @@
     document.getElementById('crm-mdl-card-checkout').textContent = `${guest.checkout_date} (${guest.checkout_time || '11:00 AM'})`;
     document.getElementById('crm-mdl-card-duration').textContent = `${guest.total_nights || 1} Night(s)`;
     document.getElementById('crm-mdl-card-resmode').textContent = guest.reservation_mode || (guest.reservation_mode?.name ?? 'Front Desk');
+    
+    const mealPlanVal = guest.plan_name || (guest.plan?.plan_name ?? 'Room Only (EP)');
+    const mealPlanElem = document.getElementById('crm-mdl-meal-plan');
+    if (mealPlanElem) mealPlanElem.textContent = mealPlanVal;
+    const cardMealPlanElem = document.getElementById('crm-mdl-card-mealplan');
+    if (cardMealPlanElem) cardMealPlanElem.textContent = mealPlanVal;
 
     const corpSection = document.getElementById('crm-mdl-corporate-card-section');
     if (guest.company) {
@@ -1355,6 +1370,10 @@
               <td style="padding: 4px 0;">${g.total_nights} Night(s)</td>
               <td style="padding: 4px 0; font-weight: 600; color: #64748b;">Reservation Mode:</td>
               <td style="padding: 4px 0;">${escapeHtml(g.reservation_mode)}</td>
+            </tr>
+            <tr>
+              <td style="padding: 4px 0; font-weight: 600; color: #64748b;">Meal Plan:</td>
+              <td style="padding: 4px 0; font-weight: 700; color: #c2410c;" colspan="3">${escapeHtml(g.plan_name || 'Room Only (EP)')}</td>
             </tr>
             ${g.company ? `
             <tr>

@@ -379,8 +379,17 @@
 @section('content')
 @php
   $serializedGuests = $guests->map(function($g) {
+    $hasSettled = ($g->settlements && $g->settlements->where('status', 'Settled')->isNotEmpty())
+        || ($g->settlements && $g->settlements->isNotEmpty() && (float)$g->balance <= 0.01)
+        || ($g->payments && $g->payments->where('payment_type', 'Settlement')->isNotEmpty())
+        || strtolower($g->status ?? '') === 'settlement done'
+        || ((float)$g->balance <= 0.01 && (float)$g->payable_amount > 0 && ((float)$g->advance_amount > 0 || ($g->payments && $g->payments->isNotEmpty())));
+    $currentStatus = ($hasSettled && $g->status !== 'Checked Out') ? 'Settlement Done' : ($g->status ?: 'Confirmed');
+    $isLocked = $hasSettled || in_array($currentStatus, ['Settlement Done', 'Checked Out']);
+
     return [
       'id' => $g->id,
+      'guest_id' => $g->guest_id,
       'reserve_id' => $g->reserve_id ?: ('RES-' . $g->id),
       'folio_number' => $g->folio_number ?: ('FOL-' . ($g->room?->room_number ?? '100') . '-' . $g->id),
       'guest_name' => ($g->title?->name ? $g->title->name . ' ' : '') . $g->guest_name,
@@ -418,7 +427,9 @@
       'balance' => (float)$g->balance,
       'payment_mode' => $g->paymentMode?->name ?? 'Cash / Direct',
       'payment_remarks' => $g->payment_remarks ?: 'None',
-      'status' => $g->status ?: 'Confirmed',
+      'status' => $currentStatus,
+      'is_locked' => $isLocked,
+      'has_settled' => $hasSettled,
       'company' => $g->company ? [
         'name' => $g->company->name,
         'gstin' => $g->company->gstin ?: 'N/A',
@@ -812,20 +823,29 @@
     <!-- Modal Footer Actions -->
     <div class="modal-bot" style="padding: 12px 22px; background: #ffffff; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
       
-      <!-- Quick Status Changer from inside Modal -->
-      <div style="display: flex; align-items: center; gap: 8px;">
-        <span style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase;">Update Status:</span>
-        <select class="status-quick-select" id="mdl-quick-status-select" onchange="onModalStatusChange(this.value)">
-          <option value="Confirmed">Confirmed (Active)</option>
-          <option value="Arrived">Arrived</option>
-          <option value="Checked In">Checked In</option>
-          <option value="Stay Over">Stay Over</option>
-          <option value="Checked Out">Checked Out</option>
-          <option value="Cancelled">Cancelled</option>
-        </select>
+      <!-- Quick Status Changer or Locked Badge from inside Modal -->
+      <div id="mdl-status-control-container" style="display: flex; align-items: center; gap: 8px;">
+        <span style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase;">Status:</span>
+        <div id="mdl-status-control-wrapper" style="display: inline-flex; align-items: center;">
+          <select class="status-quick-select" id="mdl-quick-status-select" onchange="onModalStatusChange(this.value)">
+            <option value="Confirmed">Confirmed (Active)</option>
+            <option value="Arrived">Arrived</option>
+            <option value="Checked In">Checked In</option>
+            <option value="Stay Over">Stay Over</option>
+            <option value="Settlement Done" disabled>Settlement Done</option>
+            <option value="Checked Out">Checked Out</option>
+            <option value="Cancelled">Cancelled</option>
+          </select>
+          <span id="mdl-status-locked-indicator" class="badge-locked settled" style="display: none; padding: 4px 10px; font-size: 12px; font-weight: 700;">
+            <i class="fa-solid fa-lock"></i> <span id="mdl-status-locked-text">Settlement Done (Locked)</span>
+          </span>
+        </div>
       </div>
 
-      <div style="display: flex; gap: 8px;">
+      <div style="display: flex; gap: 8px; align-items: center;">
+        <a id="mdl-btn-goto-crm" href="{{ url('front-office/guest') }}" class="btn-ui-secondary" style="display: none; padding: 7px 14px; border-radius: 8px; border: 1px solid #c7d2fe; background: #eef2ff; color: #4338ca; font-size: 12px; font-weight: 700; text-decoration: none; align-items: center; gap: 5px;" title="Open Guest Profile & Folio in CRM">
+          <i class="fa-solid fa-users"></i> Guest CRM
+        </a>
         <button type="button" class="btn-ui-secondary" onclick="printGuestDossier()" style="padding: 7px 16px; border-radius: 8px; border: 1px solid #cbd5e1; background: #f8fafc; color: #334155; font-size: 12px; font-weight: 700;">
           <i class="fa-solid fa-print"></i> Print Dossier
         </button>
@@ -1000,7 +1020,7 @@
           <!-- Status Badge -->
           <td style="text-align: center;">
             <span id="badge-status-${item.id}" class="status-badge ${badgeColor}">
-              ${(item.status === 'Settlement Done' || item.status === 'Checked Out') ? '<i class="fa-solid fa-lock" style="font-size: 8px;"></i>' : '<i class="fa-solid fa-circle" style="font-size: 6px;"></i>'}
+              ${(item.is_locked || ['settlement done', 'checked out'].includes((item.status || '').toLowerCase())) ? '<i class="fa-solid fa-lock" style="font-size: 8px;"></i>' : '<i class="fa-solid fa-circle" style="font-size: 6px;"></i>'}
               <span class="status-text">${escapeHtml(item.status)}</span>
             </span>
           </td>
@@ -1008,7 +1028,7 @@
           <!-- Actions: Quick Status Selector + Eye View Button -->
           <td style="text-align: center;">
             <div class="action-flex-wrap">
-              ${(item.status === 'Settlement Done' || item.status === 'Checked Out') ? `
+              ${(item.is_locked || ['settlement done', 'checked out'].includes((item.status || '').toLowerCase())) ? `
                 <span class="badge-locked ${item.status === 'Settlement Done' ? 'settled' : ''}" title="Guest status is locked.">
                   <i class="fa-solid fa-lock" style="font-size: 10px;"></i> ${escapeHtml(item.status)}
                 </span>
@@ -1156,8 +1176,13 @@
   // Update guest status via AJAX
   function updateGuestStatus(guestId, newStatus, selectElement) {
     const item = (window.allArrivalGuests || []).find(g => String(g.id) === String(guestId));
-    if (item && (item.status === 'Settlement Done' || item.status === 'Checked Out')) {
-      alert(`This reservation is locked in '${item.status}' status and cannot be modified.`);
+    const isLocked = item && (item.is_locked || ['settlement done', 'checked out'].includes((item.status || '').toLowerCase()));
+    if (isLocked) {
+      if (typeof PmsAlert !== 'undefined') {
+        PmsAlert.toast(`This reservation is locked in '${item.status}' status and cannot be modified.`, 'warning');
+      } else {
+        alert(`This reservation is locked in '${item.status}' status and cannot be modified.`);
+      }
       if (selectElement) selectElement.value = item.status;
       return;
     }
@@ -1180,26 +1205,24 @@
       if (data.success) {
         // Update item in local state
         const item = (window.allArrivalGuests || []).find(g => String(g.id) === String(guestId));
-        if (item) item.status = data.status;
+        if (item) {
+          item.status = data.status;
+          item.is_locked = ['Settlement Done', 'Checked Out'].includes(data.status);
+        }
 
         // Re-render table row
-        const badge = document.getElementById(`badge-status-${guestId}`);
-        if (badge) {
-          badge.className = `status-badge ${getStatusBadgeColor(data.status)}`;
-          const textSpan = badge.querySelector('.status-text');
-          if (textSpan) textSpan.textContent = data.status;
-        }
+        renderTable();
 
         // Update modal if currently opened with this guest
         if (currentActiveGuest && String(currentActiveGuest.id) === String(guestId)) {
           currentActiveGuest.status = data.status;
+          currentActiveGuest.is_locked = ['Settlement Done', 'Checked Out'].includes(data.status);
           const mdlBadge = document.getElementById('mdl-status-badge');
           if (mdlBadge) {
             mdlBadge.textContent = data.status;
             mdlBadge.className = `status-badge ${getStatusBadgeColor(data.status)}`;
           }
-          const mdlSelect = document.getElementById('mdl-quick-status-select');
-          if (mdlSelect) mdlSelect.value = data.status;
+          openGuestDetailsModal(currentActiveGuest);
         }
 
         if (typeof PmsAlert !== 'undefined') {
@@ -1209,9 +1232,9 @@
         }
       } else {
         if (typeof PmsAlert !== 'undefined') {
-          PmsAlert.toast(data.message || 'Error updating status', 'error');
+          PmsAlert.toast(data.message || data.error || 'Error updating status', 'error');
         } else {
-          alert('Error updating status');
+          alert(data.message || data.error || 'Error updating status');
         }
       }
     })
@@ -1237,6 +1260,15 @@
   // When status changed inside the Eye Details Modal
   function onModalStatusChange(newStatus) {
     if (!currentActiveGuest) return;
+    const isLocked = currentActiveGuest.is_locked || ['settlement done', 'checked out'].includes((currentActiveGuest.status || '').toLowerCase());
+    if (isLocked) {
+      if (typeof PmsAlert !== 'undefined') {
+        PmsAlert.toast(`This reservation is locked in '${currentActiveGuest.status}' status and cannot be modified.`, 'warning');
+      } else {
+        alert(`This reservation is locked in '${currentActiveGuest.status}' status and cannot be modified.`);
+      }
+      return;
+    }
     const guestId = currentActiveGuest.id;
     const rowSelect = document.getElementById(`status-select-${guestId}`);
     if (rowSelect) rowSelect.value = newStatus;
@@ -1338,13 +1370,35 @@
     document.getElementById('mdl-bill-paymode').textContent = g.payment_mode || 'Cash / Direct';
     document.getElementById('mdl-bill-remarks').textContent = g.payment_remarks || 'None';
 
-    // Set quick status changer in modal footer
+    // Configure quick status changer vs locked badge in modal footer
+    const isLocked = g.is_locked || ['settlement done', 'checked out'].includes((g.status || '').toLowerCase());
     const modalSelect = document.getElementById('mdl-quick-status-select');
-    if (modalSelect) {
-      modalSelect.value = g.status || 'Confirmed';
-      const isLocked = (g.status === 'Settlement Done' || g.status === 'Checked Out');
-      modalSelect.disabled = isLocked;
-      modalSelect.title = isLocked ? `Locked in ${g.status} status` : 'Change Guest Status';
+    const lockedIndicator = document.getElementById('mdl-status-locked-indicator');
+    const lockedText = document.getElementById('mdl-status-locked-text');
+    const gotoCrmBtn = document.getElementById('mdl-btn-goto-crm');
+
+    if (gotoCrmBtn) {
+      gotoCrmBtn.style.display = 'inline-flex';
+      gotoCrmBtn.href = `{{ url('front-office/guest') }}?search=${encodeURIComponent(g.raw_name || g.mobile || '')}`;
+    }
+
+    if (isLocked) {
+      if (modalSelect) modalSelect.style.display = 'none';
+      if (lockedIndicator) {
+        lockedIndicator.style.display = 'inline-flex';
+        lockedIndicator.className = `badge-locked ${g.status === 'Settlement Done' ? 'settled' : ''}`;
+        if (lockedText) lockedText.textContent = `${g.status} (Locked)`;
+      }
+    } else {
+      if (modalSelect) {
+        modalSelect.style.display = 'inline-block';
+        modalSelect.value = g.status || 'Confirmed';
+        modalSelect.disabled = false;
+        modalSelect.title = 'Change Guest Status';
+      }
+      if (lockedIndicator) {
+        lockedIndicator.style.display = 'none';
+      }
     }
 
     // Show modal

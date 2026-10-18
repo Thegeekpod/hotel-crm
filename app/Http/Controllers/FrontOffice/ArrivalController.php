@@ -45,6 +45,7 @@ class ArrivalController extends Controller
             'room.beddingConfigRelation',
             'company',
             'payments.paymentMode',
+            'settlements',
             'plan',
             'registrationType',
             'reservationMode',
@@ -86,6 +87,19 @@ class ArrivalController extends Controller
 
         $guests = $query->get();
 
+        // Ensure any booking that has a completed settlement reflects 'Settlement Done'
+        foreach ($guests as $g) {
+            $hasSettled = $g->settlements->where('status', 'Settled')->isNotEmpty()
+                || ($g->settlements->isNotEmpty() && (float)$g->balance <= 0.01)
+                || $g->payments->where('payment_type', 'Settlement')->isNotEmpty()
+                || strtolower($g->status ?? '') === 'settlement done'
+                || ((float)$g->balance <= 0.01 && (float)$g->payable_amount > 0 && ((float)$g->advance_amount > 0 || $g->payments->isNotEmpty()));
+            if ($hasSettled && !in_array($g->status, ['Settlement Done', 'Checked Out'])) {
+                $g->status = 'Settlement Done';
+                $g->save();
+            }
+        }
+
         // Calculate statistics
         $stats = [
             'total' => (clone $baseQuery)->count(),
@@ -93,6 +107,7 @@ class ArrivalController extends Controller
             'arrived' => (clone $baseQuery)->where('status', 'Arrived')->count(),
             'checked_in' => (clone $baseQuery)->where('status', 'Checked In')->count(),
             'stay_over' => (clone $baseQuery)->where('status', 'Stay Over')->count(),
+            'settlement_done' => (clone $baseQuery)->where('status', 'Settlement Done')->count(),
             'checked_out' => (clone $baseQuery)->where('status', 'Checked Out')->count(),
             'cancelled' => (clone $baseQuery)->where('status', 'Cancelled')->count(),
         ];
@@ -118,16 +133,22 @@ class ArrivalController extends Controller
             'status' => 'required|string|max:50',
         ]);
 
-        $booking = Booking::with(['room', 'guest'])->findOrFail($id);
+        $booking = Booking::with(['room', 'guest', 'settlements'])->findOrFail($id);
         $oldStatus = $booking->status ?: 'Confirmed';
         $newStatus = $validated['status'];
 
-        // Strict Lock: Disallow modifying record once Settlement Done or Checked Out
-        if (in_array($booking->status, ['Settlement Done', 'Checked Out'])) {
+        $hasSettled = $booking->settlements()->where('status', 'Settled')->exists()
+            || ($booking->settlements()->exists() && (float)$booking->balance <= 0.01)
+            || $booking->payments()->where('payment_type', 'Settlement')->exists()
+            || in_array(strtolower($booking->status ?? ''), ['settlement done', 'checked out'])
+            || ((float)$booking->balance <= 0.01 && (float)$booking->payable_amount > 0 && ((float)$booking->advance_amount > 0 || $booking->payments()->exists()));
+
+        // Strict Lock: Disallow modifying record once Settlement Done, Settled, or Checked Out
+        if ($hasSettled || in_array($booking->status, ['Settlement Done', 'Checked Out'])) {
             return response()->json([
                 'success' => false,
-                'message' => "Record is locked. This guest reservation is already in '{$booking->status}' status and cannot be modified.",
-                'error' => "Record is locked. This guest reservation is already in '{$booking->status}' status and cannot be modified."
+                'message' => "Record is locked. This guest has completed settlement (status: '{$booking->status}') and cannot be modified.",
+                'error' => "Record is locked. This guest has completed settlement (status: '{$booking->status}') and cannot be modified."
             ], 403);
         }
 

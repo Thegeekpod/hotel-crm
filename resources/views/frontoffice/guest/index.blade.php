@@ -510,12 +510,6 @@
           </div>
         </div>
         <div style="display: flex; gap: 8px; align-items: center;">
-          <button type="button" class="btn-ui-primary" onclick="if(typeof openReservationModal === 'function') openReservationModal(); else openModal('reserve-modal');">
-            <i class="fa-solid fa-calendar-plus"></i> New Reservation
-          </button>
-          <a href="{{ route('frontoffice.arrivals') }}" class="btn-ui-secondary" style="border: 1px solid #cbd5e1; background: #ffffff; color: #334155; text-decoration: none; padding: 7px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
-            <i class="fa-solid fa-plane-arrival"></i> View Arrivals
-          </a>
           <a href="{{ route('frontoffice.dashboard') }}" class="btn-ui-secondary" style="border: 1px solid #cbd5e1; background: #ffffff; color: #334155; text-decoration: none; padding: 7px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
             <i class="fa-solid fa-table-cells"></i> Room Rack
           </a>

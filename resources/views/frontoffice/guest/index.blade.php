@@ -700,8 +700,6 @@
               <th style="min-width: 130px; white-space: nowrap;">Room &amp; Floor</th>
               <th style="min-width: 140px; white-space: nowrap;">Check-in</th>
               <th style="min-width: 140px; white-space: nowrap;">Check-out</th>
-              <th style="min-width: 110px; text-align: right; white-space: nowrap;">Paid</th>
-              <th style="min-width: 130px; text-align: right; white-space: nowrap;">Remaining</th>
               <th style="min-width: 100px; text-align: center; white-space: nowrap;">Status</th>
               <th style="width: 70px; text-align: center; white-space: nowrap;">Action</th>
             </tr>
@@ -819,33 +817,7 @@
                   @endif
                 </td>
 
-                <!-- 7. Paid -->
-                <td style="text-align: right; white-space: nowrap;">
-                  <div style="font-family: var(--font-mono, monospace); font-weight: 800; font-size: 12px; color: #059669;">
-                    ₹ {{ number_format($paidVal, 2) }}
-                  </div>
-                  @if($item->paymentMode?->name)
-                    <div style="font-size: 10px; color: #64748b; margin-top: 2px; white-space: nowrap;">
-                      {{ $item->paymentMode->name }}
-                    </div>
-                  @endif
-                </td>
-
-                <!-- 8. Remaining (outstanding) -->
-                <td style="text-align: right; white-space: nowrap;">
-                  <div style="font-family: var(--font-mono, monospace); font-weight: 800; font-size: 12px; color: {{ $balanceVal > 0 ? '#e11d48' : '#059669' }};">
-                    ₹ {{ number_format($balanceVal, 2) }}
-                  </div>
-                  <div style="font-size: 10px; font-weight: 700; margin-top: 2px;">
-                    @if($balanceVal > 0)
-                      <span style="color: #e11d48; background: #ffe4e6; padding: 1px 6px; border-radius: 4px; font-size: 9px; font-weight: 800;">Due</span>
-                    @else
-                      <span style="color: #059669; background: #ecfdf5; padding: 1px 6px; border-radius: 4px; font-size: 9px; font-weight: 800;">Cleared</span>
-                    @endif
-                  </div>
-                </td>
-
-                <!-- 9. Status -->
+                <!-- Status -->
                 <td style="text-align: center; white-space: nowrap;">
                   <span class="status-badge {{ $statusClass }}">
                     @if(in_array($item->status, ['Settlement Done', 'Checked Out']))
@@ -869,7 +841,7 @@
               </tr>
             @empty
               <tr>
-                <td colspan="11" style="text-align: center; color: var(--text-muted); padding: 36px 20px;">
+                <td colspan="9" style="text-align: center; color: var(--text-muted); padding: 36px 20px;">
                   <div style="font-size: 28px; color: #cbd5e1; margin-bottom: 8px;"><i class="fa-solid fa-users-slash"></i></div>
                   <div style="font-size: 13px; font-weight: 700; color: #64748b;">No matching guests found.</div>
                   <div style="font-size: 11px; color: #94a3b8; margin-top: 4px;">Try modifying your search query or filter options.</div>
@@ -1182,28 +1154,6 @@
       </div>
 
       <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-        <!-- Settle Balance Button: shown when balance > 0 -->
-        <button type="button" 
-                id="crm-btn-settle" 
-                onclick="openCrmSettlementModal()" 
-                style="padding: 7px 18px; border-radius: 8px; background: linear-gradient(135deg, #059669 0%, #047857 100%); color: #ffffff; border: none; font-size: 12px; font-weight: 800; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; box-shadow: 0 4px 12px rgba(5,150,105,0.25);">
-          <i class="fa-solid fa-calculator"></i> Settle Balance
-        </button>
-
-        <!-- Check Out Button: shown ONLY after settlement complete (balance <= 0) and not Checked Out -->
-        <button type="button" 
-                id="crm-btn-checkout" 
-                onclick="executeCrmCheckout()" 
-                style="padding: 7px 18px; border-radius: 8px; background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); color: #ffffff; border: none; font-size: 12px; font-weight: 800; display: none; align-items: center; gap: 6px; cursor: pointer; box-shadow: 0 4px 12px rgba(99,102,241,0.25);">
-          <i class="fa-solid fa-right-from-bracket"></i> Check Out
-        </button>
-
-        <!-- Locked / Finalized Badge: shown when guest status is 'Checked Out' -->
-        <div id="crm-badge-locked" 
-             style="display: none; padding: 6px 14px; border-radius: 8px; background: #f1f5f9; border: 1px solid #cbd5e1; color: #475569; font-size: 12px; font-weight: 800; align-items: center; gap: 6px;">
-          <i class="fa-solid fa-lock" style="color: #64748b;"></i> Stay Finalized &amp; Checked Out (Locked)
-        </div>
-
         <button type="button" class="btn-ui-secondary" onclick="printCrmGuestDossier()" style="padding: 7px 16px; border-radius: 8px; border: 1px solid #cbd5e1; background: #ffffff; font-size: 12px; font-weight: 700; color: #334155; display: inline-flex; align-items: center; gap: 6px;">
           <i class="fa-solid fa-print"></i> Print Dossier
         </button>
@@ -1211,116 +1161,6 @@
           Close
         </button>
       </div>
-    </div>
-
-  </div>
-</div>
-
-<!-- ========================================== -->
-<!-- GUEST FOLIO SETTLEMENT MODAL               -->
-<!-- ========================================== -->
-<div class="modal-backdrop" id="guest-crm-settlement-modal" style="z-index: 100050;">
-  <div class="modal-window" style="width: 520px; max-width: 95vw; border-radius: 16px; overflow: hidden; box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.4); border: none; box-sizing: border-box; background: #ffffff;">
-    
-    <!-- Modal Header -->
-    <div style="background: linear-gradient(135deg, #059669 0%, #047857 100%); color: #ffffff; padding: 14px 20px; display: flex; justify-content: space-between; align-items: center;">
-      <div style="display: flex; align-items: center; gap: 10px;">
-        <div style="width: 36px; height: 36px; border-radius: 8px; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 16px;">
-          <i class="fa-solid fa-calculator"></i>
-        </div>
-        <div>
-          <h3 style="margin: 0; font-size: 15px; font-weight: 800; color: #ffffff;">Guest Folio Settlement</h3>
-          <div style="font-size: 11px; opacity: 0.9; margin-top: 1px;">
-            <span id="crm-settle-guest-name">Guest</span> • Folio: <span id="crm-settle-folio-num">-</span>
-          </div>
-        </div>
-      </div>
-      <button type="button" class="modal-close" onclick="closeModal('guest-crm-settlement-modal')" style="background: rgba(255,255,255,0.2); border: none; color: #ffffff; width: 30px; height: 30px; border-radius: 50%; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center;">&times;</button>
-    </div>
-
-    <!-- Modal Body -->
-    <div style="padding: 20px; background: #f8fafc; overflow-y: auto;">
-      <!-- Outstanding Balance Highlight -->
-      <div style="background: linear-gradient(135deg, #fff1f2 0%, #ffe4e6 100%); border: 1px solid #fecdd3; border-radius: 12px; padding: 16px; text-align: center; margin-bottom: 18px;">
-        <div style="font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: #9f1239;">Outstanding Due Balance</div>
-        <div id="crm-settle-balance-display" style="font-size: 26px; font-weight: 900; color: #e11d48; margin-top: 4px; font-family: var(--font-mono, monospace);">
-          ₹ 0.00
-        </div>
-        <div style="font-size: 11px; color: #64748b; margin-top: 4px; display: flex; justify-content: center; gap: 14px;">
-          <span>Payable: <strong id="crm-settle-payable-display">₹ 0.00</strong></span>
-          <span>•</span>
-          <span>Paid So Far: <strong id="crm-settle-paid-display" style="color: #059669;">₹ 0.00</strong></span>
-        </div>
-      </div>
-
-      <!-- Settlement Form Fields -->
-      <div style="display: flex; flex-direction: column; gap: 14px;">
-        <div>
-          <label style="display: block; font-size: 11px; font-weight: 800; color: #334155; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.3px;">
-            Settlement Amount (₹) <span style="color: #e11d48;">*</span>
-          </label>
-          <div style="position: relative;">
-            <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-weight: 800; color: #64748b; font-size: 14px;">₹</span>
-            <input type="number" 
-                   step="0.01" 
-                   min="0.01" 
-                   id="crm-settle-amount-input" 
-                   style="width: 100%; box-sizing: border-box; padding: 9px 12px 9px 30px; border-radius: 8px; border: 1.5px solid #cbd5e1; font-size: 14px; font-weight: 800; font-family: var(--font-mono, monospace); color: #0f172a; outline: none;" 
-                   placeholder="0.00">
-          </div>
-          <div style="font-size: 10px; color: #64748b; margin-top: 4px; display: flex; justify-content: space-between;">
-            <span>Enter exact or partial settlement amount</span>
-            <button type="button" onclick="setFullSettlementAmount()" style="background: none; border: none; color: #059669; font-weight: 800; cursor: pointer; text-decoration: underline; font-size: 10px; padding: 0;">Pay Full Due</button>
-          </div>
-        </div>
-
-        <div>
-          <label style="display: block; font-size: 11px; font-weight: 800; color: #334155; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.3px;">
-            Payment Mode <span style="color: #e11d48;">*</span>
-          </label>
-          <select id="crm-settle-mode-select" style="width: 100%; box-sizing: border-box; padding: 9px 12px; border-radius: 8px; border: 1.5px solid #cbd5e1; font-size: 12px; font-weight: 700; color: #1e293b; background: #ffffff; outline: none;">
-            @foreach($paymentModes ?? [] as $pm)
-              <option value="{{ $pm->id }}" {{ strtolower($pm->name) === 'cash' ? 'selected' : '' }}>{{ $pm->name }}</option>
-            @endforeach
-          </select>
-        </div>
-
-        <div>
-          <label style="display: block; font-size: 11px; font-weight: 800; color: #334155; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.3px;">
-            Transaction / Reference ID (Optional)
-          </label>
-          <input type="text" 
-                 id="crm-settle-txn-ref" 
-                 placeholder="e.g. UPI-12345678, CARD-REF-998" 
-                 style="width: 100%; box-sizing: border-box; padding: 9px 12px; border-radius: 8px; border: 1.5px solid #cbd5e1; font-size: 12px; font-family: var(--font-mono, monospace); outline: none;">
-        </div>
-
-        <div>
-          <label style="display: block; font-size: 11px; font-weight: 800; color: #334155; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.3px;">
-            Settlement Remarks / Note (Optional)
-          </label>
-          <textarea id="crm-settle-remarks" 
-                    rows="2" 
-                    placeholder="e.g. Final balance cleared at front desk counter." 
-                    style="width: 100%; box-sizing: border-box; padding: 8px 12px; border-radius: 8px; border: 1.5px solid #cbd5e1; font-size: 12px; outline: none; resize: vertical;"></textarea>
-        </div>
-      </div>
-    </div>
-
-    <!-- Modal Footer -->
-    <div style="padding: 12px 20px; background: #ffffff; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; align-items: center; gap: 8px;">
-      <button type="button" 
-              class="btn-ui-secondary" 
-              onclick="closeModal('guest-crm-settlement-modal')" 
-              style="padding: 8px 16px; border-radius: 8px; border: 1px solid #cbd5e1; background: #ffffff; font-size: 12px; font-weight: 700; color: #64748b;">
-        Cancel
-      </button>
-      <button type="button" 
-              id="crm-btn-confirm-settlement" 
-              onclick="submitCrmSettlement()" 
-              style="padding: 8px 20px; border-radius: 8px; background: linear-gradient(135deg, #059669 0%, #047857 100%); color: #ffffff; border: none; font-size: 12px; font-weight: 800; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; box-shadow: 0 4px 12px rgba(5,150,105,0.25);">
-        <i class="fa-solid fa-check-circle"></i> Confirm Settlement
-      </button>
     </div>
 
   </div>

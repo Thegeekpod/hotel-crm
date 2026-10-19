@@ -14,7 +14,10 @@
         <span class="ico-box"><i class="fa-solid fa-address-card" style="color: #f59e0b;"></i></span>
         <span class="lbl-box">Guest</span>
       </a>
-     
+      <a href="{{ route('frontoffice.folio') }}" class="ribbon-btn {{ request()->routeIs('frontoffice.folio*') ? 'active-btn' : '' }}">
+        <span class="ico-box"><i class="fa-solid fa-file-invoice-dollar" style="color: #6366f1;"></i></span>
+        <span class="lbl-box">Folio</span>
+      </a>
     </div>
   </div>
   <div style="font-size: 11px; font-weight: 700; color: var(--accent-emerald); display: flex; align-items: center; gap: 6px;">

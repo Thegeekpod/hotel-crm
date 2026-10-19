@@ -5,6 +5,7 @@ use App\Http\Controllers\FrontOffice\DashboardController;
 use App\Http\Controllers\FrontOffice\ArrivalController;
 use App\Http\Controllers\FrontOffice\InhouseController;
 use App\Http\Controllers\FrontOffice\GuestController;
+use App\Http\Controllers\FrontOffice\FolioController;
 
 // Front Office Module Routes (Arrivals, Guest CRM, In-House, Reservations)
 Route::prefix('front-office')->name('frontoffice.')->group(function () {
@@ -20,6 +21,12 @@ Route::prefix('front-office')->name('frontoffice.')->group(function () {
     Route::get('/guest/{id}/details', [GuestController::class, 'getDetails'])->name('guest.details');
     Route::post('/guest/{id}/settle', [GuestController::class, 'settle'])->name('guest.settle');
     Route::post('/guest/{id}/checkout', [GuestController::class, 'checkout'])->name('guest.checkout');
+
+    // Folio Management (Booking table, dossier details, settlement & checkout)
+    Route::get('/folio', [FolioController::class, 'index'])->name('folio');
+    Route::get('/folio/{id}/details', [FolioController::class, 'getDetails'])->name('folio.details');
+    Route::post('/folio/{id}/settle', [FolioController::class, 'settle'])->name('folio.settle');
+    Route::post('/folio/{id}/checkout', [FolioController::class, 'checkout'])->name('folio.checkout');
     Route::get('/reserve', [DashboardController::class, 'reserve'])->name('reserve');
     
     // Dynamic Reservation, Check-in & Room Status Endpoints

@@ -76,37 +76,6 @@
     box-shadow: 0 2px 10px -3px rgba(0,0,0,0.04);
   }
 
-  /* KPI Stat Tiles Grid with Responsive Breakpoints */
-  .folio-stats-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 12px;
-    margin-top: 14px;
-  }
-  @media (max-width: 1024px) {
-    .folio-stats-grid {
-      grid-template-columns: repeat(2, 1fr);
-    }
-  }
-  @media (max-width: 540px) {
-    .folio-stats-grid {
-      grid-template-columns: 1fr;
-    }
-  }
-
-  .folio-stat-tile {
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    padding: 12px 16px;
-    transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
-  }
-  .folio-stat-tile:hover {
-    transform: translateY(-2px);
-    background: #ffffff;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
-  }
-
   /* Toolbar styling like guest CRM */
   .folio-toolbar {
     background: #ffffff;
@@ -122,12 +91,6 @@
     flex: 1;
     min-width: 260px;
     max-width: 440px;
-  }
-  @media (max-width: 992px) {
-    .search-box-wrap {
-      max-width: 100%;
-      min-width: 100%;
-    }
   }
 
   .search-box-wrap i.search-icon {
@@ -608,9 +571,7 @@
 <main class="pms-main-viewport">
   <div class="pms-page-container">
 
-    <!-- ========================================== -->
-    <!-- Clean Header Card (like guest CRM)        -->
-    <!-- ========================================== -->
+    <!-- Clean Header Card (like guest CRM) -->
     <div class="folio-header-card">
       <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
         <div>
@@ -635,7 +596,13 @@
             @endif
           </h2>
           <div style="font-size: 12px; color: #64748b; margin-top: 2px;">
-            Booking numbers grouped folio directory with rooms, occupants, financial settlements &amp; check-out control.
+            @if(!empty($fromDate) && !empty($toDate) && $fromDate === $toDate)
+              Showing folio records with check-in on <strong>{{ \Carbon\Carbon::parse($fromDate)->format('D, d F Y') }}</strong> ({{ $fromDate === $today ? 'Today' : 'Selected Date' }}).
+            @elseif(!empty($fromDate) || !empty($toDate))
+              Showing folio records with check-in between <strong>{{ !empty($fromDate) ? \Carbon\Carbon::parse($fromDate)->format('d M Y') : 'Start' }}</strong> and <strong>{{ !empty($toDate) ? \Carbon\Carbon::parse($toDate)->format('d M Y') : 'End' }}</strong>.
+            @else
+              Booking numbers grouped folio directory with rooms, occupants, financial settlements &amp; check-out control.
+            @endif
           </div>
         </div>
 
@@ -646,69 +613,7 @@
           <a href="{{ route('frontoffice.guest') }}" class="btn-ui-secondary" style="border: 1px solid #cbd5e1; background: #ffffff; color: #334155; text-decoration: none; padding: 7px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
             <i class="fa-solid fa-address-card"></i> Guest CRM
           </a>
-          <button type="button" class="btn-ui-secondary" onclick="window.location.reload()" style="border: 1px solid #cbd5e1; background: #ffffff; color: #475569; padding: 7px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; cursor: pointer;">
-            <i class="fa-solid fa-rotate"></i> Refresh
-          </button>
         </div>
-      </div>
-
-      <!-- KPI Metric Counters (Filter-aware: dynamically updates with active filters) -->
-      <div class="folio-stats-grid">
-        
-        <!-- KPI Tile 1: Volume -->
-        <div class="folio-stat-tile">
-          <div style="font-size: 10px; font-weight: 800; text-transform: uppercase; color: #64748b; letter-spacing: 0.5px;">
-            @if($stats['is_filtered'])
-              Filtered Bookings
-            @else
-              Today's Check-ins
-            @endif
-          </div>
-          <div style="font-size: 22px; font-weight: 900; color: #6366f1; margin-top: 4px; font-family: var(--font-mono, monospace);">
-            {{ $stats['total_folios'] }}
-          </div>
-          <div style="font-size: 10px; color: #64748b; margin-top: 2px;">
-            @if($stats['is_filtered'])
-              Matching active filters (Total: {{ $stats['all_time_folios'] }})
-            @else
-              Of {{ $stats['all_time_folios'] }} all-time folios
-            @endif
-          </div>
-        </div>
-
-        <!-- KPI Tile 2: Gross Receivables -->
-        <div class="folio-stat-tile">
-          <div style="font-size: 10px; font-weight: 800; text-transform: uppercase; color: #64748b; letter-spacing: 0.5px;">Gross Receivables</div>
-          <div style="font-size: 22px; font-weight: 900; color: #4f46e5; margin-top: 4px; font-family: var(--font-mono, monospace);">
-            ₹ {{ number_format($stats['total_receivable'], 2) }}
-          </div>
-          <div style="font-size: 10px; color: #64748b; margin-top: 2px;">
-            {{ $stats['total_folios'] }} folios billing volume
-          </div>
-        </div>
-
-        <!-- KPI Tile 3: Total Paid -->
-        <div class="folio-stat-tile">
-          <div style="font-size: 10px; font-weight: 800; text-transform: uppercase; color: #64748b; letter-spacing: 0.5px;">Total Paid (Adv + Settle)</div>
-          <div style="font-size: 22px; font-weight: 900; color: #059669; margin-top: 4px; font-family: var(--font-mono, monospace);">
-            ₹ {{ number_format($stats['total_paid'], 2) }}
-          </div>
-          <div style="font-size: 10px; color: #059669; font-weight: 700; margin-top: 2px;">
-            ₹ {{ number_format($stats['total_settled'], 2) }} settled ({{ $stats['settled_count'] }} finalized)
-          </div>
-        </div>
-
-        <!-- KPI Tile 4: Remaining Due -->
-        <div class="folio-stat-tile">
-          <div style="font-size: 10px; font-weight: 800; text-transform: uppercase; color: #64748b; letter-spacing: 0.5px;">Remaining Due</div>
-          <div style="font-size: 22px; font-weight: 900; color: {{ $stats['total_outstanding'] > 0 ? '#e11d48' : '#059669' }}; margin-top: 4px; font-family: var(--font-mono, monospace);">
-            ₹ {{ number_format($stats['total_outstanding'], 2) }}
-          </div>
-          <div style="font-size: 10px; color: {{ $stats['total_outstanding'] > 0 ? '#e11d48' : '#059669' }}; font-weight: 700; margin-top: 2px;">
-            {{ $stats['pending_settle_count'] }} folios pending settlement
-          </div>
-        </div>
-
       </div>
     </div>
 
@@ -739,7 +644,7 @@
           </div>
 
           <!-- Date Range: From & To Date Filter -->
-          <div style="display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+          <div style="display: inline-flex; align-items: center; gap: 6px;">
             <label for="folio-from-date" style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">
               <i class="fa-regular fa-calendar-days" style="color: #6366f1;"></i> Check-in From:
             </label>
@@ -829,19 +734,17 @@
       </div>
     </form>
 
-    <!-- ========================================== -->
-    <!-- Folio Master Table                         -->
-    <!-- ========================================== -->
-    <div class="pms-page-content" style="padding: 0; overflow: visible;">
-      <div class="pms-table-box" style="border-radius: 14px; box-shadow: 0 4px 20px -5px rgba(0,0,0,0.06); background: #ffffff; overflow-x: auto; width: 100%; -webkit-overflow-scrolling: touch;">
-        <table class="pms-table" id="folio-master-table" style="width: 100%; min-width: 1280px;">
+    <!-- Main Folio Master Table with SL Indexing -->
+    <div class="pms-page-content">
+      <div class="pms-table-box" style="border-radius: 14px; box-shadow: 0 4px 20px -5px rgba(0,0,0,0.06); background: #ffffff; overflow-x: auto;">
+        <table class="pms-table" id="folio-master-table">
           <thead>
             <tr>
               <th style="width: 45px; text-align: center; white-space: nowrap;">SL</th>
               <th style="min-width: 140px; text-align: left; white-space: nowrap;">Booking Number</th>
-              <th style="min-width: 190px; white-space: nowrap;">Primary Guest Details</th>
+              <th style="min-width: 180px; white-space: nowrap;">Primary Guest Details</th>
               <th style="min-width: 130px; white-space: nowrap;">Mobile / Phone</th>
-              <th style="min-width: 170px; white-space: nowrap;">Room(s) &amp; Floor</th>
+              <th style="min-width: 160px; white-space: nowrap;">Room(s) &amp; Floor</th>
               <th style="min-width: 120px; text-align: right; white-space: nowrap;">Paid Amount</th>
               <th style="min-width: 130px; text-align: right; white-space: nowrap;">Remaining Amount</th>
               <th style="min-width: 135px; white-space: nowrap;">Check-in</th>
@@ -1068,10 +971,10 @@
           </tbody>
         </table>
 
-        <!-- PMS Custom Pagination Footer -->
-        <div class="pms-table-pagination">
-          <div class="pms-pagination-info">
-            Showing {{ $folios->firstItem() ?? 0 }} to {{ $folios->lastItem() ?? 0 }} of {{ $folios->total() }} reservations
+        <!-- Backend Table Pagination Footer -->
+        <div class="pms-table-pagination" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 18px; border-top: 1px solid #e2e8f0; background: #ffffff; flex-wrap: wrap; gap: 10px;">
+          <div class="pms-pagination-info" style="font-size: 12px; font-weight: 600; color: #64748b;">
+            Showing {{ $folios->firstItem() ?? 0 }} to {{ $folios->lastItem() ?? 0 }} of {{ $folios->total() }} records
           </div>
           <div class="pms-page-nav">
             @if ($folios->hasPages())
@@ -1125,7 +1028,7 @@
 <!-- EXTENSIVE FOLIO DOSSIER MODAL (Design matching guest CRM)                 -->
 <!-- ========================================================================= -->
 <div class="modal-backdrop" id="folio-details-modal">
-  <div class="modal-window large">
+  <div class="modal-window large" style="width: 900px; max-width: 95vw; max-height: 92vh; display: flex; flex-direction: column; border-radius: 16px; overflow: hidden; box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.3); border: none; box-sizing: border-box;">
     
     <!-- Modal Header (Gradient style matching guest CRM) -->
     <div class="modal-top">

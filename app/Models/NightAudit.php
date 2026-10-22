@@ -12,6 +12,23 @@ class NightAudit extends Model
 
     protected $table = 'night_audits';
 
+    protected static function booted()
+    {
+        static::updating(function ($nightAudit) {
+            // Once completed, audit records are permanently locked and cannot be changed
+            if ($nightAudit->getOriginal('status') === 'Completed') {
+                return false;
+            }
+        });
+
+        static::deleting(function ($nightAudit) {
+            // Completed audits are historical legal records and cannot be deleted
+            if ($nightAudit->getOriginal('status') === 'Completed') {
+                return false;
+            }
+        });
+    }
+
     protected $fillable = [
         'audit_date',
         'completed_at',

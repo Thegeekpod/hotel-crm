@@ -314,18 +314,24 @@
             Night Audit
             @if($existingAudit)
               <span class="audit-badge completed">
-                <i class="fa-solid fa-circle-check"></i> Completed
+                <i class="fa-solid fa-lock"></i> Audit Completed
+              </span>
+            @elseif($isToday)
+              <span class="audit-badge pending">
+                <i class="fa-solid fa-clock"></i> Today (Pending)
               </span>
             @else
-              <span class="audit-badge pending">
-                <i class="fa-solid fa-clock"></i> Pending
+              <span class="audit-badge" style="background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1;">
+                <i class="fa-solid fa-clock-rotate-left"></i> Past Date
               </span>
             @endif
           </h2>
           <div style="font-size: 12px; color: #64748b; margin-top: 3px;">
             Audit Date: <strong>{{ \Carbon\Carbon::parse($selectedDate)->format('l, d F Y') }}</strong>
             @if($existingAudit)
-              • Closed by <strong>{{ $existingAudit->auditor_name ?: ($existingAudit->auditor?->name ?? 'Auditor') }}</strong> at {{ $existingAudit->completed_at ? $existingAudit->completed_at->format('h:i A') : 'N/A' }}
+              • Completed by <strong>{{ $existingAudit->auditor_name ?: ($existingAudit->auditor?->name ?? 'Auditor') }}</strong> at {{ $existingAudit->completed_at ? $existingAudit->completed_at->format('h:i A') : 'N/A' }}
+            @elseif(!$isToday)
+              • <span style="color: #94a3b8;">Historical view (Read-only)</span>
             @endif
           </div>
         </div>
@@ -360,9 +366,21 @@
             <i class="fa-solid fa-print"></i> Print
           </button>
 
-          <button type="button" class="btn-run-audit" onclick="openCompleteAuditModal()">
-            <i class="fa-solid fa-circle-check"></i> {{ $existingAudit ? 'Re-Run Audit' : 'Complete Audit' }}
-          </button>
+          @if($isToday)
+            @if($existingAudit)
+              <button type="button" class="btn-ui-secondary" disabled style="opacity: 0.85; cursor: not-allowed; background: #ecfdf5; color: #047857; border-color: #a7f3d0; font-weight: 800;" title="Today's audit is completed and locked. Re-running is not supported.">
+                <i class="fa-solid fa-lock"></i> Audit Completed (Locked)
+              </button>
+            @else
+              <button type="button" class="btn-run-audit" onclick="openCompleteAuditModal()">
+                <i class="fa-solid fa-circle-check"></i> Complete Audit
+              </button>
+            @endif
+          @else
+            <span class="btn-ui-secondary" style="cursor: default; opacity: 0.85; background: #f8fafc; color: #64748b; font-weight: 700;" title="Night audit can only be performed for today. Past dates are view-only.">
+              <i class="fa-solid fa-eye"></i> View-Only Mode
+            </span>
+          @endif
         </div>
       </div>
     </div>
@@ -786,12 +804,13 @@
   </div>
 </main>
 
+@if($isToday && !$existingAudit)
 <!-- SIMPLE COMPLETE AUDIT MODAL -->
 <div class="modal-backdrop" id="modal-complete-audit" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.45); backdrop-filter: blur(2px); z-index: 99999; align-items: center; justify-content: center;">
   <div style="background: #ffffff; width: 440px; max-width: 95vw; border-radius: 14px; overflow: hidden; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2); border: 1px solid #e2e8f0;">
     <div style="background: #ffffff; padding: 14px 18px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
       <h3 style="margin: 0; font-size: 15px; font-weight: 800; color: #1e293b; display: flex; align-items: center; gap: 7px;">
-        <i class="fa-solid fa-circle-check" style="color: #10b981;"></i> Complete Night Audit
+        <i class="fa-solid fa-circle-check" style="color: #10b981;"></i> Complete Today's Night Audit
       </h3>
       <button type="button" onclick="closeCompleteAuditModal()" style="background: transparent; border: none; color: #94a3b8; font-size: 18px; cursor: pointer;">&times;</button>
     </div>
@@ -800,7 +819,7 @@
       <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 12px; margin-bottom: 14px; font-size: 12px;">
         <div style="display: flex; justify-content: space-between; padding-bottom: 4px;">
           <span style="color: #64748b;">Audit Date:</span>
-          <strong>{{ \Carbon\Carbon::parse($selectedDate)->format('d M Y') }}</strong>
+          <strong>{{ \Carbon\Carbon::parse($today)->format('d M Y') }}</strong>
         </div>
         <div style="display: flex; justify-content: space-between; padding: 4px 0;">
           <span style="color: #64748b;">Total Collections:</span>
@@ -817,7 +836,7 @@
       </div>
 
       <form id="form-complete-audit" onsubmit="submitNightAudit(event)">
-        <input type="hidden" name="audit_date" value="{{ $selectedDate }}">
+        <input type="hidden" name="audit_date" value="{{ $today }}">
 
         <div style="margin-bottom: 12px;">
           <label style="display: block; font-size: 11px; font-weight: 800; color: #475569; text-transform: uppercase; margin-bottom: 4px;">
@@ -837,7 +856,7 @@
           <textarea name="remarks" 
                     rows="2" 
                     style="width: 100%; border-radius: 6px; border: 1px solid #cbd5e1; padding: 6px 10px; font-family: inherit; font-size: 12px; box-sizing: border-box; resize: vertical; outline: none;" 
-                    placeholder="Closing notes (optional)...">{{ $existingAudit?->remarks }}</textarea>
+                    placeholder="Closing notes (optional)..."></textarea>
         </div>
 
         <div style="display: flex; justify-content: flex-end; gap: 8px;">
@@ -852,6 +871,7 @@
     </div>
   </div>
 </div>
+@endif
 
 <!-- PRINT REPORT CONTENT -->
 <div id="printable-night-audit-report" style="display: none;">

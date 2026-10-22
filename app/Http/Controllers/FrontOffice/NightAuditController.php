@@ -280,6 +280,32 @@ class NightAuditController extends Controller
             ->limit(15)
             ->get();
 
+        // 8. If audit is already completed, freeze and lock all values directly from the stored record
+        if ($existingAudit) {
+            $totalPayments = (float)$existingAudit->total_payments;
+            $advancePayments = (float)$existingAudit->advance_payments;
+            $settlementPayments = (float)$existingAudit->settlement_payments;
+            $cashCollection = (float)$existingAudit->cash_collection;
+            $upiCollection = (float)$existingAudit->upi_collection;
+            $cardCollection = (float)$existingAudit->card_collection;
+            $bankCollection = (float)$existingAudit->bank_collection;
+            $otherCollection = (float)$existingAudit->other_collection;
+            $dailyRoomRevenue = (float)$existingAudit->room_revenue;
+            $dailyFoodRevenue = (float)$existingAudit->food_revenue;
+            $totalDailyRevenue = (float)$existingAudit->total_revenue;
+            $occupancyRate = (float)$existingAudit->occupancy_rate;
+            $occupiedRoomsCount = (int)$existingAudit->occupied_rooms;
+            $vacantRoomsCount = (int)$existingAudit->vacant_rooms;
+            $totalRoomsCount = (int)$existingAudit->total_rooms;
+            $maintenanceRoomsCount = (int)$existingAudit->maintenance_rooms;
+            $adr = (float)$existingAudit->adr;
+            $revpar = (float)$existingAudit->revpar;
+            $mealPlanCounts['EP'] = (int)$existingAudit->ep_plan_count;
+            $mealPlanCounts['CP'] = (int)$existingAudit->cp_plan_count;
+            $mealPlanCounts['MAP'] = (int)$existingAudit->map_plan_count;
+            $mealPlanCounts['AP'] = (int)$existingAudit->ap_plan_count;
+        }
+
         return view('frontoffice.nightaudit.index', compact(
             'selectedDate',
             'today',
@@ -335,7 +361,26 @@ class NightAuditController extends Controller
             'auditor_name' => 'nullable|string|max:100',
         ]);
 
-        $auditDate = $validated['audit_date'];
+        $today = Carbon::today()->format('Y-m-d');
+        $auditDate = Carbon::parse($validated['audit_date'])->toDateString();
+
+        // 1. Audit can only be performed and stored for today's date (not past, not future)
+        if ($auditDate !== $today) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Night audit can only be performed and stored for today (' . Carbon::parse($today)->format('d M Y') . '). Past and future dates cannot be audited.'
+            ], 422);
+        }
+
+        // 2. Re-run audit is not supported. Only one audit in today only.
+        $existingAudit = NightAudit::whereDate('audit_date', $today)->first();
+        if ($existingAudit) {
+            return response()->json([
+                'success' => false,
+                'error' => "Today's night audit has already been completed at " . ($existingAudit->completed_at ? $existingAudit->completed_at->format('h:i A') : '') . ". Re-running the audit is not supported."
+            ], 422);
+        }
+
         $auditorName = $validated['auditor_name'] ?? (Auth::user()?->name ?? 'Front Office Night Auditor');
         $auditorId = Auth::id() ?? null;
 
@@ -466,14 +511,13 @@ class NightAuditController extends Controller
                 ],
             ];
 
-            // Save or update NightAudit record
-            $nightAudit = NightAudit::updateOrCreate(
-                ['audit_date' => $auditDate],
-                [
-                    'completed_at' => now(),
-                    'auditor_id' => $auditorId,
-                    'auditor_name' => $auditorName,
-                    'status' => 'Completed',
+            // Store NightAudit record (single audit only)
+            $nightAudit = NightAudit::create([
+                'audit_date' => $auditDate,
+                'completed_at' => now(),
+                'auditor_id' => $auditorId,
+                'auditor_name' => $auditorName,
+                'status' => 'Completed',
                     'total_payments' => $totalPayments,
                     'advance_payments' => $advancePayments,
                     'settlement_payments' => $settlementPayments,
@@ -505,8 +549,7 @@ class NightAuditController extends Controller
                     'ap_plan_count' => $ap,
                     'remarks' => $validated['remarks'] ?? null,
                     'audit_snapshot' => $snapshot,
-                ]
-            );
+                ]);
 
             DB::commit();
 

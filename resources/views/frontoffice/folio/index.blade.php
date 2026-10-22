@@ -1854,7 +1854,7 @@
           confirmButtonColor: '#10b981',
           confirmButtonText: 'OK'
         }).then(() => {
-          openFolioModalById(activeFolioData.id, true);
+          window.location.reload();
         });
       } else {
         Swal.fire({
@@ -1931,11 +1931,11 @@
           Swal.fire({
             icon: 'success',
             title: 'Check Out Complete!',
-            text: data.message || 'Reservation successfully checked out!',
+            text: data.message || 'Reservation successfully checked out! Room(s) scheduled for housekeeping.',
             confirmButtonColor: '#10b981',
             confirmButtonText: 'OK'
           }).then(() => {
-            openFolioModalById(activeFolioData.id, true);
+            window.location.reload();
           });
         } else {
           Swal.fire({

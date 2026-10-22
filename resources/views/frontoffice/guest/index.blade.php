@@ -239,6 +239,39 @@
     border-color: #ddd6fe;
   }
 
+  .action-flex-wrap {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .status-quick-select {
+    height: 30px;
+    padding: 2px 24px 2px 8px;
+    font-size: 11px;
+    font-weight: 700;
+    border-radius: 8px;
+    border: 1px solid #cbd5e1;
+    background: #ffffff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 8px center;
+    appearance: none;
+    -webkit-appearance: none;
+    color: #334155;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .status-quick-select:hover {
+    border-color: #6366f1;
+    background-color: #f8fafc;
+  }
+
+  .status-quick-select:focus {
+    border-color: #6366f1;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.15);
+  }
+
   /* Custom Checkout SweetAlert2 Dialog */
   .pms-swal-checkout-popup {
     border-radius: 18px !important;
@@ -700,8 +733,8 @@
               <th style="min-width: 130px; white-space: nowrap;">Room &amp; Floor</th>
               <th style="min-width: 140px; white-space: nowrap;">Check-in</th>
               <th style="min-width: 140px; white-space: nowrap;">Check-out</th>
-              <th style="min-width: 100px; text-align: center; white-space: nowrap;">Status</th>
-              <th style="width: 70px; text-align: center; white-space: nowrap;">Action</th>
+              <th style="min-width: 110px; text-align: center; white-space: nowrap;">Status</th>
+              <th style="min-width: 160px; text-align: center; white-space: nowrap;">Action</th>
             </tr>
           </thead>
           <tbody id="guest-crm-tbody">
@@ -819,24 +852,53 @@
 
                 <!-- Status -->
                 <td style="text-align: center; white-space: nowrap;">
-                  <span class="status-badge {{ $statusClass }}">
+                  <span id="badge-status-{{ $item->id }}" class="status-badge {{ $statusClass }}">
                     @if(in_array($item->status, ['Settlement Done', 'Checked Out']))
                       <i class="fa-solid fa-lock" style="font-size: 8px;"></i>
                     @else
                       <i class="fa-solid fa-circle" style="font-size: 6px;"></i>
                     @endif
-                    <span>{{ $item->status ?? 'Confirmed' }}</span>
+                    <span class="status-text">{{ $item->status ?? 'Confirmed' }}</span>
                   </span>
                 </td>
 
-                <!-- Action: Uniform Eye View Button -->
+                <!-- Action: Quick Status Selector + Eye View Button -->
                 <td style="text-align: center; white-space: nowrap;">
-                  <button type="button" 
-                          class="btn-action-view" 
-                          onclick="openGuestDetailsModalById({{ $item->id }})" 
-                          title="View Complete Guest Dossier (Rooms, Stay, Billing, Company)">
-                    <i class="fa-solid fa-eye"></i>
-                  </button>
+                  <div class="action-flex-wrap">
+                    @php
+                      $isItemLocked = in_array($item->status, ['Settlement Done', 'Checked Out'])
+                        || ($item->settlements && $item->settlements->where('status', 'Settled')->isNotEmpty())
+                        || ($item->latestBooking?->settlements && $item->latestBooking->settlements->where('status', 'Settled')->isNotEmpty())
+                        || ($item->latestBooking?->payments && $item->latestBooking->payments->where('payment_type', 'Settlement')->isNotEmpty())
+                        || ((float)$balanceVal <= 0.01 && (float)$item->payable_amount > 0 && ($paidVal > 0));
+                    @endphp
+
+                    @if($isItemLocked)
+                      <span class="badge-locked {{ $item->status === 'Settlement Done' ? 'settled' : '' }}" style="padding: 3px 8px; font-size: 11px;" title="Guest status is locked.">
+                        <i class="fa-solid fa-lock" style="font-size: 9px;"></i>
+                        <span>{{ $item->status ?? 'Locked' }}</span>
+                      </span>
+                    @else
+                      <select class="status-quick-select" 
+                              id="status-select-{{ $item->id }}" 
+                              onchange="updateGuestStatus({{ $item->id }}, this.value, this)" 
+                              title="Change Guest Status">
+                        <option value="Confirmed" {{ ($item->status ?? 'Confirmed') === 'Confirmed' ? 'selected' : '' }}>Confirmed</option>
+                        <option value="Arrived" {{ $item->status === 'Arrived' ? 'selected' : '' }}>Arrived</option>
+                        <option value="Checked In" {{ in_array($item->status, ['Checked In', 'Checked-In']) ? 'selected' : '' }}>Checked In</option>
+                        <option value="Stay Over" {{ in_array($item->status, ['Stay Over', 'Stay-Over']) ? 'selected' : '' }}>Stay Over</option>
+                        <option value="Checked Out" {{ in_array($item->status, ['Checked Out', 'Checked-Out']) ? 'selected' : '' }}>Checked Out</option>
+                        <option value="Cancelled" {{ $item->status === 'Cancelled' ? 'selected' : '' }}>Cancelled</option>
+                      </select>
+                    @endif
+
+                    <button type="button" 
+                            class="btn-action-view" 
+                            onclick="openGuestDetailsModalById({{ $item->id }})" 
+                            title="View Complete Guest Dossier (Rooms, Stay, Billing, Company)">
+                      <i class="fa-solid fa-eye"></i>
+                    </button>
+                  </div>
                 </td>
               </tr>
             @empty
@@ -919,9 +981,22 @@
           <i class="fa-solid fa-id-card-clip"></i>
         </div>
         <div>
-          <div style="display: flex; align-items: center; gap: 8px;">
+          <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
             <h3 id="crm-mdl-guest-name" style="margin: 0; font-size: 16px; font-weight: 800; color: #ffffff;">Guest Profile Dossier</h3>
             <span id="crm-mdl-status-badge" class="status-badge" style="background: #ffffff; color: #4338ca; font-weight: 800;">Confirmed</span>
+            <div id="crm-mdl-status-control-wrapper" style="display: inline-flex; align-items: center; margin-left: 6px;">
+              <select class="status-quick-select" id="crm-mdl-quick-status-select" onchange="onModalStatusChange(this.value)" style="background-color: #ffffff; color: #1e293b; height: 28px; font-size: 11px;">
+                <option value="Confirmed">Confirmed</option>
+                <option value="Arrived">Arrived</option>
+                <option value="Checked In">Checked In</option>
+                <option value="Stay Over">Stay Over</option>
+                <option value="Checked Out">Checked Out</option>
+                <option value="Cancelled">Cancelled</option>
+              </select>
+              <span id="crm-mdl-status-locked-indicator" class="badge-locked settled" style="display: none; padding: 3px 10px; font-size: 11px; font-weight: 700;">
+                <i class="fa-solid fa-lock"></i> <span id="crm-mdl-status-locked-text">Locked</span>
+              </span>
+            </div>
           </div>
           <div style="font-size: 11px; opacity: 0.85; margin-top: 2px; font-family: var(--font-mono, monospace);">
             Reserve Ref: <span id="crm-mdl-reserve-id" style="font-weight: 700;">-</span> &nbsp;|&nbsp; Folio: <span id="crm-mdl-folio-number" style="font-weight: 700;">-</span>
@@ -1163,10 +1238,26 @@
     document.getElementById('crm-mdl-registered-at').textContent = guest.created_at_fmt || 'N/A';
 
     const statusBadge = document.getElementById('crm-mdl-status-badge');
+    const mdlSelect = document.getElementById('crm-mdl-quick-status-select');
+    const mdlLocked = document.getElementById('crm-mdl-status-locked-indicator');
+    const mdlLockedText = document.getElementById('crm-mdl-status-locked-text');
+    const isLocked = guest.is_locked || ['settlement done', 'checked out', 'settled'].includes((guest.status || '').toLowerCase());
+
     if (statusBadge) {
-      const isLocked = ['settlement done', 'checked out', 'settled'].includes((guest.status || '').toLowerCase());
       statusBadge.innerHTML = (isLocked ? '<i class="fa-solid fa-lock" style="font-size: 8px;"></i> ' : '<i class="fa-solid fa-circle" style="font-size: 6px;"></i> ') + escapeHtml(guest.status || 'Confirmed');
       statusBadge.className = `status-badge ${getStatusBadgeColor(guest.status)}`;
+    }
+
+    if (mdlSelect && mdlLocked) {
+      if (isLocked) {
+        mdlSelect.style.display = 'none';
+        mdlLocked.style.display = 'inline-flex';
+        if (mdlLockedText) mdlLockedText.textContent = `${guest.status} (Locked)`;
+      } else {
+        mdlSelect.style.display = 'inline-block';
+        mdlSelect.value = guest.status || 'Confirmed';
+        mdlLocked.style.display = 'none';
+      }
     }
 
     // Highlight Banner
@@ -1654,6 +1745,107 @@
     .catch(() => {
       alert('Unable to load guest profile');
     });
+  }
+
+  // Update guest status via AJAX
+  function updateGuestStatus(guestId, newStatus, selectElement) {
+    const item = (window.allCrmGuests || []).find(g => String(g.id) === String(guestId));
+    const isLocked = item && (item.is_locked || ['settlement done', 'checked out'].includes((item.status || '').toLowerCase()));
+    if (isLocked) {
+      if (typeof PmsAlert !== 'undefined') {
+        PmsAlert.toast(`This reservation is locked in '${item.status}' status and cannot be modified.`, 'warning');
+      } else {
+        alert(`This reservation is locked in '${item.status}' status and cannot be modified.`);
+      }
+      if (selectElement) selectElement.value = item.status;
+      return;
+    }
+
+    const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+    if (selectElement) selectElement.disabled = true;
+
+    fetch(`{{ url('front-office/guest') }}/${guestId}/status`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': token,
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({ status: newStatus })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (selectElement) selectElement.disabled = false;
+      if (data.success) {
+        // Update local item
+        if (item) {
+          item.status = data.status;
+          item.is_locked = ['Settlement Done', 'Checked Out'].includes(data.status);
+        }
+
+        // Update status badge on the row immediately
+        const badge = document.getElementById(`badge-status-${guestId}`);
+        if (badge) {
+          badge.className = `status-badge ${getStatusBadgeColor(data.status)}`;
+          const icon = ['Settlement Done', 'Checked Out'].includes(data.status) 
+            ? '<i class="fa-solid fa-lock" style="font-size: 8px;"></i>' 
+            : '<i class="fa-solid fa-circle" style="font-size: 6px;"></i>';
+          badge.innerHTML = `${icon} <span class="status-text">${escapeHtml(data.status)}</span>`;
+        }
+
+        // Update modal if currently opened with this guest
+        if (currentActiveCrmGuest && String(currentActiveCrmGuest.id) === String(guestId)) {
+          currentActiveCrmGuest.status = data.status;
+          currentActiveCrmGuest.is_locked = ['Settlement Done', 'Checked Out'].includes(data.status);
+          const mdlBadge = document.getElementById('crm-mdl-status-badge');
+          if (mdlBadge) {
+            const icon = ['Settlement Done', 'Checked Out'].includes(data.status) 
+              ? '<i class="fa-solid fa-lock" style="font-size: 8px;"></i> ' 
+              : '<i class="fa-solid fa-circle" style="font-size: 6px;"></i> ';
+            mdlBadge.innerHTML = icon + escapeHtml(data.status);
+            mdlBadge.className = `status-badge ${getStatusBadgeColor(data.status)}`;
+          }
+          const mdlSelect = document.getElementById('crm-mdl-quick-status-select');
+          if (mdlSelect) mdlSelect.value = data.status;
+        }
+
+        if (typeof PmsAlert !== 'undefined') {
+          PmsAlert.toast(data.message, 'success');
+        } else {
+          alert(data.message);
+        }
+
+        // Reload page after a brief moment to update server-side stats and lists
+        setTimeout(() => {
+          window.location.reload();
+        }, 600);
+      } else {
+        if (selectElement && item) selectElement.value = item.status;
+        if (typeof PmsAlert !== 'undefined') {
+          PmsAlert.toast(data.message || data.error || 'Error updating status', 'error');
+        } else {
+          alert(data.message || data.error || 'Error updating status');
+        }
+      }
+    })
+    .catch(err => {
+      if (selectElement) {
+        selectElement.disabled = false;
+        if (item) selectElement.value = item.status;
+      }
+      console.error('Error updating status:', err);
+      if (typeof PmsAlert !== 'undefined') {
+        PmsAlert.toast('Failed to update status. Please try again.', 'error');
+      } else {
+        alert('Failed to update status.');
+      }
+    });
+  }
+
+  function onModalStatusChange(newStatus) {
+    if (!currentActiveCrmGuest) return;
+    const rowSelect = document.getElementById(`status-select-${currentActiveCrmGuest.id}`);
+    updateGuestStatus(currentActiveCrmGuest.id, newStatus, rowSelect);
   }
 
   // Print Guest Dossier

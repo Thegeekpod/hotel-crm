@@ -16,6 +16,8 @@ use App\Models\Settlement;
 use App\Models\Checkout;
 use App\Models\RoomHousekeepingHistory;
 use App\Models\HousekeepingState;
+use App\Models\OperationalStatus;
+use App\Models\RoomOperationalHistory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -44,8 +46,10 @@ class GuestController extends Controller
             'latestBooking.reservationMode',
             'latestBooking.plan',
             'latestBooking.payments.paymentMode',
+            'latestBooking.settlements',
             'bookings.room.categoryRelation',
             'payments.paymentMode',
+            'settlements',
         ])
         ->orderBy('id', 'desc');
 
@@ -149,6 +153,14 @@ class GuestController extends Controller
             $planCode = $planObj?->plan_code ?: '';
             $planPrice = (float)($planObj?->price ?? 0);
 
+            $hasSettled = ($item->settlements && $item->settlements->where('status', 'Settled')->isNotEmpty())
+                || ($lb?->settlements && $lb->settlements->where('status', 'Settled')->isNotEmpty())
+                || ($lb?->payments && $lb->payments->where('payment_type', 'Settlement')->isNotEmpty())
+                || strtolower($item->status ?? '') === 'settlement done'
+                || ((float)$balVal <= 0.01 && (float)$item->payable_amount > 0 && ($advanceAmount > 0 || ($lb?->payments && $lb->payments->isNotEmpty())));
+
+            $isLocked = $hasSettled || in_array($item->status, ['Settlement Done', 'Checked Out']);
+
             // Fetch all associated bookings for this guest / group to gather all rooms
             $allBookings = \App\Models\Booking::where(function($q) use ($item, $lb) {
                 if ($lb?->primary_booking_id) {
@@ -192,6 +204,7 @@ class GuestController extends Controller
                 'folio_number' => $item->folio_number ?: '-',
                 'created_at_fmt' => $item->created_at ? $item->created_at->format('d M Y, h:i A') : 'N/A',
                 'status' => $item->status ?: 'Confirmed',
+                'is_locked' => $isLocked,
                 'room_id' => $item->room_id,
                 'room_number' => $room?->room_number ? ('R' . preg_replace('/^r[-_\s]?/i', '', trim($room->room_number))) : 'Unassigned',
                 'room_category' => $room?->categoryRelation?->name ?? ($room?->category ?? 'Standard'),
@@ -291,6 +304,14 @@ class GuestController extends Controller
         $balVal = (float)($guest->balance ?? 0);
         $planObj = $lb?->plan;
 
+        $hasSettled = ($guest->settlements && $guest->settlements->where('status', 'Settled')->isNotEmpty())
+            || ($lb?->settlements && $lb->settlements->where('status', 'Settled')->isNotEmpty())
+            || ($lb?->payments && $lb->payments->where('payment_type', 'Settlement')->isNotEmpty())
+            || strtolower($guest->status ?? '') === 'settlement done'
+            || ((float)$balVal <= 0.01 && (float)$guest->payable_amount > 0 && ($advanceAmount > 0 || ($lb?->payments && $lb->payments->isNotEmpty())));
+
+        $isLocked = $hasSettled || in_array($guest->status, ['Settlement Done', 'Checked Out']);
+
         // Fetch all associated bookings for this guest / group to gather all rooms
         $allBookings = \App\Models\Booking::where(function($q) use ($guest, $lb) {
             if ($lb?->primary_booking_id) {
@@ -334,6 +355,7 @@ class GuestController extends Controller
             'folio_number' => $guest->folio_number ?: '-',
             'created_at_fmt' => $guest->created_at ? $guest->created_at->format('d M Y, h:i A') : 'N/A',
             'status' => $guest->status ?: 'Confirmed',
+            'is_locked' => $isLocked,
             'room_id' => $guest->room_id,
             'room_number' => $room?->room_number ? ('R' . preg_replace('/^r[-_\s]?/i', '', trim($room->room_number))) : 'Unassigned',
             'room_category' => $room?->categoryRelation?->name ?? ($room?->category ?? 'Standard'),
@@ -386,6 +408,130 @@ class GuestController extends Controller
             'success' => true,
             'guest' => $serialized,
             'raw_guest' => $guest
+        ]);
+    }
+
+    public function updateStatus(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'status' => 'required|string|max:50',
+        ]);
+
+        $guest = Guest::with(['latestBooking.room', 'latestBooking.settlements', 'latestBooking.payments', 'settlements'])->findOrFail($id);
+        $booking = $guest->latestBooking;
+        if (!$booking) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No active booking record found for this guest.',
+                'error' => 'No active booking record found for this guest.'
+            ], 404);
+        }
+
+        $oldStatus = $booking->status ?: 'Confirmed';
+        $newStatus = $validated['status'];
+
+        $hasSettled = $booking->settlements()->where('status', 'Settled')->exists()
+            || ($guest->settlements()->where('status', 'Settled')->exists())
+            || ($booking->settlements()->exists() && (float)$booking->balance <= 0.01)
+            || ($guest->settlements()->exists() && (float)$guest->balance <= 0.01)
+            || $booking->payments()->where('payment_type', 'Settlement')->exists()
+            || in_array(strtolower($booking->status ?? ''), ['settlement done', 'checked out'])
+            || ((float)$booking->balance <= 0.01 && (float)$booking->payable_amount > 0 && ((float)$booking->advance_amount > 0 || $booking->payments()->exists()));
+
+        // Strict Lock: Disallow modifying record once Settlement Done, Settled, or Checked Out
+        if ($hasSettled || in_array($booking->status, ['Settlement Done', 'Checked Out'])) {
+            return response()->json([
+                'success' => false,
+                'message' => "Record is locked. This guest has completed settlement (status: '{$booking->status}') and cannot be modified.",
+                'error' => "Record is locked. This guest has completed settlement (status: '{$booking->status}') and cannot be modified."
+            ], 403);
+        }
+
+        // Prevent checkout if there is still outstanding balance
+        if ($newStatus === 'Checked Out' && (float)$booking->balance > 0.01) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Cannot check out guest with outstanding balance of ₹ ' . number_format($booking->balance, 2) . '. Complete settlement first.',
+                'error' => 'Cannot check out guest with outstanding balance of ₹ ' . number_format($booking->balance, 2) . '. Complete settlement first.'
+            ], 422);
+        }
+
+        $booking->status = $newStatus;
+        if ($newStatus === 'Checked Out') {
+            $booking->checkout_date = now()->toDateString();
+            $booking->checkout_time = now()->format('H:i');
+        }
+        $booking->save();
+
+        // Update secondary bookings under the same reservation dossier if any
+        if ($booking->reserve_id) {
+            $secondaryUpdate = ['status' => $newStatus];
+            if ($newStatus === 'Checked Out') {
+                $secondaryUpdate['checkout_date'] = now()->toDateString();
+                $secondaryUpdate['checkout_time'] = now()->format('H:i');
+            }
+            Booking::where('reserve_id', $booking->reserve_id)
+                ->where('id', '!=', $booking->id)
+                ->update($secondaryUpdate);
+        }
+
+        // Room operational state update if arrived or checked in
+        if (in_array($newStatus, ['Arrived', 'Checked In']) && $booking->room) {
+            $activeOp = OperationalStatus::where('name', 'like', '%Active%')->first();
+            if ($activeOp) {
+                RoomOperationalHistory::create([
+                    'room_id' => $booking->room->id,
+                    'operational_status_id' => $activeOp->id,
+                ]);
+            }
+        }
+
+        // Room housekeeping and checkout record if Checked Out
+        if ($newStatus === 'Checked Out') {
+            $totalPaid = round((float)$booking->advance_amount + (float)Payment::where('booking_id', $booking->id)->where('payment_type', 'Settlement')->sum('amount'), 2);
+            $latestSettlement = Settlement::where('booking_id', $booking->id)->latest('id')->first()
+                ?: Settlement::where('guest_id', $guest->id)->latest('id')->first();
+
+            Checkout::firstOrCreate(
+                ['booking_id' => $booking->id],
+                [
+                    'guest_id' => $guest->id,
+                    'room_id' => $booking->room_id,
+                    'settlement_id' => $latestSettlement?->id,
+                    'checkout_date' => now()->toDateString(),
+                    'checkout_time' => now()->format('H:i'),
+                    'actual_checkout_at' => now(),
+                    'total_nights' => $booking->total_nights,
+                    'room_charges' => $booking->total_amount,
+                    'extra_charges' => 0.00,
+                    'late_checkout_charge' => 0.00,
+                    'discount_amount' => $booking->discount_amount,
+                    'tax_amount' => $booking->gst_amount,
+                    'grand_total' => $booking->payable_amount,
+                    'paid_amount' => $totalPaid ?: $booking->payable_amount,
+                    'balance_amount' => 0.00,
+                    'status' => 'Completed',
+                    'remarks' => 'Checked out via Guest CRM Directory',
+                ]
+            );
+
+            if ($booking->room_id) {
+                $dirtyState = HousekeepingState::where('name', 'like', '%dirty%')->first();
+                if ($dirtyState) {
+                    RoomHousekeepingHistory::create([
+                        'room_id' => $booking->room_id,
+                        'housekeeping_status_id' => $dirtyState->id,
+                        'start_time' => now(),
+                        'status' => 'pending',
+                    ]);
+                }
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => "Guest status updated to '{$newStatus}' successfully.",
+            'status' => $newStatus
         ]);
     }
 

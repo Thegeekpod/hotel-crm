@@ -34,4 +34,9 @@ class RoomHousekeepingHistory extends Model
     {
         return $this->belongsTo(HousekeepingState::class, 'housekeeping_status_id');
     }
+
+    public function housekeepingState(): BelongsTo
+    {
+        return $this->belongsTo(HousekeepingState::class, 'housekeeping_status_id');
+    }
 }

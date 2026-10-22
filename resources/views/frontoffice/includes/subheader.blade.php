@@ -18,6 +18,10 @@
         <span class="ico-box"><i class="fa-solid fa-file-invoice-dollar" style="color: #6366f1;"></i></span>
         <span class="lbl-box">Folio</span>
       </a>
+      <a href="{{ route('frontoffice.nightaudit') }}" class="ribbon-btn {{ request()->routeIs('frontoffice.nightaudit*') || request()->routeIs('frontoffice.night-audit*') ? 'active-btn' : '' }}">
+        <span class="ico-box"><i class="fa-solid fa-moon" style="color: #8b5cf6;"></i></span>
+        <span class="lbl-box">Night Audit</span>
+      </a>
     </div>
   </div>
   <div style="font-size: 11px; font-weight: 700; color: var(--accent-emerald); display: flex; align-items: center; gap: 6px;">

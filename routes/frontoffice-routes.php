@@ -6,6 +6,7 @@ use App\Http\Controllers\FrontOffice\ArrivalController;
 use App\Http\Controllers\FrontOffice\InhouseController;
 use App\Http\Controllers\FrontOffice\GuestController;
 use App\Http\Controllers\FrontOffice\FolioController;
+use App\Http\Controllers\FrontOffice\NightAuditController;
 
 // Front Office Module Routes (Arrivals, Guest CRM, In-House, Reservations)
 Route::prefix('front-office')->name('frontoffice.')->group(function () {
@@ -28,6 +29,13 @@ Route::prefix('front-office')->name('frontoffice.')->group(function () {
     Route::get('/folio/{id}/details', [FolioController::class, 'getDetails'])->name('folio.details');
     Route::post('/folio/{id}/settle', [FolioController::class, 'settle'])->name('folio.settle');
     Route::post('/folio/{id}/checkout', [FolioController::class, 'checkout'])->name('folio.checkout');
+
+    // Night Audit Management
+    Route::get('/nightaudit', [NightAuditController::class, 'index'])->name('nightaudit');
+    Route::get('/night-audit', [NightAuditController::class, 'index'])->name('night-audit');
+    Route::post('/night-audit/complete', [NightAuditController::class, 'complete'])->name('night-audit.complete');
+    Route::get('/night-audit/{id}/report', [NightAuditController::class, 'getReport'])->name('night-audit.report');
+
     Route::get('/reserve', [DashboardController::class, 'reserve'])->name('reserve');
     
     // Dynamic Reservation, Check-in & Room Status Endpoints

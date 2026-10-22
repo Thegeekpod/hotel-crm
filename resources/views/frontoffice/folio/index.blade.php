@@ -1447,12 +1447,22 @@
           }
           populateAndOpenFolioModal(data.folio);
         } else {
-          alert('Could not fetch folio details.');
+          Swal.fire({
+            icon: 'error',
+            title: 'Folio Notice',
+            text: 'Could not fetch folio details.',
+            confirmButtonColor: '#4f46e5'
+          });
         }
       })
       .catch(err => {
         console.error('Error fetching folio details:', err);
-        alert('Failed to load folio details.');
+        Swal.fire({
+          icon: 'error',
+          title: 'System Error',
+          text: 'Failed to load folio details. Please try again.',
+          confirmButtonColor: '#4f46e5'
+        });
       });
     }
   }
@@ -1793,13 +1803,23 @@
     const confirmBtn = document.getElementById('fmdl-btn-confirm-settlement');
 
     if (isNaN(settleAmount) || settleAmount <= 0) {
-      alert('Please enter a valid settlement amount greater than 0.');
+      Swal.fire({
+        icon: 'warning',
+        title: 'Invalid Amount',
+        text: 'Please enter a valid settlement amount greater than 0.',
+        confirmButtonColor: '#4f46e5'
+      });
       amountInput.focus();
       return;
     }
 
     if (settleAmount > (Number(activeFolioData.balance) + 0.01)) {
-      alert(`Settlement amount cannot exceed the current balance of ${formatINR(activeFolioData.balance)}.`);
+      Swal.fire({
+        icon: 'warning',
+        title: 'Amount Exceeded',
+        text: `Settlement amount cannot exceed the current balance of ${formatINR(activeFolioData.balance)}.`,
+        confirmButtonColor: '#4f46e5'
+      });
       amountInput.focus();
       return;
     }
@@ -1827,18 +1847,34 @@
       confirmBtn.innerHTML = '<i class="fa-solid fa-check-circle"></i> Confirm &amp; Save Settlement';
 
       if (data.success) {
-        alert(data.message || 'Settlement processed successfully!');
-        // Reload details to refresh ledger and check out button state
-        openFolioModalById(activeFolioData.id, true);
+        Swal.fire({
+          icon: 'success',
+          title: 'Settlement Saved!',
+          text: data.message || 'Settlement processed successfully!',
+          confirmButtonColor: '#10b981',
+          confirmButtonText: 'OK'
+        }).then(() => {
+          openFolioModalById(activeFolioData.id, true);
+        });
       } else {
-        alert(data.error || 'Settlement failed. Please check your inputs.');
+        Swal.fire({
+          icon: 'warning',
+          title: 'Settlement Notice',
+          text: data.error || data.message || 'Settlement failed. Please check your inputs.',
+          confirmButtonColor: '#4f46e5'
+        });
       }
     })
     .catch(err => {
       confirmBtn.disabled = false;
       confirmBtn.innerHTML = '<i class="fa-solid fa-check-circle"></i> Confirm &amp; Save Settlement';
       console.error(err);
-      alert('An error occurred during settlement submission.');
+      Swal.fire({
+        icon: 'error',
+        title: 'System Error',
+        text: 'An error occurred during settlement submission. Please try again.',
+        confirmButtonColor: '#4f46e5'
+      });
     });
   }
 
@@ -1846,43 +1882,83 @@
     if (!activeFolioData) return;
 
     if (activeFolioData.balance > 0.01) {
-      alert(`Cannot check out reservation with outstanding balance of ${formatINR(activeFolioData.balance)}. Please complete settlement first.`);
+      Swal.fire({
+        icon: 'warning',
+        title: 'Outstanding Balance Due',
+        html: `Cannot check out reservation with outstanding balance of <strong style="color: #e11d48;">${formatINR(activeFolioData.balance)}</strong>.<br><br>Please complete settlement first before checking out.`,
+        confirmButtonColor: '#4f46e5',
+        confirmButtonText: 'OK'
+      });
       return;
     }
 
-    if (!confirm(`Are you sure you want to Check Out Booking #${activeFolioData.reserve_id} for ${activeFolioData.primary_guest?.name}? Rooms will be scheduled for Housekeeping.`)) {
-      return;
-    }
+    Swal.fire({
+      title: 'Confirm Room Check-Out',
+      html: `Are you sure you want to Check Out Booking <strong>#${escapeHtml(activeFolioData.reserve_id)}</strong> for <strong>${escapeHtml(activeFolioData.primary_guest?.name || 'Guest')}</strong>?<br><br><span style="font-size: 12px; color: #64748b;">The room status will be automatically scheduled for Housekeeping.</span>`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#10b981',
+      cancelButtonColor: '#64748b',
+      confirmButtonText: '<i class="fa-solid fa-check"></i> Yes, Check Out',
+      cancelButtonText: 'Cancel'
+    }).then(result => {
+      if (!result.isConfirmed) return;
 
-    const btn = document.getElementById('fmdl-action-btn-checkout');
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing Check Out...';
-
-    fetch(`{{ url('front-office/folio') }}/${activeFolioData.id}/checkout`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-        'Accept': 'application/json',
-      },
-      body: JSON.stringify({
-        remarks: 'Checked out from Folio Manager Counter'
-      })
-    })
-    .then(res => res.json())
-    .then(data => {
-      btn.disabled = false;
-      if (data.success) {
-        alert(data.message || 'Reservation successfully checked out!');
-        openFolioModalById(activeFolioData.id, true);
-      } else {
-        alert(data.error || 'Check out failed.');
+      const btn = document.getElementById('fmdl-action-btn-checkout');
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing Check Out...';
       }
-    })
-    .catch(err => {
-      btn.disabled = false;
-      console.error(err);
-      alert('Network error while processing check out.');
+
+      fetch(`{{ url('front-office/folio') }}/${activeFolioData.id}/checkout`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': '{{ csrf_token() }}',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({
+          remarks: 'Checked out from Folio Manager Counter'
+        })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fa-solid fa-right-from-bracket"></i> Check Out';
+        }
+        if (data.success) {
+          Swal.fire({
+            icon: 'success',
+            title: 'Check Out Complete!',
+            text: data.message || 'Reservation successfully checked out!',
+            confirmButtonColor: '#10b981',
+            confirmButtonText: 'OK'
+          }).then(() => {
+            openFolioModalById(activeFolioData.id, true);
+          });
+        } else {
+          Swal.fire({
+            icon: 'warning',
+            title: 'Check Out Notice',
+            text: data.error || data.message || 'Check out failed.',
+            confirmButtonColor: '#4f46e5'
+          });
+        }
+      })
+      .catch(err => {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fa-solid fa-right-from-bracket"></i> Check Out';
+        }
+        console.error(err);
+        Swal.fire({
+          icon: 'error',
+          title: 'System Error',
+          text: 'Network error while processing check out. Please try again.',
+          confirmButtonColor: '#4f46e5'
+        });
+      });
     });
   }
 

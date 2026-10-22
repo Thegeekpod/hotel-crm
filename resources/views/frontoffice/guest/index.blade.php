@@ -1072,76 +1072,22 @@
 
       </div>
 
-      <!-- CARD 3: Pricing & Financial Breakdown -->
+      <!-- CARD 3: Allotted Room & Stay Details (NO PAYMENT DETAILS) -->
       <div class="dossier-card" style="margin-bottom: 0;">
         <div class="dossier-card-title">
-          <i class="fa-solid fa-file-invoice-dollar"></i> Pricing & Billing Breakdown
+          <i class="fa-solid fa-door-open"></i> Allotted Room &amp; Accommodation Details
         </div>
 
-        <!-- 4-Stat Metric Boxes -->
-        <div class="billing-summary-grid">
-          <div class="bill-stat-item">
-            <div class="bill-stat-label">Daily Room Rate</div>
-            <div class="bill-stat-value" id="crm-mdl-bill-rate" style="color: #334155;">₹ 0.00</div>
-          </div>
-
-          <div class="bill-stat-item">
-            <div class="bill-stat-label">Gross Amount</div>
-            <div class="bill-stat-value" id="crm-mdl-bill-gross" style="color: #1e293b;">₹ 0.00</div>
-          </div>
-
-          <div class="bill-stat-item">
-            <div class="bill-stat-label">Advance Deposit</div>
-            <div class="bill-stat-value" id="crm-mdl-bill-advance" style="color: #059669;">₹ 0.00</div>
-          </div>
-
-          <div class="bill-stat-item" id="crm-mdl-balance-box">
-            <div class="bill-stat-label" id="crm-mdl-balance-label">Balance Due</div>
-            <div class="bill-stat-value" id="crm-mdl-bill-balance" style="color: #e11d48;">₹ 0.00</div>
-          </div>
+        <div id="crm-mdl-rooms-container" style="display: flex; flex-direction: column; gap: 8px;">
+          <!-- Dynamically populated room entries -->
         </div>
 
-        <div style="margin-top: 14px; background: #ffffff; border: 1px solid #f1f5f9; border-radius: 8px; padding: 10px 14px;">
-          <div class="dossier-field-row">
-            <span class="dossier-label">Room Rate × Nights</span>
-            <span class="dossier-val mono" id="crm-mdl-bill-calc-row">-</span>
+        <!-- Remarks / Special Requests Box -->
+        <div id="crm-mdl-remarks-box" style="margin-top: 12px; padding: 10px 14px; background: #ffffff; border: 1px dashed #cbd5e1; border-radius: 8px; display: none;">
+          <div style="font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 4px; display: flex; align-items: center; gap: 5px;">
+            <i class="fa-regular fa-comment-dots" style="color: #6366f1;"></i> Special Requests &amp; Booking Remarks
           </div>
-          <div class="dossier-field-row">
-            <span class="dossier-label">Advance Deposit Paid</span>
-            <span class="dossier-val mono" id="crm-mdl-bill-advance-row" style="color: #059669;">-</span>
-          </div>
-          <div class="dossier-field-row" id="crm-mdl-settle-field-row">
-            <span class="dossier-label">Settlement Amount Paid</span>
-            <span class="dossier-val mono" id="crm-mdl-bill-settle-row" style="color: #6366f1; font-weight: 800;">-</span>
-          </div>
-          <div class="dossier-field-row">
-            <span class="dossier-label">Total Amount Paid</span>
-            <span class="dossier-val mono" id="crm-mdl-bill-totalpaid-row" style="color: #059669; font-weight: 800;">-</span>
-          </div>
-          <div class="dossier-field-row">
-            <span class="dossier-label">Discount</span>
-            <span class="dossier-val mono" id="crm-mdl-bill-discount" style="color: #059669;">-</span>
-          </div>
-          <div class="dossier-field-row">
-            <span class="dossier-label">GST / Tax</span>
-            <span class="dossier-val mono" id="crm-mdl-bill-gst" style="color: #6366f1;">-</span>
-          </div>
-          <div class="dossier-field-row">
-            <span class="dossier-label">Meal Plan Package</span>
-            <span class="dossier-val" id="crm-mdl-bill-mealplan" style="color: #c2410c; font-weight: 700;">-</span>
-          </div>
-          <div class="dossier-field-row">
-            <span class="dossier-label">Net Payable Amount</span>
-            <span class="dossier-val mono" id="crm-mdl-bill-payable" style="font-size: 13px; font-weight: 900; color: #0f172a;">-</span>
-          </div>
-          <div class="dossier-field-row">
-            <span class="dossier-label">Payment Mode</span>
-            <span class="dossier-val" id="crm-mdl-bill-paymode">-</span>
-          </div>
-          <div class="dossier-field-row">
-            <span class="dossier-label">Payment Remarks / Reference</span>
-            <span class="dossier-val" id="crm-mdl-bill-remarks" style="color: #64748b;">-</span>
-          </div>
+          <div id="crm-mdl-remarks-text" style="font-size: 12px; color: #334155; font-weight: 600;">-</div>
         </div>
       </div>
 
@@ -1282,100 +1228,61 @@
       corpSection.style.display = 'none';
     }
 
-    // Card 3: Pricing & Billing Breakdown
-    const rate = Number(guest.room_rate || 0);
-    const gross = Number(guest.total_amount || 0);
-    const advance = Number(guest.advance_amount || 0);
-    const settlePaid = Number(guest.settlement_paid || 0);
-    const totalPaid = Number(guest.total_paid || (advance + settlePaid));
-    const balance = Number(guest.balance || 0);
-    const discountAmt = Number(guest.discount_amount || 0);
-    const discountPct = Number(guest.discount_percentage || 0);
-    const payable = Number(guest.payable_amount || 0);
+    // Card 3: Allotted Rooms & Accommodation Details (No payment details)
+    const roomsContainer = document.getElementById('crm-mdl-rooms-container');
+    if (roomsContainer) {
+      roomsContainer.innerHTML = '';
+      const roomsList = (guest.all_rooms && guest.all_rooms.length > 0) ? guest.all_rooms : [{
+        room_number: guest.room_number || (guest.room?.room_number ?? 'Pending'),
+        category: guest.room_category || (guest.room?.category_relation?.name ?? 'Standard'),
+        floor: guest.room_floor || (guest.room?.floor_relation?.floor ?? '1'),
+        bedding: guest.room_bedding || (guest.room?.bedding_config_relation?.name ?? 'Standard'),
+        occupant_name: guest.guest_name || guest.name,
+        occupant_phone: guest.mobile || 'N/A',
+        status: guest.status || 'Confirmed'
+      }];
 
-    document.getElementById('crm-mdl-bill-rate').textContent = formatINR(rate);
-    document.getElementById('crm-mdl-bill-gross').textContent = formatINR(gross);
-    document.getElementById('crm-mdl-bill-advance').textContent = formatINR(advance);
-
-    const advRow = document.getElementById('crm-mdl-bill-advance-row');
-    if (advRow) advRow.textContent = formatINR(advance);
-
-    const settleRow = document.getElementById('crm-mdl-bill-settle-row');
-    if (settleRow) settleRow.textContent = formatINR(settlePaid);
-
-    const totalPaidRow = document.getElementById('crm-mdl-bill-totalpaid-row');
-    if (totalPaidRow) totalPaidRow.textContent = formatINR(totalPaid);
-
-    const balElem = document.getElementById('crm-mdl-bill-balance');
-    balElem.textContent = formatINR(balance);
-    balElem.style.color = balance > 0 ? '#e11d48' : '#059669';
-
-    const balLabel = document.getElementById('crm-mdl-balance-label');
-    if (balLabel) balLabel.textContent = balance > 0 ? 'Balance Due' : 'Fully Settled';
-
-    document.getElementById('crm-mdl-bill-calc-row').textContent = `${formatINR(rate)} × ${guest.total_nights || 1} Night(s) = ${formatINR(rate * (guest.total_nights || 1))}`;
-    
-    let discText = '₹ 0.00';
-    if (discountAmt > 0 || discountPct > 0) {
-      discText = `- ${formatINR(discountAmt)} (${discountPct}%)`;
-    }
-    document.getElementById('crm-mdl-bill-discount').textContent = discText;
-
-    const gstAmt = Number(guest.gst_amount || 0);
-    const gstPct = Number(guest.gst_percentage || 0);
-    const gstType = guest.gst_type || 'exclusive';
-    let gstText = '₹ 0.00 (0%)';
-    if (gstAmt > 0) {
-      gstText = `${gstType === 'inclusive' ? 'Incl. ' : '+ '}${formatINR(gstAmt)} (${gstPct}%)`;
-    }
-    const crmGstElem = document.getElementById('crm-mdl-bill-gst');
-    if (crmGstElem) crmGstElem.textContent = gstText;
-
-    const billMealPlanElem = document.getElementById('crm-mdl-bill-mealplan');
-    if (billMealPlanElem) {
-      billMealPlanElem.textContent = mealPlanVal;
+      roomsList.forEach(rm => {
+        const item = document.createElement('div');
+        item.style.cssText = 'display: flex; justify-content: space-between; align-items: center; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 14px; flex-wrap: wrap; gap: 10px;';
+        item.innerHTML = `
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <div style="min-width: 44px; height: 38px; padding: 0 8px; border-radius: 8px; background: #4f46e5; color: #ffffff; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 13px; font-family: var(--font-mono, monospace);">
+              ${escapeHtml(rm.room_number)}
+            </div>
+            <div>
+              <div style="font-size: 13px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                <span>Floor ${escapeHtml(rm.floor)} • ${escapeHtml(rm.category)}</span>
+                <span style="font-size: 11px; font-weight: 700; color: #6366f1; background: #e0e7ff; padding: 1px 7px; border-radius: 4px;">
+                  <i class="fa-solid fa-bed"></i> ${escapeHtml(rm.bedding)}
+                </span>
+              </div>
+              <div style="font-size: 11px; color: #64748b; margin-top: 3px;">
+                <i class="fa-solid fa-user" style="color: #64748b;"></i> Occupant: <strong style="color: #334155;">${escapeHtml(rm.occupant_name)}</strong>
+                ${rm.occupant_phone && rm.occupant_phone !== 'N/A' ? ` • <span style="font-family: var(--font-mono, monospace);"><i class="fa-solid fa-phone" style="font-size: 9px;"></i> ${escapeHtml(rm.occupant_phone)}</span>` : ''}
+              </div>
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span class="status-badge ${getStatusBadgeColor(rm.status || guest.status)}" style="font-size: 11px;">
+              ${escapeHtml(rm.status || guest.status || 'Confirmed')}
+            </span>
+          </div>
+        `;
+        roomsContainer.appendChild(item);
+      });
     }
 
-    document.getElementById('crm-mdl-bill-payable').textContent = formatINR(payable);
-    document.getElementById('crm-mdl-bill-paymode').textContent = guest.payment_mode || (guest.payment_mode?.name ?? 'Cash / Direct');
-    document.getElementById('crm-mdl-bill-remarks').textContent = guest.payment_remarks || 'None';
-
-    // Configure Action Buttons: Settle vs Check Out vs Locked
-    const btnSettle = document.getElementById('crm-btn-settle');
-    const btnCheckout = document.getElementById('crm-btn-checkout');
-    const badgeLocked = document.getElementById('crm-badge-locked');
-
-    const isCheckedOut = (guest.status || '').toLowerCase() === 'checked out';
-    const isSettled = (guest.status || '').toLowerCase() === 'settlement done' || balance <= 0.01;
-
-    if (isCheckedOut) {
-      if (btnSettle) btnSettle.style.display = 'none';
-      if (btnCheckout) btnCheckout.style.display = 'none';
-      if (badgeLocked) {
-        badgeLocked.style.display = 'inline-flex';
-        badgeLocked.className = 'badge-locked';
-        badgeLocked.innerHTML = '<i class="fa-solid fa-lock" style="color: #64748b;"></i> Stay Finalized &amp; Checked Out (Locked)';
-      }
-    } else if (balance > 0.01) {
-      // Balance still due: Settlement button active, Checkout hidden
-      if (btnSettle) {
-        btnSettle.style.display = 'inline-flex';
-        btnSettle.innerHTML = `<i class="fa-solid fa-calculator"></i> Settle Balance (${formatINR(balance)})`;
-      }
-      if (btnCheckout) btnCheckout.style.display = 'none';
-      if (badgeLocked) badgeLocked.style.display = 'none';
-    } else {
-      // Balance is 0 or cleared: Settlement complete! Status is Settlement Done and locked!
-      if (btnSettle) btnSettle.style.display = 'none';
-      if (btnCheckout) {
-        btnCheckout.style.display = 'inline-flex';
-        btnCheckout.disabled = false;
-        btnCheckout.innerHTML = '<i class="fa-solid fa-right-from-bracket"></i> Check Out';
-      }
-      if (badgeLocked) {
-        badgeLocked.style.display = 'inline-flex';
-        badgeLocked.className = 'badge-locked settled';
-        badgeLocked.innerHTML = '<i class="fa-solid fa-lock"></i> Settlement Done (Locked)';
+    // Remarks box
+    const remarksBox = document.getElementById('crm-mdl-remarks-box');
+    const remarksText = document.getElementById('crm-mdl-remarks-text');
+    const guestRemarks = (guest.remarks || guest.payment_remarks || '').trim();
+    if (remarksBox && remarksText) {
+      if (guestRemarks && guestRemarks.toLowerCase() !== 'none' && guestRemarks.toLowerCase() !== 'n/a') {
+        remarksText.textContent = guestRemarks;
+        remarksBox.style.display = 'block';
+      } else {
+        remarksBox.style.display = 'none';
       }
     }
 
@@ -1838,40 +1745,42 @@
         </div>
 
         <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px; margin-bottom: 24px;">
-          <h2 style="margin: 0 0 10px 0; font-size: 14px; font-weight: 800; color: #334155; text-transform: uppercase;">3. Billing & Financial Summary</h2>
+          <h2 style="margin: 0 0 10px 0; font-size: 14px; font-weight: 800; color: #334155; text-transform: uppercase;">3. Room Allocations &amp; Occupant Details</h2>
           <table style="width: 100%; font-size: 12px; border-collapse: collapse;">
-            <tr style="border-bottom: 1px solid #e2e8f0;">
-              <td style="padding: 6px 0; font-weight: 600; color: #64748b;">Nightly Room Tariff:</td>
-              <td style="padding: 6px 0; text-align: right; font-weight: 700;">${formatINR(g.room_rate)}</td>
-            </tr>
-            <tr style="border-bottom: 1px solid #e2e8f0;">
-              <td style="padding: 6px 0; font-weight: 600; color: #64748b;">Total Gross (${g.total_nights} nights):</td>
-              <td style="padding: 6px 0; text-align: right; font-weight: 700;">${formatINR(g.total_amount)}</td>
-            </tr>
-            <tr style="border-bottom: 1px solid #e2e8f0;">
-              <td style="padding: 6px 0; font-weight: 600; color: #64748b;">Discount:</td>
-              <td style="padding: 6px 0; text-align: right; color: #059669; font-weight: 700;">${Number(g.discount_amount || 0) > 0 ? '-' + formatINR(g.discount_amount) + ' (' + (g.discount_percentage || 0) + '%)' : '₹ 0.00'}</td>
-            </tr>
-            <tr style="border-bottom: 1px solid #e2e8f0;">
-              <td style="padding: 6px 0; font-weight: 600; color: #64748b;">GST / Tax:</td>
-              <td style="padding: 6px 0; text-align: right; color: #6366f1; font-weight: 700;">${Number(g.gst_amount || 0) > 0 ? (g.gst_type === 'inclusive' ? 'Incl. ' : '+ ') + formatINR(g.gst_amount) + ' (' + (g.gst_percentage || 0) + '%)' : '₹ 0.00 (0%)'}</td>
-            </tr>
-            <tr style="border-bottom: 1px solid #e2e8f0;">
-              <td style="padding: 6px 0; font-weight: 800; color: #1e293b;">Net Payable Amount:</td>
-              <td style="padding: 6px 0; text-align: right; font-weight: 800; font-size: 14px;">${formatINR(g.payable_amount)}</td>
-            </tr>
-            <tr style="border-bottom: 1px solid #e2e8f0;">
-              <td style="padding: 6px 0; font-weight: 600; color: #059669;">Advance Deposit Received:</td>
-              <td style="padding: 6px 0; text-align: right; font-weight: 700; color: #059669;">${formatINR(g.advance_amount)}</td>
-            </tr>
-            <tr>
-              <td style="padding: 6px 0; font-weight: 800; color: ${g.balance > 0 ? '#e11d48' : '#059669'};">Outstanding Balance Due:</td>
-              <td style="padding: 6px 0; text-align: right; font-weight: 800; font-size: 14px; color: ${g.balance > 0 ? '#e11d48' : '#059669'};">${formatINR(g.balance)}</td>
-            </tr>
-            <tr>
-              <td style="padding: 4px 0; font-size: 11px; color: #64748b;" colspan="2">Payment Mode: ${escapeHtml(g.payment_mode)} • Remarks: ${escapeHtml(g.payment_remarks)}</td>
-            </tr>
+            <thead>
+              <tr style="border-bottom: 1.5px solid #cbd5e1; text-align: left; color: #64748b; font-size: 11px; text-transform: uppercase;">
+                <th style="padding: 6px 4px;">Room</th>
+                <th style="padding: 6px 4px;">Floor &amp; Category</th>
+                <th style="padding: 6px 4px;">Bedding</th>
+                <th style="padding: 6px 4px;">Assigned Occupant</th>
+                <th style="padding: 6px 4px;">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${(g.all_rooms && g.all_rooms.length > 0 ? g.all_rooms : [{
+                room_number: g.room_number || 'Pending',
+                floor: g.room_floor || '1',
+                category: g.room_category || 'Standard',
+                bedding: g.room_bedding || 'Standard',
+                occupant_name: g.guest_name || 'Primary Guest',
+                occupant_phone: g.mobile || 'N/A',
+                status: g.status || 'Confirmed'
+              }]).map(rm => `
+                <tr style="border-bottom: 1px solid #e2e8f0;">
+                  <td style="padding: 6px 4px; font-weight: 800; color: #4338ca; font-family: monospace;">${escapeHtml(rm.room_number)}</td>
+                  <td style="padding: 6px 4px; font-weight: 700;">Floor ${escapeHtml(rm.floor)} • ${escapeHtml(rm.category)}</td>
+                  <td style="padding: 6px 4px;">${escapeHtml(rm.bedding)}</td>
+                  <td style="padding: 6px 4px;">${escapeHtml(rm.occupant_name)} ${rm.occupant_phone && rm.occupant_phone !== 'N/A' ? `(${escapeHtml(rm.occupant_phone)})` : ''}</td>
+                  <td style="padding: 6px 4px; font-weight: 700; color: #059669;">${escapeHtml(rm.status || g.status || 'Confirmed')}</td>
+                </tr>
+              `).join('')}
+            </tbody>
           </table>
+          ${(g.remarks || g.payment_remarks) && (g.remarks || g.payment_remarks).toLowerCase() !== 'none' ? `
+            <div style="margin-top: 10px; font-size: 11px; color: #64748b;">
+              <strong>Remarks:</strong> ${escapeHtml(g.remarks || g.payment_remarks)}
+            </div>
+          ` : ''}
         </div>
 
         <div style="display: flex; justify-content: space-between; margin-top: 40px; font-size: 12px; color: #64748b;">

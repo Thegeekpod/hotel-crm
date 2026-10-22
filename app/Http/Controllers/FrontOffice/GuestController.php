@@ -149,6 +149,42 @@ class GuestController extends Controller
             $planCode = $planObj?->plan_code ?: '';
             $planPrice = (float)($planObj?->price ?? 0);
 
+            // Fetch all associated bookings for this guest / group to gather all rooms
+            $allBookings = \App\Models\Booking::where(function($q) use ($item, $lb) {
+                if ($lb?->primary_booking_id) {
+                    $q->where('primary_booking_id', $lb->primary_booking_id)->orWhere('id', $lb->primary_booking_id);
+                } elseif ($lb && $lb->additionalBookings()->exists()) {
+                    $q->where('primary_booking_id', $lb->id)->orWhere('id', $lb->id);
+                } else {
+                    $q->where('guest_id', $item->id);
+                }
+            })->with(['room.categoryRelation', 'room.floorRelation', 'room.beddingConfigRelation', 'guest'])->get();
+
+            $allRooms = $allBookings->map(function($b) {
+                $rm = $b->room;
+                return [
+                    'room_number' => $rm?->room_number ? ('R' . preg_replace('/^r[-_\s]?/i', '', trim($rm->room_number))) : 'Unassigned',
+                    'category' => $rm?->categoryRelation?->name ?? ($rm?->category ?? 'Standard'),
+                    'floor' => $rm?->floorRelation?->floor ?? ($rm?->floor ?? '1'),
+                    'bedding' => $rm?->beddingConfigRelation?->name ?? 'Standard',
+                    'occupant_name' => ($b->guest?->title?->name ? $b->guest->title->name . ' ' : '') . ($b->guest?->guest_name ?? 'Primary Guest'),
+                    'occupant_phone' => $b->guest?->mobile ?? 'N/A',
+                    'status' => $b->status ?? 'Confirmed',
+                ];
+            })->values()->all();
+
+            if (empty($allRooms) && $room) {
+                $allRooms[] = [
+                    'room_number' => 'R' . preg_replace('/^r[-_\s]?/i', '', trim($room->room_number)),
+                    'category' => $room->categoryRelation?->name ?? ($room->category ?? 'Standard'),
+                    'floor' => $room->floorRelation?->floor ?? ($room->floor ?? '1'),
+                    'bedding' => $room->beddingConfigRelation?->name ?? 'Standard',
+                    'occupant_name' => ($item->title?->name ? $item->title->name . ' ' : '') . $item->guest_name,
+                    'occupant_phone' => $item->mobile ?? 'N/A',
+                    'status' => $item->status ?: 'Confirmed',
+                ];
+            }
+
             return [
                 'id' => $item->id,
                 'guest_name' => ($item->title?->name ? $item->title->name . ' ' : '') . $item->guest_name,
@@ -200,6 +236,8 @@ class GuestController extends Controller
                 'payable_amount' => (float)$item->payable_amount,
                 'payment_mode' => $lb?->payments?->last()?->paymentMode?->name ?? ($item->paymentMode?->name ?? 'Cash / Direct'),
                 'payment_remarks' => $lb?->remarks ?: ($item->payments?->last()?->payment_remarks ?? 'None'),
+                'remarks' => $lb?->remarks ?: '',
+                'all_rooms' => $allRooms,
             ];
         });
 
@@ -253,6 +291,42 @@ class GuestController extends Controller
         $balVal = (float)($guest->balance ?? 0);
         $planObj = $lb?->plan;
 
+        // Fetch all associated bookings for this guest / group to gather all rooms
+        $allBookings = \App\Models\Booking::where(function($q) use ($guest, $lb) {
+            if ($lb?->primary_booking_id) {
+                $q->where('primary_booking_id', $lb->primary_booking_id)->orWhere('id', $lb->primary_booking_id);
+            } elseif ($lb && $lb->additionalBookings()->exists()) {
+                $q->where('primary_booking_id', $lb->id)->orWhere('id', $lb->id);
+            } else {
+                $q->where('guest_id', $guest->id);
+            }
+        })->with(['room.categoryRelation', 'room.floorRelation', 'room.beddingConfigRelation', 'guest'])->get();
+
+        $allRooms = $allBookings->map(function($b) {
+            $rm = $b->room;
+            return [
+                'room_number' => $rm?->room_number ? ('R' . preg_replace('/^r[-_\s]?/i', '', trim($rm->room_number))) : 'Unassigned',
+                'category' => $rm?->categoryRelation?->name ?? ($rm?->category ?? 'Standard'),
+                'floor' => $rm?->floorRelation?->floor ?? ($rm?->floor ?? '1'),
+                'bedding' => $rm?->beddingConfigRelation?->name ?? 'Standard',
+                'occupant_name' => ($b->guest?->title?->name ? $b->guest->title->name . ' ' : '') . ($b->guest?->guest_name ?? 'Primary Guest'),
+                'occupant_phone' => $b->guest?->mobile ?? 'N/A',
+                'status' => $b->status ?? 'Confirmed',
+            ];
+        })->values()->all();
+
+        if (empty($allRooms) && $room) {
+            $allRooms[] = [
+                'room_number' => 'R' . preg_replace('/^r[-_\s]?/i', '', trim($room->room_number)),
+                'category' => $room->categoryRelation?->name ?? ($room->category ?? 'Standard'),
+                'floor' => $room->floorRelation?->floor ?? ($room->floor ?? '1'),
+                'bedding' => $room->beddingConfigRelation?->name ?? 'Standard',
+                'occupant_name' => ($guest->title?->name ? $guest->title->name . ' ' : '') . $guest->guest_name,
+                'occupant_phone' => $guest->mobile ?? 'N/A',
+                'status' => $guest->status ?: 'Confirmed',
+            ];
+        }
+
         $serialized = [
             'id' => $guest->id,
             'guest_name' => ($guest->title?->name ? $guest->title->name . ' ' : '') . $guest->guest_name,
@@ -304,6 +378,8 @@ class GuestController extends Controller
             'payable_amount' => (float)$guest->payable_amount,
             'payment_mode' => $lb?->payments?->last()?->paymentMode?->name ?? ($guest->paymentMode?->name ?? 'Cash / Direct'),
             'payment_remarks' => $lb?->remarks ?: ($guest->payments?->last()?->payment_remarks ?? 'None'),
+            'remarks' => $lb?->remarks ?: '',
+            'all_rooms' => $allRooms,
         ];
 
         return response()->json([

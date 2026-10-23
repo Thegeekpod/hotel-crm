@@ -325,39 +325,68 @@
     gap: 12px;
   }
 
-  .billing-summary-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 10px;
-    margin-top: 10px;
-  }
-
-  @media (max-width: 640px) {
-    .billing-summary-grid {
-      grid-template-columns: repeat(2, 1fr);
-    }
-  }
-
-  .bill-stat-item {
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    padding: 8px 10px;
-    text-align: center;
-  }
-
-  .bill-stat-label {
+  .badge-extra-guests {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
     font-size: 10px;
-    font-weight: 700;
-    color: #64748b;
-    text-transform: uppercase;
+    font-weight: 800;
+    padding: 2px 7px;
+    border-radius: 9999px;
+    background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+    color: #3730a3;
+    border: 1px solid #a5b4fc;
+    margin-left: 6px;
+    vertical-align: middle;
   }
 
-  .bill-stat-value {
-    font-size: 14px;
-    font-weight: 900;
+  .room-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: #eef2ff;
+    color: #4338ca;
+    border: 1px solid #c7d2fe;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-weight: 800;
     font-family: var(--font-mono, monospace);
-    margin-top: 2px;
+    font-size: 11px;
+  }
+
+  /* Room card inside dossier */
+  .room-alloc-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-bottom: 10px;
+  }
+
+  .room-alloc-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #f1f5f9;
+    padding-bottom: 8px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  /* Occupant row */
+  .occupant-badge-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 10px;
+    background: #f8fafc;
+    border-radius: 6px;
+    margin-bottom: 4px;
+    font-size: 11px;
+    flex-wrap: wrap;
+    gap: 6px;
+    border: 1px solid #f1f5f9;
   }
 
   /* Media Print Rules */
@@ -387,30 +416,74 @@
     $currentStatus = ($hasSettled && $g->status !== 'Checked Out') ? 'Settlement Done' : ($g->status ?: 'Confirmed');
     $isLocked = $hasSettled || in_array($currentStatus, ['Settlement Done', 'Checked Out']);
 
+    // Assemble all associated bookings for this reservation dossier
+    $allBookings = collect([$g])->concat($g->additionalBookings ?? collect());
+
+    // Group rooms and their registered occupants room-wise
+    $roomsMap = [];
+    foreach ($allBookings as $b) {
+        $r = $b->room;
+        $rKey = $r ? $r->id : ('unassigned_' . $b->id);
+
+        if (!isset($roomsMap[$rKey])) {
+            $rawRoom = $r?->room_number ?? null;
+            $cleanRoomNum = $rawRoom ? preg_replace('/^r[-_\s]?/i', '', trim($rawRoom)) : null;
+            $roomsMap[$rKey] = [
+                'room_id' => $r?->id,
+                'room_number' => $cleanRoomNum ? ('R' . $cleanRoomNum) : 'Unassigned',
+                'raw_number' => $rawRoom ?: 'Unassigned',
+                'floor' => (string)($r?->floorRelation?->floor ?? ($r?->floor ?? '1')),
+                'category' => strtoupper($r?->categoryRelation?->name ?? ($r?->category ?? 'DELUXE')),
+                'bedding' => $r?->beddingConfigRelation?->name ?? 'Standard',
+                'rate' => (float)($r?->rate ?? $b->room_rate),
+                'occupants' => [],
+            ];
+        }
+
+        $occGuest = $b->guest;
+        $gName = ($occGuest?->title?->name ? $occGuest->title->name . ' ' : '') . ($occGuest?->guest_name ?? 'Guest');
+        $roomsMap[$rKey]['occupants'][] = [
+            'booking_id' => $b->id,
+            'guest_id' => $occGuest?->id,
+            'is_primary' => ($b->id === $g->id),
+            'name' => $gName,
+            'mobile' => $occGuest?->mobile ?: 'N/A',
+            'email' => $occGuest?->email ?: 'N/A',
+            'city' => $occGuest?->city ?: 'N/A',
+            'id_card_type' => $occGuest?->idCardType?->name ?? 'ID Proof',
+            'id_card_number' => $occGuest?->id_card_number ?: 'N/A',
+            'status' => $b->status ?: 'Confirmed',
+        ];
+    }
+
+    $roomsList = array_values($roomsMap);
+    $totalGuestsCount = $allBookings->count();
+    $extraGuestsCount = max(0, $totalGuestsCount - 1);
+
     return [
       'id' => $g->id,
       'guest_id' => $g->guest_id,
       'reserve_id' => $g->reserve_id ?: ('RES-' . $g->id),
       'folio_number' => $g->folio_number ?: ('FOL-' . ($g->room?->room_number ?? '100') . '-' . $g->id),
-      'guest_name' => ($g->title?->name ? $g->title->name . ' ' : '') . $g->guest_name,
-      'raw_name' => $g->guest_name,
-      'title' => $g->title?->name ?? '',
-      'mobile' => $g->mobile ?: 'N/A',
-      'email' => $g->email ?: 'N/A',
-      'city' => $g->city ?: 'N/A',
-      'guest_address' => $g->guest_address ?: 'N/A',
-      'nationality' => $g->nationality?->name ?? 'Indian',
-      'id_card_type' => $g->idCardType?->name ?? 'N/A',
-      'id_card_number' => $g->id_card_number ?: 'N/A',
+      'guest_name' => ($g->guest?->title?->name ? $g->guest->title->name . ' ' : '') . ($g->guest?->guest_name ?? 'Guest'),
+      'raw_name' => $g->guest?->guest_name ?? '',
+      'title' => $g->guest?->title?->name ?? '',
+      'mobile' => $g->guest?->mobile ?: 'N/A',
+      'email' => $g->guest?->email ?: 'N/A',
+      'city' => $g->guest?->city ?: 'N/A',
+      'guest_address' => $g->guest?->guest_address ?: 'N/A',
+      'nationality' => $g->guest?->nationality?->name ?? 'Indian',
+      'id_card_type' => $g->guest?->idCardType?->name ?? 'N/A',
+      'id_card_number' => $g->guest?->id_card_number ?: 'N/A',
       'registration_type' => $g->registrationType?->name ?? 'Regular',
       'reservation_mode' => $g->reservationMode?->name ?? 'Front Desk',
-      'has_privilege_card' => (bool)$g->has_privilege_card,
-      'privilege_card_no' => $g->privilege_card_no ?: 'N/A',
-      'room_number' => (string)($g->room?->room_number ?? 'Pending'),
-      'room_category' => strtoupper($g->room?->categoryRelation?->name ?? ($g->room?->category ?? 'DELUXE')),
-      'room_floor' => (string)($g->room?->floorRelation?->floor ?? ($g->room?->floor ?? '1')),
-      'room_bedding' => $g->room?->beddingConfigRelation?->name ?? 'Standard',
-      'room_rate' => (float)($g->room_rate ?: ($g->room?->rate ?: 0)),
+      'has_privilege_card' => (bool)$g->guest?->has_privilege_card,
+      'privilege_card_no' => $g->guest?->privilege_card_no ?: 'N/A',
+      'plan_name' => $g->plan?->plan_name ?: 'Room Only (EP)',
+      'plan_code' => $g->plan?->plan_code ?: '',
+      'total_guests_count' => $totalGuestsCount,
+      'extra_guests_count' => $extraGuestsCount,
+      'rooms' => $roomsList,
       'reserve_date' => $g->reserve_date ? $g->reserve_date->format('d M Y') : date('d M Y'),
       'reserve_time' => $g->reserve_time ? date('h:i A', strtotime($g->reserve_time)) : '12:00 PM',
       'checkout_date' => $g->checkout_date ? $g->checkout_date->format('d M Y') : date('d M Y', strtotime('+1 day')),
@@ -613,11 +686,11 @@
     <div class="modal-top" style="background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%); color: #ffffff; padding: 14px 22px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.15);">
       <div style="display: flex; align-items: center; gap: 12px;">
         <div style="width: 38px; height: 38px; border-radius: 10px; background: rgba(255,255,255,0.18); display: flex; align-items: center; justify-content: center; font-size: 16px; color: #ffffff;">
-          <i class="fa-solid fa-id-card-clip"></i>
+          <i class="fa-solid fa-plane-arrival"></i>
         </div>
         <div>
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <h3 id="mdl-guest-name" style="margin: 0; font-size: 16px; font-weight: 800; color: #ffffff;">Guest Details</h3>
+          <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <h3 id="mdl-guest-name" style="margin: 0; font-size: 16px; font-weight: 800; color: #ffffff;">Guest Profile &amp; Arrival Dossier</h3>
             <span id="mdl-status-badge" class="status-badge" style="background: #ffffff; color: #4338ca; font-weight: 800;">Confirmed</span>
           </div>
           <div style="font-size: 11px; opacity: 0.85; margin-top: 2px; font-family: var(--font-mono, monospace);">
@@ -629,7 +702,7 @@
     </div>
 
     <!-- Modal Body Area -->
-    <div class="modal-content-area" style="padding: 20px 24px; background: #f8fafc; overflow-y: auto; max-height: calc(92vh - 130px);">
+    <div class="modal-content-area" id="arrival-modal-body" style="padding: 20px 24px; background: #f8fafc; overflow-y: auto; max-height: calc(92vh - 130px);">
       
       <!-- Top Highlight Banner -->
       <div class="dossier-highlight-box">
@@ -638,22 +711,25 @@
             <i class="fa-solid fa-door-open"></i>
           </div>
           <div>
-            <div style="font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Allotted Room & Category</div>
-            <div style="font-size: 16px; font-weight: 900; color: #0f172a; margin-top: 1px;">
-              Room <span id="mdl-room-number">-</span> • <span id="mdl-room-category">-</span>
+            <div style="font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Allotted Room(s) &amp; Category</div>
+            <div style="font-size: 15px; font-weight: 900; color: #0f172a; margin-top: 1px;" id="mdl-highlight-rooms">
+              -
             </div>
           </div>
         </div>
 
-        <div style="display: flex; gap: 8px; align-items: center;">
+        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
           <span style="font-size: 11px; font-weight: 800; background: #ffffff; border: 1px solid #cbd5e1; padding: 4px 10px; border-radius: 6px; color: #475569;">
-            <i class="fa-solid fa-stairs" style="color: #6366f1;"></i> Floor <span id="mdl-room-floor">-</span>
+            <i class="fa-solid fa-users" style="color: #6366f1;"></i> <span id="mdl-total-guests">1 Person</span>
           </span>
-          <span style="font-size: 11px; font-weight: 800; background: #ffffff; border: 1px solid #cbd5e1; padding: 4px 10px; border-radius: 6px; color: #475569;">
-            <i class="fa-solid fa-bed" style="color: #6366f1;"></i> <span id="mdl-room-bedding">-</span>
+          <span style="font-size: 11px; font-weight: 800; background: #fff7ed; border: 1px solid #fed7aa; padding: 4px 10px; border-radius: 6px; color: #c2410c;">
+            <i class="fa-solid fa-utensils" style="color: #ea580c;"></i> <span id="mdl-plan-name">Room Only (EP)</span>
           </span>
           <span style="font-size: 11px; font-weight: 800; background: #e0e7ff; border: 1px solid #c7d2fe; padding: 4px 10px; border-radius: 6px; color: #4338ca;">
             <i class="fa-solid fa-moon"></i> <span id="mdl-total-nights">1</span> Night(s) Stay
+          </span>
+          <span style="font-size: 11px; font-weight: 800; background: #f0fdf4; border: 1px solid #bbf7d0; padding: 4px 10px; border-radius: 6px; color: #15803d;">
+            <i class="fa-solid fa-headset" style="color: #16a34a;"></i> <span id="mdl-reservation-mode">Front Desk</span>
           </span>
         </div>
       </div>
@@ -661,15 +737,20 @@
       <!-- 2-Column Uniform Dossier Grid -->
       <div class="dossier-grid">
         
-        <!-- CARD 1: Guest Profile Information -->
+        <!-- CARD 1: Primary Guest Profile Information -->
         <div class="dossier-card">
           <div class="dossier-card-title">
-            <i class="fa-solid fa-user-check"></i> Guest Profile Details
+            <i class="fa-solid fa-user-check"></i> Primary Guest Profile Details
           </div>
 
           <div class="dossier-field-row">
             <span class="dossier-label">Full Name</span>
             <span class="dossier-val" id="mdl-card-name">-</span>
+          </div>
+
+          <div class="dossier-field-row">
+            <span class="dossier-label">Registration Type</span>
+            <span class="dossier-val" id="mdl-card-regtype" style="color: #4338ca; font-weight: 800;">-</span>
           </div>
 
           <div class="dossier-field-row">
@@ -702,11 +783,6 @@
             <span class="dossier-val" id="mdl-card-idproof">-</span>
           </div>
 
-          <div class="dossier-field-row">
-            <span class="dossier-label">Guest / Reg Type</span>
-            <span class="dossier-val" id="mdl-card-regtype">-</span>
-          </div>
-
           <div class="dossier-field-row" id="mdl-card-privilege-row" style="display: none;">
             <span class="dossier-label">Privilege / VIP Card</span>
             <span class="dossier-val mono" id="mdl-card-privilege" style="color: #b45309;">-</span>
@@ -716,7 +792,7 @@
         <!-- CARD 2: Stay Schedule & Corporate Account -->
         <div class="dossier-card">
           <div class="dossier-card-title">
-            <i class="fa-solid fa-calendar-days"></i> Stay & Corporate Details
+            <i class="fa-solid fa-calendar-days"></i> Stay &amp; Corporate Details
           </div>
 
           <div class="dossier-field-row">
@@ -737,6 +813,11 @@
           <div class="dossier-field-row">
             <span class="dossier-label">Reservation Mode</span>
             <span class="dossier-val" id="mdl-card-resmode">-</span>
+          </div>
+
+          <div class="dossier-field-row">
+            <span class="dossier-label">Meal Plan</span>
+            <span class="dossier-val" id="mdl-card-mealplan" style="color: #c2410c; font-weight: 800;">-</span>
           </div>
 
           <!-- Corporate Account Block -->
@@ -761,60 +842,13 @@
 
       </div>
 
-      <!-- CARD 3: Pricing & Financial Breakdown -->
+      <!-- CARD 3: Allocated Rooms & Registered Occupants (Room-Wise) -->
       <div class="dossier-card" style="margin-bottom: 0;">
         <div class="dossier-card-title">
-          <i class="fa-solid fa-file-invoice-dollar"></i> Pricing & Billing Breakdown
+          <i class="fa-solid fa-bed"></i> Allocated Rooms &amp; Registered Occupants (Room-Wise)
         </div>
-
-        <!-- 4-Stat Metric Boxes -->
-        <div class="billing-summary-grid">
-          <div class="bill-stat-item">
-            <div class="bill-stat-label">Daily Room Rate</div>
-            <div class="bill-stat-value" id="mdl-bill-rate" style="color: #334155;">₹ 0.00</div>
-          </div>
-
-          <div class="bill-stat-item">
-            <div class="bill-stat-label">Gross Amount</div>
-            <div class="bill-stat-value" id="mdl-bill-gross" style="color: #1e293b;">₹ 0.00</div>
-          </div>
-
-          <div class="bill-stat-item">
-            <div class="bill-stat-label">Advance Paid</div>
-            <div class="bill-stat-value" id="mdl-bill-advance" style="color: #059669;">₹ 0.00</div>
-          </div>
-
-          <div class="bill-stat-item" id="mdl-balance-box">
-            <div class="bill-stat-label" id="mdl-balance-label">Balance Due</div>
-            <div class="bill-stat-value" id="mdl-bill-balance" style="color: #e11d48;">₹ 0.00</div>
-          </div>
-        </div>
-
-        <div style="margin-top: 14px; background: #ffffff; border: 1px solid #f1f5f9; border-radius: 8px; padding: 10px 14px;">
-          <div class="dossier-field-row">
-            <span class="dossier-label">Room Rate × Nights</span>
-            <span class="dossier-val mono" id="mdl-bill-calc-row">-</span>
-          </div>
-          <div class="dossier-field-row">
-            <span class="dossier-label">Discount</span>
-            <span class="dossier-val mono" id="mdl-bill-discount" style="color: #059669;">-</span>
-          </div>
-          <div class="dossier-field-row">
-            <span class="dossier-label">GST / Tax</span>
-            <span class="dossier-val mono" id="mdl-bill-gst" style="color: #6366f1;">-</span>
-          </div>
-          <div class="dossier-field-row">
-            <span class="dossier-label">Net Payable Amount</span>
-            <span class="dossier-val mono" id="mdl-bill-payable" style="font-size: 13px; font-weight: 900; color: #0f172a;">-</span>
-          </div>
-          <div class="dossier-field-row">
-            <span class="dossier-label">Payment Mode</span>
-            <span class="dossier-val" id="mdl-bill-paymode">-</span>
-          </div>
-          <div class="dossier-field-row">
-            <span class="dossier-label">Payment Remarks / Reference</span>
-            <span class="dossier-val" id="mdl-bill-remarks" style="color: #64748b;">-</span>
-          </div>
+        <div id="mdl-rooms-container">
+          <!-- Populated dynamically room-wise -->
         </div>
       </div>
 
@@ -904,7 +938,8 @@
 
       // Search keyword filter
       if (!query) return true;
-      const searchBlob = `${item.guest_name} ${item.mobile} ${item.email} ${item.room_number} ${item.reserve_id} ${item.folio_number} ${item.room_category} ${item.status}`.toLowerCase();
+      const roomsStr = (item.rooms || []).map(r => `${r.room_number} ${r.category} ${(r.occupants || []).map(o => o.name).join(' ')}`).join(' ');
+      const searchBlob = `${item.guest_name} ${item.mobile} ${item.email} ${item.city} ${item.reserve_id} ${item.folio_number} ${item.plan_name} ${roomsStr} ${item.status}`.toLowerCase();
       return searchBlob.includes(query);
     });
   }
@@ -933,7 +968,7 @@
         <tr>
           <td colspan="10" style="text-align: center; color: var(--text-muted); padding: 36px 20px;">
             <div style="font-size: 28px; color: #cbd5e1; margin-bottom: 8px;"><i class="fa-solid fa-users-slash"></i></div>
-            <div style="font-size: 13px; font-weight: 700; color: #64748b;">No matching guests found.</div>
+            <div style="font-size: 13px; font-weight: 700; color: #64748b;">No matching arrivals found.</div>
             <div style="font-size: 11px; color: #94a3b8; margin-top: 4px;">Try modifying your search or status filter.</div>
           </td>
         </tr>
@@ -958,7 +993,8 @@
 
           <!-- Booking Ref & Folio -->
           <td>
-            <div style="font-family: var(--font-mono, monospace); font-weight: 800; color: #4f46e5; font-size: 12px;">
+            <div style="font-family: var(--font-mono, monospace); font-weight: 800; color: #4f46e5; font-size: 12px; cursor: pointer;" onclick="openGuestDetailsModalById(${item.id})" title="Click to view Arrival Dossier">
+              <i class="fa-solid fa-receipt" style="color: #6366f1; margin-right: 4px; font-size: 11px;"></i>
               ${escapeHtml(item.reserve_id)}
             </div>
             <div style="font-size: 10px; color: #64748b; font-family: var(--font-mono, monospace); margin-top: 2px;">
@@ -966,30 +1002,50 @@
             </div>
           </td>
 
-          <!-- Guest Details -->
+          <!-- Guest Details with +N persons -->
           <td>
-            <div style="font-weight: 800; color: #0f172a; font-size: 13px;">
-              ${escapeHtml(item.guest_name)}
+            <div style="font-weight: 800; color: #0f172a; font-size: 13px; display: inline-flex; align-items: center; flex-wrap: wrap;">
+              <span>${escapeHtml(item.guest_name)}</span>
+              ${item.extra_guests_count > 0 ? `
+                <span class="badge-extra-guests" title="${item.extra_guests_count} additional person(s) registered under this reservation">
+                  <i class="fa-solid fa-user-plus" style="font-size: 9px;"></i>
+                  +${item.extra_guests_count} ${item.extra_guests_count === 1 ? 'person' : 'persons'}
+                </span>
+              ` : ''}
             </div>
             <div style="font-size: 11px; color: #64748b; display: flex; align-items: center; gap: 8px; margin-top: 2px;">
               ${item.mobile && item.mobile !== 'N/A' ? `<span><i class="fa-solid fa-phone" style="font-size: 9px; color: #10b981;"></i> ${escapeHtml(item.mobile)}</span>` : ''}
               ${item.registration_type ? `<span style="font-size: 9px; padding: 1px 6px; border-radius: 4px; background: #e2e8f0; color: #475569; font-weight: 700;">${escapeHtml(item.registration_type)}</span>` : ''}
+              ${item.city && item.city !== 'N/A' ? `<span style="color: #94a3b8;"><i class="fa-solid fa-location-dot" style="font-size: 9px;"></i> ${escapeHtml(item.city)}</span>` : ''}
             </div>
           </td>
 
-          <!-- Room & Category -->
+          <!-- Room(s) & Category (Room-wise) -->
           <td>
-            <div style="display: flex; align-items: center; gap: 6px;">
-              <span style="background: #eef2ff; color: #4338ca; border: 1px solid #c7d2fe; padding: 2px 8px; border-radius: 6px; font-weight: 800; font-family: var(--font-mono, monospace); font-size: 11px;">
-                Room ${escapeHtml(item.room_number)}
+            ${item.rooms && item.rooms.length > 0 ? `
+              <div style="display: flex; flex-direction: column; gap: 4px;">
+                ${item.rooms.map(r => `
+                  <div style="display: inline-flex; align-items: center; gap: 6px;">
+                    <span class="room-tag">
+                      <i class="fa-solid fa-door-open" style="font-size: 10px;"></i>
+                      ${escapeHtml(r.room_number)}
+                    </span>
+                    <span style="font-size: 10px; color: #64748b; font-weight: 700;">
+                      Floor ${escapeHtml(r.floor)}
+                    </span>
+                    <span style="color: #cbd5e1;">•</span>
+                    <span style="font-size: 10px; color: #94a3b8;">${escapeHtml(r.category)}</span>
+                  </div>
+                `).join('')}
+              </div>
+            ` : `
+              <span style="font-size: 11px; color: #94a3b8; font-style: italic;">
+                <i class="fa-solid fa-hourglass-half" style="font-size: 10px;"></i> Pending
               </span>
-            </div>
-            <div style="font-size: 10px; font-weight: 700; color: #64748b; margin-top: 3px; text-transform: uppercase;">
-              ${escapeHtml(item.room_category)} • Fl. ${escapeHtml(item.room_floor)}
-            </div>
+            `}
           </td>
 
-          <!-- Stay Dates -->
+          <!-- Stay Dates & Plan -->
           <td>
             <div style="font-size: 11px; font-weight: 700; color: #1e293b;">
               ${escapeHtml(item.reserve_date)}
@@ -1029,14 +1085,14 @@
           <td style="text-align: center;">
             <div class="action-flex-wrap">
               ${(item.is_locked || ['settlement done', 'checked out'].includes((item.status || '').toLowerCase())) ? `
-                <span class="badge-locked ${item.status === 'Settlement Done' ? 'settled' : ''}" title="Guest status is locked.">
+                <span class="badge-locked ${item.status === 'Settlement Done' ? 'settled' : ''}" title="Reservation status is locked.">
                   <i class="fa-solid fa-lock" style="font-size: 10px;"></i> ${escapeHtml(item.status)}
                 </span>
               ` : `
                 <select class="status-quick-select" 
                         id="status-select-${item.id}" 
                         onchange="updateGuestStatus(${item.id}, this.value, this)" 
-                        title="Change Guest Status">
+                        title="Change Reservation Status">
                   <option value="Confirmed" ${item.status === 'Confirmed' ? 'selected' : ''}>Confirmed (Active)</option>
                   <option value="Arrived" ${item.status === 'Arrived' ? 'selected' : ''}>Arrived</option>
                   <option value="Checked In" ${item.status === 'Checked In' ? 'selected' : ''}>Checked In</option>
@@ -1049,7 +1105,7 @@
               <button type="button" 
                       class="btn-action-view" 
                       onclick="openGuestDetailsModalById(${item.id})" 
-                      title="View Complete Guest & Billing Dossier">
+                      title="View Complete Arrival Dossier (Rooms, Occupants, Meal Plan, Schedule)">
                 <i class="fa-solid fa-eye"></i>
               </button>
             </div>
@@ -1231,7 +1287,7 @@
           alert(data.message);
         }
 
-        // Must reload page on status change as required
+        // Reload page on status change to keep room states synced
         setTimeout(() => {
           window.location.reload();
         }, 600);
@@ -1280,7 +1336,73 @@
     updateGuestStatus(guestId, newStatus, rowSelect);
   }
 
-  // Open Uniform Guest Details Modal
+  // Render Room-wise Allocated Rooms and Occupants in Modal
+  function renderRoomsOccupants(rooms) {
+    const container = document.getElementById('mdl-rooms-container');
+    if (!container) return;
+    if (!rooms || rooms.length === 0) {
+      container.innerHTML = '<div style="color: #94a3b8; font-size: 11px; font-style: italic; padding: 10px;">No specific room allocated.</div>';
+      return;
+    }
+
+    let html = '';
+    rooms.forEach(r => {
+      html += `
+        <div class="room-alloc-card">
+          <div class="room-alloc-header">
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+              <span class="room-tag">
+                <i class="fa-solid fa-door-open"></i> ${escapeHtml(r.room_number)}
+              </span>
+              <span style="font-size: 12px; font-weight: 800; color: #0f172a;">Floor ${escapeHtml(r.floor)}</span>
+              <span style="color: #cbd5e1;">•</span>
+              <span style="font-size: 11px; color: #64748b; font-weight: 600;">${escapeHtml(r.category)}</span>
+              <span style="color: #cbd5e1;">•</span>
+              <span style="font-size: 11px; color: #64748b;">${escapeHtml(r.bedding)}</span>
+            </div>
+            <span style="font-size: 10px; font-weight: 800; background: #e0e7ff; color: #4338ca; padding: 2px 8px; border-radius: 4px;">
+              ${(r.occupants || []).length} Occupant(s)
+            </span>
+          </div>
+          <div>
+            <div style="font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.3px;">
+              Registered Occupants in this Room:
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+      `;
+
+      if (r.occupants && r.occupants.length > 0) {
+        r.occupants.forEach(occ => {
+          html += `
+            <div class="occupant-badge-row">
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <i class="fa-solid ${occ.is_primary ? 'fa-star' : 'fa-user'}" style="color: ${occ.is_primary ? '#f59e0b' : '#94a3b8'};"></i>
+                <strong style="color: #1e293b;">${escapeHtml(occ.name)}</strong>
+                ${occ.is_primary ? '<span style="background: #fef3c7; color: #b45309; font-size: 9px; font-weight: 800; padding: 1px 5px; border-radius: 4px;">Primary</span>' : ''}
+              </div>
+              <div style="display: flex; align-items: center; gap: 12px; color: #64748b; font-family: var(--font-mono, monospace); font-size: 11px;">
+                <span><i class="fa-solid fa-phone" style="font-size: 9px; color: #10b981;"></i> ${escapeHtml(occ.mobile)}</span>
+                <span>•</span>
+                <span>${escapeHtml(occ.id_card_type)}: ${escapeHtml(occ.id_card_number)}</span>
+              </div>
+            </div>
+          `;
+        });
+      } else {
+        html += '<div style="font-size: 11px; color: #94a3b8; padding: 4px;">No occupants assigned yet.</div>';
+      }
+
+      html += `
+            </div>
+          </div>
+        </div>
+      `;
+    });
+
+    container.innerHTML = html;
+  }
+
+  // Open Uniform Guest Details Modal (Without Payments Details, With Room-Wise Occupants & Meal Plan)
   function openGuestDetailsModal(g) {
     if (!g) return;
     currentActiveGuest = g;
@@ -1295,13 +1417,31 @@
     statusBadge.className = `status-badge ${getStatusBadgeColor(g.status)}`;
 
     // Top Highlight Info
-    document.getElementById('mdl-room-number').textContent = g.room_number || 'Pending';
-    document.getElementById('mdl-room-category').textContent = g.room_category || 'Standard';
-    document.getElementById('mdl-room-floor').textContent = g.room_floor || '1';
-    document.getElementById('mdl-room-bedding').textContent = g.room_bedding || 'Standard';
-    document.getElementById('mdl-total-nights').textContent = g.total_nights || 1;
+    const hlRooms = (g.rooms || []).map(r => `${r.room_number} (Floor ${r.floor} • ${r.category})`).join(' • ');
+    document.getElementById('mdl-highlight-rooms').textContent = hlRooms || 'Unassigned';
 
-    // Profile Card
+    const elTotalGuests = document.getElementById('mdl-total-guests');
+    if (elTotalGuests) {
+      const roomCnt = (g.rooms || []).length;
+      elTotalGuests.textContent = `${g.total_guests_count || 1} Person(s) (${roomCnt} Room(s))`;
+    }
+
+    const elPlan = document.getElementById('mdl-plan-name');
+    if (elPlan) {
+      elPlan.textContent = g.plan_name || 'Room Only (EP)';
+    }
+
+    const elNights = document.getElementById('mdl-total-nights');
+    if (elNights) {
+      elNights.textContent = `${g.total_nights || 1} Night(s) Stay`;
+    }
+
+    const elResMode = document.getElementById('mdl-reservation-mode');
+    if (elResMode) {
+      elResMode.textContent = g.reservation_mode || 'Front Desk';
+    }
+
+    // Profile Card (Primary Guest)
     document.getElementById('mdl-card-name').textContent = g.guest_name || '-';
     document.getElementById('mdl-card-phone').textContent = g.mobile || 'N/A';
     document.getElementById('mdl-card-email').textContent = g.email || 'N/A';
@@ -1324,6 +1464,7 @@
     document.getElementById('mdl-card-checkout').textContent = `${g.checkout_date || 'N/A'} (${g.checkout_time || ''})`;
     document.getElementById('mdl-card-duration').textContent = `${g.total_nights || 1} Night(s) Stay`;
     document.getElementById('mdl-card-resmode').textContent = g.reservation_mode || 'Front Desk';
+    document.getElementById('mdl-card-mealplan').textContent = g.plan_name || 'Room Only (EP)';
 
     // Corporate Card
     const corpSection = document.getElementById('mdl-corporate-card-section');
@@ -1339,41 +1480,8 @@
       corpSection.style.display = 'none';
     }
 
-    // Billing Breakdown Card
-    const formatINR = val => '₹ ' + Number(val || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    document.getElementById('mdl-bill-rate').textContent = formatINR(g.room_rate);
-    document.getElementById('mdl-bill-gross').textContent = formatINR(g.total_amount);
-    document.getElementById('mdl-bill-advance').textContent = formatINR(g.advance_amount);
-    
-    const balanceElem = document.getElementById('mdl-bill-balance');
-    const balanceLabel = document.getElementById('mdl-balance-label');
-    balanceElem.textContent = formatINR(g.balance);
-    if (Number(g.balance || 0) > 0) {
-      balanceElem.style.color = '#e11d48';
-      balanceLabel.textContent = 'Balance Due';
-    } else {
-      balanceElem.style.color = '#059669';
-      balanceLabel.textContent = 'Settled (Nil)';
-    }
-
-    document.getElementById('mdl-bill-calc-row').textContent = `${formatINR(g.room_rate)} × ${g.total_nights || 1} Night(s) = ${formatINR(g.total_amount)}`;
-    
-    let discountStr = '₹ 0.00';
-    if (Number(g.discount_amount || 0) > 0) {
-      discountStr = `- ${formatINR(g.discount_amount)} (${g.discount_percentage || 0}%)`;
-    }
-    document.getElementById('mdl-bill-discount').textContent = discountStr;
-
-    let gstStr = '₹ 0.00 (0%)';
-    if (Number(g.gst_amount || 0) > 0) {
-      gstStr = `${g.gst_type === 'inclusive' ? 'Incl. ' : '+ '}${formatINR(g.gst_amount)} (${g.gst_percentage || 0}%)`;
-    }
-    const gstElem = document.getElementById('mdl-bill-gst');
-    if (gstElem) gstElem.textContent = gstStr;
-
-    document.getElementById('mdl-bill-payable').textContent = formatINR(g.payable_amount);
-    document.getElementById('mdl-bill-paymode').textContent = g.payment_mode || 'Cash / Direct';
-    document.getElementById('mdl-bill-remarks').textContent = g.payment_remarks || 'None';
+    // Render Allocated Rooms and Registered Occupants Room-Wise
+    renderRoomsOccupants(g.rooms || []);
 
     // Configure quick status changer vs locked badge in modal footer
     const isLocked = g.is_locked || ['settlement done', 'checked out'].includes((g.status || '').toLowerCase());
@@ -1399,11 +1507,17 @@
         modalSelect.style.display = 'inline-block';
         modalSelect.value = g.status || 'Confirmed';
         modalSelect.disabled = false;
-        modalSelect.title = 'Change Guest Status';
+        modalSelect.title = 'Change Reservation Status';
       }
       if (lockedIndicator) {
         lockedIndicator.style.display = 'none';
       }
+    }
+
+    // Reset scroll position to top
+    const modalBody = document.getElementById('arrival-modal-body');
+    if (modalBody) {
+      modalBody.scrollTop = 0;
     }
 
     // Show modal
@@ -1428,19 +1542,49 @@
     renderTable();
   });
 
-  // Print Guest Dossier via dedicated print-area
+  // Print Guest Dossier (Room-Wise without payment details)
   function printGuestDossier() {
     if (!currentActiveGuest) return;
     const g = currentActiveGuest;
-    const formatINR = val => '₹ ' + Number(val || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     const printArea = document.getElementById('print-area');
     if (!printArea) return;
+
+    let roomsHtml = '';
+    (g.rooms || []).forEach(r => {
+      roomsHtml += `
+        <div style="margin-bottom: 12px; border: 1px solid #cbd5e1; border-radius: 6px; padding: 10px;">
+          <div style="font-weight: 800; font-size: 13px; color: #1e293b; margin-bottom: 6px;">
+            Room ${r.room_number} (Floor ${r.floor} • ${r.category} • ${r.bedding})
+          </div>
+          <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
+            <thead>
+              <tr style="background: #f1f5f9; text-align: left;">
+                <th style="padding: 4px 6px;">Occupant Name</th>
+                <th style="padding: 4px 6px;">Phone</th>
+                <th style="padding: 4px 6px;">ID Proof</th>
+                <th style="padding: 4px 6px;">Type</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${(r.occupants || []).map(occ => `
+                <tr style="border-bottom: 1px solid #f1f5f9;">
+                  <td style="padding: 4px 6px; font-weight: 700;">${occ.name}</td>
+                  <td style="padding: 4px 6px;">${occ.mobile}</td>
+                  <td style="padding: 4px 6px;">${occ.id_card_type} - ${occ.id_card_number}</td>
+                  <td style="padding: 4px 6px;">${occ.is_primary ? 'Primary Guest' : 'Co-occupant'}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+    });
 
     printArea.innerHTML = `
       <div style="padding: 30px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #1e293b; background: #ffffff;">
         <div style="text-align: center; border-bottom: 2px solid #334155; padding-bottom: 12px; margin-bottom: 20px;">
           <div style="font-size: 22px; font-weight: 800; color: #4338ca;">HOTEL SAGAR SONNET</div>
-          <div style="font-size: 12px; color: #64748b; margin-top: 4px;">Front Desk Property Management System • Guest Dossier</div>
+          <div style="font-size: 12px; color: #64748b; margin-top: 4px;">Front Desk Property Management System • Arrival &amp; Stay Dossier</div>
         </div>
         <div style="display: flex; justify-content: space-between; margin-bottom: 16px; background: #f8fafc; padding: 10px 14px; border: 1px solid #cbd5e1; font-size: 12px; font-weight: 700; border-radius: 6px;">
           <span>Reserve ID: ${g.reserve_id}</span>
@@ -1448,7 +1592,7 @@
           <span>Status: ${g.status}</span>
         </div>
         <div style="margin-bottom: 16px; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px;">
-          <div style="font-size: 12px; font-weight: 800; text-transform: uppercase; margin-bottom: 8px; color: #4338ca; border-bottom: 1px solid #f1f5f9; padding-bottom: 4px;">Guest Profile</div>
+          <div style="font-size: 12px; font-weight: 800; text-transform: uppercase; margin-bottom: 8px; color: #4338ca; border-bottom: 1px solid #f1f5f9; padding-bottom: 4px;">Primary Guest Profile</div>
           <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
             <tr><td style="width: 35%; color: #64748b; font-weight: 600; padding: 4px 6px;">Guest Name:</td><td style="font-weight: 700; color: #0f172a; padding: 4px 6px;">${g.guest_name}</td></tr>
             <tr><td style="color: #64748b; font-weight: 600; padding: 4px 6px;">Phone / Mobile:</td><td style="font-weight: 700; color: #0f172a; padding: 4px 6px;">${g.mobile}</td></tr>
@@ -1459,27 +1603,19 @@
           </table>
         </div>
         <div style="margin-bottom: 16px; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px;">
-          <div style="font-size: 12px; font-weight: 800; text-transform: uppercase; margin-bottom: 8px; color: #4338ca; border-bottom: 1px solid #f1f5f9; padding-bottom: 4px;">Room & Stay Information</div>
+          <div style="font-size: 12px; font-weight: 800; text-transform: uppercase; margin-bottom: 8px; color: #4338ca; border-bottom: 1px solid #f1f5f9; padding-bottom: 4px;">Stay &amp; Meal Plan Information</div>
           <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
-            <tr><td style="width: 35%; color: #64748b; font-weight: 600; padding: 4px 6px;">Allotted Room:</td><td style="font-weight: 700; color: #0f172a; padding: 4px 6px;">Room ${g.room_number} (${g.room_category}) - Floor ${g.room_floor}</td></tr>
-            <tr><td style="color: #64748b; font-weight: 600; padding: 4px 6px;">Check-In:</td><td style="font-weight: 700; color: #0f172a; padding: 4px 6px;">${g.reserve_date} ${g.reserve_time}</td></tr>
+            <tr><td style="width: 35%; color: #64748b; font-weight: 600; padding: 4px 6px;">Check-In:</td><td style="font-weight: 700; color: #0f172a; padding: 4px 6px;">${g.reserve_date} ${g.reserve_time}</td></tr>
             <tr><td style="color: #64748b; font-weight: 600; padding: 4px 6px;">Check-Out:</td><td style="font-weight: 700; color: #0f172a; padding: 4px 6px;">${g.checkout_date} ${g.checkout_time}</td></tr>
             <tr><td style="color: #64748b; font-weight: 600; padding: 4px 6px;">Duration:</td><td style="font-weight: 700; color: #0f172a; padding: 4px 6px;">${g.total_nights} Night(s)</td></tr>
+            <tr><td style="color: #64748b; font-weight: 600; padding: 4px 6px;">Meal Plan:</td><td style="font-weight: 700; color: #c2410c; padding: 4px 6px;">${g.plan_name}</td></tr>
+            <tr><td style="color: #64748b; font-weight: 600; padding: 4px 6px;">Reservation Mode:</td><td style="font-weight: 700; color: #0f172a; padding: 4px 6px;">${g.reservation_mode}</td></tr>
             ${g.company ? `<tr><td style="color: #64748b; font-weight: 600; padding: 4px 6px;">Company:</td><td style="font-weight: 700; color: #0f172a; padding: 4px 6px;">${g.company.name} (GSTIN: ${g.company.gstin})</td></tr>` : ''}
           </table>
         </div>
         <div style="margin-bottom: 16px; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px;">
-          <div style="font-size: 12px; font-weight: 800; text-transform: uppercase; margin-bottom: 8px; color: #4338ca; border-bottom: 1px solid #f1f5f9; padding-bottom: 4px;">Billing & Pricing Breakdown</div>
-          <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
-            <tr><td style="width: 35%; color: #64748b; font-weight: 600; padding: 4px 6px;">Room Rate:</td><td style="font-weight: 700; color: #0f172a; padding: 4px 6px;">${formatINR(g.room_rate)} / night</td></tr>
-            <tr><td style="color: #64748b; font-weight: 600; padding: 4px 6px;">Gross Total:</td><td style="font-weight: 700; color: #0f172a; padding: 4px 6px;">${formatINR(g.total_amount)}</td></tr>
-            <tr><td style="color: #64748b; font-weight: 600; padding: 4px 6px;">Discount:</td><td style="font-weight: 700; color: #059669; padding: 4px 6px;">${Number(g.discount_amount || 0) > 0 ? '-' + formatINR(g.discount_amount) + ' (' + (g.discount_percentage || 0) + '%)' : '₹ 0.00'}</td></tr>
-            <tr><td style="color: #64748b; font-weight: 600; padding: 4px 6px;">GST / Tax:</td><td style="font-weight: 700; color: #6366f1; padding: 4px 6px;">${Number(g.gst_amount || 0) > 0 ? (g.gst_type === 'inclusive' ? 'Incl. ' : '+ ') + formatINR(g.gst_amount) + ' (' + (g.gst_percentage || 0) + '%)' : '₹ 0.00 (0%)'}</td></tr>
-            <tr><td style="color: #64748b; font-weight: 600; padding: 4px 6px;">Payable Amount:</td><td style="font-weight: 700; color: #0f172a; padding: 4px 6px;">${formatINR(g.payable_amount)}</td></tr>
-            <tr><td style="color: #64748b; font-weight: 600; padding: 4px 6px;">Advance Paid:</td><td style="font-weight: 700; color: #0f172a; padding: 4px 6px;">${formatINR(g.advance_amount)}</td></tr>
-            <tr><td style="color: #64748b; font-weight: 600; padding: 4px 6px;">Balance Remaining:</td><td style="font-weight: 700; color: #e11d48; padding: 4px 6px;">${formatINR(g.balance)}</td></tr>
-            <tr><td style="color: #64748b; font-weight: 600; padding: 4px 6px;">Payment Mode:</td><td style="font-weight: 700; color: #0f172a; padding: 4px 6px;">${g.payment_mode}</td></tr>
-          </table>
+          <div style="font-size: 12px; font-weight: 800; text-transform: uppercase; margin-bottom: 8px; color: #4338ca; border-bottom: 1px solid #f1f5f9; padding-bottom: 4px;">Allocated Room(s) &amp; Registered Occupants</div>
+          ${roomsHtml}
         </div>
         <div style="display: flex; justify-content: space-between; margin-top: 40px; font-size: 11px; font-weight: 700;">
           <div>Guest Signature: __________________</div>

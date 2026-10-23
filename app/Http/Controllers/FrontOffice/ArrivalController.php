@@ -35,7 +35,7 @@ class ArrivalController extends Controller
         $today = now()->toDateString();
         $selectedDate = $request->query('date');
 
-        // Fetch bookings whose check-in date matches chosen date or strictly future dates
+        // Fetch primary bookings (folio dossiers) whose check-in date matches chosen date or strictly future dates
         $query = Booking::with([
             'guest.title',
             'guest.nationality',
@@ -49,7 +49,15 @@ class ArrivalController extends Controller
             'plan',
             'registrationType',
             'reservationMode',
-        ]);
+            'additionalBookings.guest.title',
+            'additionalBookings.guest.nationality',
+            'additionalBookings.guest.idCardType',
+            'additionalBookings.room.categoryRelation',
+            'additionalBookings.room.floorRelation',
+            'additionalBookings.room.beddingConfigRelation',
+            'additionalBookings.plan',
+        ])
+        ->whereNull('primary_booking_id');
 
         if ($request->filled('date')) {
             if ($selectedDate < $today) {
@@ -57,10 +65,10 @@ class ArrivalController extends Controller
                     ->with('warning', 'Past dates cannot be selected for arrivals.');
             }
             $query->whereDate('reserve_date', $selectedDate);
-            $baseQuery = Booking::whereDate('reserve_date', $selectedDate);
+            $baseQuery = Booking::whereNull('primary_booking_id')->whereDate('reserve_date', $selectedDate);
         } else {
             $query->whereDate('reserve_date', '>', $today);
-            $baseQuery = Booking::whereDate('reserve_date', '>', $today);
+            $baseQuery = Booking::whereNull('primary_booking_id')->whereDate('reserve_date', '>', $today);
         }
 
         $query->latest('id');
@@ -71,16 +79,31 @@ class ArrivalController extends Controller
 
         if ($request->filled('search')) {
             $s = trim($request->search);
-            $query->where(function ($q) use ($s) {
+            $cleanRoom = ltrim(ltrim($s, 'Rr'), '-');
+            $query->where(function ($q) use ($s, $cleanRoom) {
                 $q->where('reserve_id', 'like', "%{$s}%")
                   ->orWhere('folio_number', 'like', "%{$s}%")
                   ->orWhereHas('guest', function ($gq) use ($s) {
                       $gq->where('guest_name', 'like', "%{$s}%")
                          ->orWhere('mobile', 'like', "%{$s}%")
-                         ->orWhere('email', 'like', "%{$s}%");
+                         ->orWhere('email', 'like', "%{$s}%")
+                         ->orWhere('city', 'like', "%{$s}%");
                   })
-                  ->orWhereHas('room', function ($rq) use ($s) {
-                      $rq->where('room_number', 'like', "%{$s}%");
+                  ->orWhereHas('room', function ($rq) use ($s, $cleanRoom) {
+                      $rq->where('room_number', 'like', "%{$s}%")
+                         ->orWhere('room_number', 'like', "%{$cleanRoom}%");
+                  })
+                  ->orWhereHas('additionalBookings.guest', function ($agq) use ($s) {
+                      $agq->where('guest_name', 'like', "%{$s}%")
+                          ->orWhere('mobile', 'like', "%{$s}%");
+                  })
+                  ->orWhereHas('additionalBookings.room', function ($ar) use ($s, $cleanRoom) {
+                      $ar->where('room_number', 'like', "%{$s}%")
+                         ->orWhere('room_number', 'like', "%{$cleanRoom}%");
+                  })
+                  ->orWhereHas('company', function ($cq) use ($s) {
+                      $cq->where('name', 'like', "%{$s}%")
+                         ->orWhere('gstin', 'like', "%{$s}%");
                   });
             });
         }
@@ -164,6 +187,13 @@ class ArrivalController extends Controller
         $booking->status = $newStatus;
         $booking->save();
 
+        // Synchronize status to all secondary bookings under the same reservation
+        if ($booking->reserve_id) {
+            Booking::where('reserve_id', $booking->reserve_id)
+                ->where('id', '!=', $booking->id)
+                ->update(['status' => $newStatus]);
+        }
+
         if (in_array($newStatus, ['Arrived', 'Checked In']) && $booking->room) {
             $activeOp = OperationalStatus::where('name', 'like', '%Active%')->first();
             if ($activeOp) {
@@ -244,12 +274,16 @@ class ArrivalController extends Controller
             'room.floorRelation',
             'room.beddingConfigRelation',
             'company',
-            'payments.paymentMode',
             'plan',
             'registrationType',
             'reservationMode',
-            'primaryBooking.guest',
-            'additionalBookings.guest',
+            'additionalBookings.guest.title',
+            'additionalBookings.guest.nationality',
+            'additionalBookings.guest.idCardType',
+            'additionalBookings.room.categoryRelation',
+            'additionalBookings.room.floorRelation',
+            'additionalBookings.room.beddingConfigRelation',
+            'additionalBookings.plan',
         ])->findOrFail($id);
 
         return response()->json([

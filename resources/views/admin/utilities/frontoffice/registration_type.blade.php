@@ -30,7 +30,7 @@
   .admin-nav-header {
     font-size: 11px;
     font-weight: 800;
-    color: var(--text-muted);
+    /* color: var(--text-muted); */
     text-transform: uppercase;
     letter-spacing: 0.8px;
     padding: 9px 12px;

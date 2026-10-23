@@ -26,7 +26,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
     })->name('index');
 
     Route::get('/dashboard', function () {
-        return redirect()->route('admin.utilities.roommanage.category.index');
+        return redirect()->route('admin.utilities.frontoffice.registration-type.index');
     })->name('dashboard');
 
     Route::get('/login', function () {

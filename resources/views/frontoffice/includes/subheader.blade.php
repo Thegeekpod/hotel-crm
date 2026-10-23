@@ -16,7 +16,7 @@
       </a>
       <a href="{{ route('frontoffice.folio') }}" class="ribbon-btn {{ request()->routeIs('frontoffice.folio*') ? 'active-btn' : '' }}">
         <span class="ico-box"><i class="fa-solid fa-file-invoice-dollar" style="color: #6366f1;"></i></span>
-        <span class="lbl-box">Folio</span>
+        <span class="lbl-box">Sattlements</span>
       </a>
       <a href="{{ route('frontoffice.nightaudit') }}" class="ribbon-btn {{ request()->routeIs('frontoffice.nightaudit*') || request()->routeIs('frontoffice.night-audit*') ? 'active-btn' : '' }}">
         <span class="ico-box"><i class="fa-solid fa-moon" style="color: #8b5cf6;"></i></span>

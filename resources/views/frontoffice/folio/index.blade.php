@@ -1,6 +1,6 @@
 @extends('frontoffice.layouts.app')
 
-@section('title', 'Folio Management & Master Ledger - Hotel Sagar Sonnet CRM / PMS')
+@section('title', 'Settlement Management & Master Ledger - Hotel Sagar Sonnet CRM / PMS')
 
 @push('styles')
 <style>
@@ -577,7 +577,7 @@
         <div>
           <h2 style="margin: 0; font-size: 18px; font-weight: 800; color: #1e293b; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
             <i class="fa-solid fa-file-invoice-dollar" style="color: #6366f1;"></i> 
-            Folio Management &amp; Master Ledger
+            Settlement Management &amp; Master Ledger
             <span style="font-size: 11px; font-weight: 700; background: #e0e7ff; color: #4338ca; border: 1px solid #c7d2fe; padding: 2px 10px; border-radius: 20px;">
               {{ $folios->total() }} Records
             </span>
@@ -597,11 +597,11 @@
           </h2>
           <div style="font-size: 12px; color: #64748b; margin-top: 2px;">
             @if(!empty($fromDate) && !empty($toDate) && $fromDate === $toDate)
-              Showing folio records with check-in on <strong>{{ \Carbon\Carbon::parse($fromDate)->format('D, d F Y') }}</strong> ({{ $fromDate === $today ? 'Today' : 'Selected Date' }}).
+              Showing settlement records with check-in on <strong>{{ \Carbon\Carbon::parse($fromDate)->format('D, d F Y') }}</strong> ({{ $fromDate === $today ? 'Today' : 'Selected Date' }}).
             @elseif(!empty($fromDate) || !empty($toDate))
-              Showing folio records with check-in between <strong>{{ !empty($fromDate) ? \Carbon\Carbon::parse($fromDate)->format('d M Y') : 'Start' }}</strong> and <strong>{{ !empty($toDate) ? \Carbon\Carbon::parse($toDate)->format('d M Y') : 'End' }}</strong>.
+              Showing settlement records with check-in between <strong>{{ !empty($fromDate) ? \Carbon\Carbon::parse($fromDate)->format('d M Y') : 'Start' }}</strong> and <strong>{{ !empty($toDate) ? \Carbon\Carbon::parse($toDate)->format('d M Y') : 'End' }}</strong>.
             @else
-              Booking numbers grouped folio directory with rooms, occupants, financial settlements &amp; check-out control.
+              Booking numbers grouped settlement directory with rooms, occupants, financial settlements &amp; check-out control.
             @endif
           </div>
         </div>
@@ -631,7 +631,7 @@
                    name="search" 
                    id="folio-search-input"
                    value="{{ request('search') }}" 
-                   placeholder="Search by Booking #, Folio #, Guest, Phone, Room..." 
+                   placeholder="Search by Booking #, Settlement #, Guest, Phone, Room..." 
                    onkeydown="if(event.key==='Enter'){this.form.submit();}"
                    autocomplete="off">
             @if(request()->filled('search'))
@@ -734,7 +734,7 @@
       </div>
     </form>
 
-    <!-- Main Folio Master Table with SL Indexing -->
+    <!-- Main Settlement Master Table with SL Indexing -->
     <div class="pms-page-content">
       <div class="pms-table-box" style="border-radius: 14px; box-shadow: 0 4px 20px -5px rgba(0,0,0,0.06); background: #ffffff; overflow-x: auto;">
         <table class="pms-table" id="folio-master-table">
@@ -800,12 +800,12 @@
 
                 <!-- 1. Booking Number (Clickable to view dossier) -->
                 <td style="white-space: nowrap;">
-                  <div class="folio-id-text" style="cursor: pointer;" onclick="openFolioModalById({{ $item->id }})" data-booking-id="{{ $item->id }}" title="Click to open Folio Dossier">
+                  <div class="folio-id-text" style="cursor: pointer;" onclick="openFolioModalById({{ $item->id }})" data-booking-id="{{ $item->id }}" title="Click to open Settlement Dossier">
                     <i class="fa-solid fa-receipt" style="color: #6366f1; margin-right: 4px; font-size: 11px; pointer-events: none;"></i>
                     {{ $item->reserve_id ?: ('RES-' . $item->id) }}
                   </div>
-                  <div class="folio-number-sub" style="cursor: pointer;" onclick="openFolioModalById({{ $item->id }})" data-booking-id="{{ $item->id }}" title="Click to open Folio Dossier">
-                    Folio: {{ $item->folio_number ?: '-' }}
+                  <div class="folio-number-sub" style="cursor: pointer;" onclick="openFolioModalById({{ $item->id }})" data-booking-id="{{ $item->id }}" title="Click to open Settlement Dossier">
+                    Settlement: {{ $item->folio_number ?: '-' }}
                   </div>
                 </td>
 
@@ -948,7 +948,7 @@
                           class="btn-action-view" 
                           data-booking-id="{{ $item->id }}"
                           onclick="openFolioModalById({{ $item->id }})" 
-                          title="View Full Folio Dossier (Rooms, Occupants, Billings, Settle &amp; Checkout)">
+                          title="View Full Settlement Dossier (Rooms, Occupants, Billings, Settle &amp; Checkout)">
                     <i class="fa-solid fa-eye" style="pointer-events: none;"></i>
                   </button>
                 </td>
@@ -958,7 +958,7 @@
               <tr>
                 <td colspan="11" style="text-align: center; color: var(--text-muted); padding: 40px 20px;">
                   <div style="font-size: 32px; color: #cbd5e1; margin-bottom: 8px;"><i class="fa-solid fa-receipt"></i></div>
-                  <div style="font-size: 14px; font-weight: 700; color: #64748b;">No matching folios found for this filter.</div>
+                  <div style="font-size: 14px; font-weight: 700; color: #64748b;">No matching settlements found for this filter.</div>
                   <div style="font-size: 11px; color: #94a3b8; margin-top: 4px;">
                     Showing check-ins for {{ $fromDate ? \Carbon\Carbon::parse($fromDate)->format('d M Y') : 'selected dates' }}. 
                     @if(!empty($fromDate) || !empty($toDate))
@@ -1012,7 +1012,7 @@
 <!-- Bottom Summary Bar (like guest CRM) -->
 <footer class="pms-bottom-bar">
   <div style="font-size: 11px; font-weight: 700; color: var(--text-secondary); display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
-    <span><i class="fa-solid fa-receipt" style="color: #6366f1;"></i> Total Folios: <strong>{{ $stats['total_folios'] ?? 0 }}</strong></span>
+    <span><i class="fa-solid fa-receipt" style="color: #6366f1;"></i> Total Settlements: <strong>{{ $stats['total_folios'] ?? 0 }}</strong></span>
     <span>•</span>
     <span><i class="fa-solid fa-file-invoice" style="color: #0891b2;"></i> Total Receivable: <strong>₹ {{ number_format($stats['total_receivable'] ?? 0, 2) }}</strong></span>
     <span>•</span>
@@ -1025,7 +1025,7 @@
 </footer>
 
 <!-- ========================================================================= -->
-<!-- EXTENSIVE FOLIO DOSSIER MODAL (Design matching guest CRM)                 -->
+<!-- EXTENSIVE SETTLEMENT DOSSIER MODAL (Design matching guest CRM)             -->
 <!-- ========================================================================= -->
 <div class="modal-backdrop" id="folio-details-modal">
   <div class="modal-window large" style="width: 900px; max-width: 95vw; max-height: 92vh; display: flex; flex-direction: column; border-radius: 16px; overflow: hidden; box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.3); border: none; box-sizing: border-box;">
@@ -1038,11 +1038,11 @@
         </div>
         <div>
           <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-            <h3 id="fmdl-guest-name" style="margin: 0; font-size: 16px; font-weight: 800; color: #ffffff;">Guest Profile &amp; Folio Dossier</h3>
+            <h3 id="fmdl-guest-name" style="margin: 0; font-size: 16px; font-weight: 800; color: #ffffff;">Guest Profile &amp; Settlement Dossier</h3>
             <span id="fmdl-status-badge" class="status-badge" style="background: #ffffff; color: #4338ca; font-weight: 800;">Confirmed</span>
           </div>
           <div style="font-size: 11px; opacity: 0.85; margin-top: 2px; font-family: var(--font-mono, monospace);">
-            Booking Ref: <span id="fmdl-reserve-id" style="font-weight: 700;">-</span> &nbsp;|&nbsp; Folio: <span id="fmdl-folio-number" style="font-weight: 700;">-</span>
+            Booking Ref: <span id="fmdl-reserve-id" style="font-weight: 700;">-</span> &nbsp;|&nbsp; Settlement: <span id="fmdl-folio-number" style="font-weight: 700;">-</span>
           </div>
         </div>
       </div>
@@ -1283,7 +1283,7 @@
         <div id="fmdl-settlement-interactive-panel" class="settlement-panel" style="display: none;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
             <div style="font-size: 12px; font-weight: 800; color: #065f46; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px;">
-              <i class="fa-solid fa-calculator"></i> Process Folio Settlement
+              <i class="fa-solid fa-calculator"></i> Process Settlement
             </div>
             <button type="button" onclick="setFullFolioSettlementAmount()" style="background: none; border: none; color: #047857; font-weight: 800; cursor: pointer; text-decoration: underline; font-size: 11px; padding: 0;">
               Pay Full Due (<span id="fmdl-btn-payfull-val">₹ 0.00</span>)
@@ -1449,18 +1449,18 @@
         } else {
           Swal.fire({
             icon: 'error',
-            title: 'Folio Notice',
-            text: 'Could not fetch folio details.',
+            title: 'Settlement Notice',
+            text: 'Could not fetch settlement details.',
             confirmButtonColor: '#4f46e5'
           });
         }
       })
       .catch(err => {
-        console.error('Error fetching folio details:', err);
+        console.error('Error fetching settlement details:', err);
         Swal.fire({
           icon: 'error',
           title: 'System Error',
-          text: 'Failed to load folio details. Please try again.',
+          text: 'Failed to load settlement details. Please try again.',
           confirmButtonColor: '#4f46e5'
         });
       });
@@ -1918,7 +1918,7 @@
           'Accept': 'application/json',
         },
         body: JSON.stringify({
-          remarks: 'Checked out from Folio Manager Counter'
+          remarks: 'Checked out from Settlement Manager Counter'
         })
       })
       .then(res => res.json())
@@ -2031,8 +2031,8 @@
               <div style="font-size: 12px; color: #64748b; margin-top: 4px;">Luxury Stays &amp; Hospitality Services • Live PMS Dossier</div>
             </div>
             <div style="text-align: right;">
-              <div style="font-size: 18px; font-weight: bold; color: #4f46e5;">TAX INVOICE / FOLIO</div>
-              <div style="font-size: 12px; font-family: monospace; color: #334155; margin-top: 4px;">Folio #: ${escapeHtml(f.folio_number)}</div>
+              <div style="font-size: 18px; font-weight: bold; color: #4f46e5;">TAX INVOICE / SETTLEMENT</div>
+              <div style="font-size: 12px; font-family: monospace; color: #334155; margin-top: 4px;">Settlement #: ${escapeHtml(f.folio_number)}</div>
               <div style="font-size: 12px; font-family: monospace; color: #64748b;">Booking #: ${escapeHtml(f.reserve_id)}</div>
             </div>
           </div>

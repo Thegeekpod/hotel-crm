@@ -606,14 +606,7 @@
           </div>
         </div>
 
-        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-          <a href="{{ route('frontoffice.dashboard') }}" class="btn-ui-secondary" style="border: 1px solid #cbd5e1; background: #ffffff; color: #334155; text-decoration: none; padding: 7px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
-            <i class="fa-solid fa-table-cells"></i> Room Rack
-          </a>
-          <a href="{{ route('frontoffice.guest') }}" class="btn-ui-secondary" style="border: 1px solid #cbd5e1; background: #ffffff; color: #334155; text-decoration: none; padding: 7px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
-            <i class="fa-solid fa-address-card"></i> Guest CRM
-          </a>
-        </div>
+        
       </div>
     </div>
 
@@ -741,10 +734,10 @@
           <thead>
             <tr>
               <th style="width: 45px; text-align: center; white-space: nowrap;">SL</th>
+              <th style="min-width: 160px; white-space: nowrap;">Room(s) &amp; Floor</th>
               <th style="min-width: 140px; text-align: left; white-space: nowrap;">Booking Number</th>
               <th style="min-width: 180px; white-space: nowrap;">Primary Guest Details</th>
               <th style="min-width: 130px; white-space: nowrap;">Mobile / Phone</th>
-              <th style="min-width: 160px; white-space: nowrap;">Room(s) &amp; Floor</th>
               <th style="min-width: 120px; text-align: right; white-space: nowrap;">Paid Amount</th>
               <th style="min-width: 130px; text-align: right; white-space: nowrap;">Remaining Amount</th>
               <th style="min-width: 135px; white-space: nowrap;">Check-in</th>
@@ -798,50 +791,7 @@
                   {{ $sl }}
                 </td>
 
-                <!-- 1. Booking Number (Clickable to view dossier) -->
-                <td style="white-space: nowrap;">
-                  <div class="folio-id-text" style="cursor: pointer;" onclick="openFolioModalById({{ $item->id }})" data-booking-id="{{ $item->id }}" title="Click to open Settlement Dossier">
-                    <i class="fa-solid fa-receipt" style="color: #6366f1; margin-right: 4px; font-size: 11px; pointer-events: none;"></i>
-                    {{ $item->reserve_id ?: ('RES-' . $item->id) }}
-                  </div>
-                  <div class="folio-number-sub" style="cursor: pointer;" onclick="openFolioModalById({{ $item->id }})" data-booking-id="{{ $item->id }}" title="Click to open Settlement Dossier">
-                    Settlement: {{ $item->folio_number ?: '-' }}
-                  </div>
-                </td>
-
-                <!-- 2. Primary Guest Details with Dynamic +N persons -->
-                <td style="white-space: nowrap;">
-                  <div style="font-weight: 800; color: #0f172a; font-size: 13px; display: inline-flex; align-items: center;">
-                    <span>{{ $primaryGuestName }}</span>
-                    @if($extraCount > 0)
-                      <span class="badge-extra-guests" title="{{ $extraCount }} additional person(s) registered under this booking">
-                        <i class="fa-solid fa-user-plus" style="font-size: 9px;"></i>
-                        +{{ $extraCount }} {{ $extraCount === 1 ? 'person' : 'persons' }}
-                      </span>
-                    @endif
-                  </div>
-                  <div style="font-size: 10px; color: #64748b; margin-top: 2px; display: flex; align-items: center; gap: 6px;">
-                    @if($item->registrationType?->name)
-                      <span style="background: #f1f5f9; padding: 1px 6px; border-radius: 4px; font-weight: 700; color: #475569;">
-                        {{ $item->registrationType->name }}
-                      </span>
-                    @endif
-                    @if($item->guest?->city)
-                      <span style="color: #cbd5e1;">•</span>
-                      <span style="color: #94a3b8;"><i class="fa-solid fa-location-dot" style="font-size: 9px;"></i> {{ $item->guest->city }}</span>
-                    @endif
-                  </div>
-                </td>
-
-                <!-- 3. Primary Mobile / Phone -->
-                <td style="white-space: nowrap;">
-                  <div style="font-family: var(--font-mono, monospace); font-weight: 700; font-size: 12px; color: #1e293b; display: inline-flex; align-items: center; gap: 6px;">
-                    <i class="fa-solid fa-phone" style="font-size: 10px; color: #10b981;"></i>
-                    <span>{{ $item->guest?->mobile ?: 'N/A' }}</span>
-                  </div>
-                </td>
-
-                <!-- 4. All Room Details with Floor -->
+                <!-- 1. Room(s) & Floor (First) -->
                 <td style="white-space: nowrap;">
                   @if($uniqueRooms->isNotEmpty())
                     <div style="display: flex; flex-direction: column; gap: 4px;">
@@ -870,6 +820,49 @@
                       <i class="fa-solid fa-hourglass-half" style="font-size: 10px;"></i> Unassigned
                     </span>
                   @endif
+                </td>
+
+                <!-- 2. Booking Number (Then Booking Number) -->
+                <td style="white-space: nowrap;">
+                  <div class="folio-id-text" style="cursor: pointer;" onclick="openFolioModalById({{ $item->id }})" data-booking-id="{{ $item->id }}" title="Click to open Settlement Dossier">
+                    <i class="fa-solid fa-receipt" style="color: #6366f1; margin-right: 4px; font-size: 11px; pointer-events: none;"></i>
+                    {{ $item->reserve_id ?: ('RES-' . $item->id) }}
+                  </div>
+                  <div class="folio-number-sub" style="cursor: pointer;" onclick="openFolioModalById({{ $item->id }})" data-booking-id="{{ $item->id }}" title="Click to open Settlement Dossier">
+                    Settlement: {{ $item->folio_number ?: '-' }}
+                  </div>
+                </td>
+
+                <!-- 3. Primary Guest Details with Dynamic +N persons -->
+                <td style="white-space: nowrap;">
+                  <div style="font-weight: 800; color: #0f172a; font-size: 13px; display: inline-flex; align-items: center;">
+                    <span>{{ $primaryGuestName }}</span>
+                    @if($extraCount > 0)
+                      <span class="badge-extra-guests" title="{{ $extraCount }} additional person(s) registered under this booking">
+                        <i class="fa-solid fa-user-plus" style="font-size: 9px;"></i>
+                        +{{ $extraCount }} {{ $extraCount === 1 ? 'person' : 'persons' }}
+                      </span>
+                    @endif
+                  </div>
+                  <div style="font-size: 10px; color: #64748b; margin-top: 2px; display: flex; align-items: center; gap: 6px;">
+                    @if($item->registrationType?->name)
+                      <span style="background: #f1f5f9; padding: 1px 6px; border-radius: 4px; font-weight: 700; color: #475569;">
+                        {{ $item->registrationType->name }}
+                      </span>
+                    @endif
+                    @if($item->guest?->city)
+                      <span style="color: #cbd5e1;">•</span>
+                      <span style="color: #94a3b8;"><i class="fa-solid fa-location-dot" style="font-size: 9px;"></i> {{ $item->guest->city }}</span>
+                    @endif
+                  </div>
+                </td>
+
+                <!-- 4. Primary Mobile / Phone -->
+                <td style="white-space: nowrap;">
+                  <div style="font-family: var(--font-mono, monospace); font-weight: 700; font-size: 12px; color: #1e293b; display: inline-flex; align-items: center; gap: 6px;">
+                    <i class="fa-solid fa-phone" style="font-size: 10px; color: #10b981;"></i>
+                    <span>{{ $item->guest?->mobile ?: 'N/A' }}</span>
+                  </div>
                 </td>
 
                 <!-- 5. Paid Amount -->

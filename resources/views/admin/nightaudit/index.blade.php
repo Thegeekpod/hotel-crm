@@ -518,6 +518,71 @@
     font-family: var(--font-mono, monospace);
   }
 
+  /* Dossier Tabs & Tables */
+  .dossier-nav-tabs {
+    display: flex;
+    gap: 4px;
+    border-bottom: 2px solid #e2e8f0;
+    padding: 0 16px;
+    background: #ffffff;
+    overflow-x: auto;
+  }
+  .dossier-tab-btn {
+    padding: 10px 14px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #64748b;
+    border: none;
+    background: transparent;
+    border-bottom: 3px solid transparent;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+  }
+  .dossier-tab-btn:hover {
+    color: #4f46e5;
+  }
+  .dossier-tab-btn.active {
+    color: #4f46e5;
+    font-weight: 800;
+    border-bottom-color: #4f46e5;
+  }
+  .dossier-tab-pane {
+    display: none;
+  }
+  .dossier-tab-pane.active {
+    display: block;
+  }
+  .dossier-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11.5px;
+  }
+  .dossier-table th {
+    background: #f8fafc;
+    color: #475569;
+    font-weight: 800;
+    text-transform: uppercase;
+    font-size: 10.5px;
+    letter-spacing: 0.3px;
+    padding: 9px 12px;
+    border-bottom: 1px solid #e2e8f0;
+    text-align: left;
+    white-space: nowrap;
+  }
+  .dossier-table td {
+    padding: 8px 12px;
+    border-bottom: 1px solid #f1f5f9;
+    color: #1e293b;
+    vertical-align: middle;
+  }
+  .dossier-table tbody tr:hover {
+    background: #f8fafc;
+  }
+
   /* Print Styles */
   @media print {
     body * { visibility: hidden !important; }
@@ -711,7 +776,7 @@
               <th style="text-align: right;">Room Revenue (₹)</th>
               <th style="text-align: right;">Total Revenue (₹)</th>
               <th style="text-align: center;">Status</th>
-              <th style="text-align: center; width: 120px;">Actions</th>
+              <th style="text-align: center; width: 70px;">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -787,22 +852,11 @@
                   </span>
                 </td>
 
-                <!-- Actions -->
+                <!-- Actions (View Only) -->
                 <td style="text-align: center;">
-                  <div style="display: inline-flex; align-items: center; gap: 6px;">
-                    <!-- View Dossier Modal Trigger -->
-                    <button type="button" class="btn-action-view" onclick="viewAuditDossier({{ $a->id }})" title="View Complete Audit Dossier">
-                      <i class="fa-solid fa-eye"></i>
-                    </button>
-                    <!-- Quick Print -->
-                    <button type="button" class="btn-action-print" onclick="printAuditById({{ $a->id }})" title="Print Audit Summary Sheet">
-                      <i class="fa-solid fa-print"></i>
-                    </button>
-                    <!-- Open Front Office Date View -->
-                    <a href="{{ route('frontoffice.nightaudit', ['date' => $a->audit_date->format('Y-m-d')]) }}" class="btn-action-external" title="Open in Front Desk Live View" target="_blank">
-                      <i class="fa-solid fa-arrow-up-right-from-square"></i>
-                    </a>
-                  </div>
+                  <button type="button" class="btn-action-view" onclick="viewAuditDossier({{ $a->id }})" title="View Details">
+                    <i class="fa-solid fa-eye"></i>
+                  </button>
                 </td>
               </tr>
             @empty
@@ -846,43 +900,36 @@
 
 <!-- AUDIT DOSSIER MODAL -->
 <div class="modal-backdrop" id="audit-dossier-modal" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(5px); z-index: 99999; align-items: center; justify-content: center;">
-  <div style="background: #ffffff; width: 800px; max-width: 95vw; max-height: 90vh; border-radius: 16px; overflow: hidden; box-shadow: 0 25px 60px rgba(0, 0, 0, 0.25); border: 1px solid #e2e8f0; display: flex; flex-direction: column;">
+  <div style="background: #ffffff; width: 1050px; max-width: 96vw; max-height: 92vh; border-radius: 16px; overflow: hidden; box-shadow: 0 25px 60px rgba(0, 0, 0, 0.25); border: 1px solid #e2e8f0; display: flex; flex-direction: column;">
     
     <!-- Modal Top Header -->
-    <div style="background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); color: #ffffff; padding: 16px 22px; display: flex; justify-content: space-between; align-items: center;">
-      <div style="display: flex; align-items: center; gap: 12px;">
-        <div style="width: 38px; height: 38px; border-radius: 10px; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 16px;">
-          <i class="fa-solid fa-moon"></i>
-        </div>
+    <div style="background: #4f46e5; color: #ffffff; padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <i class="fa-solid fa-moon" style="font-size: 16px;"></i>
         <div>
-          <h3 id="md-title" style="margin: 0; font-size: 16px; font-weight: 800; color: #ffffff; letter-spacing: 0.3px;">Night Audit Dossier</h3>
-          <div id="md-subtitle" style="font-size: 11.5px; opacity: 0.85; margin-top: 2px;">Hotel Sagar Sonnet • Permanent Signed Audit</div>
+          <h3 id="md-title" style="margin: 0; font-size: 15px; font-weight: 800; color: #ffffff;">Night Audit Details</h3>
+          <div id="md-subtitle" style="font-size: 11px; opacity: 0.85; margin-top: 2px;"></div>
         </div>
       </div>
-      <button type="button" onclick="closeAuditModal()" style="background: rgba(255,255,255,0.2); border: none; color: #ffffff; width: 30px; height: 30px; border-radius: 50%; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.35)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">&times;</button>
+      <button type="button" onclick="closeAuditModal()" style="background: transparent; border: none; color: #ffffff; font-size: 22px; cursor: pointer; line-height: 1;">&times;</button>
     </div>
 
     <!-- Modal Body -->
-    <div id="md-content" style="padding: 20px 24px; overflow-y: auto; background: #f8fafc; flex: 1;">
+    <div id="md-content" style="padding: 0; overflow: hidden; background: #f8fafc; flex: 1; display: flex; flex-direction: column;">
       <div style="text-align: center; padding: 40px; color: #64748b;">
         <i class="fa-solid fa-spinner fa-spin" style="font-size: 24px; color: #6366f1;"></i>
-        <div style="margin-top: 10px; font-weight: 700;">Loading Audit Dossier...</div>
+        <div style="margin-top: 10px; font-weight: 700;">Loading...</div>
       </div>
     </div>
 
     <!-- Modal Footer -->
-    <div style="padding: 14px 22px; background: #ffffff; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
-      <span style="font-size: 12px; font-weight: 700; color: #10b981; display: flex; align-items: center; gap: 6px;">
-        <i class="fa-solid fa-circle-check"></i> Audit Locked & Verified
-      </span>
-      <div style="display: flex; gap: 8px;">
-        <button type="button" id="btn-print-dossier" class="btn-ui-primary" style="height: 36px; padding: 0 16px; font-size: 12px; font-weight: 700; border-radius: 8px; display: inline-flex; align-items: center; gap: 6px;">
-          <i class="fa-solid fa-print"></i> Print Report
-        </button>
-        <button type="button" onclick="closeAuditModal()" class="btn-ui-secondary" style="height: 36px; padding: 0 16px; font-size: 12px; font-weight: 700; border-radius: 8px;">
-          Close
-        </button>
-      </div>
+    <div style="padding: 12px 20px; background: #ffffff; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; align-items: center; gap: 8px;">
+      <button type="button" id="btn-print-dossier" class="btn-ui-primary" style="height: 34px; padding: 0 14px; font-size: 12px; font-weight: 700; border-radius: 6px; display: inline-flex; align-items: center; gap: 6px;">
+        <i class="fa-solid fa-print"></i> Print
+      </button>
+      <button type="button" onclick="closeAuditModal()" class="btn-ui-secondary" style="height: 34px; padding: 0 14px; font-size: 12px; font-weight: 700; border-radius: 6px;">
+        Close
+      </button>
     </div>
 
   </div>
@@ -907,8 +954,8 @@
     if (modal) modal.style.display = 'flex';
     content.innerHTML = `
       <div style="text-align: center; padding: 40px; color: #64748b;">
-        <i class="fa-solid fa-spinner fa-spin" style="font-size: 26px; color: #6366f1;"></i>
-        <div style="margin-top: 10px; font-weight: 700; font-size: 13px;">Fetching signed audit dossier...</div>
+        <i class="fa-solid fa-spinner fa-spin" style="font-size: 24px; color: #6366f1;"></i>
+        <div style="margin-top: 10px; font-weight: 700; font-size: 13px;">Loading...</div>
       </div>
     `;
 
@@ -916,7 +963,7 @@
       .then(res => res.json())
       .then(data => {
         if (!data.success || !data.audit) {
-          content.innerHTML = `<div style="text-align: center; padding: 30px; color: #ef4444; font-weight: 700;">Failed to load audit dossier.</div>`;
+          content.innerHTML = `<div style="text-align: center; padding: 30px; color: #ef4444; font-weight: 700;">Failed to load audit record.</div>`;
           return;
         }
 
@@ -924,96 +971,461 @@
         currentLoadedAudit = a;
 
         const auditDateFormatted = a.audit_date ? new Date(a.audit_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'N/A';
+        const auditDay = a.audit_date ? new Date(a.audit_date).toLocaleDateString('en-US', { weekday: 'long' }) : '';
         const completedTime = a.completed_at ? new Date(a.completed_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : 'N/A';
+        const auditorName = a.auditor_name || (a.auditor ? a.auditor.name : 'Auditor');
 
-        title.textContent = `Night Audit Dossier • ${auditDateFormatted}`;
-        subtitle.textContent = `Audited by ${a.auditor_name || (a.auditor ? a.auditor.name : 'Front Office Auditor')} • Completed at ${completedTime}`;
+        title.textContent = `Night Audit Details • ${auditDateFormatted}`;
+        subtitle.textContent = `${auditorName} • ${completedTime}`;
 
-        printBtn.onclick = () => printAuditObject(a);
+        const snapshot = a.audit_snapshot || {};
+        const payments = snapshot.payments_list || [];
+        const occupiedRooms = snapshot.occupied_rooms || [];
+        const hkHistories = snapshot.housekeeping_histories || [];
+        const opHistories = snapshot.operational_histories || [];
+        const guestsList = snapshot.guests_list || [];
+        const unsettled = snapshot.unsettled_summary || {};
 
         content.innerHTML = `
-          <!-- 4 Mini Summary Metric Cards -->
-          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 16px;">
-            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
-              <div style="font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Occupancy</div>
-              <div style="font-size: 16px; font-weight: 900; color: #4338ca; font-family: var(--font-mono, monospace); margin-top: 2px;">${Number(a.occupancy_rate || 0).toFixed(1)}%</div>
-            </div>
-            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
-              <div style="font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Collections</div>
-              <div style="font-size: 16px; font-weight: 900; color: #059669; font-family: var(--font-mono, monospace); margin-top: 2px;">₹ ${Number(a.total_payments || 0).toLocaleString('en-IN', {minimumFractionDigits: 2})}</div>
-            </div>
-            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
-              <div style="font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Room Revenue</div>
-              <div style="font-size: 16px; font-weight: 900; color: #6366f1; font-family: var(--font-mono, monospace); margin-top: 2px;">₹ ${Number(a.room_revenue || 0).toLocaleString('en-IN', {minimumFractionDigits: 2})}</div>
-            </div>
-            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
-              <div style="font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Total Revenue</div>
-              <div style="font-size: 16px; font-weight: 900; color: #7c3aed; font-family: var(--font-mono, monospace); margin-top: 2px;">₹ ${Number(a.total_revenue || 0).toLocaleString('en-IN', {minimumFractionDigits: 2})}</div>
-            </div>
+          <!-- Fixed Modal Navigation Tabs -->
+          <div class="dossier-nav-tabs">
+            <button type="button" class="dossier-tab-btn active" onclick="switchDossierTab('md-tab-summary', this)">
+              <i class="fa-solid fa-chart-pie"></i> Summary &amp; Reconciliations
+            </button>
+            <button type="button" class="dossier-tab-btn" onclick="switchDossierTab('md-tab-payments', this)">
+              <i class="fa-solid fa-receipt"></i> Payments (${payments.length})
+            </button>
+            <button type="button" class="dossier-tab-btn" onclick="switchDossierTab('md-tab-rooms', this)">
+              <i class="fa-solid fa-bed"></i> Occupied Rooms (${occupiedRooms.length})
+            </button>
+            <button type="button" class="dossier-tab-btn" onclick="switchDossierTab('md-tab-hk', this)">
+              <i class="fa-solid fa-broom"></i> Housekeeping (${hkHistories.length})
+            </button>
+            <button type="button" class="dossier-tab-btn" onclick="switchDossierTab('md-tab-op', this)">
+              <i class="fa-solid fa-sliders"></i> Operational (${opHistories.length})
+            </button>
+            <button type="button" class="dossier-tab-btn" onclick="switchDossierTab('md-tab-guests', this)">
+              <i class="fa-solid fa-users"></i> Guests (${guestsList.length})
+            </button>
           </div>
 
-          <!-- Dossier 2-Column Sections -->
-          <div class="dossier-grid">
-            <!-- 1. Collections Breakdown -->
-            <div class="dossier-section">
-              <div class="dossier-sec-title">
-                <i class="fa-solid fa-cash-register"></i> Collections Breakdown
+          <!-- Scrollable Tab Panes Container -->
+          <div style="overflow-y: auto; padding: 18px 20px; flex: 1;">
+
+            <!-- TAB 1: SUMMARY & RECONCILIATIONS -->
+            <div id="md-tab-summary" class="dossier-tab-pane active">
+              
+              <!-- Top Key Data Strip -->
+              <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 16px; margin-bottom: 14px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; font-size: 12px;">
+                <div>
+                  <div style="font-size: 11px; font-weight: 700; color: #64748b;">Audit Date</div>
+                  <div style="font-size: 13px; font-weight: 800; color: #0f172a; margin-top: 2px;">${auditDateFormatted} <span style="font-size: 11px; color: #64748b; font-weight: 600;">(${auditDay})</span></div>
+                </div>
+                <div>
+                  <div style="font-size: 11px; font-weight: 700; color: #64748b;">Completion Time</div>
+                  <div style="font-size: 13px; font-weight: 800; color: #0f172a; margin-top: 2px; font-family: var(--font-mono, monospace);">${completedTime}</div>
+                </div>
+                <div>
+                  <div style="font-size: 11px; font-weight: 700; color: #64748b;">Auditor Name</div>
+                  <div style="font-size: 13px; font-weight: 800; color: #0f172a; margin-top: 2px;">${escapeHtml(auditorName)}</div>
+                </div>
+                <div>
+                  <div style="font-size: 11px; font-weight: 700; color: #64748b;">Status</div>
+                  <div style="margin-top: 2px;">
+                    <span class="badge-tag green" style="font-size: 10px; padding: 2px 8px; font-weight: 800;">
+                      <i class="fa-solid fa-lock"></i> ${escapeHtml(a.status || 'COMPLETED')}
+                    </span>
+                  </div>
+                </div>
               </div>
-              <div class="dossier-row"><span class="dossier-label">Cash Collected:</span><span class="dossier-val" style="color: #059669;">₹ ${Number(a.cash_collection || 0).toLocaleString('en-IN', {minimumFractionDigits: 2})}</span></div>
-              <div class="dossier-row"><span class="dossier-label">UPI / QR Code:</span><span class="dossier-val" style="color: #4338ca;">₹ ${Number(a.upi_collection || 0).toLocaleString('en-IN', {minimumFractionDigits: 2})}</span></div>
-              <div class="dossier-row"><span class="dossier-label">Credit / Debit Card:</span><span class="dossier-val" style="color: #d97706;">₹ ${Number(a.card_collection || 0).toLocaleString('en-IN', {minimumFractionDigits: 2})}</span></div>
-              <div class="dossier-row"><span class="dossier-label">Bank Transfer / Cheque:</span><span class="dossier-val" style="color: #0284c7;">₹ ${Number(a.bank_collection || 0).toLocaleString('en-IN', {minimumFractionDigits: 2})}</span></div>
-              <div class="dossier-row" style="font-weight: 800; border-top: 1px solid #e2e8f0; margin-top: 4px; padding-top: 8px;"><span class="dossier-label" style="font-weight: 800; color: #0f172a;">Total Reconciled Collections:</span><span class="dossier-val" style="color: #059669; font-weight: 900;">₹ ${Number(a.total_payments || 0).toLocaleString('en-IN', {minimumFractionDigits: 2})}</span></div>
+
+              <!-- Collections & Revenue 2-Columns Grid -->
+              <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin-bottom: 14px;">
+                
+                <!-- Collections Box -->
+                <div class="dossier-section">
+                  <div class="dossier-sec-title">
+                    <i class="fa-solid fa-cash-register"></i> Collections Breakdown
+                  </div>
+                  <div class="dossier-row"><span class="dossier-label">Cash:</span><span class="dossier-val" style="color: #059669;">₹ ${fmt(a.cash_collection)}</span></div>
+                  <div class="dossier-row"><span class="dossier-label">UPI / Digital:</span><span class="dossier-val" style="color: #4338ca;">₹ ${fmt(a.upi_collection)}</span></div>
+                  <div class="dossier-row"><span class="dossier-label">Card / POS:</span><span class="dossier-val" style="color: #b45309;">₹ ${fmt(a.card_collection)}</span></div>
+                  <div class="dossier-row"><span class="dossier-label">Bank Transfer:</span><span class="dossier-val" style="color: #0284c7;">₹ ${fmt(a.bank_collection)}</span></div>
+                  <div class="dossier-row" style="font-weight: 800; border-top: 1px solid #e2e8f0; margin-top: 4px; padding-top: 8px;">
+                    <span class="dossier-label" style="font-weight: 800; color: #0f172a;">Total Collections:</span>
+                    <span class="dossier-val" style="color: #059669; font-weight: 900; font-size: 13.5px;">₹ ${fmt(a.total_payments)}</span>
+                  </div>
+                </div>
+
+                <!-- Revenue Box -->
+                <div class="dossier-section">
+                  <div class="dossier-sec-title">
+                    <i class="fa-solid fa-chart-line"></i> Revenue Reconciliation
+                  </div>
+                  <div class="dossier-row"><span class="dossier-label">Room Tariff Revenue:</span><span class="dossier-val" style="color: #4338ca;">₹ ${fmt(a.room_revenue)}</span></div>
+                  ${Number(a.food_revenue || 0) > 0 ? `<div class="dossier-row"><span class="dossier-label">Food / Meal Plans:</span><span class="dossier-val">₹ ${fmt(a.food_revenue)}</span></div>` : ''}
+                  <div class="dossier-row"><span class="dossier-label">Tax / GST:</span><span class="dossier-val">₹ ${fmt(a.tax_amount)}</span></div>
+                  <div class="dossier-row"><span class="dossier-label">Discount:</span><span class="dossier-val" style="color: #ef4444;">- ₹ ${fmt(a.discount_amount)}</span></div>
+                  <div class="dossier-row" style="font-weight: 800; border-top: 1px solid #e2e8f0; margin-top: 4px; padding-top: 8px;">
+                    <span class="dossier-label" style="font-weight: 800; color: #0f172a;">Total Revenue:</span>
+                    <span class="dossier-val" style="color: #7c3aed; font-weight: 900; font-size: 13.5px;">₹ ${fmt(a.total_revenue)}</span>
+                  </div>
+                </div>
+
+              </div>
+
+              <!-- Rooms & Occupancy KPI Grid -->
+              <div class="dossier-section" style="margin-bottom: 14px;">
+                <div class="dossier-sec-title">
+                  <i class="fa-solid fa-bed"></i> Rooms &amp; Occupancy
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; text-align: center; margin-top: 8px;">
+                  <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px;">
+                    <div style="font-size: 11px; font-weight: 700; color: #64748b;">Occupancy Rate</div>
+                    <div style="font-size: 15px; font-weight: 900; color: #4338ca; font-family: var(--font-mono, monospace); margin-top: 3px;">${Number(a.occupancy_rate || 0).toFixed(1)}%</div>
+                  </div>
+                  <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px;">
+                    <div style="font-size: 11px; font-weight: 700; color: #64748b;">Occupied Rooms</div>
+                    <div style="font-size: 15px; font-weight: 900; color: #0f172a; font-family: var(--font-mono, monospace); margin-top: 3px;">${a.occupied_rooms || 0} / ${a.total_rooms || 0}</div>
+                  </div>
+                  <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px;">
+                    <div style="font-size: 11px; font-weight: 700; color: #64748b;">Vacant Rooms</div>
+                    <div style="font-size: 15px; font-weight: 900; color: #059669; font-family: var(--font-mono, monospace); margin-top: 3px;">${a.vacant_rooms || 0}</div>
+                  </div>
+                  <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px;">
+                    <div style="font-size: 11px; font-weight: 700; color: #64748b;">ADR / RevPAR</div>
+                    <div style="font-size: 13px; font-weight: 800; color: #334155; font-family: var(--font-mono, monospace); margin-top: 3px;">₹ ${Number(a.adr || 0).toFixed(0)} / ₹ ${Number(a.revpar || 0).toFixed(0)}</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Unsettled Folio Balances Box -->
+              <div class="dossier-section" style="margin-bottom: 14px;">
+                <div class="dossier-sec-title">
+                  <i class="fa-solid fa-clock"></i> Folio Reconciliations
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 8px; text-align: center;">
+                  <div style="background: #fff1f2; border: 1px solid #fecdd3; border-radius: 8px; padding: 10px;">
+                    <div style="font-size: 11px; font-weight: 700; color: #b91c1c;">Outstanding Unsettled Due</div>
+                    <div style="font-size: 15px; font-weight: 900; color: #b91c1c; font-family: var(--font-mono, monospace); margin-top: 3px;">₹ ${fmt(unsettled.total_unsettled_amount || 0)}</div>
+                  </div>
+                  <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px;">
+                    <div style="font-size: 11px; font-weight: 700; color: #64748b;">Unsettled Folios</div>
+                    <div style="font-size: 15px; font-weight: 900; color: #e11d48; font-family: var(--font-mono, monospace); margin-top: 3px;">${unsettled.unsettled_bookings_count || 0} Folio(s)</div>
+                  </div>
+                  <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 10px;">
+                    <div style="font-size: 11px; font-weight: 700; color: #15803d;">Settled Folios</div>
+                    <div style="font-size: 15px; font-weight: 900; color: #16a34a; font-family: var(--font-mono, monospace); margin-top: 3px;">${unsettled.settled_bookings_count || 0} Folio(s)</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Remarks -->
+              ${a.remarks ? `
+                <div class="dossier-section">
+                  <div class="dossier-sec-title">
+                    <i class="fa-solid fa-comment-dots"></i> Auditor Remarks
+                  </div>
+                  <div style="font-size: 12px; color: #334155; line-height: 1.5;">${escapeHtml(a.remarks)}</div>
+                </div>
+              ` : ''}
+
             </div>
 
-            <!-- 2. Revenue Breakdown -->
-            <div class="dossier-section">
-              <div class="dossier-sec-title">
-                <i class="fa-solid fa-chart-pie"></i> Revenue Breakdown
+            <!-- TAB 2: PAYMENTS LIST -->
+            <div id="md-tab-payments" class="dossier-tab-pane">
+              <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; overflow-x: auto;">
+                <table class="dossier-table">
+                  <thead>
+                    <tr>
+                      <th style="width: 40px; text-align: center;">SL</th>
+                      <th>Time</th>
+                      <th>Guest Name</th>
+                      <th>Room</th>
+                      <th>Folio #</th>
+                      <th style="text-align: right;">Total Bill</th>
+                      <th style="text-align: right;">Paid</th>
+                      <th style="text-align: right;">Remaining</th>
+                      <th style="text-align: center;">Status</th>
+                      <th>Mode</th>
+                      <th style="text-align: right;">Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${payments.length > 0 ? payments.map((p, idx) => `
+                      <tr>
+                        <td style="text-align: center; font-weight: 800; color: #64748b; font-family: var(--font-mono, monospace);">${idx + 1}</td>
+                        <td style="font-family: var(--font-mono, monospace); font-size: 11px; color: #475569;">${escapeHtml(p.time || '-')}</td>
+                        <td style="font-weight: 700; color: #0f172a;">${escapeHtml(p.guest_name || 'Guest')}</td>
+                        <td><span style="font-weight: 800; color: #4338ca; background: #e0e7ff; padding: 2px 7px; border-radius: 6px; font-family: var(--font-mono, monospace); font-size: 11px;">${escapeHtml(p.room_number || '-')}</span></td>
+                        <td style="font-family: var(--font-mono, monospace); font-size: 11px; color: #475569;">${escapeHtml(p.folio_number || '-')}</td>
+                        <td style="text-align: right; font-family: var(--font-mono, monospace); font-weight: 600;">₹ ${fmt(p.total_bill)}</td>
+                        <td style="text-align: right; font-family: var(--font-mono, monospace); color: #059669; font-weight: 600;">₹ ${fmt(p.paid_amount)}</td>
+                        <td style="text-align: right; font-family: var(--font-mono, monospace); color: ${p.remaining_amount > 0 ? '#b91c1c' : '#059669'}; font-weight: 700;">₹ ${fmt(p.remaining_amount)}</td>
+                        <td style="text-align: center;">
+                          ${p.is_settled ? `
+                            <span style="font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 6px; background: #dcfce7; color: #15803d; border: 1px solid #86efac;">
+                              <i class="fa-solid fa-check"></i> Settled
+                            </span>
+                          ` : `
+                            <span style="font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 6px; background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5;">
+                              <i class="fa-solid fa-clock"></i> Unsettled
+                            </span>
+                          `}
+                        </td>
+                        <td><span class="mode-pill ${String(p.mode).toLowerCase()}">${escapeHtml(p.mode || 'Cash')}</span></td>
+                        <td style="text-align: right; font-weight: 800; font-family: var(--font-mono, monospace); color: #059669; font-size: 12.5px;">₹ ${fmt(p.amount)}</td>
+                      </tr>
+                    `).join('') : `
+                      <tr>
+                        <td colspan="11" style="text-align: center; padding: 32px; color: #94a3b8;">No payment records recorded for this audit date.</td>
+                      </tr>
+                    `}
+                  </tbody>
+                  ${payments.length > 0 ? `
+                    <tfoot>
+                      <tr style="background: #f8fafc; font-weight: 800;">
+                        <td colspan="10" style="text-align: right; text-transform: uppercase; font-size: 11px; color: #64748b; padding: 10px 12px;">Total Collections:</td>
+                        <td style="text-align: right; font-size: 13px; font-family: var(--font-mono, monospace); color: #059669; padding: 10px 12px;">₹ ${fmt(a.total_payments)}</td>
+                      </tr>
+                    </tfoot>
+                  ` : ''}
+                </table>
               </div>
-              <div class="dossier-row"><span class="dossier-label">Room Tariff Revenue:</span><span class="dossier-val">₹ ${Number(a.room_revenue || 0).toLocaleString('en-IN', {minimumFractionDigits: 2})}</span></div>
-              <div class="dossier-row"><span class="dossier-label">Food & Meal Plans:</span><span class="dossier-val">₹ ${Number(a.food_revenue || 0).toLocaleString('en-IN', {minimumFractionDigits: 2})}</span></div>
-              <div class="dossier-row"><span class="dossier-label">Taxes & GST:</span><span class="dossier-val">₹ ${Number(a.tax_amount || 0).toLocaleString('en-IN', {minimumFractionDigits: 2})}</span></div>
-              <div class="dossier-row"><span class="dossier-label">Discounts Adjusted:</span><span class="dossier-val" style="color: #ef4444;">- ₹ ${Number(a.discount_amount || 0).toLocaleString('en-IN', {minimumFractionDigits: 2})}</span></div>
-              <div class="dossier-row" style="font-weight: 800; border-top: 1px solid #e2e8f0; margin-top: 4px; padding-top: 8px;"><span class="dossier-label" style="font-weight: 800; color: #0f172a;">Net Hotel Sales:</span><span class="dossier-val" style="color: #7c3aed; font-weight: 900;">₹ ${Number(a.total_revenue || 0).toLocaleString('en-IN', {minimumFractionDigits: 2})}</span></div>
             </div>
 
-            <!-- 3. Room & Inventory Status -->
-            <div class="dossier-section">
-              <div class="dossier-sec-title">
-                <i class="fa-solid fa-door-open"></i> Rooms & Inventory Status
+            <!-- TAB 3: OCCUPIED ROOMS -->
+            <div id="md-tab-rooms" class="dossier-tab-pane">
+              <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; overflow-x: auto;">
+                <table class="dossier-table">
+                  <thead>
+                    <tr>
+                      <th style="width: 40px; text-align: center;">SL</th>
+                      <th>Room</th>
+                      <th>Category</th>
+                      <th>Floor</th>
+                      <th>Guest &amp; Folio</th>
+                      <th>Check-in</th>
+                      <th>Check-out</th>
+                      <th style="text-align: center;">Operational Status</th>
+                      <th style="text-align: center;">Housekeeping</th>
+                      <th style="text-align: right;">Rate / Day</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${occupiedRooms.length > 0 ? occupiedRooms.map((rm, idx) => `
+                      <tr>
+                        <td style="text-align: center; font-weight: 800; color: #64748b; font-family: var(--font-mono, monospace);">${idx + 1}</td>
+                        <td><span style="font-weight: 800; color: #4338ca; background: #e0e7ff; padding: 2px 7px; border-radius: 6px; font-family: var(--font-mono, monospace); font-size: 11px;">${escapeHtml(rm.room_number)}</span></td>
+                        <td style="font-weight: 600; color: #1e293b;">${escapeHtml(rm.category || 'Standard')}</td>
+                        <td style="font-size: 11px; color: #64748b;">${escapeHtml(rm.floor || 'Floor 1')}</td>
+                        <td>
+                          <div style="font-weight: 700; color: #0f172a;">${escapeHtml(rm.guest_name || 'Guest')}</div>
+                          <div style="font-size: 10px; color: #64748b; margin-top: 2px;">Folio #${escapeHtml(rm.folio_number || '-')}</div>
+                        </td>
+                        <td style="font-size: 11px; color: #475569;">${escapeHtml(rm.checkin_date || '-')}</td>
+                        <td style="font-size: 11px; color: #475569;">${escapeHtml(rm.checkout_date || '-')}</td>
+                        <td style="text-align: center;">
+                          <span style="font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 6px; background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0;">
+                            ${escapeHtml(rm.operational_status || 'Active')}
+                          </span>
+                        </td>
+                        <td style="text-align: center;">
+                          <span style="font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 6px; background: #dcfce7; color: #15803d; border: 1px solid #86efac;">
+                            ${escapeHtml(rm.housekeeping_status || 'Clean')}
+                          </span>
+                        </td>
+                        <td style="text-align: right; font-weight: 800; font-family: var(--font-mono, monospace); color: #1e293b;">₹ ${fmt(rm.day_rate)}</td>
+                      </tr>
+                    `).join('') : `
+                      <tr>
+                        <td colspan="10" style="text-align: center; padding: 32px; color: #94a3b8;">No occupied rooms recorded on this date.</td>
+                      </tr>
+                    `}
+                  </tbody>
+                </table>
               </div>
-              <div class="dossier-row"><span class="dossier-label">Total Hotel Rooms:</span><span class="dossier-val">${a.total_rooms || 0}</span></div>
-              <div class="dossier-row"><span class="dossier-label">Occupied Rooms:</span><span class="dossier-val" style="color: #4338ca;">${a.occupied_rooms || 0}</span></div>
-              <div class="dossier-row"><span class="dossier-label">Vacant Rooms:</span><span class="dossier-val" style="color: #059669;">${a.vacant_rooms || 0}</span></div>
-              <div class="dossier-row"><span class="dossier-label">Maintenance / OOO:</span><span class="dossier-val" style="color: #d97706;">${a.maintenance_rooms || 0}</span></div>
-              <div class="dossier-row"><span class="dossier-label">ADR (Average Daily Rate):</span><span class="dossier-val">₹ ${Number(a.adr || 0).toFixed(0)}</span></div>
             </div>
 
-            <!-- 4. Guest & Meal Plans Movement -->
-            <div class="dossier-section">
-              <div class="dossier-sec-title">
-                <i class="fa-solid fa-utensils"></i> Meal Plans & Occupants
+            <!-- TAB 4: HOUSEKEEPING HISTORY -->
+            <div id="md-tab-hk" class="dossier-tab-pane">
+              <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; overflow-x: auto;">
+                <table class="dossier-table">
+                  <thead>
+                    <tr>
+                      <th style="width: 40px; text-align: center;">SL</th>
+                      <th style="width: 120px;">Time / Date</th>
+                      <th>Room</th>
+                      <th>Category</th>
+                      <th>Floor</th>
+                      <th style="text-align: center;">Housekeeping State</th>
+                      <th style="text-align: center;">Task Status</th>
+                      <th>Start Time</th>
+                      <th>Completion Time</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${hkHistories.length > 0 ? hkHistories.map((hk, idx) => `
+                      <tr>
+                        <td style="text-align: center; font-weight: 800; color: #64748b; font-family: var(--font-mono, monospace);">${idx + 1}</td>
+                        <td style="font-family: var(--font-mono, monospace); font-size: 11px; color: #475569;">
+                          ${escapeHtml(hk.time || '-')}
+                          <span style="display: block; font-size: 10px; color: #94a3b8;">${escapeHtml(hk.date || '')}</span>
+                        </td>
+                        <td><span style="font-weight: 800; color: #4338ca; background: #e0e7ff; padding: 2px 7px; border-radius: 6px; font-family: var(--font-mono, monospace); font-size: 11px;">${escapeHtml(hk.room_number)}</span></td>
+                        <td style="font-weight: 600; color: #1e293b;">${escapeHtml(hk.category || 'Standard')}</td>
+                        <td style="font-size: 11px; color: #64748b;">${escapeHtml(hk.floor || 'Floor 1')}</td>
+                        <td style="text-align: center;">
+                          <span style="font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 6px; background: #dcfce7; color: #15803d; border: 1px solid #86efac;">
+                            <i class="fa-solid fa-broom"></i> ${escapeHtml(hk.housekeeping_status || 'Clean')}
+                          </span>
+                        </td>
+                        <td style="text-align: center;">
+                          <span style="font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 6px; background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0;">
+                            ${escapeHtml(hk.status || 'Complete')}
+                          </span>
+                        </td>
+                        <td style="font-family: var(--font-mono, monospace); font-size: 11px; color: #475569;">${escapeHtml(hk.start_time || '-')}</td>
+                        <td style="font-family: var(--font-mono, monospace); font-size: 11px; color: #475569;">${escapeHtml(hk.completion_time || '-')}</td>
+                      </tr>
+                    `).join('') : `
+                      <tr>
+                        <td colspan="9" style="text-align: center; padding: 32px; color: #94a3b8;">No housekeeping events recorded on this date.</td>
+                      </tr>
+                    `}
+                  </tbody>
+                </table>
               </div>
-              <div class="dossier-row"><span class="dossier-label">EP (Room Only):</span><span class="dossier-val">${a.ep_plan_count || 0} rooms</span></div>
-              <div class="dossier-row"><span class="dossier-label">CP (Continental / Breakfast):</span><span class="dossier-val">${a.cp_plan_count || 0} rooms</span></div>
-              <div class="dossier-row"><span class="dossier-label">MAP (Half Board):</span><span class="dossier-val">${a.map_plan_count || 0} rooms</span></div>
-              <div class="dossier-row"><span class="dossier-label">AP (Full Board):</span><span class="dossier-val">${a.ap_plan_count || 0} rooms</span></div>
-              <div class="dossier-row"><span class="dossier-label">Total In-House Guests:</span><span class="dossier-val" style="font-weight: 800; color: #0f172a;">${a.inhouse_guests_count || 0} Persons</span></div>
             </div>
+
+            <!-- TAB 5: OPERATIONAL HISTORY -->
+            <div id="md-tab-op" class="dossier-tab-pane">
+              <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; overflow-x: auto;">
+                <table class="dossier-table">
+                  <thead>
+                    <tr>
+                      <th style="width: 40px; text-align: center;">SL</th>
+                      <th style="width: 120px;">Time / Date</th>
+                      <th>Room</th>
+                      <th>Category</th>
+                      <th>Floor</th>
+                      <th style="text-align: center;">Operational Status</th>
+                      <th style="text-align: center;">Room Model State</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${opHistories.length > 0 ? opHistories.map((op, idx) => `
+                      <tr>
+                        <td style="text-align: center; font-weight: 800; color: #64748b; font-family: var(--font-mono, monospace);">${idx + 1}</td>
+                        <td style="font-family: var(--font-mono, monospace); font-size: 11px; color: #475569;">
+                          ${escapeHtml(op.time || '-')}
+                          <span style="display: block; font-size: 10px; color: #94a3b8;">${escapeHtml(op.date || '')}</span>
+                        </td>
+                        <td><span style="font-weight: 800; color: #4338ca; background: #e0e7ff; padding: 2px 7px; border-radius: 6px; font-family: var(--font-mono, monospace); font-size: 11px;">${escapeHtml(op.room_number)}</span></td>
+                        <td style="font-weight: 600; color: #1e293b;">${escapeHtml(op.category || 'Standard')}</td>
+                        <td style="font-size: 11px; color: #64748b;">${escapeHtml(op.floor || 'Floor 1')}</td>
+                        <td style="text-align: center;">
+                          <span style="font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 6px; background: #dcfce7; color: #15803d; border: 1px solid #86efac;">
+                            <i class="fa-solid fa-circle-check"></i> ${escapeHtml(op.operational_status || 'Active')}
+                          </span>
+                        </td>
+                        <td style="text-align: center;">
+                          <span style="font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 6px; background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0;">
+                            ${escapeHtml(op.room_status || 'Active')}
+                          </span>
+                        </td>
+                      </tr>
+                    `).join('') : `
+                      <tr>
+                        <td colspan="7" style="text-align: center; padding: 32px; color: #94a3b8;">No operational status changes logged on this date.</td>
+                      </tr>
+                    `}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- TAB 6: TODAY'S GUESTS -->
+            <div id="md-tab-guests" class="dossier-tab-pane">
+              <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; overflow-x: auto;">
+                <table class="dossier-table">
+                  <thead>
+                    <tr>
+                      <th style="width: 40px; text-align: center;">SL</th>
+                      <th>Folio #</th>
+                      <th>Guest Details</th>
+                      <th>Room</th>
+                      <th>Category</th>
+                      <th>Check-in</th>
+                      <th>Check-out</th>
+                      <th style="text-align: right;">Total Bill</th>
+                      <th style="text-align: right;">Paid</th>
+                      <th style="text-align: right;">Remaining</th>
+                      <th style="text-align: center;">Folio Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${guestsList.length > 0 ? guestsList.map((g, idx) => `
+                      <tr>
+                        <td style="text-align: center; font-weight: 800; color: #64748b; font-family: var(--font-mono, monospace);">${idx + 1}</td>
+                        <td style="font-family: var(--font-mono, monospace); font-size: 11px; font-weight: 700; color: #4338ca;">${escapeHtml(g.folio_number || '-')}</td>
+                        <td>
+                          <div style="font-weight: 700; color: #0f172a;">${escapeHtml(g.guest_name || 'Guest')}</div>
+                          <div style="font-size: 10px; color: #64748b; margin-top: 1px;"><i class="fa-solid fa-phone" style="font-size: 9px;"></i> ${escapeHtml(g.mobile_no || '-')}</div>
+                        </td>
+                        <td><span style="font-weight: 800; color: #4338ca; background: #e0e7ff; padding: 2px 7px; border-radius: 6px; font-family: var(--font-mono, monospace); font-size: 11px;">${escapeHtml(g.room_number || '-')}</span></td>
+                        <td style="font-weight: 600; color: #1e293b;">${escapeHtml(g.category || 'Standard')}</td>
+                        <td style="font-size: 11px; color: #475569;">${escapeHtml(g.checkin_date || '-')}</td>
+                        <td style="font-size: 11px; color: #475569;">${escapeHtml(g.checkout_date || '-')}</td>
+                        <td style="text-align: right; font-family: var(--font-mono, monospace); font-weight: 600;">₹ ${fmt(g.total_bill)}</td>
+                        <td style="text-align: right; font-family: var(--font-mono, monospace); color: #059669; font-weight: 600;">₹ ${fmt(g.paid_amount)}</td>
+                        <td style="text-align: right; font-family: var(--font-mono, monospace); color: ${g.remaining_amount > 0 ? '#b91c1c' : '#059669'}; font-weight: 700;">₹ ${fmt(g.remaining_amount)}</td>
+                        <td style="text-align: center;">
+                          ${g.is_settled ? `
+                            <span style="font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 6px; background: #dcfce7; color: #15803d; border: 1px solid #86efac;">
+                              <i class="fa-solid fa-check"></i> Settled
+                            </span>
+                          ` : `
+                            <span style="font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 6px; background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5;">
+                              <i class="fa-solid fa-clock"></i> Unsettled
+                            </span>
+                          `}
+                        </td>
+                      </tr>
+                    `).join('') : `
+                      <tr>
+                        <td colspan="11" style="text-align: center; padding: 32px; color: #94a3b8;">No guest folios active on this audit date.</td>
+                      </tr>
+                    `}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
           </div>
-
-          ${a.remarks ? `
-            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
-              <div style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 4px;">Auditor Remarks / Sign-off Notes</div>
-              <div style="font-size: 12px; color: #334155; line-height: 1.5;">${escapeHtml(a.remarks)}</div>
-            </div>
-          ` : ''}
         `;
+        if (printBtn) {
+          printBtn.onclick = () => printAuditObject(a);
+        }
       })
       .catch(err => {
         content.innerHTML = `<div style="text-align: center; padding: 30px; color: #ef4444; font-weight: 700;">Error: ${err.message}</div>`;
       });
+  }
+
+  function switchDossierTab(tabId, btn) {
+    const modal = document.getElementById('audit-dossier-modal');
+    if (!modal) return;
+    modal.querySelectorAll('.dossier-tab-btn').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    modal.querySelectorAll('.dossier-tab-pane').forEach(p => p.style.display = 'none');
+    const target = document.getElementById(tabId);
+    if (target) target.style.display = 'block';
+  }
+
+  function fmt(val) {
+    const n = parseFloat(val);
+    return isNaN(n) ? '0.00' : n.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
 
   function closeAuditModal() {

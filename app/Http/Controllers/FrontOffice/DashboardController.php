@@ -193,7 +193,9 @@ class DashboardController extends Controller
                 $opName = $latestOp?->operationalStatus?->name ?? '';
                 $hkName = $latestHk?->housekeepingStatus?->name ?? '';
 
-                if (stripos($opName, 'Blocked') !== false || stripos($opName, 'Maintenance') !== false || stripos($opName, 'Order') !== false) {
+                $isOpBlocked = (bool)preg_match('/block|blok|maintenance|order/i', $opName);
+
+                if ($isOpBlocked) {
                     $status = 'blocked';
                     $cleaning = 'Blocked';
                 } elseif ($guest) {
@@ -202,7 +204,7 @@ class DashboardController extends Controller
                 } elseif (stripos($hkName, 'Dirty') !== false || ($latestHk && $latestHk->status === 'pending')) {
                     $status = 'dirty';
                     $cleaning = 'Dirty';
-                } elseif ($r->status === 'Inactive') {
+                } elseif ($r->status === 'Inactive' && empty($opName)) {
                     $status = 'blocked';
                     $cleaning = 'Blocked';
                 } else {
@@ -1452,28 +1454,27 @@ class DashboardController extends Controller
 
             // Determine calculated rack status
             $hasActiveGuests = $room->activeGuests()->exists();
+            $isOpBlocked = (bool)preg_match('/block|blok|maintenance|order/i', $opName);
+
             if ($hasActiveGuests) {
                 $calculatedStatus = 'occupied';
                 $cleaningText = (stripos($hkName, 'Dirty') !== false) ? 'Dirty' : 'Cleaned';
-            } elseif (stripos($opName, 'Blocked') !== false || stripos($opName, 'Maintenance') !== false || stripos($opName, 'Order') !== false) {
+            } elseif ($isOpBlocked) {
                 $calculatedStatus = 'blocked';
                 $cleaningText = 'Blocked';
             } elseif (stripos($hkName, 'Dirty') !== false) {
                 $calculatedStatus = 'dirty';
                 $cleaningText = 'Dirty';
-            } elseif ($room->status === 'Inactive') {
-                $calculatedStatus = 'blocked';
-                $cleaningText = 'Blocked';
             } else {
                 $calculatedStatus = 'available';
                 $cleaningText = 'Cleaned';
             }
 
-            // Sync room model status
-            if ($calculatedStatus === 'available' || $calculatedStatus === 'occupied') {
-                $room->status = 'Active';
-            } elseif ($calculatedStatus === 'blocked') {
+            // Sync room model status (Active vs Inactive)
+            if ($calculatedStatus === 'blocked') {
                 $room->status = 'Inactive';
+            } else {
+                $room->status = 'Active';
             }
             $room->save();
 

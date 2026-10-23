@@ -20,6 +20,8 @@ Route::prefix('front-office')->name('frontoffice.')->group(function () {
     Route::get('/guest', [GuestController::class, 'index'])->name('guest');
     Route::get('/guest-crm', [GuestController::class, 'index'])->name('guest-crm');
     Route::get('/guest/{id}/details', [GuestController::class, 'getDetails'])->name('guest.details');
+    Route::post('/guest/{id}/update', [GuestController::class, 'update'])->name('guest.update');
+    Route::put('/guest/{id}', [GuestController::class, 'update'])->name('guest.update-put');
     Route::post('/guest/{id}/status', [GuestController::class, 'updateStatus'])->name('guest.update-status');
     Route::post('/guest/{id}/settle', [GuestController::class, 'settle'])->name('guest.settle');
     Route::post('/guest/{id}/checkout', [GuestController::class, 'checkout'])->name('guest.checkout');

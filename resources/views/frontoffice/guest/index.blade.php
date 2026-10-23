@@ -323,6 +323,29 @@
     box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3);
   }
 
+  .btn-action-edit {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: 1px solid #bfdbfe;
+    background: #eff6ff;
+    color: #2563eb;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .btn-action-edit:hover {
+    background: #2563eb;
+    color: #ffffff;
+    border-color: #2563eb;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);
+  }
+
   /* Pagination styles */
   .pms-page-nav {
     display: flex;
@@ -500,24 +523,52 @@
 @php
   // Map page guests for instant view modal opening
   $serializedGuests = collect($guests->items())->map(function($g) {
+    $advVal = (float)$g->advance_amount;
+    $settlePayments = (float)($g->settlements?->sum('paid_amount') ?: $g->latestBooking?->payments?->where('payment_type', 'Settlement')->sum('amount'));
+    $totalPaid = round($advVal + $settlePayments, 2);
+    $balVal = (float)($g->balance ?? 0);
+
+    $hasSettled = ($g->settlements && $g->settlements->where('status', 'Settled')->isNotEmpty())
+      || ($g->latestBooking?->settlements && $g->latestBooking->settlements->where('status', 'Settled')->isNotEmpty())
+      || ($g->latestBooking?->payments && $g->latestBooking->payments->where('payment_type', 'Settlement')->isNotEmpty())
+      || strtolower($g->status ?? '') === 'settlement done'
+      || ((float)$balVal <= 0.01 && (float)$g->payable_amount > 0 && ($advVal > 0 || ($g->latestBooking?->payments && $g->latestBooking->payments->isNotEmpty())));
+
+    $isLocked = $hasSettled || in_array($g->status, ['Settlement Done', 'Checked Out']);
+
     return [
       'id' => $g->id,
+      'title_id' => $g->title_id,
+      'title' => $g->title?->name ?? '',
+      'raw_name' => $g->guest_name,
+      'guest_name' => ($g->title?->name ? $g->title->name . ' ' : '') . $g->guest_name,
       'reserve_id' => $g->reserve_id ?: ('RES-' . $g->id),
       'folio_number' => $g->folio_number ?: ('FOL-' . ($g->room?->room_number ?? '100') . '-' . $g->id),
-      'guest_name' => ($g->title?->name ? $g->title->name . ' ' : '') . $g->guest_name,
-      'raw_name' => $g->guest_name,
-      'title' => $g->title?->name ?? '',
       'mobile' => $g->mobile ?: 'N/A',
+      'raw_mobile' => $g->mobile ?? '',
       'email' => $g->email ?: 'N/A',
+      'raw_email' => $g->email ?? '',
       'city' => $g->city ?: 'N/A',
+      'raw_city' => $g->city ?? '',
       'guest_address' => $g->guest_address ?: 'N/A',
+      'raw_address' => $g->guest_address ?? '',
+      'nationality_id' => $g->nationality_id,
       'nationality' => $g->nationality?->name ?? 'Indian',
+      'id_card_type_id' => $g->id_card_type_id,
       'id_card_type' => $g->idCardType?->name ?? 'N/A',
       'id_card_number' => $g->id_card_number ?: 'N/A',
+      'raw_id_card_number' => $g->id_card_number ?? '',
       'registration_type' => $g->registrationType?->name ?? 'Regular',
       'reservation_mode' => $g->reservationMode?->name ?? 'Front Desk',
       'has_privilege_card' => (bool)$g->has_privilege_card,
       'privilege_card_no' => $g->privilege_card_no ?: 'N/A',
+      'raw_privilege_card_no' => $g->privilege_card_no ?? '',
+      'company_id' => $g->company_id,
+      'new_company_name' => $g->new_company_name ?? '',
+      'new_company_address' => $g->new_company_address ?? '',
+      'new_company_gstin' => $g->new_company_gstin ?? '',
+      'new_company_phone' => $g->new_company_phone ?? '',
+      'is_locked' => $isLocked,
       'room_number' => (string)($g->room?->room_number ?? 'Pending'),
       'room_category' => strtoupper($g->room?->categoryRelation?->name ?? ($g->room?->category ?? 'DELUXE')),
       'room_floor' => (string)($g->room?->floorRelation?->floor ?? ($g->room?->floor ?? '1')),
@@ -536,10 +587,10 @@
       'gst_percentage' => (float)$g->gst_percentage,
       'gst_amount' => (float)$g->gst_amount,
       'payable_amount' => (float)$g->payable_amount,
-      'advance_amount' => (float)$g->advance_amount,
-      'settlement_paid' => (float)($g->settlements?->sum('paid_amount') ?: $g->latestBooking?->payments?->where('payment_type', 'Settlement')->sum('amount')),
-      'total_paid' => round((float)$g->advance_amount + (float)($g->settlements?->sum('paid_amount') ?: $g->latestBooking?->payments?->where('payment_type', 'Settlement')->sum('amount')), 2),
-      'balance' => (float)$g->balance,
+      'advance_amount' => $advVal,
+      'settlement_paid' => $settlePayments,
+      'total_paid' => $totalPaid,
+      'balance' => $balVal,
       'payment_mode' => $g->paymentMode?->name ?? 'Cash / Direct',
       'payment_remarks' => $g->payment_remarks ?: 'None',
       'status' => $g->status ?: 'Confirmed',
@@ -781,15 +832,15 @@
 
                 <!-- 2. Name -->
                 <td style="white-space: nowrap;">
-                  <div style="font-weight: 800; color: #0f172a; font-size: 13px; white-space: nowrap;">
+                  <div id="guest-name-display-{{ $item->id }}" style="font-weight: 800; color: #0f172a; font-size: 13px; white-space: nowrap;">
                     {{ ($item->title?->name ? $item->title->name . ' ' : '') . $item->guest_name }}
                   </div>
                   <div style="font-size: 10px; color: #64748b; margin-top: 2px; display: flex; align-items: center; gap: 6px; font-family: var(--font-mono, monospace);">
                     <span style="color: #6366f1; font-weight: 700;">{{ $item->reserve_id ?: ('RES-' . $item->id) }}</span>
-                    @if($item->city)
+                    <span id="guest-city-wrap-{{ $item->id }}" style="{{ $item->city ? '' : 'display: none;' }}">
                       <span style="color: #cbd5e1;">•</span>
-                      <span style="color: #94a3b8;"><i class="fa-solid fa-location-dot" style="font-size: 9px;"></i> {{ $item->city }}</span>
-                    @endif
+                      <span style="color: #94a3b8;"><i class="fa-solid fa-location-dot" style="font-size: 9px;"></i> <span id="guest-city-display-{{ $item->id }}">{{ $item->city }}</span></span>
+                    </span>
                   </div>
                 </td>
 
@@ -797,7 +848,7 @@
                 <td style="white-space: nowrap;">
                   <div style="font-family: var(--font-mono, monospace); font-weight: 700; font-size: 12px; color: #1e293b; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap;">
                     <i class="fa-solid fa-phone" style="font-size: 10px; color: #10b981;"></i>
-                    <span>{{ $item->mobile ?: 'N/A' }}</span>
+                    <span id="guest-phone-display-{{ $item->id }}">{{ $item->mobile ?: 'N/A' }}</span>
                   </div>
                 </td>
 
@@ -862,7 +913,7 @@
                   </span>
                 </td>
 
-                <!-- Action: Quick Status Selector + Eye View Button -->
+                <!-- Action: Edit Button (unlocked guests) + Eye View Button -->
                 <td style="text-align: center; white-space: nowrap;">
                   <div class="action-flex-wrap">
                     @php
@@ -873,29 +924,24 @@
                         || ((float)$balanceVal <= 0.01 && (float)$item->payable_amount > 0 && ($paidVal > 0));
                     @endphp
 
-                    @if($isItemLocked)
-                      <span class="badge-locked {{ $item->status === 'Settlement Done' ? 'settled' : '' }}" style="padding: 3px 8px; font-size: 11px;" title="Guest status is locked.">
-                        <i class="fa-solid fa-lock" style="font-size: 9px;"></i>
-                        <span>{{ $item->status ?? 'Locked' }}</span>
-                      </span>
+                    @if(!$isItemLocked)
+                      <button type="button" 
+                              class="btn-action-edit" 
+                              id="btn-edit-guest-{{ $item->id }}"
+                              onclick="openGuestEditModal({{ $item->id }})" 
+                              title="Edit Guest Details">
+                        <i class="fa-solid fa-pen-to-square"></i>
+                      </button>
                     @else
-                      <select class="status-quick-select" 
-                              id="status-select-{{ $item->id }}" 
-                              onchange="updateGuestStatus({{ $item->id }}, this.value, this)" 
-                              title="Change Guest Status">
-                        <option value="Confirmed" {{ ($item->status ?? 'Confirmed') === 'Confirmed' ? 'selected' : '' }}>Confirmed</option>
-                        <option value="Arrived" {{ $item->status === 'Arrived' ? 'selected' : '' }}>Arrived</option>
-                        <option value="Checked In" {{ in_array($item->status, ['Checked In', 'Checked-In']) ? 'selected' : '' }}>Checked In</option>
-                        <option value="Stay Over" {{ in_array($item->status, ['Stay Over', 'Stay-Over']) ? 'selected' : '' }}>Stay Over</option>
-                        <option value="Checked Out" {{ in_array($item->status, ['Checked Out', 'Checked-Out']) ? 'selected' : '' }}>Checked Out</option>
-                        <option value="Cancelled" {{ $item->status === 'Cancelled' ? 'selected' : '' }}>Cancelled</option>
-                      </select>
+                      <span class="badge-locked settled" style="padding: 4px 8px; font-size: 10px;" title="Guest reservation is settled and locked. Edit is disabled.">
+                        <i class="fa-solid fa-lock" style="font-size: 9px;"></i> Settled
+                      </span>
                     @endif
 
                     <button type="button" 
                             class="btn-action-view" 
                             onclick="openGuestDetailsModalById({{ $item->id }})" 
-                            title="View Complete Guest Dossier (Rooms, Stay, Billing, Company)">
+                            title="View Complete Guest Dossier">
                       <i class="fa-solid fa-eye"></i>
                     </button>
                   </div>
@@ -984,19 +1030,6 @@
           <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
             <h3 id="crm-mdl-guest-name" style="margin: 0; font-size: 16px; font-weight: 800; color: #ffffff;">Guest Profile Dossier</h3>
             <span id="crm-mdl-status-badge" class="status-badge" style="background: #ffffff; color: #4338ca; font-weight: 800;">Confirmed</span>
-            <div id="crm-mdl-status-control-wrapper" style="display: inline-flex; align-items: center; margin-left: 6px;">
-              <select class="status-quick-select" id="crm-mdl-quick-status-select" onchange="onModalStatusChange(this.value)" style="background-color: #ffffff; color: #1e293b; height: 28px; font-size: 11px;">
-                <option value="Confirmed">Confirmed</option>
-                <option value="Arrived">Arrived</option>
-                <option value="Checked In">Checked In</option>
-                <option value="Stay Over">Stay Over</option>
-                <option value="Checked Out">Checked Out</option>
-                <option value="Cancelled">Cancelled</option>
-              </select>
-              <span id="crm-mdl-status-locked-indicator" class="badge-locked settled" style="display: none; padding: 3px 10px; font-size: 11px; font-weight: 700;">
-                <i class="fa-solid fa-lock"></i> <span id="crm-mdl-status-locked-text">Locked</span>
-              </span>
-            </div>
           </div>
           <div style="font-size: 11px; opacity: 0.85; margin-top: 2px; font-family: var(--font-mono, monospace);">
             Reserve Ref: <span id="crm-mdl-reserve-id" style="font-weight: 700;">-</span> &nbsp;|&nbsp; Folio: <span id="crm-mdl-folio-number" style="font-weight: 700;">-</span>
@@ -1187,6 +1220,200 @@
   </div>
 </div>
 
+<!-- ========================================== -->
+<!-- UNIFORM GUEST EDIT MODAL (GUEST DETAILS ONLY) -->
+<!-- ========================================== -->
+<div class="modal-backdrop" id="guest-crm-edit-modal">
+  <div class="modal-window large" style="width: 780px; max-width: 95vw; max-height: 92vh; display: flex; flex-direction: column; border-radius: 16px; overflow: hidden; box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.3); border: none; box-sizing: border-box;">
+    
+    <!-- Modal Header -->
+    <div class="modal-top" style="background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: #ffffff; padding: 14px 22px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.15);">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <div style="width: 38px; height: 38px; border-radius: 10px; background: rgba(255,255,255,0.18); display: flex; align-items: center; justify-content: center; font-size: 16px; color: #ffffff;">
+          <i class="fa-solid fa-user-pen"></i>
+        </div>
+        <div>
+          <h3 style="margin: 0; font-size: 16px; font-weight: 800; color: #ffffff;">Edit Guest Profile Details</h3>
+          <div style="font-size: 11px; opacity: 0.85; margin-top: 2px;">
+            Guest: <strong id="edit-mdl-guest-title-name">-</strong> &nbsp;|&nbsp; Ref: <span id="edit-mdl-reserve-ref" style="font-family: var(--font-mono, monospace); font-weight: 700;">-</span>
+          </div>
+        </div>
+      </div>
+      <button type="button" class="modal-close" onclick="closeModal('guest-crm-edit-modal')" style="background: rgba(255,255,255,0.2); border: none; color: #ffffff; width: 32px; height: 32px; border-radius: 50%; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s;">&times;</button>
+    </div>
+
+    <!-- Modal Form Body -->
+    <form id="guest-crm-edit-form" onsubmit="submitGuestEdit(event)" style="display: flex; flex-direction: column; flex: 1; overflow: hidden; margin: 0;">
+      <input type="hidden" id="edit-guest-id" name="id">
+
+      <div class="modal-content-area" style="padding: 20px 24px; background: #f8fafc; overflow-y: auto; max-height: calc(92vh - 130px);">
+        
+        <!-- Context Alert Banner -->
+        <div style="font-size: 11px; color: #1e40af; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 10px 14px; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; line-height: 1.5;">
+          <i class="fa-solid fa-circle-info" style="color: #2563eb; font-size: 14px; flex-shrink: 0;"></i>
+          <span>Modify personal information, contact credentials, identity proof, and corporate account for this guest only. Room allotment, dates, and billing amounts are preserved and managed separately.</span>
+        </div>
+
+        <!-- SECTION 1: Personal Profile Details -->
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px 16px; margin-bottom: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+          <div style="font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.7px; color: #475569; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px;">
+            <i class="fa-solid fa-id-card" style="color: #2563eb;"></i> Personal Details
+          </div>
+
+          <!-- Title + Full Name + Nationality -->
+          <div style="display: flex; gap: 12px; margin-bottom: 12px; flex-wrap: wrap;">
+            <div style="width: 100px; flex-shrink: 0;">
+              <label style="display: block; font-size: 10px; font-weight: 800; margin-bottom: 5px; color: #64748b; text-transform: uppercase; letter-spacing: 0.8px;">Title</label>
+              <select name="title_id" id="edit-title-id" class="pms-filter-select" style="width: 100%; height: 38px; font-size: 12px; background-color: #ffffff;">
+                <option value="">Select</option>
+                @foreach($titles ?? \App\Models\Title::where('status', 'Active')->get() as $t)
+                  <option value="{{ $t->id }}">{{ $t->name }}</option>
+                @endforeach
+              </select>
+            </div>
+            <div style="flex: 1; min-width: 220px;">
+              <label style="display: block; font-size: 10px; font-weight: 800; margin-bottom: 5px; color: #64748b; text-transform: uppercase; letter-spacing: 0.8px;">Guest Full Name <span style="color: #ef4444;">*</span></label>
+              <input type="text" name="guest_name" id="edit-guest-name" required placeholder="First and Last Name" style="width: 100%; height: 38px; padding: 6px 12px; font-size: 13px; font-weight: 600; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #0f172a; box-sizing: border-box;">
+            </div>
+            <div style="width: 170px; min-width: 140px; flex-shrink: 0;">
+              <label style="display: block; font-size: 10px; font-weight: 800; margin-bottom: 5px; color: #64748b; text-transform: uppercase; letter-spacing: 0.8px;">Nationality</label>
+              <select name="nationality_id" id="edit-nationality-id" class="pms-filter-select" style="width: 100%; height: 38px; font-size: 12px; background-color: #ffffff;">
+                @foreach($nationalities ?? \App\Models\Nationality::where('status', 'Active')->get() as $nat)
+                  <option value="{{ $nat->id }}">{{ $nat->name }}</option>
+                @endforeach
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 2: Contact Information -->
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px 16px; margin-bottom: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+          <div style="font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.7px; color: #475569; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px;">
+            <i class="fa-solid fa-address-book" style="color: #10b981;"></i> Contact &amp; Location
+          </div>
+
+          <!-- Phone + Email + City -->
+          <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-bottom: 12px;">
+            <div>
+              <label style="display: block; font-size: 10px; font-weight: 800; margin-bottom: 5px; color: #64748b; text-transform: uppercase; letter-spacing: 0.8px;">Mobile Phone <span style="color: #ef4444;">*</span></label>
+              <input type="text" name="mobile" id="edit-mobile" required placeholder="+91 9876543210" style="width: 100%; height: 38px; padding: 6px 12px; font-size: 13px; font-weight: 700; font-family: var(--font-mono, monospace); border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #0f172a; box-sizing: border-box;">
+            </div>
+            <div>
+              <label style="display: block; font-size: 10px; font-weight: 800; margin-bottom: 5px; color: #64748b; text-transform: uppercase; letter-spacing: 0.8px;">Email Address</label>
+              <input type="email" name="email" id="edit-email" placeholder="guest@example.com" style="width: 100%; height: 38px; padding: 6px 12px; font-size: 13px; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #0f172a; box-sizing: border-box;">
+            </div>
+            <div>
+              <label style="display: block; font-size: 10px; font-weight: 800; margin-bottom: 5px; color: #64748b; text-transform: uppercase; letter-spacing: 0.8px;">City / Town</label>
+              <input type="text" name="city" id="edit-city" placeholder="e.g. Kolkata" style="width: 100%; height: 38px; padding: 6px 12px; font-size: 13px; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #0f172a; box-sizing: border-box;">
+            </div>
+          </div>
+
+          <!-- Full Address -->
+          <div>
+            <label style="display: block; font-size: 10px; font-weight: 800; margin-bottom: 5px; color: #64748b; text-transform: uppercase; letter-spacing: 0.8px;">Full Postal Address</label>
+            <input type="text" name="guest_address" id="edit-address" placeholder="Flat / House No, Street, Landmark, Pin code" style="width: 100%; height: 38px; padding: 6px 12px; font-size: 13px; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #0f172a; box-sizing: border-box;">
+          </div>
+        </div>
+
+        <!-- SECTION 3: Identity & VIP Privileges -->
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px 16px; margin-bottom: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+          <div style="font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.7px; color: #475569; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px;">
+            <i class="fa-solid fa-passport" style="color: #6366f1;"></i> Identity Proof &amp; VIP Privilege
+          </div>
+
+          <!-- ID Card Type + ID Card Number -->
+          <div style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; margin-bottom: 12px;">
+            <div>
+              <label style="display: block; font-size: 10px; font-weight: 800; margin-bottom: 5px; color: #64748b; text-transform: uppercase; letter-spacing: 0.8px;">ID Proof Type</label>
+              <select name="id_card_type_id" id="edit-id-card-type-id" class="pms-filter-select" style="width: 100%; height: 38px; font-size: 12px; background-color: #ffffff;">
+                <option value="">Select ID Proof</option>
+                @foreach($idCardTypes ?? \App\Models\IdCardType::where('status', 'Active')->get() as $idt)
+                  <option value="{{ $idt->id }}">{{ $idt->name }}</option>
+                @endforeach
+              </select>
+            </div>
+            <div>
+              <label style="display: block; font-size: 10px; font-weight: 800; margin-bottom: 5px; color: #64748b; text-transform: uppercase; letter-spacing: 0.8px;">ID Proof Number</label>
+              <input type="text" name="id_card_number" id="edit-id-card-number" placeholder="Aadhaar / Passport / Voter ID No" style="width: 100%; height: 38px; padding: 6px 12px; font-size: 13px; font-family: var(--font-mono, monospace); font-weight: 700; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #0f172a; box-sizing: border-box;">
+            </div>
+          </div>
+
+          <!-- VIP Privilege Card Checkbox & Number -->
+          <div style="background: rgba(245, 158, 11, 0.05); border: 1px solid rgba(245, 158, 11, 0.2); border-radius: 8px; padding: 10px 12px;">
+            <label style="display: inline-flex; align-items: center; gap: 8px; font-weight: 800; font-size: 12px; cursor: pointer; color: #b45309; margin-bottom: 6px;">
+              <input type="checkbox" name="has_privilege_card" id="edit-has-privilege-card" onchange="toggleEditPrivilegeInput(this.checked)" style="width: 16px; height: 16px; accent-color: #d97706; cursor: pointer;">
+              <i class="fa-solid fa-gem"></i> Guest has Privilege / VIP Card
+            </label>
+            <div id="edit-privilege-card-wrap" style="display: none; margin-top: 6px;">
+              <input type="text" name="privilege_card_no" id="edit-privilege-card-no" placeholder="Enter Privilege Card Number" style="width: 100%; max-width: 320px; height: 34px; padding: 4px 10px; font-size: 12px; font-weight: 700; font-family: var(--font-mono, monospace); border: 1px solid #f59e0b; border-radius: 6px; background: #ffffff; color: #78350f; box-sizing: border-box;">
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 4: Corporate / Company Details -->
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px 16px; margin-bottom: 0; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+          <div style="font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.7px; color: #475569; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px;">
+            <i class="fa-solid fa-building" style="color: #4338ca;"></i> Corporate Account Affiliation
+          </div>
+
+          <div style="margin-bottom: 12px;">
+            <label style="display: block; font-size: 10px; font-weight: 800; margin-bottom: 5px; color: #64748b; text-transform: uppercase; letter-spacing: 0.8px;">Company Affiliation</label>
+            <select name="company_id" id="edit-company-id" onchange="onEditCompanyChange(this.value)" class="pms-filter-select" style="width: 100%; height: 38px; font-size: 12px; background-color: #ffffff;">
+              <option value="">Individual / None</option>
+              @foreach($companies ?? \App\Models\Company::where('status', 'Active')->get() as $comp)
+                <option value="{{ $comp->id }}">{{ $comp->name }} (GSTIN: {{ $comp->gstin ?: 'N/A' }})</option>
+              @endforeach
+              <option value="new">+ Add Custom / New Company</option>
+            </select>
+          </div>
+
+          <!-- Custom Company Fields -->
+          <div id="edit-new-company-section" style="display: none; padding: 12px; background: #f8fafc; border: 1px dashed #c7d2fe; border-radius: 8px; margin-top: 10px;">
+            <div style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; margin-bottom: 10px;">
+              <div>
+                <label style="display: block; font-size: 10px; font-weight: 800; margin-bottom: 4px; color: #64748b; text-transform: uppercase;">Company Name</label>
+                <input type="text" name="new_company_name" id="edit-new-company-name" placeholder="Company Name" style="width: 100%; height: 34px; padding: 4px 10px; font-size: 12px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
+              </div>
+              <div>
+                <label style="display: block; font-size: 10px; font-weight: 800; margin-bottom: 4px; color: #64748b; text-transform: uppercase;">Company GSTIN</label>
+                <input type="text" name="new_company_gstin" id="edit-new-company-gstin" placeholder="GSTIN" style="width: 100%; height: 34px; padding: 4px 10px; font-size: 12px; font-family: var(--font-mono, monospace); border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
+              </div>
+            </div>
+            <div style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px;">
+              <div>
+                <label style="display: block; font-size: 10px; font-weight: 800; margin-bottom: 4px; color: #64748b; text-transform: uppercase;">Company Phone</label>
+                <input type="text" name="new_company_phone" id="edit-new-company-phone" placeholder="Office Phone" style="width: 100%; height: 34px; padding: 4px 10px; font-size: 12px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
+              </div>
+              <div>
+                <label style="display: block; font-size: 10px; font-weight: 800; margin-bottom: 4px; color: #64748b; text-transform: uppercase;">Company Address</label>
+                <input type="text" name="new_company_address" id="edit-new-company-address" placeholder="Address" style="width: 100%; height: 34px; padding: 4px 10px; font-size: 12px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="modal-bot" style="padding: 12px 22px; background: #ffffff; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;">
+        <span style="font-size: 11px; color: #64748b; font-weight: 600;">
+          <i class="fa-solid fa-shield-halved" style="color: #10b981;"></i> Updates apply strictly to this guest record.
+        </span>
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <button type="button" class="btn-ui-secondary" onclick="closeModal('guest-crm-edit-modal')" style="padding: 8px 18px; border-radius: 8px; border: 1px solid #cbd5e1; background: #ffffff; font-size: 12px; font-weight: 700; color: #64748b; cursor: pointer;">
+            Cancel
+          </button>
+          <button type="submit" id="btn-save-guest-edit" class="btn-ui-primary" style="padding: 8px 22px; border-radius: 8px; background: #2563eb; color: #ffffff; border: none; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);">
+            <i class="fa-solid fa-floppy-disk"></i> Save Changes
+          </button>
+        </div>
+      </div>
+    </form>
+
+  </div>
+</div>
+
 <!-- Hidden Clean Print Template Area -->
 <div id="print-area" style="display: none;"></div>
 
@@ -1238,26 +1465,11 @@
     document.getElementById('crm-mdl-registered-at').textContent = guest.created_at_fmt || 'N/A';
 
     const statusBadge = document.getElementById('crm-mdl-status-badge');
-    const mdlSelect = document.getElementById('crm-mdl-quick-status-select');
-    const mdlLocked = document.getElementById('crm-mdl-status-locked-indicator');
-    const mdlLockedText = document.getElementById('crm-mdl-status-locked-text');
     const isLocked = guest.is_locked || ['settlement done', 'checked out', 'settled'].includes((guest.status || '').toLowerCase());
 
     if (statusBadge) {
       statusBadge.innerHTML = (isLocked ? '<i class="fa-solid fa-lock" style="font-size: 8px;"></i> ' : '<i class="fa-solid fa-circle" style="font-size: 6px;"></i> ') + escapeHtml(guest.status || 'Confirmed');
       statusBadge.className = `status-badge ${getStatusBadgeColor(guest.status)}`;
-    }
-
-    if (mdlSelect && mdlLocked) {
-      if (isLocked) {
-        mdlSelect.style.display = 'none';
-        mdlLocked.style.display = 'inline-flex';
-        if (mdlLockedText) mdlLockedText.textContent = `${guest.status} (Locked)`;
-      } else {
-        mdlSelect.style.display = 'inline-block';
-        mdlSelect.value = guest.status || 'Confirmed';
-        mdlLocked.style.display = 'none';
-      }
     }
 
     // Highlight Banner
@@ -1747,105 +1959,209 @@
     });
   }
 
-  // Update guest status via AJAX
-  function updateGuestStatus(guestId, newStatus, selectElement) {
-    const item = (window.allCrmGuests || []).find(g => String(g.id) === String(guestId));
-    const isLocked = item && (item.is_locked || ['settlement done', 'checked out'].includes((item.status || '').toLowerCase()));
+  // Open Guest Edit Modal
+  function openGuestEditModal(guestId) {
+    const guest = (window.allCrmGuests || []).find(g => String(g.id) === String(guestId));
+    if (!guest) {
+      // Fallback: fetch details via API
+      fetch(`{{ url('front-office/guest') }}/${guestId}/details`, {
+        headers: { 'Accept': 'application/json' }
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.guest) {
+          fillAndShowEditModal(data.guest);
+        } else {
+          alert('Guest record not found.');
+        }
+      })
+      .catch(() => alert('Failed to load guest data.'));
+      return;
+    }
+    fillAndShowEditModal(guest);
+  }
+
+  function fillAndShowEditModal(guest) {
+    const isLocked = guest.is_locked || ['settlement done', 'checked out', 'settled'].includes((guest.status || '').toLowerCase());
     if (isLocked) {
       if (typeof PmsAlert !== 'undefined') {
-        PmsAlert.toast(`This reservation is locked in '${item.status}' status and cannot be modified.`, 'warning');
+        PmsAlert.toast('This guest reservation is settled and locked. Profile details cannot be modified.', 'warning');
       } else {
-        alert(`This reservation is locked in '${item.status}' status and cannot be modified.`);
+        alert('This guest reservation is settled and locked. Profile details cannot be modified.');
       }
-      if (selectElement) selectElement.value = item.status;
       return;
     }
 
-    const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-    if (selectElement) selectElement.disabled = true;
+    document.getElementById('edit-guest-id').value = guest.id;
+    document.getElementById('edit-mdl-guest-title-name').textContent = guest.guest_name || guest.raw_name || 'Guest';
+    document.getElementById('edit-mdl-reserve-ref').textContent = guest.reserve_id || ('RES-' + guest.id);
 
-    fetch(`{{ url('front-office/guest') }}/${guestId}/status`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRF-TOKEN': token,
-        'Accept': 'application/json'
-      },
-      body: JSON.stringify({ status: newStatus })
-    })
-    .then(res => res.json())
-    .then(data => {
-      if (selectElement) selectElement.disabled = false;
-      if (data.success) {
-        // Update local item
-        if (item) {
-          item.status = data.status;
-          item.is_locked = ['Settlement Done', 'Checked Out'].includes(data.status);
-        }
+    // Personal details
+    document.getElementById('edit-title-id').value = guest.title_id || '';
+    document.getElementById('edit-guest-name').value = guest.raw_name || guest.guest_name || '';
+    if (guest.nationality_id) {
+      document.getElementById('edit-nationality-id').value = guest.nationality_id;
+    }
 
-        // Update status badge on the row immediately
-        const badge = document.getElementById(`badge-status-${guestId}`);
-        if (badge) {
-          badge.className = `status-badge ${getStatusBadgeColor(data.status)}`;
-          const icon = ['Settlement Done', 'Checked Out'].includes(data.status) 
-            ? '<i class="fa-solid fa-lock" style="font-size: 8px;"></i>' 
-            : '<i class="fa-solid fa-circle" style="font-size: 6px;"></i>';
-          badge.innerHTML = `${icon} <span class="status-text">${escapeHtml(data.status)}</span>`;
-        }
+    // Contact details
+    document.getElementById('edit-mobile').value = (guest.raw_mobile !== undefined ? guest.raw_mobile : (guest.mobile === 'N/A' ? '' : guest.mobile)) || '';
+    document.getElementById('edit-email').value = (guest.raw_email !== undefined ? guest.raw_email : (guest.email === 'N/A' ? '' : guest.email)) || '';
+    document.getElementById('edit-city').value = (guest.raw_city !== undefined ? guest.raw_city : (guest.city === 'N/A' ? '' : guest.city)) || '';
+    document.getElementById('edit-address').value = (guest.raw_address !== undefined ? guest.raw_address : (guest.guest_address === 'N/A' ? '' : guest.guest_address)) || '';
 
-        // Update modal if currently opened with this guest
-        if (currentActiveCrmGuest && String(currentActiveCrmGuest.id) === String(guestId)) {
-          currentActiveCrmGuest.status = data.status;
-          currentActiveCrmGuest.is_locked = ['Settlement Done', 'Checked Out'].includes(data.status);
-          const mdlBadge = document.getElementById('crm-mdl-status-badge');
-          if (mdlBadge) {
-            const icon = ['Settlement Done', 'Checked Out'].includes(data.status) 
-              ? '<i class="fa-solid fa-lock" style="font-size: 8px;"></i> ' 
-              : '<i class="fa-solid fa-circle" style="font-size: 6px;"></i> ';
-            mdlBadge.innerHTML = icon + escapeHtml(data.status);
-            mdlBadge.className = `status-badge ${getStatusBadgeColor(data.status)}`;
-          }
-          const mdlSelect = document.getElementById('crm-mdl-quick-status-select');
-          if (mdlSelect) mdlSelect.value = data.status;
-        }
+    // ID proof
+    document.getElementById('edit-id-card-type-id').value = guest.id_card_type_id || '';
+    document.getElementById('edit-id-card-number').value = (guest.raw_id_card_number !== undefined ? guest.raw_id_card_number : (guest.id_card_number === 'N/A' ? '' : guest.id_card_number)) || '';
 
-        if (typeof PmsAlert !== 'undefined') {
-          PmsAlert.toast(data.message, 'success');
-        } else {
-          alert(data.message);
-        }
+    // Privilege card
+    const hasPrivilege = Boolean(guest.has_privilege_card);
+    const privChk = document.getElementById('edit-has-privilege-card');
+    privChk.checked = hasPrivilege;
+    toggleEditPrivilegeInput(hasPrivilege);
+    document.getElementById('edit-privilege-card-no').value = (guest.raw_privilege_card_no !== undefined ? guest.raw_privilege_card_no : (guest.privilege_card_no === 'N/A' ? '' : guest.privilege_card_no)) || '';
 
-        // Reload page after a brief moment to update server-side stats and lists
-        setTimeout(() => {
-          window.location.reload();
-        }, 600);
-      } else {
-        if (selectElement && item) selectElement.value = item.status;
-        if (typeof PmsAlert !== 'undefined') {
-          PmsAlert.toast(data.message || data.error || 'Error updating status', 'error');
-        } else {
-          alert(data.message || data.error || 'Error updating status');
-        }
-      }
-    })
-    .catch(err => {
-      if (selectElement) {
-        selectElement.disabled = false;
-        if (item) selectElement.value = item.status;
-      }
-      console.error('Error updating status:', err);
-      if (typeof PmsAlert !== 'undefined') {
-        PmsAlert.toast('Failed to update status. Please try again.', 'error');
-      } else {
-        alert('Failed to update status.');
-      }
-    });
+    // Company
+    const compSelect = document.getElementById('edit-company-id');
+    if (guest.company_id) {
+      compSelect.value = guest.company_id;
+      onEditCompanyChange(guest.company_id);
+    } else if (guest.new_company_name) {
+      compSelect.value = 'new';
+      onEditCompanyChange('new');
+      document.getElementById('edit-new-company-name').value = guest.new_company_name || '';
+      document.getElementById('edit-new-company-gstin').value = guest.new_company_gstin || '';
+      document.getElementById('edit-new-company-phone').value = guest.new_company_phone || '';
+      document.getElementById('edit-new-company-address').value = guest.new_company_address || '';
+    } else {
+      compSelect.value = '';
+      onEditCompanyChange('');
+    }
+
+    openModal('guest-crm-edit-modal');
   }
 
-  function onModalStatusChange(newStatus) {
-    if (!currentActiveCrmGuest) return;
-    const rowSelect = document.getElementById(`status-select-${currentActiveCrmGuest.id}`);
-    updateGuestStatus(currentActiveCrmGuest.id, newStatus, rowSelect);
+  function toggleEditPrivilegeInput(isChecked) {
+    const wrap = document.getElementById('edit-privilege-card-wrap');
+    if (wrap) {
+      wrap.style.display = isChecked ? 'block' : 'none';
+      if (!isChecked) {
+        document.getElementById('edit-privilege-card-no').value = '';
+      }
+    }
+  }
+
+  function onEditCompanyChange(val) {
+    const section = document.getElementById('edit-new-company-section');
+    if (!section) return;
+    if (val === 'new') {
+      section.style.display = 'block';
+    } else {
+      section.style.display = 'none';
+      if (val === '') {
+        document.getElementById('edit-new-company-name').value = '';
+        document.getElementById('edit-new-company-gstin').value = '';
+        document.getElementById('edit-new-company-phone').value = '';
+        document.getElementById('edit-new-company-address').value = '';
+      }
+    }
+  }
+
+  async function submitGuestEdit(event) {
+    event.preventDefault();
+    const guestId = document.getElementById('edit-guest-id').value;
+    if (!guestId) return;
+
+    const form = document.getElementById('guest-crm-edit-form');
+    const formData = new FormData(form);
+    const saveBtn = document.getElementById('btn-save-guest-edit');
+
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...';
+
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+    const payload = {
+      title_id: formData.get('title_id') || null,
+      guest_name: formData.get('guest_name'),
+      nationality_id: formData.get('nationality_id') || null,
+      mobile: formData.get('mobile') || null,
+      email: formData.get('email') || null,
+      city: formData.get('city') || null,
+      guest_address: formData.get('guest_address') || null,
+      id_card_type_id: formData.get('id_card_type_id') || null,
+      id_card_number: formData.get('id_card_number') || null,
+      has_privilege_card: formData.get('has_privilege_card') ? 1 : 0,
+      privilege_card_no: formData.get('privilege_card_no') || null,
+      company_id: formData.get('company_id') || null,
+      new_company_name: formData.get('new_company_name') || null,
+      new_company_gstin: formData.get('new_company_gstin') || null,
+      new_company_phone: formData.get('new_company_phone') || null,
+      new_company_address: formData.get('new_company_address') || null,
+    };
+
+    try {
+      const response = await fetch(`{{ url('front-office/guest') }}/${guestId}/update`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-CSRF-TOKEN': csrfToken || ''
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || data.error || 'Failed to update guest details');
+      }
+
+      // Update in memory guest record
+      const g = (window.allCrmGuests || []).find(x => String(x.id) === String(guestId));
+      if (g) {
+        Object.assign(g, data.guest);
+      }
+
+      // Update table row in UI
+      const nameElem = document.getElementById(`guest-name-display-${guestId}`);
+      if (nameElem) {
+        nameElem.textContent = data.guest.guest_name;
+      }
+
+      const cityWrap = document.getElementById(`guest-city-wrap-${guestId}`);
+      const cityElem = document.getElementById(`guest-city-display-${guestId}`);
+      if (cityElem) {
+        cityElem.textContent = data.guest.city !== 'N/A' ? data.guest.city : '';
+        if (cityWrap) {
+          cityWrap.style.display = (data.guest.city && data.guest.city !== 'N/A') ? 'inline' : 'none';
+        }
+      }
+
+      const phoneElem = document.getElementById(`guest-phone-display-${guestId}`);
+      if (phoneElem) {
+        phoneElem.textContent = data.guest.mobile || 'N/A';
+      }
+
+      // If active guest in details modal is open, re-populate
+      if (currentActiveCrmGuest && String(currentActiveCrmGuest.id) === String(guestId)) {
+        Object.assign(currentActiveCrmGuest, data.guest);
+        populateAndOpenModal(currentActiveCrmGuest);
+      }
+
+      closeModal('guest-crm-edit-modal');
+
+      if (typeof PmsAlert !== 'undefined') {
+        PmsAlert.toast(data.message || 'Guest details updated successfully!', 'success');
+      } else {
+        alert(data.message || 'Guest details updated successfully!');
+      }
+
+    } catch (err) {
+      alert(err.message || 'Error updating guest details');
+    } finally {
+      saveBtn.disabled = false;
+      saveBtn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Save Changes';
+    }
   }
 
   // Print Guest Dossier

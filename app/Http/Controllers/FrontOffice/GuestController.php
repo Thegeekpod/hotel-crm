@@ -10,6 +10,8 @@ use App\Models\IdCardType;
 use App\Models\ReservationMode;
 use App\Models\PaymentMode;
 use App\Models\Guest;
+use App\Models\Title;
+use App\Models\Nationality;
 use App\Models\Booking;
 use App\Models\Payment;
 use App\Models\Settlement;
@@ -32,6 +34,8 @@ class GuestController extends Controller
         $registrationModes = ReservationMode::where('status', 'Active')->get();
         $registrationTypes = \App\Models\RegistrationType::where('status', 'Active')->get();
         $paymentModes = PaymentMode::where('status', 'Active')->get();
+        $titles = Title::where('status', 'Active')->get();
+        $nationalities = Nationality::where('status', 'Active')->get();
         $rackRooms = [];
 
         $query = Guest::with([
@@ -199,6 +203,9 @@ class GuestController extends Controller
 
             return [
                 'id' => $item->id,
+                'title_id' => $item->title_id,
+                'title' => $item->title?->name ?? '',
+                'raw_name' => $item->guest_name,
                 'guest_name' => ($item->title?->name ? $item->title->name . ' ' : '') . $item->guest_name,
                 'reserve_id' => $item->reserve_id ?: ('RES-' . $item->id),
                 'folio_number' => $item->folio_number ?: '-',
@@ -213,14 +220,26 @@ class GuestController extends Controller
                 'total_nights' => (int)($item->total_nights ?: 1),
                 'registration_type' => $lb?->registrationType?->name ?? ($item->registrationType?->name ?? 'Regular'),
                 'mobile' => $item->mobile ?: 'N/A',
+                'raw_mobile' => $item->mobile ?? '',
                 'email' => $item->email ?: 'N/A',
+                'raw_email' => $item->email ?? '',
                 'city' => $item->city ?: 'N/A',
+                'raw_city' => $item->city ?? '',
                 'guest_address' => $item->guest_address ?: 'N/A',
+                'raw_address' => $item->guest_address ?? '',
+                'nationality_id' => $item->nationality_id,
                 'nationality' => $item->nationality?->name ?? 'Indian',
+                'id_card_type_id' => $item->id_card_type_id,
                 'id_card_type' => $item->idCardType?->name ?? 'ID Proof',
                 'id_card_number' => $item->id_card_number ?: 'N/A',
+                'raw_id_card_number' => $item->id_card_number ?? '',
                 'has_privilege_card' => (bool)$item->has_privilege_card,
                 'privilege_card_no' => $item->privilege_card_no ?: '',
+                'company_id' => $item->company_id,
+                'new_company_name' => $item->new_company_name ?? '',
+                'new_company_address' => $item->new_company_address ?? '',
+                'new_company_gstin' => $item->new_company_gstin ?? '',
+                'new_company_phone' => $item->new_company_phone ?? '',
                 'reserve_date' => $item->reserve_date ? \Carbon\Carbon::parse($item->reserve_date)->format('d M Y') : 'N/A',
                 'reserve_time' => $item->reserve_time ? date('h:i A', strtotime($item->reserve_time)) : '12:00 PM',
                 'checkout_date' => $item->checkout_date ? \Carbon\Carbon::parse($item->checkout_date)->format('d M Y') : 'N/A',
@@ -268,6 +287,8 @@ class GuestController extends Controller
             'registrationModes',
             'registrationTypes',
             'paymentModes',
+            'titles',
+            'nationalities',
             'rackRooms'
         ));
     }
@@ -408,6 +429,136 @@ class GuestController extends Controller
             'success' => true,
             'guest' => $serialized,
             'raw_guest' => $guest
+        ]);
+    }
+
+    public function update(Request $request, $id)
+    {
+        $guest = Guest::with(['latestBooking.settlements', 'latestBooking.payments', 'settlements'])->find($id);
+        if (!$guest) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Guest record not found.',
+                'error' => 'Guest record not found.'
+            ], 404);
+        }
+
+        $booking = $guest->latestBooking;
+        $balVal = (float)($guest->balance ?? 0);
+        $advanceAmount = (float)$guest->advance_amount;
+        $hasSettled = ($guest->settlements && $guest->settlements->where('status', 'Settled')->isNotEmpty())
+            || ($booking?->settlements && $booking->settlements->where('status', 'Settled')->isNotEmpty())
+            || ($booking?->payments && $booking->payments->where('payment_type', 'Settlement')->isNotEmpty())
+            || strtolower($guest->status ?? '') === 'settlement done'
+            || ((float)$balVal <= 0.01 && (float)$guest->payable_amount > 0 && ($advanceAmount > 0 || ($booking?->payments && $booking->payments->isNotEmpty())));
+
+        $isLocked = $hasSettled || in_array($guest->status, ['Settlement Done', 'Checked Out']);
+
+        if ($isLocked) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This guest record is settled / locked and cannot be edited.',
+                'error' => 'This guest record is settled / locked and cannot be edited.'
+            ], 403);
+        }
+
+        $validated = $request->validate([
+            'title_id' => 'nullable|exists:titles,id',
+            'guest_name' => 'required|string|max:191',
+            'mobile' => 'nullable|string|max:20',
+            'email' => 'nullable|email|max:191',
+            'city' => 'nullable|string|max:100',
+            'guest_address' => 'nullable|string|max:500',
+            'nationality_id' => 'nullable|exists:nationalities,id',
+            'id_card_type_id' => 'nullable|exists:id_card_types,id',
+            'id_card_number' => 'nullable|string|max:100',
+            'has_privilege_card' => 'nullable',
+            'privilege_card_no' => 'nullable|string|max:100',
+            'company_id' => 'nullable',
+            'new_company_name' => 'nullable|string|max:191',
+            'new_company_address' => 'nullable|string|max:500',
+            'new_company_gstin' => 'nullable|string|max:50',
+            'new_company_phone' => 'nullable|string|max:50',
+        ]);
+
+        $hasPrivilege = $request->boolean('has_privilege_card') || $request->input('has_privilege_card') === '1' || $request->input('has_privilege_card') === 1;
+        $validated['has_privilege_card'] = $hasPrivilege;
+        if (!$hasPrivilege) {
+            $validated['privilege_card_no'] = null;
+        }
+
+        // Handle company selection: 'new' or numeric id or empty
+        $compVal = $request->input('company_id');
+        if ($compVal === 'new') {
+            $validated['company_id'] = null;
+        } elseif (is_numeric($compVal) && (int)$compVal > 0) {
+            $validated['company_id'] = (int)$compVal;
+            $validated['new_company_name'] = null;
+            $validated['new_company_address'] = null;
+            $validated['new_company_gstin'] = null;
+            $validated['new_company_phone'] = null;
+        } else {
+            $validated['company_id'] = null;
+        }
+
+        // Update ONLY this particular guest details
+        $guest->update($validated);
+
+        // Optionally sync company fields on the latest booking
+        if ($booking) {
+            $booking->update([
+                'company_id' => $validated['company_id'] ?? null,
+                'new_company_name' => $validated['new_company_name'] ?? null,
+                'new_company_address' => $validated['new_company_address'] ?? null,
+                'new_company_gstin' => $validated['new_company_gstin'] ?? null,
+                'new_company_phone' => $validated['new_company_phone'] ?? null,
+            ]);
+        }
+
+        $guest->load(['title', 'nationality', 'idCardType', 'company']);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Guest profile details updated successfully!',
+            'guest' => [
+                'id' => $guest->id,
+                'title_id' => $guest->title_id,
+                'title' => $guest->title?->name ?? '',
+                'guest_name' => ($guest->title?->name ? $guest->title->name . ' ' : '') . $guest->guest_name,
+                'raw_name' => $guest->guest_name,
+                'mobile' => $guest->mobile ?: 'N/A',
+                'raw_mobile' => $guest->mobile ?? '',
+                'email' => $guest->email ?: 'N/A',
+                'raw_email' => $guest->email ?? '',
+                'city' => $guest->city ?: 'N/A',
+                'raw_city' => $guest->city ?? '',
+                'guest_address' => $guest->guest_address ?: 'N/A',
+                'raw_address' => $guest->guest_address ?? '',
+                'nationality_id' => $guest->nationality_id,
+                'nationality' => $guest->nationality?->name ?? 'Indian',
+                'id_card_type_id' => $guest->id_card_type_id,
+                'id_card_type' => $guest->idCardType?->name ?? 'ID Proof',
+                'id_card_number' => $guest->id_card_number ?: 'N/A',
+                'raw_id_card_number' => $guest->id_card_number ?? '',
+                'has_privilege_card' => (bool)$guest->has_privilege_card,
+                'privilege_card_no' => $guest->privilege_card_no ?: '',
+                'company_id' => $guest->company_id,
+                'company' => $guest->company ? [
+                    'name' => $guest->company->name,
+                    'gstin' => $guest->company->gstin ?: 'N/A',
+                    'address' => $guest->company->address ?: 'N/A',
+                    'phone' => $guest->company->phone ?: 'N/A',
+                ] : ($guest->new_company_name ? [
+                    'name' => $guest->new_company_name,
+                    'gstin' => $guest->new_company_gstin ?: 'N/A',
+                    'address' => $guest->new_company_address ?: 'N/A',
+                    'phone' => $guest->new_company_phone ?: 'N/A',
+                ] : null),
+                'new_company_name' => $guest->new_company_name ?? '',
+                'new_company_address' => $guest->new_company_address ?? '',
+                'new_company_gstin' => $guest->new_company_gstin ?? '',
+                'new_company_phone' => $guest->new_company_phone ?? '',
+            ]
         ]);
     }
 

@@ -209,7 +209,7 @@ class Guest extends Model
 
     public function latestBooking(): HasOne
     {
-        return $this->hasOne(Booking::class, 'guest_id')->latestOfMany();
+        return $this->hasOne(Booking::class, 'guest_id')->latestOfMany('updated_at');
     }
 
     public function currentBooking(): HasOne

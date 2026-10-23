@@ -500,17 +500,21 @@ class FolioController extends Controller
                 'remarks' => $request->input('remarks', 'Early check-out for individual occupant'),
             ]);
 
-            // 3. Check if any other occupants remain in the same room
+            // 3. Check if any other occupants remain active in the same room under this reservation
+            $roomVacated = false;
+            $roomObj = $occupantBooking->room;
             if ($occupantBooking->room_id) {
                 $remainingInRoom = Booking::where('room_id', $occupantBooking->room_id)
                     ->where('reserve_id', $occupantBooking->reserve_id)
                     ->where('id', '!=', $occupantBooking->id)
-                    ->where('status', '!=', 'Checked Out')
+                    ->whereIn('status', ['Confirmed', 'Arrived', 'Stay Over', 'Checked In', 'Settlement Done'])
                     ->count();
 
-                // If no remaining occupants in this room, set room housekeeping to dirty
+                // If no remaining active occupants in this room, mark room as dirty for housekeeping and release room
                 if ($remainingInRoom === 0) {
-                    $dirtyState = HousekeepingState::where('name', 'like', '%dirty%')->first();
+                    $roomVacated = true;
+                    $dirtyState = HousekeepingState::where('name', 'Dirty')->first()
+                        ?: HousekeepingState::where('name', 'like', '%dirty%')->first();
                     if ($dirtyState) {
                         RoomHousekeepingHistory::create([
                             'room_id' => $occupantBooking->room_id,
@@ -524,7 +528,8 @@ class FolioController extends Controller
 
             // 4. Check if all bookings across the entire reservation are now checked out
             $remainingInReserve = Booking::where('reserve_id', $occupantBooking->reserve_id)
-                ->where('status', '!=', 'Checked Out')
+                ->where('id', '!=', $occupantBooking->id)
+                ->whereIn('status', ['Confirmed', 'Arrived', 'Stay Over', 'Checked In', 'Settlement Done'])
                 ->count();
 
             $isAllCheckedOut = ($remainingInReserve === 0);
@@ -545,11 +550,21 @@ class FolioController extends Controller
             DB::commit();
 
             $guestName = $occupantBooking->guest?->guest_name ?? 'Guest';
+            $roomLabel = $roomObj?->room_number ? ('Room ' . $roomObj->room_number) : 'the room';
+            $msg = "Guest {$guestName} has been checked out early successfully.";
+            if ($roomVacated) {
+                $msg .= " {$roomLabel} is now completely vacated and scheduled for Housekeeping (Dirty).";
+            } else {
+                $msg .= " {$roomLabel} remains active and reserved for remaining occupant(s).";
+            }
+
             return response()->json([
                 'success' => true,
-                'message' => "Guest {$guestName} has been checked out early successfully.",
+                'message' => $msg,
                 'guest_name' => $guestName,
                 'booking_id' => $occupantBooking->id,
+                'room_number' => $roomObj?->room_number,
+                'room_vacated' => $roomVacated,
                 'checkout_date' => Carbon::parse($checkoutDate)->format('d M Y'),
                 'checkout_time' => date('h:i A', strtotime($checkoutTime)),
                 'is_all_checked_out' => $isAllCheckedOut,
@@ -620,6 +635,19 @@ class FolioController extends Controller
             ];
         }
 
+        // Annotate each room with is_vacated and active_occupants_count
+        foreach ($roomsMap as $k => $rmData) {
+            $occCount = count($rmData['occupants']);
+            $rmCheckedOutCount = collect($rmData['occupants'])->where('is_checked_out', true)->count();
+            $roomsMap[$k]['is_vacated'] = ($occCount > 0 && $rmCheckedOutCount >= $occCount);
+            $roomsMap[$k]['active_occupants_count'] = max(0, $occCount - $rmCheckedOutCount);
+        }
+
+        $totalOccupantsCount = $allBookings->count();
+        $checkedOutOccupantsCount = $allBookings->where('status', 'Checked Out')->count();
+        $isAllCheckedOut = ($checkedOutOccupantsCount >= $totalOccupantsCount);
+        $effectiveStatus = $isAllCheckedOut ? 'Checked Out' : ($booking->status === 'Checked Out' ? 'Settlement Done' : $booking->status);
+
         // Settlements history
         $settlementsHistory = ($booking->settlements ?? collect())->map(function ($s) {
             return [
@@ -648,7 +676,9 @@ class FolioController extends Controller
             'id' => $booking->id,
             'reserve_id' => $booking->reserve_id ?: ('RES-' . $booking->id),
             'folio_number' => $booking->folio_number ?: ('FOL-' . ($booking->room?->room_number ?? '100') . '-' . $booking->id),
-            'status' => $booking->status ?: 'Confirmed',
+            'status' => $effectiveStatus ?: 'Confirmed',
+            'is_all_checked_out' => $isAllCheckedOut,
+            'active_occupants_count' => max(0, $totalOccupantsCount - $checkedOutOccupantsCount),
             'created_at_fmt' => $booking->created_at ? $booking->created_at->format('d M Y, h:i A') : 'N/A',
             'registration_type' => $booking->registrationType?->name ?? 'Regular',
             'reservation_mode' => $booking->reservationMode?->name ?? 'Front Desk',

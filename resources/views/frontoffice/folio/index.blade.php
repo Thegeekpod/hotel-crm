@@ -1745,6 +1745,11 @@
 
     let html = '';
     rooms.forEach(r => {
+      const isVacated = r.is_vacated === true;
+      const roomStatusBadge = isVacated
+        ? `<span style="background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;"><i class="fa-solid fa-broom"></i> Vacated (Housekeeping Dirty)</span>`
+        : `<span style="background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;"><i class="fa-solid fa-bed"></i> Reserved / Occupied</span>`;
+
       html += `
         <div class="room-alloc-card">
           <div class="room-alloc-header">
@@ -1757,6 +1762,7 @@
               <span style="font-size: 11px; color: #64748b; font-weight: 600;">${escapeHtml(r.category)}</span>
               <span style="color: #cbd5e1;">•</span>
               <span style="font-size: 11px; color: #64748b;">${escapeHtml(r.bedding)}</span>
+              ${roomStatusBadge}
             </div>
             <div style="font-size: 11px; font-family: var(--font-mono, monospace); font-weight: 800; color: #4338ca;">
               ${formatINR(r.rate)} / night
@@ -1916,7 +1922,9 @@
     const btnCheckout = document.getElementById('fmdl-action-btn-checkout');
     const badgeLocked = document.getElementById('fmdl-badge-locked');
 
-    const isCheckedOut = (folio.status || '').toLowerCase() === 'checked out';
+    const isCheckedOut = (folio.is_all_checked_out !== undefined) 
+      ? folio.is_all_checked_out 
+      : ((folio.status || '').toLowerCase() === 'checked out');
     const isSettled = (folio.status || '').toLowerCase() === 'settlement done' || Number(folio.balance) <= 0.01;
 
     if (isCheckedOut) {

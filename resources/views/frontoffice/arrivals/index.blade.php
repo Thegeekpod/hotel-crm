@@ -347,11 +347,178 @@
     background: #eef2ff;
     color: #4338ca;
     border: 1px solid #c7d2fe;
-    padding: 2px 8px;
+    padding: 3px 8px;
     border-radius: 6px;
     font-weight: 800;
     font-family: var(--font-mono, monospace);
     font-size: 11px;
+    box-sizing: border-box;
+  }
+
+  .room-tag-clickable {
+    cursor: pointer;
+    transition: all 0.15s ease-in-out;
+    outline: none;
+    line-height: normal;
+    text-decoration: none;
+  }
+
+  .room-tag-clickable:hover {
+    transform: translateY(-1px);
+  }
+
+  .room-tag-clickable:active {
+    transform: translateY(0);
+  }
+
+  .room-tag-clickable.disabled {
+    cursor: not-allowed;
+    opacity: 0.8;
+  }
+
+  /* Room Tag Status-Specific Colors */
+  .room-tag.status-confirmed, .room-tag.status-blue {
+    background: rgba(99, 102, 241, 0.12);
+    color: #4338ca;
+    border-color: rgba(99, 102, 241, 0.3);
+  }
+  .room-tag.status-confirmed:hover, .room-tag.status-blue:hover {
+    background: rgba(99, 102, 241, 0.22);
+    border-color: #6366f1;
+    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.25);
+  }
+
+  .room-tag.status-checkedin, .room-tag.status-checked-in, .room-tag.status-cyan {
+    background: rgba(6, 182, 212, 0.12);
+    color: #0e7490;
+    border-color: rgba(6, 182, 212, 0.3);
+  }
+  .room-tag.status-checkedin:hover, .room-tag.status-checked-in:hover, .room-tag.status-cyan:hover {
+    background: rgba(6, 182, 212, 0.22);
+    border-color: #06b6d4;
+    box-shadow: 0 2px 8px rgba(6, 182, 212, 0.25);
+  }
+
+  .room-tag.status-cancelled, .room-tag.status-red {
+    background: rgba(239, 68, 68, 0.12);
+    color: #b91c1c;
+    border-color: rgba(239, 68, 68, 0.3);
+  }
+  .room-tag.status-cancelled:hover, .room-tag.status-red:hover {
+    background: rgba(239, 68, 68, 0.22);
+    border-color: #ef4444;
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.25);
+  }
+
+  .room-tag.status-arrived, .room-tag.status-green {
+    background: rgba(16, 185, 129, 0.12);
+    color: #047857;
+    border-color: rgba(16, 185, 129, 0.3);
+  }
+  .room-tag.status-arrived:hover, .room-tag.status-green:hover {
+    background: rgba(16, 185, 129, 0.22);
+    border-color: #10b981;
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.25);
+  }
+
+  .room-tag.status-stayover, .room-tag.status-stay-over, .room-tag.status-yellow {
+    background: rgba(245, 158, 11, 0.12);
+    color: #b45309;
+    border-color: rgba(245, 158, 11, 0.3);
+  }
+  .room-tag.status-stayover:hover, .room-tag.status-stay-over:hover, .room-tag.status-yellow:hover {
+    background: rgba(245, 158, 11, 0.22);
+    border-color: #f59e0b;
+    box-shadow: 0 2px 8px rgba(245, 158, 11, 0.25);
+  }
+
+  .room-tag.status-settled, .room-tag.status-settlement-done {
+    background: #ede9fe;
+    color: #5b21b6;
+    border-color: #ddd6fe;
+  }
+  .room-tag.status-settled:hover, .room-tag.status-settlement-done:hover {
+    background: #ddd6fe;
+    border-color: #8b5cf6;
+    box-shadow: 0 2px 8px rgba(139, 92, 246, 0.25);
+  }
+
+  .room-tag.status-checkedout, .room-tag.status-checked-out, .room-tag.status-purple, .room-tag.status-gray {
+    background: rgba(100, 116, 139, 0.12);
+    color: #475569;
+    border-color: rgba(100, 116, 139, 0.3);
+  }
+  .room-tag.status-checkedout:hover, .room-tag.status-checked-out:hover, .room-tag.status-purple:hover, .room-tag.status-gray:hover {
+    background: rgba(100, 116, 139, 0.22);
+    border-color: #64748b;
+    box-shadow: 0 2px 8px rgba(100, 116, 139, 0.25);
+  }
+
+  /* Floating Room Status Dropdown Portal */
+  .room-status-dropdown-portal {
+    position: fixed;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.18), 0 4px 6px -2px rgba(15, 23, 42, 0.05);
+    padding: 6px;
+    z-index: 999999;
+    min-width: 145px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    animation: pmsFadeInDown 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  @keyframes pmsFadeInDown {
+    from {
+      opacity: 0;
+      transform: translateY(-4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .room-status-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 7px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #1e293b;
+    cursor: pointer;
+    transition: all 0.12s ease;
+    user-select: none;
+  }
+
+  .room-status-item:hover {
+    background: #f1f5f9;
+  }
+
+  .room-status-item.active {
+    background: #eef2ff;
+    color: #4338ca;
+  }
+
+  .room-status-item .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 8px;
+  }
+
+  .room-status-item.confirmed .dot { background: #6366f1; }
+  .room-status-item.checkedin .dot { background: #06b6d4; }
+  .room-status-item.cancelled .dot { background: #ef4444; }
+
+  .room-status-item.active .check-icon {
+    opacity: 1 !important;
+    color: #4338ca;
   }
 
   /* Room card inside dossier */
@@ -593,13 +760,9 @@
           </label>
           <select id="status-filter-select" class="pms-filter-select" onchange="onSearchOrFilterChange()">
             <option value="all">All Statuses</option>
-            <option value="Confirmed">Confirmed (Active)</option>
-            <option value="Arrived">Arrived</option>
-            <option value="Checked In">Checked In</option>
-            <option value="Stay Over">Stay Over</option>
-            <option value="Settlement Done">Settlement Done</option>
-            <option value="Checked Out">Checked Out</option>
-            <option value="Cancelled">Cancelled</option>
+            <option value="Confirmed">Confirm</option>
+            <option value="Checked In">Checkin</option>
+            <option value="Cancelled">Cancel</option>
           </select>
         </div>
 
@@ -631,15 +794,15 @@
           <thead>
             <tr>
               <th style="width: 45px; text-align: center;">SL</th>
-              <th style="width: 130px;">Booking Ref</th>
-              <th style="min-width: 170px;">Guest Details</th>
-              <th style="min-width: 130px;">Allotted Room</th>
+              <th style="min-width: 140px;">Allotted Room</th>
+              <th style="min-width: 145px; white-space: nowrap;">Booking Ref</th>
+              <th style="min-width: 175px;">Guest Details</th>
               <th style="min-width: 140px;">Stay Dates</th>
               <th style="min-width: 90px; text-align: right;">Total Gross</th>
               <th style="min-width: 90px; text-align: right;">Advance</th>
               <th style="min-width: 90px; text-align: right;">Balance</th>
-              <th style="min-width: 110px; text-align: center;">Status</th>
-              <th style="min-width: 160px; text-align: center;">Action</th>
+              <th style="min-width: 105px; text-align: center;">Status</th>
+              <th style="width: 70px; text-align: center;">Action</th>
             </tr>
           </thead>
           <tbody id="arrivals-guest-tbody">
@@ -861,13 +1024,9 @@
         <span style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase;">Status:</span>
         <div id="mdl-status-control-wrapper" style="display: inline-flex; align-items: center;">
           <select class="status-quick-select" id="mdl-quick-status-select" onchange="onModalStatusChange(this.value)">
-            <option value="Confirmed">Confirmed (Active)</option>
-            <option value="Arrived">Arrived</option>
-            <option value="Checked In">Checked In</option>
-            <option value="Stay Over">Stay Over</option>
-            <option value="Settlement Done" disabled>Settlement Done</option>
-            <option value="Checked Out">Checked Out</option>
-            <option value="Cancelled">Cancelled</option>
+            <option value="Confirmed">Confirm</option>
+            <option value="Checked In">Checkin</option>
+            <option value="Cancelled">Cancel</option>
           </select>
           <span id="mdl-status-locked-indicator" class="badge-locked settled" style="display: none; padding: 4px 10px; font-size: 12px; font-weight: 700;">
             <i class="fa-solid fa-lock"></i> <span id="mdl-status-locked-text">Settlement Done (Locked)</span>
@@ -892,13 +1051,109 @@
   </div>
 </div>
 
+<!-- Floating Room Status Dropdown Menu Portal (Click room to change status) -->
+<div id="floating-room-status-dropdown" class="room-status-dropdown-portal" style="display: none;">
+  <div class="room-status-item confirmed" data-status="Confirmed" onclick="selectRoomStatus('Confirmed')">
+    <div style="display: flex; align-items: center;">
+      <span class="dot"></span>
+      <span>Confirm</span>
+    </div>
+    <i class="fa-solid fa-check check-icon" style="font-size: 10px; opacity: 0;"></i>
+  </div>
+  <div class="room-status-item checkedin" data-status="Checked In" onclick="selectRoomStatus('Checked In')">
+    <div style="display: flex; align-items: center;">
+      <span class="dot"></span>
+      <span>Checkin</span>
+    </div>
+    <i class="fa-solid fa-check check-icon" style="font-size: 10px; opacity: 0;"></i>
+  </div>
+  <div class="room-status-item cancelled" data-status="Cancelled" onclick="selectRoomStatus('Cancelled')">
+    <div style="display: flex; align-items: center;">
+      <span class="dot"></span>
+      <span>Cancel</span>
+    </div>
+    <i class="fa-solid fa-check check-icon" style="font-size: 10px; opacity: 0;"></i>
+  </div>
+</div>
+
 @push('scripts')
 <script>
   // All guests array loaded from database
   window.allArrivalGuests = @json($serializedGuests);
   let currentActiveGuest = null;
+  let activeStatusDropdownGuestId = null;
   let currentPage = 1;
   let pageSize = 10;
+
+  // Open Room Status Dropdown when a room number tag is clicked
+  function openRoomStatusDropdown(e, guestId, currentStatus, isLocked) {
+    e.stopPropagation();
+    e.preventDefault();
+
+    const item = (window.allArrivalGuests || []).find(g => String(g.id) === String(guestId));
+    const locked = isLocked || (item && (item.is_locked || ['settlement done', 'checked out'].includes((item.status || '').toLowerCase())));
+    if (locked) {
+      if (typeof PmsAlert !== 'undefined') {
+        PmsAlert.toast(`Reservation is locked in '${item?.status || currentStatus}' status and cannot be modified.`, 'warning');
+      } else {
+        alert(`Reservation is locked in '${item?.status || currentStatus}' status and cannot be modified.`);
+      }
+      return;
+    }
+
+    activeStatusDropdownGuestId = guestId;
+    const portal = document.getElementById('floating-room-status-dropdown');
+    if (!portal) return;
+
+    const btn = e.currentTarget;
+    const rect = btn.getBoundingClientRect();
+
+    const effectiveStatus = (item?.status || currentStatus || '').toLowerCase();
+    portal.querySelectorAll('.room-status-item').forEach(el => {
+      const st = el.getAttribute('data-status').toLowerCase();
+      if (st === effectiveStatus || (st === 'checked in' && (effectiveStatus === 'checked in' || effectiveStatus === 'checkedin'))) {
+        el.classList.add('active');
+      } else {
+        el.classList.remove('active');
+      }
+    });
+
+    portal.style.display = 'flex';
+    
+    let top = rect.bottom + 4;
+    let left = rect.left;
+    const portalWidth = 145;
+    if (left + portalWidth > window.innerWidth - 10) {
+      left = window.innerWidth - portalWidth - 10;
+    }
+    
+    portal.style.top = `${top}px`;
+    portal.style.left = `${left}px`;
+  }
+
+  // Select a status option (Confirm, Checkin, Cancel)
+  function selectRoomStatus(status) {
+    const portal = document.getElementById('floating-room-status-dropdown');
+    if (portal) portal.style.display = 'none';
+
+    if (!activeStatusDropdownGuestId) return;
+    updateGuestStatus(activeStatusDropdownGuestId, status);
+  }
+
+  // Close floating dropdown on click outside or page scroll
+  window.addEventListener('click', function(e) {
+    const portal = document.getElementById('floating-room-status-dropdown');
+    if (portal && portal.style.display !== 'none' && !portal.contains(e.target) && !e.target.closest('.room-tag-clickable')) {
+      portal.style.display = 'none';
+    }
+  });
+
+  window.addEventListener('scroll', function() {
+    const portal = document.getElementById('floating-room-status-dropdown');
+    if (portal && portal.style.display !== 'none') {
+      portal.style.display = 'none';
+    }
+  }, true);
 
   // HTML escaping helper
   function escapeHtml(str) {
@@ -990,14 +1245,53 @@
             ${sl}
           </td>
 
-          <!-- Booking Ref & Folio -->
+          <!-- Allotted Room (Clickable Room Number to Change Status: Confirm, Checkin, Cancel) -->
           <td>
-            <div style="font-family: var(--font-mono, monospace); font-weight: 800; color: #4f46e5; font-size: 12px; cursor: pointer;" onclick="openGuestDetailsModalById(${item.id})" title="Click to view Arrival Dossier">
-              <i class="fa-solid fa-receipt" style="color: #6366f1; margin-right: 4px; font-size: 11px;"></i>
-              ${escapeHtml(item.reserve_id)}
+            ${item.rooms && item.rooms.length > 0 ? `
+              <div style="display: flex; flex-direction: column; gap: 4px;">
+                ${item.rooms.map(r => `
+                  <div style="display: inline-flex; align-items: center; gap: 6px;">
+                    <button type="button" 
+                            class="room-tag room-tag-clickable status-${badgeColor} ${(item.is_locked || ['settlement done', 'checked out'].includes((item.status || '').toLowerCase())) ? 'disabled' : ''}" 
+                            onclick="openRoomStatusDropdown(event, ${item.id}, '${escapeHtml(item.status)}', ${item.is_locked ? 'true' : 'false'})"
+                            title="${(item.is_locked || ['settlement done', 'checked out'].includes((item.status || '').toLowerCase())) ? 'Reservation is locked' : 'Click to change status (Confirm, Checkin, Cancel)'}">
+                      <i class="fa-solid fa-door-open" style="font-size: 10px;"></i>
+                      <span>${escapeHtml(r.room_number)}</span>
+                      ${(item.is_locked || ['settlement done', 'checked out'].includes((item.status || '').toLowerCase())) ? `
+                        <i class="fa-solid fa-lock" style="font-size: 8px; opacity: 0.6; margin-left: 2px;"></i>
+                      ` : `
+                        <i class="fa-solid fa-chevron-down" style="font-size: 8px; opacity: 0.7; margin-left: 2px;"></i>
+                      `}
+                    </button>
+                    <span style="font-size: 10px; color: #64748b; font-weight: 700;">
+                      Floor ${escapeHtml(r.floor)}
+                    </span>
+                    <span style="color: #cbd5e1;">•</span>
+                    <span style="font-size: 10px; color: #94a3b8;">${escapeHtml(r.category)}</span>
+                  </div>
+                `).join('')}
+              </div>
+            ` : `
+              <button type="button" 
+                      class="room-tag room-tag-clickable status-${badgeColor} ${(item.is_locked || ['settlement done', 'checked out'].includes((item.status || '').toLowerCase())) ? 'disabled' : ''}"
+                      onclick="openRoomStatusDropdown(event, ${item.id}, '${escapeHtml(item.status)}', ${item.is_locked ? 'true' : 'false'})"
+                      title="${(item.is_locked || ['settlement done', 'checked out'].includes((item.status || '').toLowerCase())) ? 'Reservation is locked' : 'Click to change status (Confirm, Checkin, Cancel)'}">
+                <i class="fa-solid fa-hourglass-half" style="font-size: 10px;"></i>
+                <span>Unassigned</span>
+                <i class="fa-solid fa-chevron-down" style="font-size: 8px; opacity: 0.7; margin-left: 2px;"></i>
+              </button>
+            `}
+          </td>
+
+          <!-- Booking Ref & Folio (Not in text wrap) -->
+          <td style="white-space: nowrap;">
+            <div style="font-family: var(--font-mono, monospace); font-weight: 800; color: #4f46e5; font-size: 12px; cursor: pointer; white-space: nowrap; display: inline-flex; align-items: center; gap: 4px;" onclick="openGuestDetailsModalById(${item.id})" title="Click to view Arrival Dossier">
+              <i class="fa-solid fa-receipt" style="color: #6366f1; font-size: 11px;"></i>
+              <span>${escapeHtml(item.reserve_id)}</span>
             </div>
-            <div style="font-size: 10px; color: #64748b; font-family: var(--font-mono, monospace); margin-top: 2px;">
-              <i class="fa-regular fa-file-lines"></i> ${escapeHtml(item.folio_number)}
+            <div style="font-size: 10px; color: #64748b; font-family: var(--font-mono, monospace); margin-top: 2px; white-space: nowrap; display: flex; align-items: center; gap: 4px;">
+              <i class="fa-regular fa-file-lines"></i>
+              <span>${escapeHtml(item.folio_number)}</span>
             </div>
           </td>
 
@@ -1017,31 +1311,6 @@
               ${item.registration_type ? `<span style="font-size: 9px; padding: 1px 6px; border-radius: 4px; background: #e2e8f0; color: #475569; font-weight: 700;">${escapeHtml(item.registration_type)}</span>` : ''}
               ${item.city && item.city !== 'N/A' ? `<span style="color: #94a3b8;"><i class="fa-solid fa-location-dot" style="font-size: 9px;"></i> ${escapeHtml(item.city)}</span>` : ''}
             </div>
-          </td>
-
-          <!-- Room(s) & Category (Room-wise) -->
-          <td>
-            ${item.rooms && item.rooms.length > 0 ? `
-              <div style="display: flex; flex-direction: column; gap: 4px;">
-                ${item.rooms.map(r => `
-                  <div style="display: inline-flex; align-items: center; gap: 6px;">
-                    <span class="room-tag">
-                      <i class="fa-solid fa-door-open" style="font-size: 10px;"></i>
-                      ${escapeHtml(r.room_number)}
-                    </span>
-                    <span style="font-size: 10px; color: #64748b; font-weight: 700;">
-                      Floor ${escapeHtml(r.floor)}
-                    </span>
-                    <span style="color: #cbd5e1;">•</span>
-                    <span style="font-size: 10px; color: #94a3b8;">${escapeHtml(r.category)}</span>
-                  </div>
-                `).join('')}
-              </div>
-            ` : `
-              <span style="font-size: 11px; color: #94a3b8; font-style: italic;">
-                <i class="fa-solid fa-hourglass-half" style="font-size: 10px;"></i> Pending
-              </span>
-            `}
           </td>
 
           <!-- Stay Dates & Plan -->
@@ -1080,34 +1349,14 @@
             </span>
           </td>
 
-          <!-- Actions: Quick Status Selector + Eye View Button -->
+          <!-- Actions: Eye View Button only (status change removed from action column) -->
           <td style="text-align: center;">
-            <div class="action-flex-wrap">
-              ${(item.is_locked || ['settlement done', 'checked out'].includes((item.status || '').toLowerCase())) ? `
-                <span class="badge-locked ${item.status === 'Settlement Done' ? 'settled' : ''}" title="Reservation status is locked.">
-                  <i class="fa-solid fa-lock" style="font-size: 10px;"></i> ${escapeHtml(item.status)}
-                </span>
-              ` : `
-                <select class="status-quick-select" 
-                        id="status-select-${item.id}" 
-                        onchange="updateGuestStatus(${item.id}, this.value, this)" 
-                        title="Change Reservation Status">
-                  <option value="Confirmed" ${item.status === 'Confirmed' ? 'selected' : ''}>Confirmed (Active)</option>
-                  <option value="Arrived" ${item.status === 'Arrived' ? 'selected' : ''}>Arrived</option>
-                  <option value="Checked In" ${item.status === 'Checked In' ? 'selected' : ''}>Checked In</option>
-                  <option value="Stay Over" ${item.status === 'Stay Over' ? 'selected' : ''}>Stay Over</option>
-                  <option value="Checked Out" ${item.status === 'Checked Out' ? 'selected' : ''}>Checked Out</option>
-                  <option value="Cancelled" ${item.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
-                </select>
-              `}
-
-              <button type="button" 
-                      class="btn-action-view" 
-                      onclick="openGuestDetailsModalById(${item.id})" 
-                      title="View Complete Arrival Dossier (Rooms, Occupants, Meal Plan, Schedule)">
-                <i class="fa-solid fa-eye"></i>
-              </button>
-            </div>
+            <button type="button" 
+                    class="btn-action-view" 
+                    onclick="openGuestDetailsModalById(${item.id})" 
+                    title="View Complete Arrival Dossier (Rooms, Occupants, Meal Plan, Schedule)">
+              <i class="fa-solid fa-eye"></i>
+            </button>
           </td>
         </tr>
       `;
@@ -1368,7 +1617,7 @@
         <div class="room-alloc-card">
           <div class="room-alloc-header">
             <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-              <span class="room-tag">
+              <span class="room-tag ${currentActiveGuest ? 'status-' + getStatusBadgeColor(currentActiveGuest.status) : ''}">
                 <i class="fa-solid fa-door-open"></i> ${escapeHtml(r.room_number)}
               </span>
               <span style="font-size: 12px; font-weight: 800; color: #0f172a;">Floor ${escapeHtml(r.floor)}</span>

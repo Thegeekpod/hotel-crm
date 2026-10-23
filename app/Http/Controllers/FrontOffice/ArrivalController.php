@@ -59,22 +59,28 @@ class ArrivalController extends Controller
         ])
         ->whereNull('primary_booking_id');
 
+        // Arrivals Scoping: Exclude any bookings that are already Checked In, Stay Over, Checked Out, or Settled
+        $query->whereNotIn('status', ['Checked In', 'Stay Over', 'Checked Out', 'Settlement Done']);
+
         if ($request->filled('date')) {
             $query->whereDate('reserve_date', $selectedDate);
-            $baseQuery = Booking::whereNull('primary_booking_id')->whereDate('reserve_date', $selectedDate);
+            $baseQuery = Booking::whereNull('primary_booking_id')
+                ->whereNotIn('status', ['Checked In', 'Stay Over', 'Checked Out', 'Settlement Done'])
+                ->whereDate('reserve_date', $selectedDate);
         } else {
             // Hotel PMS Arrival Scoping:
             // 1. All upcoming arrivals (checkin/reserve date >= today)
-            // 2. Any booking whose status is confirmed or arrived but has not checked in yet (even if date is earlier)
+            // 2. Any pending arrival whose status is confirmed or arrived from earlier dates
             $arrivalScope = function ($q) use ($today) {
-                $q->whereDate('reserve_date', '>=', $today)
-                  ->orWhere(function ($sub) {
-                      $sub->whereIn('status', ['Confirmed', 'Arrived'])
-                          ->whereNotIn('status', ['Checked In', 'Stay Over', 'Checked Out', 'Settlement Done', 'Cancelled']);
-                  });
+                $q->where(function ($sub) use ($today) {
+                    $sub->whereDate('reserve_date', '>=', $today)
+                        ->orWhereIn('status', ['Confirmed', 'Arrived', 'Pending']);
+                });
             };
             $query->where($arrivalScope);
-            $baseQuery = Booking::whereNull('primary_booking_id')->where($arrivalScope);
+            $baseQuery = Booking::whereNull('primary_booking_id')
+                ->whereNotIn('status', ['Checked In', 'Stay Over', 'Checked Out', 'Settlement Done'])
+                ->where($arrivalScope);
         }
 
         // Order chronologically by arrival date, then by ID

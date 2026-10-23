@@ -761,7 +761,7 @@
           <select id="status-filter-select" class="pms-filter-select" onchange="onSearchOrFilterChange()">
             <option value="all">All Statuses</option>
             <option value="Confirmed">Confirm</option>
-            <option value="Checked In">Checkin</option>
+            <option value="Arrived">Arrived</option>
             <option value="Cancelled">Cancel</option>
           </select>
         </div>
@@ -826,15 +826,13 @@
 <!-- Bottom Summary Bar -->
 <footer class="pms-bottom-bar">
   <div style="font-size: 11px; font-weight: 700; color: var(--text-secondary); display: flex; align-items: center; gap: 14px;">
-    <span><i class="fa-solid fa-users" style="color: #6366f1;"></i> Total Guests: <strong id="footer-total">{{ $stats['total'] ?? count($guests) }}</strong></span>
+    <span><i class="fa-solid fa-plane-arrival" style="color: #6366f1;"></i> Total Arrivals: <strong id="footer-total">{{ $stats['total'] ?? count($guests) }}</strong></span>
     <span>•</span>
     <span><i class="fa-solid fa-circle-check" style="color: #4338ca;"></i> Confirmed: <strong id="footer-confirmed">{{ $stats['confirmed'] ?? 0 }}</strong></span>
     <span>•</span>
     <span><i class="fa-solid fa-bell-concierge" style="color: #059669;"></i> Arrived: <strong id="footer-arrived">{{ $stats['arrived'] ?? 0 }}</strong></span>
     <span>•</span>
-    <span><i class="fa-solid fa-key" style="color: #0891b2;"></i> Checked In: <strong id="footer-checkedin">{{ $stats['checked_in'] ?? 0 }}</strong></span>
-    <span>•</span>
-    <span><i class="fa-solid fa-bed" style="color: #d97706;"></i> Stay Over: <strong id="footer-stayover">{{ $stats['stay_over'] ?? 0 }}</strong></span>
+    <span><i class="fa-solid fa-ban" style="color: #ef4444;"></i> Cancelled: <strong id="footer-cancelled">{{ $stats['cancelled'] ?? 0 }}</strong></span>
   </div>
 </footer>
 
@@ -1507,23 +1505,29 @@
     .then(data => {
       if (selectElement) selectElement.disabled = false;
       if (data.success) {
-        // Update item in local state
-        const item = (window.allArrivalGuests || []).find(g => String(g.id) === String(guestId));
-        if (item) {
-          item.status = data.status;
-          item.is_locked = ['Settlement Done', 'Checked Out'].includes(data.status);
-          if (Array.isArray(item.rooms)) {
-            item.rooms.forEach(r => {
-              if (Array.isArray(r.occupants)) {
-                r.occupants.forEach(occ => {
-                  occ.status = data.status;
-                });
-              }
-            });
+        // If checked in, remove from arrivals list immediately
+        if (data.status === 'Checked In') {
+          window.allArrivalGuests = (window.allArrivalGuests || []).filter(g => String(g.id) !== String(guestId));
+          const totalEl = document.getElementById('footer-total');
+          if (totalEl) totalEl.textContent = window.allArrivalGuests.length;
+        } else {
+          const item = (window.allArrivalGuests || []).find(g => String(g.id) === String(guestId));
+          if (item) {
+            item.status = data.status;
+            item.is_locked = ['Settlement Done', 'Checked Out'].includes(data.status);
+            if (Array.isArray(item.rooms)) {
+              item.rooms.forEach(r => {
+                if (Array.isArray(r.occupants)) {
+                  r.occupants.forEach(occ => {
+                    occ.status = data.status;
+                  });
+                }
+              });
+            }
           }
         }
 
-        // Re-render table row
+        // Re-render table
         renderTable();
 
         // Update modal if currently opened with this guest

@@ -1733,6 +1733,16 @@
       return;
     }
 
+    // Total occupants registered across all rooms under this reservation
+    let totalReservationOccupants = 0;
+    rooms.forEach(r => {
+      totalReservationOccupants += (r.occupants ? r.occupants.length : 0);
+    });
+
+    // Check if reservation has multiple guests and if settlement is complete
+    const hasMultiple = totalReservationOccupants > 1;
+    const isSettled = activeFolioData && (Number(activeFolioData.balance) <= 0.01 || (activeFolioData.status || '').toLowerCase() === 'settlement done');
+
     let html = '';
     rooms.forEach(r => {
       html += `
@@ -1760,9 +1770,6 @@
       `;
 
       if (r.occupants && r.occupants.length > 0) {
-        const hasMultiple = r.occupants.length > 1;
-        const isSettled = activeFolioData && (Number(activeFolioData.balance) <= 0.01 || (activeFolioData.status || '').toLowerCase() === 'settlement done');
-
         r.occupants.forEach(occ => {
           const isCheckedOut = occ.is_checked_out || (occ.status === 'Checked Out');
           

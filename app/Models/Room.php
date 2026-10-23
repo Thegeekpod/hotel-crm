@@ -124,9 +124,19 @@ class Room extends Model
         return $this->hasMany(RoomHousekeepingHistory::class, 'room_id');
     }
 
+    public function latestHousekeepingHistory(): HasOne
+    {
+        return $this->hasOne(RoomHousekeepingHistory::class, 'room_id')->latestOfMany();
+    }
+
     public function operationalHistories(): HasMany
     {
         return $this->hasMany(RoomOperationalHistory::class, 'room_id');
+    }
+
+    public function latestOperationalHistory(): HasOne
+    {
+        return $this->hasOne(RoomOperationalHistory::class, 'room_id')->latestOfMany();
     }
 
     public function bookings(): HasMany

@@ -19,6 +19,7 @@ class Payment extends Model
         'amount',
         'advance_amount',
         'balance',
+        'settle_number',
         'folio_number',
         'payment_remarks',
         'payment_date',
@@ -27,6 +28,19 @@ class Payment extends Model
         'transaction_id',
         'status',
     ];
+
+    /**
+     * Backward-compatible folio_number accessor and mutator mapped to settle_number
+     */
+    public function getFolioNumberAttribute()
+    {
+        return $this->attributes['settle_number'] ?? ($this->attributes['folio_number'] ?? null);
+    }
+
+    public function setFolioNumberAttribute($value)
+    {
+        $this->attributes['settle_number'] = $value;
+    }
 
     protected $casts = [
         'payment_date' => 'date',

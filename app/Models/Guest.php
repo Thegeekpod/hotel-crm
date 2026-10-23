@@ -39,6 +39,7 @@ class Guest extends Model
 
     protected $appends = [
         'reserve_id',
+        'settle_number',
         'folio_number',
         'status',
         'room_id',
@@ -67,9 +68,14 @@ class Guest extends Model
         return $this->latestBooking?->reserve_id;
     }
 
+    public function getSettleNumberAttribute()
+    {
+        return $this->latestBooking?->settle_number;
+    }
+
     public function getFolioNumberAttribute()
     {
-        return $this->latestBooking?->folio_number;
+        return $this->latestBooking?->settle_number ?? $this->latestBooking?->folio_number;
     }
 
     public function getStatusAttribute()
@@ -193,9 +199,14 @@ class Guest extends Model
     /**
      * Generate Folio Number (forwards to Booking)
      */
+    public static function generateSettleNumber(?string $roomNumber = null): string
+    {
+        return Booking::generateSettleNumber($roomNumber);
+    }
+
     public static function generateFolioNumber(?string $roomNumber = null): string
     {
-        return Booking::generateFolioNumber($roomNumber);
+        return Booking::generateSettleNumber($roomNumber);
     }
 
     /* -------------------------------------------------------------------------- */

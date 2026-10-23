@@ -16,6 +16,7 @@ class Booking extends Model
 
     protected $fillable = [
         'reserve_id',
+        'settle_number',
         'folio_number',
         'guest_id',
         'room_id',
@@ -49,6 +50,19 @@ class Booking extends Model
         'primary_booking_id',
         'remarks',
     ];
+
+    /**
+     * Backward-compatible folio_number accessor and mutator mapped to settle_number
+     */
+    public function getFolioNumberAttribute()
+    {
+        return $this->attributes['settle_number'] ?? ($this->attributes['folio_number'] ?? null);
+    }
+
+    public function setFolioNumberAttribute($value)
+    {
+        $this->attributes['settle_number'] = $value;
+    }
 
     protected $casts = [
         'checkin_date' => 'date',
@@ -176,13 +190,21 @@ class Booking extends Model
     }
 
     /**
-     * Generate Folio Number (e.g., FOL-101-492)
+     * Generate Settle Number (e.g., SET-101-492)
      */
-    public static function generateFolioNumber(?string $roomNumber = null): string
+    public static function generateSettleNumber(?string $roomNumber = null): string
     {
         $room = $roomNumber ?: 'G';
         $rand = rand(100, 999);
-        return "FOL-{$room}-{$rand}";
+        return "SET-{$room}-{$rand}";
+    }
+
+    /**
+     * Backward-compatible alias for generateFolioNumber
+     */
+    public static function generateFolioNumber(?string $roomNumber = null): string
+    {
+        return self::generateSettleNumber($roomNumber);
     }
 
     /* -------------------------------------------------------------------------- */

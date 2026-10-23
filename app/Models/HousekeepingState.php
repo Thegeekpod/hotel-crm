@@ -14,6 +14,7 @@ class HousekeepingState extends Model
     protected $fillable = [
         'name',
         'badge_color',
+        'type',
         'status',
     ];
 }

@@ -15,6 +15,7 @@ class Settlement extends Model
 
     protected $fillable = [
         'settlement_number',
+        'settle_number',
         'folio_number',
         'guest_id',
         'booking_id',
@@ -33,6 +34,19 @@ class Settlement extends Model
         'status',
         'remarks',
     ];
+
+    /**
+     * Backward-compatible folio_number accessor and mutator mapped to settle_number
+     */
+    public function getFolioNumberAttribute()
+    {
+        return $this->attributes['settle_number'] ?? ($this->attributes['folio_number'] ?? null);
+    }
+
+    public function setFolioNumberAttribute($value)
+    {
+        $this->attributes['settle_number'] = $value;
+    }
 
     protected $casts = [
         'settlement_date' => 'date',

@@ -7,6 +7,7 @@ use App\Http\Controllers\FrontOffice\InhouseController;
 use App\Http\Controllers\FrontOffice\GuestController;
 use App\Http\Controllers\FrontOffice\FolioController;
 use App\Http\Controllers\FrontOffice\NightAuditController;
+use App\Http\Controllers\FrontOffice\HousekeepingController;
 
 // Front Office Module Routes (Arrivals, Guest CRM, In-House, Reservations)
 Route::prefix('front-office')->name('frontoffice.')->group(function () {
@@ -38,6 +39,12 @@ Route::prefix('front-office')->name('frontoffice.')->group(function () {
     Route::get('/night-audit', [NightAuditController::class, 'index'])->name('night-audit');
     Route::post('/night-audit/complete', [NightAuditController::class, 'complete'])->name('night-audit.complete');
     Route::get('/night-audit/{id}/report', [NightAuditController::class, 'getReport'])->name('night-audit.report');
+
+    // Housekeeping Management
+    Route::get('/housekeeping', [HousekeepingController::class, 'index'])->name('housekeeping');
+    Route::post('/housekeeping/update-status', [HousekeepingController::class, 'updateStatus'])->name('housekeeping.update-status');
+    Route::post('/housekeeping/bulk-update', [HousekeepingController::class, 'bulkUpdate'])->name('housekeeping.bulk-update');
+    Route::get('/housekeeping/{id}/history', [HousekeepingController::class, 'getRoomHistory'])->name('housekeeping.history');
 
     Route::get('/reserve', [DashboardController::class, 'reserve'])->name('reserve');
     

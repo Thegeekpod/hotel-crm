@@ -15,9 +15,13 @@ class NightAudit extends Model
     protected static function booted()
     {
         static::updating(function ($nightAudit) {
-            // Once completed, audit records are permanently locked and cannot be changed
-            if ($nightAudit->getOriginal('status') === 'Completed') {
-                return false;
+            // Allow re-audit updates for today's audit date or when re-auditing
+            // Historical past audits from earlier dates remain locked
+            if ($nightAudit->getOriginal('status') === 'Completed' && $nightAudit->audit_date) {
+                $isToday = \Carbon\Carbon::parse($nightAudit->audit_date)->isToday();
+                if (!$isToday && !$nightAudit->is_reaudit) {
+                    return false;
+                }
             }
         });
 

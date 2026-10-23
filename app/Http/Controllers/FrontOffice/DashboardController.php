@@ -152,7 +152,8 @@ class DashboardController extends Controller
                         'raw_name' => $gModel->guest_name,
                         'title' => $gModel->title?->name ?? '',
                         'state' => $gModel->status ?: 'Confirmed',
-                        'folio' => $gModel->folio_number ?: ('FOL-' . $roomNum . '-100'),
+                        'folio' => $gModel->settle_number ?: $gModel->folio_number ?: ('SET-' . $roomNum . '-100'),
+                        'settle_number' => $gModel->settle_number ?: $gModel->folio_number ?: ('SET-' . $roomNum . '-100'),
                         'balance' => (float)$gModel->balance,
                         'mobile' => $gModel->mobile,
                         'email' => $gModel->email,
@@ -586,7 +587,8 @@ class DashboardController extends Controller
                         'raw_name' => $gModel->guest_name,
                         'title' => $gModel->title?->name ?? '',
                         'state' => $gModel->status ?: 'Confirmed',
-                        'folio' => $gModel->folio_number ?: ('FOL-' . $roomNum . '-100'),
+                        'folio' => $gModel->settle_number ?: $gModel->folio_number ?: ('SET-' . $roomNum . '-100'),
+                        'settle_number' => $gModel->settle_number ?: $gModel->folio_number ?: ('SET-' . $roomNum . '-100'),
                         'balance' => (float)$gModel->balance,
                         'mobile' => $gModel->mobile,
                         'email' => $gModel->email,
@@ -1223,7 +1225,7 @@ class DashboardController extends Controller
                     $calculatedBalance = 0.00;
                 }
 
-                $folioNo = Booking::generateFolioNumber($roomObj?->room_number ?? '100');
+                $folioNo = Booking::generateSettleNumber($roomObj?->room_number ?? '100');
 
                 $titleId = (!empty($gData['title_id']) && Title::where('id', $gData['title_id'])->exists()) ? (int)$gData['title_id'] : null;
                 $nationalityId = (!empty($gData['nationality_id']) && Nationality::where('id', $gData['nationality_id'])->exists()) ? (int)$gData['nationality_id'] : null;
@@ -1260,6 +1262,7 @@ class DashboardController extends Controller
                 // 2. Create the Booking record linked with guest_id & room_id
                 $bookingModel = Booking::create([
                     'reserve_id' => $reserveId,
+                    'settle_number' => $folioNo,
                     'folio_number' => $folioNo,
                     'guest_id' => $guestModel->id,
                     'room_id' => $roomId,
@@ -1308,6 +1311,7 @@ class DashboardController extends Controller
                             'amount' => $advanceAmount,
                             'advance_amount' => $advanceAmount,
                             'balance' => $calculatedBalance,
+                            'settle_number' => $folioNo,
                             'folio_number' => $folioNo,
                             'payment_remarks' => $paymentRemarks,
                             'payment_date' => $reserveDate,
@@ -1425,12 +1429,13 @@ class DashboardController extends Controller
                 $hkState = HousekeepingState::find($validated['housekeeping_status_id']);
                 if ($hkState) {
                     $hkName = $hkState->name;
+                    $isCompletedType = ($hkState->type === 'completed_task');
                     RoomHousekeepingHistory::create([
                         'room_id' => $room->id,
                         'housekeeping_status_id' => $hkState->id,
                         'start_time' => now(),
-                        'completion_time' => now(),
-                        'status' => 'complete',
+                        'completion_time' => ($isCompletedType ? now() : null),
+                        'status' => ($isCompletedType ? 'complete' : 'pending'),
                     ]);
                 }
             } else {

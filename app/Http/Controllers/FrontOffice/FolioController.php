@@ -100,7 +100,7 @@ class FolioController extends Controller
             $cleanRoom = ltrim(ltrim($s, 'Rr'), '-');
             $query->where(function ($q) use ($s, $cleanRoom) {
                 $q->where('reserve_id', 'like', "%{$s}%")
-                  ->orWhere('folio_number', 'like', "%{$s}%")
+                  ->orWhere('settle_number', 'like', "%{$s}%")
                   ->orWhereHas('guest', function ($gq) use ($s) {
                       $gq->where('guest_name', 'like', "%{$s}%")
                          ->orWhere('mobile', 'like', "%{$s}%")
@@ -295,7 +295,7 @@ class FolioController extends Controller
                 'amount' => $settleAmount,
                 'advance_amount' => (float)$booking->advance_amount,
                 'balance' => $newBalance,
-                'folio_number' => $booking->folio_number,
+                'settle_number' => $booking->settle_number ?: $booking->folio_number,
                 'payment_remarks' => $request->input('remarks', 'Settlement payment'),
                 'payment_date' => now()->toDateString(),
                 'payment_time' => now()->format('H:i:s'),
@@ -308,7 +308,7 @@ class FolioController extends Controller
             $settlementNumber = 'SET-' . date('Ymd') . '-' . sprintf('%04d', $booking->id) . '-' . rand(10, 99);
             Settlement::create([
                 'settlement_number' => $settlementNumber,
-                'folio_number' => $booking->folio_number,
+                'settle_number' => $booking->settle_number ?: $booking->folio_number,
                 'guest_id' => $booking->guest_id,
                 'booking_id' => $booking->id,
                 'payment_mode_id' => $paymentModeId,
@@ -675,7 +675,8 @@ class FolioController extends Controller
         return [
             'id' => $booking->id,
             'reserve_id' => $booking->reserve_id ?: ('RES-' . $booking->id),
-            'folio_number' => $booking->folio_number ?: ('FOL-' . ($booking->room?->room_number ?? '100') . '-' . $booking->id),
+            'settle_number' => $booking->settle_number ?: ($booking->folio_number ?: ('SET-' . ($booking->room?->room_number ?? '100') . '-' . $booking->id)),
+            'folio_number' => $booking->settle_number ?: ($booking->folio_number ?: ('SET-' . ($booking->room?->room_number ?? '100') . '-' . $booking->id)),
             'status' => $effectiveStatus ?: 'Confirmed',
             'is_all_checked_out' => $isAllCheckedOut,
             'active_occupants_count' => max(0, $totalOccupantsCount - $checkedOutOccupantsCount),

@@ -117,6 +117,7 @@ class NightAuditController extends Controller
                 'time' => $p->payment_time ? Carbon::parse($p->payment_time)->format('h:i A') : ($p->created_at ? $p->created_at->format('h:i A') : '-'),
                 'guest_name' => $guestName,
                 'room_number' => $roomNum,
+                'settle_number' => $folioNum,
                 'folio_number' => $folioNum,
                 'total_bill' => $totalBill,
                 'paid_amount' => $paid,
@@ -161,6 +162,7 @@ class NightAuditController extends Controller
                     'category' => $rm->categoryRelation?->name ?? 'Standard',
                     'floor' => 'Floor ' . ($rm->floorRelation?->floor ?? '1'),
                     'guest_name' => ($activeB->guest?->title?->name ? $activeB->guest->title->name . ' ' : '') . ($activeB->guest?->guest_name ?? 'Guest'),
+                    'settle_number' => $activeB->primary_booking_id ?: '#BK-' . $activeB->id,
                     'folio_number' => $activeB->primary_booking_id ?: '#BK-' . $activeB->id,
                     'checkin_date' => $activeB->reserve_date ? Carbon::parse($activeB->reserve_date)->format('d M Y') : '-',
                     'checkout_date' => $activeB->checkout_date ? Carbon::parse($activeB->checkout_date)->format('d M Y') : '-',
@@ -263,6 +265,7 @@ class NightAuditController extends Controller
 
             return [
                 'id' => $b->id,
+                'settle_number' => $b->primary_booking_id ?: ('#BK-' . $b->id),
                 'folio_number' => $b->primary_booking_id ?: ('#BK-' . $b->id),
                 'guest_name' => ($b->guest?->title?->name ? $b->guest->title->name . ' ' : '') . ($b->guest?->guest_name ?? 'Guest'),
                 'mobile_no' => $b->guest?->mobile_no ?: '-',

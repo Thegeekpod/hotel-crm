@@ -95,7 +95,7 @@ class ArrivalController extends Controller
             $cleanRoom = ltrim(ltrim($s, 'Rr'), '-');
             $query->where(function ($q) use ($s, $cleanRoom) {
                 $q->where('reserve_id', 'like', "%{$s}%")
-                  ->orWhere('folio_number', 'like', "%{$s}%")
+                  ->orWhere('settle_number', 'like', "%{$s}%")
                   ->orWhereHas('guest', function ($gq) use ($s) {
                       $gq->where('guest_name', 'like', "%{$s}%")
                          ->orWhere('mobile', 'like', "%{$s}%")
@@ -176,17 +176,17 @@ class ArrivalController extends Controller
         // Find ALL related bookings under this reservation / room / guest dossier:
         $masterBookingId = $booking->primary_booking_id ?: $booking->id;
         $reserveId = $booking->reserve_id;
-        $folioNumber = $booking->folio_number;
+        $settleNumber = $booking->settle_number ?: $booking->folio_number;
 
         $allRelatedBookings = Booking::with(['room', 'guest', 'settlements'])
-            ->where(function ($q) use ($masterBookingId, $reserveId, $folioNumber) {
+            ->where(function ($q) use ($masterBookingId, $reserveId, $settleNumber) {
                 $q->where('id', $masterBookingId)
                   ->orWhere('primary_booking_id', $masterBookingId);
                 if (!empty($reserveId)) {
                     $q->orWhere('reserve_id', $reserveId);
                 }
-                if (!empty($folioNumber)) {
-                    $q->orWhere('folio_number', $folioNumber);
+                if (!empty($settleNumber)) {
+                    $q->orWhere('settle_number', $settleNumber);
                 }
             })
             ->get();

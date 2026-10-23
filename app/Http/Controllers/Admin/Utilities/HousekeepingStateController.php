@@ -42,10 +42,12 @@ class HousekeepingStateController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255|unique:housekeeping_states,name',
             'badge_color' => 'nullable|string|max:50',
+            'type' => 'required|string|in:assign_task,completed_task',
             'status' => 'required|string|in:Active,Inactive',
         ], [
             'name.unique' => 'This housekeeping state already exists. Duplicates are not allowed.',
             'name.required' => 'Housekeeping state name is required.',
+            'type.required' => 'Task type (Assign Task or Completed Task) is required.',
         ]);
 
         if (empty($validated['badge_color'])) {
@@ -71,10 +73,12 @@ class HousekeepingStateController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255|unique:housekeeping_states,name,' . $id,
             'badge_color' => 'nullable|string|max:50',
+            'type' => 'required|string|in:assign_task,completed_task',
             'status' => 'required|string|in:Active,Inactive',
         ], [
             'name.unique' => 'This housekeeping state already exists. Duplicates are not allowed.',
             'name.required' => 'Housekeeping state name is required.',
+            'type.required' => 'Task type (Assign Task or Completed Task) is required.',
         ]);
 
         if (empty($validated['badge_color'])) {

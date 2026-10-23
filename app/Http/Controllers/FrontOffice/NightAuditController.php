@@ -287,8 +287,10 @@ class NightAuditController extends Controller
         ->orderBy('id', 'desc')
         ->get();
 
-        // Calculate total unsettled balance across today's active folios
+        // Calculate total bill, unsettled & settled balances across today's active bookings
+        $totalBookingsBill = 0;
         $totalUnsettledAmount = 0;
+        $totalSettledAmount = 0;
         $unsettledBookingsCount = 0;
         $settledBookingsCount = 0;
 
@@ -305,10 +307,12 @@ class NightAuditController extends Controller
 
             // Only count once per primary booking to avoid duplicate counting
             if (!$isAdditional) {
+                $totalBookingsBill += $bill;
                 if ($rem > 0.01) {
                     $totalUnsettledAmount += $rem;
                     $unsettledBookingsCount++;
                 } else {
+                    $totalSettledAmount += $paid;
                     $settledBookingsCount++;
                 }
             }
@@ -352,8 +356,9 @@ class NightAuditController extends Controller
             ->limit(15)
             ->get();
 
-        // 8. If audit is already completed, freeze and lock all values directly from the stored record
-        if ($existingAudit) {
+        // 8. If viewing a past date that is already completed, freeze and lock from stored record.
+        // For today ($isToday), always compute live real-time values so re-audits reflect latest payments & checkouts!
+        if ($existingAudit && !$isToday) {
             $totalPayments = (float)$existingAudit->total_payments;
             $advancePayments = (float)$existingAudit->advance_payments;
             $settlementPayments = (float)$existingAudit->settlement_payments;
@@ -430,7 +435,9 @@ class NightAuditController extends Controller
             'todayHousekeepingHistories',
             'todayOperationalHistories',
             'todayAllBookings',
+            'totalBookingsBill',
             'totalUnsettledAmount',
+            'totalSettledAmount',
             'unsettledBookingsCount',
             'settledBookingsCount'
         ));
@@ -455,14 +462,8 @@ class NightAuditController extends Controller
             ], 422);
         }
 
-        // 2. Re-run audit is not supported. Only one audit in today only.
+        // Check if an existing audit exists for today (re-audit will update it)
         $existingAudit = NightAudit::whereDate('audit_date', $today)->first();
-        if ($existingAudit) {
-            return response()->json([
-                'success' => false,
-                'error' => "Today's night audit has already been completed at " . ($existingAudit->completed_at ? $existingAudit->completed_at->format('h:i A') : '') . ". Re-running the audit is not supported."
-            ], 422);
-        }
 
         $auditorName = $validated['auditor_name'] ?? (Auth::user()?->name ?? 'Front Office Night Auditor');
         $auditorId = Auth::id() ?? null;
@@ -510,6 +511,7 @@ class NightAuditController extends Controller
                     'time' => $p->payment_time ? Carbon::parse($p->payment_time)->format('h:i A') : ($p->created_at ? $p->created_at->format('h:i A') : '-'),
                     'guest_name' => $guestName,
                     'room_number' => $roomNum,
+                    'settle_number' => $folioNum,
                     'folio_number' => $folioNum,
                     'total_bill' => $totalBill,
                     'paid_amount' => $paid,
@@ -557,6 +559,7 @@ class NightAuditController extends Controller
                         'category' => $rm->categoryRelation?->name ?? 'Standard',
                         'floor' => 'Floor ' . ($rm->floorRelation?->floor ?? '1'),
                         'guest_name' => ($activeB->guest?->title?->name ? $activeB->guest->title->name . ' ' : '') . ($activeB->guest?->guest_name ?? 'Guest'),
+                        'settle_number' => $activeB->primary_booking_id ?: '#BK-' . $activeB->id,
                         'folio_number' => $activeB->primary_booking_id ?: '#BK-' . $activeB->id,
                         'checkin_date' => $activeB->reserve_date ? Carbon::parse($activeB->reserve_date)->format('d M Y') : '-',
                         'checkout_date' => $activeB->checkout_date ? Carbon::parse($activeB->checkout_date)->format('d M Y') : '-',
@@ -669,11 +672,12 @@ class NightAuditController extends Controller
             ->orderBy('id', 'desc')
             ->get();
 
+            $totalBookingsBill = 0;
             $totalUnsettledAmount = 0;
             $unsettledBookingsCount = 0;
             $settledBookingsCount = 0;
 
-            $guestsList = $todayGuestsQuery->map(function($b) use (&$totalUnsettledAmount, &$unsettledBookingsCount, &$settledBookingsCount) {
+            $guestsList = $todayGuestsQuery->map(function($b) use (&$totalBookingsBill, &$totalUnsettledAmount, &$unsettledBookingsCount, &$settledBookingsCount) {
                 $isAdditional = !empty($b->primary_booking_id);
                 $master = ($isAdditional && $b->primaryBooking) ? $b->primaryBooking : $b;
 
@@ -685,6 +689,7 @@ class NightAuditController extends Controller
                 $rem = max(0, round($bill - $paid, 2));
 
                 if (!$isAdditional) {
+                    $totalBookingsBill += $bill;
                     if ($rem > 0.01) {
                         $totalUnsettledAmount += $rem;
                         $unsettledBookingsCount++;
@@ -695,6 +700,7 @@ class NightAuditController extends Controller
 
                 return [
                     'id' => $b->id,
+                    'settle_number' => $b->primary_booking_id ?: ('#BK-' . $b->id),
                     'folio_number' => $b->primary_booking_id ?: ('#BK-' . $b->id),
                     'guest_name' => ($b->guest?->title?->name ? $b->guest->title->name . ' ' : '') . ($b->guest?->guest_name ?? 'Guest'),
                     'mobile_no' => $b->guest?->mobile_no ?: '-',
@@ -710,6 +716,8 @@ class NightAuditController extends Controller
                 ];
             })->values()->all();
 
+            $accurateTotalBill = $totalBookingsBill > 0 ? $totalBookingsBill : $totalRev;
+
             // Prepare complete comprehensive JSON snapshot
             $snapshot = [
                 'audit_date' => $auditDate,
@@ -724,11 +732,11 @@ class NightAuditController extends Controller
                     'card_collection' => $card,
                     'bank_collection' => $bank,
                     'other_collection' => $other,
-                    'room_revenue' => $roomRev,
+                    'room_revenue' => $accurateTotalBill,
                     'food_revenue' => $foodRev,
                     'tax_amount' => $taxRev,
                     'discount_amount' => $discRev,
-                    'total_revenue' => $totalRev,
+                    'total_revenue' => $accurateTotalBill,
                     'total_rooms' => $totalRooms,
                     'occupied_rooms' => $occupiedRooms,
                     'vacant_rooms' => $vacantRooms,
@@ -750,11 +758,14 @@ class NightAuditController extends Controller
                 'housekeeping_histories' => $hkHistoriesList,
                 'operational_histories' => $opHistoriesList,
                 'guests_list' => $guestsList,
+                'unsettled_summary' => [
+                    'total_unsettled_amount' => $totalUnsettledAmount,
+                    'unsettled_bookings_count' => $unsettledBookingsCount,
+                    'settled_bookings_count' => $settledBookingsCount,
+                ],
             ];
 
-            // Store NightAudit record (single audit only)
-            $nightAudit = NightAudit::create([
-                'audit_date' => $auditDate,
+            $auditPayload = [
                 'completed_at' => now(),
                 'auditor_id' => $auditorId,
                 'auditor_name' => $auditorName,
@@ -767,11 +778,11 @@ class NightAuditController extends Controller
                 'card_collection' => $card,
                 'bank_collection' => $bank,
                 'other_collection' => $other,
-                'room_revenue' => $roomRev,
+                'room_revenue' => $accurateTotalBill,
                 'food_revenue' => $foodRev,
                 'tax_amount' => $taxRev,
                 'discount_amount' => $discRev,
-                'total_revenue' => $totalRev,
+                'total_revenue' => $accurateTotalBill,
                 'total_rooms' => $totalRooms,
                 'occupied_rooms' => $occupiedRooms,
                 'vacant_rooms' => $vacantRooms,
@@ -793,13 +804,20 @@ class NightAuditController extends Controller
                 'map_plan_count' => $map,
                 'ap_plan_count' => $ap,
                 'remarks' => $validated['remarks'] ?? null,
-            ]);
+                'audit_snapshot' => $snapshot,
+            ];
+
+            // Store or update NightAudit record (re-audit support)
+            $nightAudit = NightAudit::updateOrCreate(
+                ['audit_date' => $auditDate],
+                $auditPayload
+            );
 
             DB::commit();
 
             return response()->json([
                 'success' => true,
-                'message' => 'Night Audit for ' . Carbon::parse($auditDate)->format('d M Y') . ' has been completed and permanently recorded in the database!',
+                'message' => 'Night Audit for ' . Carbon::parse($auditDate)->format('d M Y') . ' has been updated & re-audited successfully!',
                 'audit' => $nightAudit
             ]);
 

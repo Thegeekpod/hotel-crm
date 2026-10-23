@@ -15,6 +15,8 @@ use App\Models\Plan;
 use App\Models\RoomMaintenance;
 use App\Models\HousekeepingState;
 use App\Models\OperationalStatus;
+use App\Models\RoomHousekeepingHistory;
+use App\Models\RoomOperationalHistory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -117,6 +119,7 @@ class NightAuditController extends Controller
 
         $occupiedRoomIds = $activeBookingsOnDate->pluck('room_id')->filter()->unique()->toArray();
         $occupiedRoomsCount = count($occupiedRoomIds);
+        $occupiedRooms = $allRooms->whereIn('id', $occupiedRoomIds)->values();
 
         // Maintenance / Out of order rooms
         $activeMaintenanceRooms = RoomMaintenance::where('status', 'In Progress')->pluck('room_id')->toArray();
@@ -137,6 +140,22 @@ class NightAuditController extends Controller
                 $cleanRoomsCount++;
             }
         }
+
+        // Today's Housekeeping History Logs for selected audit date
+        $todayHousekeepingHistories = RoomHousekeepingHistory::with(['room.categoryRelation', 'room.floorRelation', 'housekeepingStatus'])
+            ->where(function($q) use ($selectedDate) {
+                $q->whereDate('created_at', $selectedDate)
+                  ->orWhereDate('start_time', $selectedDate)
+                  ->orWhereDate('completion_time', $selectedDate);
+            })
+            ->orderBy('id', 'desc')
+            ->get();
+
+        // Today's Operational History Logs for selected audit date
+        $todayOperationalHistories = RoomOperationalHistory::with(['room.categoryRelation', 'room.floorRelation', 'operationalStatus'])
+            ->whereDate('created_at', $selectedDate)
+            ->orderBy('id', 'desc')
+            ->get();
 
         // Room Revenue for the day
         $dailyRoomRevenue = 0;
@@ -241,6 +260,59 @@ class NightAuditController extends Controller
             ->whereIn('status', ['Checked In', 'Stay Over', 'Arrived'])
             ->get();
         $inHouseGuestsCount = $inHouseBookings->count();
+
+        // Key active bookings by room_id for fast lookup in Today Rooms table
+        $activeBookingsByRoom = $activeBookingsOnDate->keyBy('room_id');
+
+        // 5.1. TODAY ALL GUESTS (All guests active on this date: In-House, Arriving, or Departing)
+        $todayAllBookings = Booking::with([
+            'guest.title',
+            'room.categoryRelation',
+            'room.floorRelation',
+            'plan',
+            'payments',
+            'settlements',
+            'primaryBooking.payments'
+        ])
+        ->where(function($q) use ($selectedDate) {
+            $q->where(function($sub) use ($selectedDate) {
+                $sub->whereDate('reserve_date', '<=', $selectedDate)
+                    ->whereDate('checkout_date', '>=', $selectedDate);
+            })
+            ->orWhereDate('reserve_date', $selectedDate)
+            ->orWhereDate('checkin_date', $selectedDate)
+            ->orWhereDate('checkout_date', $selectedDate);
+        })
+        ->whereNotIn('status', ['Cancelled'])
+        ->orderBy('id', 'desc')
+        ->get();
+
+        // Calculate total unsettled balance across today's active folios
+        $totalUnsettledAmount = 0;
+        $unsettledBookingsCount = 0;
+        $settledBookingsCount = 0;
+
+        foreach ($todayAllBookings as $b) {
+            $isAdditional = !empty($b->primary_booking_id);
+            $master = ($isAdditional && $b->primaryBooking) ? $b->primaryBooking : $b;
+
+            $bill = (float)($master->payable_amount > 0 ? $master->payable_amount : $master->total_amount);
+            $paid = (float)($master->payments ? $master->payments->sum('amount') : 0);
+            if ($paid <= 0 && (float)$master->advance_amount > 0) {
+                $paid = (float)$master->advance_amount;
+            }
+            $rem = max(0, round($bill - $paid, 2));
+
+            // Only count once per primary booking to avoid duplicate counting
+            if (!$isAdditional) {
+                if ($rem > 0.01) {
+                    $totalUnsettledAmount += $rem;
+                    $unsettledBookingsCount++;
+                } else {
+                    $settledBookingsCount++;
+                }
+            }
+        }
 
         // 6. Pre-Audit Checklist Warnings
         $checklist = [
@@ -349,7 +421,18 @@ class NightAuditController extends Controller
             'inHouseGuestsCount',
             'inHouseBookings',
             'checklist',
-            'pastAudits'
+            'pastAudits',
+            'allRooms',
+            'occupiedRooms',
+            'occupiedRoomIds',
+            'activeBookingsByRoom',
+            'activeMaintenanceRooms',
+            'todayHousekeepingHistories',
+            'todayOperationalHistories',
+            'todayAllBookings',
+            'totalUnsettledAmount',
+            'unsettledBookingsCount',
+            'settledBookingsCount'
         ));
     }
 
@@ -386,14 +469,14 @@ class NightAuditController extends Controller
 
         DB::beginTransaction();
         try {
-            // Calculate authoritative metrics for this audit date
+            // 1. Detailed Payments List
             $payments = Payment::where(function($q) use ($auditDate) {
                 $q->whereDate('payment_date', $auditDate)
                   ->orWhere(function($sub) use ($auditDate) {
                       $sub->whereNull('payment_date')
                           ->whereDate('created_at', $auditDate);
                   });
-            })->with('paymentMode')->get();
+            })->with(['paymentMode', 'booking.guest.title', 'booking.room'])->get();
 
             $totalPayments = (float)$payments->sum('amount');
             $advancePayments = (float)$payments->where('payment_type', 'Advance')->sum('amount');
@@ -410,20 +493,85 @@ class NightAuditController extends Controller
                 else $other += $amt;
             }
 
-            // Room metrics
-            $totalRooms = Room::count();
-            $activeBookings = Booking::with('plan')
-                ->whereDate('reserve_date', '<=', $auditDate)
-                ->whereDate('checkout_date', '>=', $auditDate)
+            $paymentsListItems = $payments->map(function($p) {
+                $b = $p->booking;
+                $totalBill = (float)($b ? ($b->payable_amount > 0 ? $b->payable_amount : ($b->total_amount > 0 ? $b->total_amount : $p->amount)) : $p->amount);
+                $paid = (float)($b && $b->payments ? $b->payments->sum('amount') : $p->amount);
+                if ($paid <= 0 && $b && (float)$b->advance_amount > 0) {
+                    $paid = (float)$b->advance_amount;
+                }
+                $rem = max(0, round($totalBill - $paid, 2));
+                $guestName = $b ? (($b->guest?->title?->name ? $b->guest->title->name . ' ' : '') . ($b->guest?->guest_name ?? 'Guest')) : '-';
+                $roomNum = $b && $b->room ? ('R' . preg_replace('/^r[-_\s]?/i', '', trim($b->room->room_number))) : '-';
+                $folioNum = $b ? ($b->primary_booking_id ?: '#BK-' . $b->id) : '-';
+
+                return [
+                    'id' => $p->id,
+                    'time' => $p->payment_time ? Carbon::parse($p->payment_time)->format('h:i A') : ($p->created_at ? $p->created_at->format('h:i A') : '-'),
+                    'guest_name' => $guestName,
+                    'room_number' => $roomNum,
+                    'folio_number' => $folioNum,
+                    'total_bill' => $totalBill,
+                    'paid_amount' => $paid,
+                    'remaining_amount' => $rem,
+                    'is_settled' => ($rem <= 0.01),
+                    'mode' => $p->paymentMode?->name ?? 'Cash',
+                    'type' => $p->payment_type,
+                    'amount' => (float)$p->amount,
+                ];
+            })->values()->all();
+
+            // 2. Room metrics & Occupied Rooms List
+            $allRoomsList = Room::with(['categoryRelation', 'floorRelation', 'beddingConfigRelation', 'operationalHistories.operationalStatus', 'housekeepingHistories.housekeepingStatus'])->get();
+            $totalRooms = $allRoomsList->count();
+
+            $activeBookings = Booking::with(['guest.title', 'room.categoryRelation', 'plan', 'payments'])
+                ->where(function($q) use ($auditDate) {
+                    $q->whereDate('reserve_date', '<=', $auditDate)
+                      ->whereDate('checkout_date', '>=', $auditDate);
+                })
                 ->whereNotIn('status', ['Cancelled', 'Checked Out'])
                 ->get();
 
-            $occupiedRooms = $activeBookings->pluck('room_id')->filter()->unique()->count();
-            $maintenanceRooms = RoomMaintenance::where('status', 'In Progress')->pluck('room_id')->unique()->count();
+            $activeBookingsByRoom = $activeBookings->keyBy('room_id');
+            $activeMaintRoomIds = RoomMaintenance::where('status', 'In Progress')->pluck('room_id')->toArray();
+            $maintenanceRooms = count(array_unique($activeMaintRoomIds));
+
+            $occupiedRoomsList = [];
+            foreach ($allRoomsList as $rm) {
+                $isMaint = in_array($rm->id, $activeMaintRoomIds);
+                $activeB = $activeBookingsByRoom->get($rm->id);
+                if ($activeB && !$isMaint) {
+                    $latestHk = $rm->housekeepingHistories ? $rm->housekeepingHistories->sortByDesc('id')->first() : null;
+                    $hkName = $latestHk?->housekeepingStatus?->name ?? ($latestHk?->housekeepingState?->name ?? 'Clean');
+
+                    $latestOp = $rm->operationalHistories ? $rm->operationalHistories->sortByDesc('id')->first() : null;
+                    $opName = $latestOp?->operationalStatus?->name ?? 'Active';
+
+                    $n = max(1, (int)$activeB->total_nights);
+                    $dayRate = (float)($activeB->room_rate ?: ($activeB->total_amount / $n));
+
+                    $occupiedRoomsList[] = [
+                        'room_id' => $rm->id,
+                        'room_number' => 'R' . preg_replace('/^r[-_\s]?/i', '', trim($rm->room_number)),
+                        'category' => $rm->categoryRelation?->name ?? 'Standard',
+                        'floor' => 'Floor ' . ($rm->floorRelation?->floor ?? '1'),
+                        'guest_name' => ($activeB->guest?->title?->name ? $activeB->guest->title->name . ' ' : '') . ($activeB->guest?->guest_name ?? 'Guest'),
+                        'folio_number' => $activeB->primary_booking_id ?: '#BK-' . $activeB->id,
+                        'checkin_date' => $activeB->reserve_date ? Carbon::parse($activeB->reserve_date)->format('d M Y') : '-',
+                        'checkout_date' => $activeB->checkout_date ? Carbon::parse($activeB->checkout_date)->format('d M Y') : '-',
+                        'operational_status' => $opName,
+                        'housekeeping_status' => $hkName,
+                        'day_rate' => $dayRate,
+                    ];
+                }
+            }
+
+            $occupiedRooms = count($occupiedRoomsList);
             $vacantRooms = max(0, $totalRooms - $occupiedRooms - $maintenanceRooms);
             $occupancyRate = $totalRooms > 0 ? round(($occupiedRooms / $totalRooms) * 100, 2) : 0.00;
 
-            // Room and food revenues
+            // 3. Room and Food Revenues
             $roomRev = 0; $foodRev = 0; $taxRev = 0; $discRev = 0;
             $ep = 0; $cp = 0; $map = 0; $ap = 0;
 
@@ -449,75 +597,125 @@ class NightAuditController extends Controller
             $adr = $occupiedRooms > 0 ? round($roomRev / $occupiedRooms, 2) : 0.00;
             $revpar = $totalRooms > 0 ? round($roomRev / $totalRooms, 2) : 0.00;
 
-            // Movements
+            // 4. Housekeeping History List
+            $hkHistories = RoomHousekeepingHistory::with(['room.categoryRelation', 'room.floorRelation', 'housekeepingStatus'])
+                ->where(function($q) use ($auditDate) {
+                    $q->whereDate('created_at', $auditDate)
+                      ->orWhereDate('start_time', $auditDate)
+                      ->orWhereDate('completion_time', $auditDate);
+                })
+                ->orderBy('id', 'desc')
+                ->get();
+
+            $hkHistoriesList = $hkHistories->map(function($hk) {
+                return [
+                    'id' => $hk->id,
+                    'time' => $hk->created_at ? $hk->created_at->format('h:i A') : '-',
+                    'date' => $hk->created_at ? $hk->created_at->format('d M Y') : '-',
+                    'room_number' => $hk->room?->room_number ? ('R' . preg_replace('/^r[-_\s]?/i', '', trim($hk->room->room_number))) : ('Room #' . $hk->room_id),
+                    'category' => $hk->room?->categoryRelation?->name ?? 'Standard',
+                    'floor' => 'Floor ' . ($hk->room?->floorRelation?->floor ?? '1'),
+                    'housekeeping_status' => $hk->housekeepingStatus?->name ?? 'Clean',
+                    'status' => ucfirst($hk->status ?? 'Complete'),
+                    'start_time' => $hk->start_time ? Carbon::parse($hk->start_time)->format('h:i A') : '-',
+                    'completion_time' => $hk->completion_time ? Carbon::parse($hk->completion_time)->format('h:i A') : '-',
+                ];
+            })->values()->all();
+
+            // 5. Operational History List
+            $opHistories = RoomOperationalHistory::with(['room.categoryRelation', 'room.floorRelation', 'operationalStatus'])
+                ->whereDate('created_at', $auditDate)
+                ->orderBy('id', 'desc')
+                ->get();
+
+            $opHistoriesList = $opHistories->map(function($op) {
+                return [
+                    'id' => $op->id,
+                    'time' => $op->created_at ? $op->created_at->format('h:i A') : '-',
+                    'date' => $op->created_at ? $op->created_at->format('d M Y') : '-',
+                    'room_number' => $op->room?->room_number ? ('R' . preg_replace('/^r[-_\s]?/i', '', trim($op->room->room_number))) : ('Room #' . $op->room_id),
+                    'category' => $op->room?->categoryRelation?->name ?? 'Standard',
+                    'floor' => 'Floor ' . ($op->room?->floorRelation?->floor ?? '1'),
+                    'operational_status' => $op->operationalStatus?->name ?? 'Active',
+                    'room_status' => $op->room?->status ?? 'Active',
+                ];
+            })->values()->all();
+
+            // 6. Movements & Today All Guests List
             $arrivals = Booking::whereDate('reserve_date', $auditDate)->count();
             $departures = Booking::whereDate('checkout_date', $auditDate)->count();
             $inhouse = Booking::whereIn('status', ['Checked In', 'Stay Over', 'Arrived'])->count();
             $pendingArr = Booking::whereDate('reserve_date', $auditDate)->whereIn('status', ['Confirmed', 'Arrived'])->count();
             $pendingDep = Booking::whereDate('checkout_date', '<=', $auditDate)->whereNotIn('status', ['Checked Out', 'Cancelled'])->count();
 
-            // Prepare detailed JSON snapshot for historical integrity
+            $todayGuestsQuery = Booking::with([
+                'guest.title',
+                'room.categoryRelation',
+                'room.floorRelation',
+                'plan',
+                'payments',
+                'primaryBooking.payments'
+            ])
+            ->where(function($q) use ($auditDate) {
+                $q->where(function($sub) use ($auditDate) {
+                    $sub->whereDate('reserve_date', '<=', $auditDate)
+                        ->whereDate('checkout_date', '>=', $auditDate);
+                })
+                ->orWhereDate('reserve_date', $auditDate)
+                ->orWhereDate('checkin_date', $auditDate)
+                ->orWhereDate('checkout_date', $auditDate);
+            })
+            ->whereNotIn('status', ['Cancelled'])
+            ->orderBy('id', 'desc')
+            ->get();
+
+            $totalUnsettledAmount = 0;
+            $unsettledBookingsCount = 0;
+            $settledBookingsCount = 0;
+
+            $guestsList = $todayGuestsQuery->map(function($b) use (&$totalUnsettledAmount, &$unsettledBookingsCount, &$settledBookingsCount) {
+                $isAdditional = !empty($b->primary_booking_id);
+                $master = ($isAdditional && $b->primaryBooking) ? $b->primaryBooking : $b;
+
+                $bill = (float)($master->payable_amount > 0 ? $master->payable_amount : $master->total_amount);
+                $paid = (float)($master->payments ? $master->payments->sum('amount') : 0);
+                if ($paid <= 0 && (float)$master->advance_amount > 0) {
+                    $paid = (float)$master->advance_amount;
+                }
+                $rem = max(0, round($bill - $paid, 2));
+
+                if (!$isAdditional) {
+                    if ($rem > 0.01) {
+                        $totalUnsettledAmount += $rem;
+                        $unsettledBookingsCount++;
+                    } else {
+                        $settledBookingsCount++;
+                    }
+                }
+
+                return [
+                    'id' => $b->id,
+                    'folio_number' => $b->primary_booking_id ?: ('#BK-' . $b->id),
+                    'guest_name' => ($b->guest?->title?->name ? $b->guest->title->name . ' ' : '') . ($b->guest?->guest_name ?? 'Guest'),
+                    'mobile_no' => $b->guest?->mobile_no ?: '-',
+                    'room_number' => $b->room?->room_number ? ('R' . preg_replace('/^r[-_\s]?/i', '', trim($b->room->room_number))) : '-',
+                    'category' => $b->room?->categoryRelation?->name ?? 'Standard',
+                    'checkin_date' => $b->reserve_date ? Carbon::parse($b->reserve_date)->format('d M Y') : '-',
+                    'checkout_date' => $b->checkout_date ? Carbon::parse($b->checkout_date)->format('d M Y') : '-',
+                    'total_bill' => $bill,
+                    'paid_amount' => $paid,
+                    'remaining_amount' => $rem,
+                    'is_settled' => ($rem <= 0.01),
+                    'status' => $b->status,
+                ];
+            })->values()->all();
+
+            // Prepare complete comprehensive JSON snapshot
             $snapshot = [
                 'audit_date' => $auditDate,
                 'completed_at' => now()->toIso8601String(),
                 'auditor_name' => $auditorName,
-                'payments' => [
-                    'total' => $totalPayments,
-                    'advance' => $advancePayments,
-                    'settlement' => $settlementPayments,
-                    'modes' => [
-                        'cash' => $cash,
-                        'upi' => $upi,
-                        'card' => $card,
-                        'bank' => $bank,
-                        'other' => $other,
-                    ],
-                    'items' => $payments->map(fn($p) => [
-                        'id' => $p->id,
-                        'amount' => (float)$p->amount,
-                        'mode' => $p->paymentMode?->name ?? 'Cash',
-                        'type' => $p->payment_type,
-                        'time' => $p->payment_time ?: $p->created_at?->format('H:i:s'),
-                    ])->values()->all()
-                ],
-                'rooms' => [
-                    'total' => $totalRooms,
-                    'occupied' => $occupiedRooms,
-                    'vacant' => $vacantRooms,
-                    'maintenance' => $maintenanceRooms,
-                    'occupancy_rate' => $occupancyRate,
-                    'adr' => $adr,
-                    'revpar' => $revpar,
-                ],
-                'revenue' => [
-                    'room_revenue' => $roomRev,
-                    'food_revenue' => $foodRev,
-                    'tax' => $taxRev,
-                    'discount' => $discRev,
-                    'grand_total' => $totalRev,
-                ],
-                'food_plans' => [
-                    'ep' => $ep,
-                    'cp' => $cp,
-                    'map' => $map,
-                    'ap' => $ap,
-                ],
-                'guests' => [
-                    'arrivals' => $arrivals,
-                    'departures' => $departures,
-                    'inhouse' => $inhouse,
-                    'pending_arrivals' => $pendingArr,
-                    'pending_departures' => $pendingDep,
-                ],
-            ];
-
-            // Store NightAudit record (single audit only)
-            $nightAudit = NightAudit::create([
-                'audit_date' => $auditDate,
-                'completed_at' => now(),
-                'auditor_id' => $auditorId,
-                'auditor_name' => $auditorName,
-                'status' => 'Completed',
+                'summary' => [
                     'total_payments' => $totalPayments,
                     'advance_payments' => $advancePayments,
                     'settlement_payments' => $settlementPayments,
@@ -538,18 +736,64 @@ class NightAuditController extends Controller
                     'occupancy_rate' => $occupancyRate,
                     'adr' => $adr,
                     'revpar' => $revpar,
+                    'total_unsettled_amount' => $totalUnsettledAmount,
+                    'unsettled_bookings_count' => $unsettledBookingsCount,
+                    'settled_bookings_count' => $settledBookingsCount,
                     'arrivals_count' => $arrivals,
                     'departures_count' => $departures,
                     'inhouse_guests_count' => $inhouse,
                     'pending_arrivals' => $pendingArr,
                     'pending_departures' => $pendingDep,
-                    'ep_plan_count' => $ep,
-                    'cp_plan_count' => $cp,
-                    'map_plan_count' => $map,
-                    'ap_plan_count' => $ap,
-                    'remarks' => $validated['remarks'] ?? null,
-                    'audit_snapshot' => $snapshot,
-                ]);
+                ],
+                'payments_list' => $paymentsListItems,
+                'occupied_rooms' => $occupiedRoomsList,
+                'housekeeping_histories' => $hkHistoriesList,
+                'operational_histories' => $opHistoriesList,
+                'guests_list' => $guestsList,
+            ];
+
+            // Store NightAudit record (single audit only)
+            $nightAudit = NightAudit::create([
+                'audit_date' => $auditDate,
+                'completed_at' => now(),
+                'auditor_id' => $auditorId,
+                'auditor_name' => $auditorName,
+                'status' => 'Completed',
+                'total_payments' => $totalPayments,
+                'advance_payments' => $advancePayments,
+                'settlement_payments' => $settlementPayments,
+                'cash_collection' => $cash,
+                'upi_collection' => $upi,
+                'card_collection' => $card,
+                'bank_collection' => $bank,
+                'other_collection' => $other,
+                'room_revenue' => $roomRev,
+                'food_revenue' => $foodRev,
+                'tax_amount' => $taxRev,
+                'discount_amount' => $discRev,
+                'total_revenue' => $totalRev,
+                'total_rooms' => $totalRooms,
+                'occupied_rooms' => $occupiedRooms,
+                'vacant_rooms' => $vacantRooms,
+                'maintenance_rooms' => $maintenanceRooms,
+                'dirty_rooms' => 0,
+                'clean_rooms' => 0,
+                'occupancy_rate' => $occupancyRate,
+                'adr' => $adr,
+                'revpar' => $revpar,
+                'arrivals_count' => $arrivals,
+                'departures_count' => $departures,
+                'inhouse_guests_count' => $inhouse,
+                'stay_over_count' => 0,
+                'cancelled_count' => 0,
+                'pending_arrivals' => $pendingArr,
+                'pending_departures' => $pendingDep,
+                'ep_plan_count' => $ep,
+                'cp_plan_count' => $cp,
+                'map_plan_count' => $map,
+                'ap_plan_count' => $ap,
+                'remarks' => $validated['remarks'] ?? null,
+            ]);
 
             DB::commit();
 

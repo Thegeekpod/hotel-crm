@@ -374,7 +374,7 @@
     const opDisplay = roomData.operational_status || (status === 'blocked' ? 'Out of Order / Blocked' : 'Active In-Service');
     const hkDisplay = roomData.housekeeping_status || (status === 'dirty' ? 'Dirty / Cleaning Due' : 'Cleaned & Inspected');
     const isDirty = status === 'dirty' || (hkDisplay && hkDisplay.toLowerCase().includes('dirty'));
-    const isBlocked = status === 'blocked' || (opDisplay && (opDisplay.toLowerCase().includes('blocked') || opDisplay.toLowerCase().includes('maintenance')));
+    const isBlocked = status === 'blocked' || (opDisplay && (/block|blok|maintenance/i.test(opDisplay)));
     const isOccupied = status === 'occupied' || !!guestObj;
 
     let statusBadgeClass = 'green';
@@ -870,17 +870,23 @@
     if (action === 'clean') {
       // Find Cleaned / Clean
       const cleanHk = hkList.find(h => /cleaned|clean|inspected/i.test(h.name)) || hkList.find(h => !/dirty/i.test(h.name));
-      const activeOp = opList.find(o => /active/i.test(o.name)) || opList[0];
+      const activeOp = opList.find(o => /^active/i.test(o.name)) || opList.find(o => /active/i.test(o.name)) || opList.find(o => !/block|blok|maintenance|order|inactive/i.test(o.name));
       if (cleanHk) targetHkId = cleanHk.id;
       if (activeOp) targetOpId = activeOp.id;
     } else if (action === 'dirty') {
       const dirtyHk = hkList.find(h => /dirty/i.test(h.name));
       if (dirtyHk) targetHkId = dirtyHk.id;
+      // If room was currently blocked, unblock it by resetting operational status to active
+      const curCard = document.querySelector(`.rack-card[data-room="${roomNo}"]`);
+      if (curCard && curCard.getAttribute('data-status') === 'blocked') {
+        const activeOp = opList.find(o => /^active/i.test(o.name)) || opList.find(o => /active/i.test(o.name)) || opList.find(o => !/block|blok|maintenance|order|inactive/i.test(o.name));
+        if (activeOp) targetOpId = activeOp.id;
+      }
     } else if (action === 'maintenance') {
       const maintOp = opList.find(o => /maintenance/i.test(o.name));
       if (maintOp) targetOpId = maintOp.id;
     } else if (action === 'blocked') {
-      const blockOp = opList.find(o => /blocked|order/i.test(o.name)) || opList.find(o => /inactive/i.test(o.name));
+      const blockOp = opList.find(o => /blocked|blok|order/i.test(o.name)) || opList.find(o => /inactive/i.test(o.name));
       if (blockOp) targetOpId = blockOp.id;
     }
 

@@ -230,6 +230,50 @@
     display: block;
   }
 
+  /* Sub Tabs inside panes */
+  .audit-subtabs-wrap {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 14px;
+    background: #f8fafc;
+    padding: 6px;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+    flex-wrap: wrap;
+  }
+  .audit-subtab-btn {
+    border: none;
+    background: transparent;
+    padding: 7px 14px;
+    border-radius: 7px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #475569;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.15s;
+  }
+  .audit-subtab-btn:hover {
+    background: #ffffff;
+    color: #0f172a;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  }
+  .audit-subtab-btn.active {
+    background: #ffffff;
+    color: #4f46e5;
+    font-weight: 800;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  }
+  .subtab-count-badge {
+    padding: 2px 7px;
+    border-radius: 9999px;
+    font-size: 10px;
+    font-weight: 800;
+    font-family: var(--font-mono, monospace);
+  }
+
   /* Pills */
   .mode-pill {
     padding: 2px 8px;
@@ -274,6 +318,31 @@
   .plan-pill.cp { background: #e0e7ff; color: #4338ca; border: 1px solid #c7d2fe; }
   .plan-pill.map { background: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
   .plan-pill.ap { background: #fce7f3; color: #be185d; border: 1px solid #fbcfe8; }
+
+  /* Filter Chips */
+  .audit-filter-chip {
+    border: 1px solid #cbd5e1;
+    background: #ffffff;
+    color: #475569;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.15s;
+  }
+  .audit-filter-chip:hover {
+    background: #f1f5f9;
+    color: #0f172a;
+  }
+  .audit-filter-chip.active {
+    background: #4f46e5;
+    color: #ffffff;
+    border-color: #4338ca;
+  }
 
   /* Responsive Rules */
   @media (max-width: 1024px) {
@@ -428,17 +497,17 @@
         </div>
       </div>
 
-      <!-- Meal Plans -->
-      <div class="audit-kpi-card" style="border-left: 3px solid #f59e0b;">
+      <!-- Unsettled Balance (Outstanding Due) -->
+      <div class="audit-kpi-card" style="border-left: 3px solid #e11d48;">
         <div class="audit-kpi-top">
-          <span class="audit-kpi-title">Meal Plans</span>
-          <span class="audit-kpi-icon" style="background: #fffbeb; color: #d97706;">
-            <i class="fa-solid fa-utensils"></i>
+          <span class="audit-kpi-title">Unsettled Balance</span>
+          <span class="audit-kpi-icon" style="background: #fff1f2; color: #e11d48;">
+            <i class="fa-solid fa-clock-rotate-left"></i>
           </span>
         </div>
-        <div class="audit-kpi-val" style="color: #d97706;">₹ {{ number_format($dailyFoodRevenue, 2) }}</div>
+        <div class="audit-kpi-val" style="color: #e11d48;">₹ {{ number_format($totalUnsettledAmount, 2) }}</div>
         <div class="audit-kpi-sub">
-          CP: {{ $mealPlanCounts['CP'] }} • MAP: {{ $mealPlanCounts['MAP'] }} • AP: {{ $mealPlanCounts['AP'] }} • EP: {{ $mealPlanCounts['EP'] }}
+          <strong style="color: #b91c1c;">{{ $unsettledBookingsCount }}</strong> unsettled folio(s) pending payment
         </div>
       </div>
 
@@ -457,23 +526,20 @@
       </div>
     </div>
 
-    <!-- 3. Navigation Tabs -->
+    <!-- 3. Navigation Tabs (Meals Removed) -->
     <div class="audit-nav-tabs">
       <button type="button" class="audit-nav-tab active" onclick="switchAuditTab('tab-payments', this)">
-        <i class="fa-solid fa-receipt"></i> Payments ({{ count($paymentsList) }})
+        <i class="fa-solid fa-receipt"></i> Today Payments ({{ count($paymentsList) }})
       </button>
       <button type="button" class="audit-nav-tab" onclick="switchAuditTab('tab-rooms', this)">
-        <i class="fa-solid fa-bed"></i> Rooms ({{ $occupiedRoomsCount }}/{{ $totalRoomsCount }})
-      </button>
-      <button type="button" class="audit-nav-tab" onclick="switchAuditTab('tab-food', this)">
-        <i class="fa-solid fa-bowl-food"></i> Food &amp; Meals ({{ count($mealPlansList) }})
+        <i class="fa-solid fa-bed"></i> Occupied Rooms ({{ $occupiedRoomsCount }})
       </button>
       <button type="button" class="audit-nav-tab" onclick="switchAuditTab('tab-guests', this)">
-        <i class="fa-solid fa-users"></i> Guests ({{ $inHouseGuestsCount }})
+        <i class="fa-solid fa-users"></i> Today All Guests ({{ count($todayAllBookings) }})
       </button>
     </div>
 
-    <!-- TAB 1: PAYMENTS -->
+    <!-- TAB 1: TODAY PAYMENTS -->
     <div id="tab-payments" class="audit-tab-pane active">
       <div class="pms-table-box" style="border-radius: 12px; background: #ffffff; border: 1px solid #e2e8f0; overflow-x: auto;">
         <table class="pms-table" style="width: 100%;">
@@ -484,10 +550,10 @@
               <th>Guest Name</th>
               <th>Room</th>
               <th>Folio #</th>
-              <th style="text-align: right;">Total Balance</th>
+              <th style="text-align: right;">Total Bill</th>
               <th style="text-align: right;">Paid</th>
               <th style="text-align: right;">Remaining</th>
-              <th style="text-align: center;">Payment Type</th>
+              <th style="text-align: center;">Payment Status</th>
               <th>Mode</th>
               <th style="text-align: right;">Amount</th>
             </tr>
@@ -503,17 +569,23 @@
                 $roomNum = $p->booking?->room?->room_number ? ('R' . preg_replace('/^r[-_\s]?/i', '', trim($p->booking->room->room_number))) : '-';
 
                 $booking = $p->booking;
-                $totalBill = $booking ? (float)($booking->payable_amount ?: $booking->total_amount) : (float)$p->amount;
-                $remaining = $booking ? max(0, (float)$booking->balance) : 0.00;
-                $isSettled = ($booking && in_array($booking->status, ['Settlement Done', 'Checked Out'])) || ($remaining <= 0.01);
-
                 if ($booking) {
-                    $totalPaid = max(0, $totalBill - $remaining);
-                    if ($totalPaid <= 0 && $booking->payments) {
-                        $totalPaid = (float)$booking->payments->sum('amount');
+                    $totalBill = (float)($booking->payable_amount > 0 ? $booking->payable_amount : ($booking->total_amount > 0 ? $booking->total_amount : $p->amount));
+                    $totalPaid = (float)($booking->payments ? $booking->payments->sum('amount') : 0);
+                    if ($totalPaid <= 0 && (float)$booking->advance_amount > 0) {
+                        $totalPaid = (float)$booking->advance_amount;
                     }
+                    if ($totalPaid <= 0) {
+                        $totalPaid = (float)$p->amount;
+                    }
+                    $remaining = max(0, round($totalBill - $totalPaid, 2));
+                    // Settled ONLY if remaining <= 0.01 (100% cleared)
+                    $isSettled = ($remaining <= 0.01);
                 } else {
+                    $totalBill = (float)$p->amount;
                     $totalPaid = (float)$p->amount;
+                    $remaining = 0.00;
+                    $isSettled = true;
                 }
               @endphp
               <tr>
@@ -534,7 +606,7 @@
                 <td style="font-family: var(--font-mono, monospace); font-size: 11px; color: #6366f1; font-weight: 700;">
                   {{ $p->folio_number ?: ($p->booking?->folio_number ?: '-') }}
                 </td>
-                <!-- Total Balance (Total Bill) -->
+                <!-- Total Bill -->
                 <td style="text-align: right; font-weight: 800; font-family: var(--font-mono, monospace); font-size: 12px; color: #1e293b;">
                   ₹ {{ number_format($totalBill, 2) }}
                 </td>
@@ -546,16 +618,21 @@
                 <td style="text-align: right; font-weight: 800; font-family: var(--font-mono, monospace); font-size: 12px; color: {{ $remaining > 0.01 ? '#e11d48' : '#64748b' }};">
                   ₹ {{ number_format($remaining, 2) }}
                 </td>
-                <!-- Payment Type: Settled / Unsettled (No Advance shown) -->
+                <!-- Payment Status: Settled vs Unsettled -->
                 <td style="text-align: center;">
                   @if($isSettled)
-                    <span class="status-pill settled" title="Settlement Done">
+                    <span class="status-pill settled" title="Payment cleared in full">
                       <i class="fa-solid fa-circle-check"></i> Settled
                     </span>
                   @else
                     <span class="status-pill unsettled" title="Remaining balance of ₹ {{ number_format($remaining, 2) }}">
                       <i class="fa-solid fa-clock"></i> Unsettled
                     </span>
+                    @if($totalPaid > 0)
+                      <div style="font-size: 9px; color: #b91c1c; font-weight: 700; margin-top: 2px;">Advance Rem: ₹ {{ number_format($remaining, 0) }}</div>
+                    @else
+                      <div style="font-size: 9px; color: #b91c1c; font-weight: 700; margin-top: 2px;">Total Unpaid</div>
+                    @endif
                   @endif
                 </td>
                 <td>
@@ -589,133 +666,358 @@
       </div>
     </div>
 
-    <!-- TAB 2: ROOMS -->
+    <!-- TAB 2: TODAY ROOMS (Complete Hotel Room Inventory & Occupancy + Housekeeping & Operational Histories) -->
     <div id="tab-rooms" class="audit-tab-pane">
-      <div class="pms-table-box" style="border-radius: 12px; background: #ffffff; border: 1px solid #e2e8f0; overflow-x: auto;">
-        <table class="pms-table" style="width: 100%;">
-          <thead>
-            <tr>
-              <th style="width: 45px; text-align: center;">SL</th>
-              <th>Room</th>
-              <th>Category</th>
-              <th>Floor</th>
-              <th>Guest Name</th>
-              <th>Check-in</th>
-              <th>Check-out</th>
-              <th>Meal Plan</th>
-              <th style="text-align: right;">Rate / Day</th>
-            </tr>
-          </thead>
-          <tbody>
-            @forelse($inHouseBookings as $idx => $b)
+      <!-- Subtabs Navigation -->
+      <div class="audit-subtabs-wrap">
+        <button type="button" class="audit-subtab-btn active" onclick="switchRoomSubView('view-room-inventory', this)">
+          <i class="fa-solid fa-bed"></i> Occupied Rooms
+          <span class="subtab-count-badge" style="background: #e0e7ff; color: #4338ca;">{{ $occupiedRoomsCount }}</span>
+        </button>
+        <button type="button" class="audit-subtab-btn" onclick="switchRoomSubView('view-hk-history', this)">
+          <i class="fa-solid fa-broom"></i> Today's Housekeeping History
+          <span class="subtab-count-badge" style="background: #dcfce7; color: #15803d;">{{ count($todayHousekeepingHistories) }}</span>
+        </button>
+        <button type="button" class="audit-subtab-btn" onclick="switchRoomSubView('view-op-history', this)">
+          <i class="fa-solid fa-sliders"></i> Today's Operational History
+          <span class="subtab-count-badge" style="background: #fef3c7; color: #b45309;">{{ count($todayOperationalHistories) }}</span>
+        </button>
+      </div>
+
+      <!-- SUBVIEW 1: OCCUPIED ROOMS -->
+      <div id="view-room-inventory" class="room-subview">
+        <div class="pms-table-box" style="border-radius: 12px; background: #ffffff; border: 1px solid #e2e8f0; overflow-x: auto;">
+          <table class="pms-table" style="width: 100%;">
+            <thead>
+              <tr>
+                <th style="width: 45px; text-align: center;">SL</th>
+                <th>Room</th>
+                <th>Category</th>
+                <th>Floor</th>
+                <th style="text-align: center;">Occupancy</th>
+                <th>Guest &amp; Folio</th>
+                <th>Check-in</th>
+                <th>Check-out</th>
+                <th style="text-align: center;">Operational Status</th>
+                <th style="text-align: center;">Housekeeping</th>
+                <th style="text-align: right;">Rate / Day</th>
+              </tr>
+            </thead>
+            <tbody id="rooms-tbody">
               @php
-                $cleanNum = $b->room?->room_number ? ('R' . preg_replace('/^r[-_\s]?/i', '', trim($b->room->room_number))) : 'Unassigned';
-                $n = max(1, (int)$b->total_nights);
-                $dayRate = (float)($b->room_rate ?: ($b->total_amount / $n));
+                $displayOccupiedRooms = isset($occupiedRooms) ? $occupiedRooms : $allRooms->filter(function($rm) use ($activeBookingsByRoom, $activeMaintenanceRooms) {
+                  return $activeBookingsByRoom->has($rm->id) && !in_array($rm->id, $activeMaintenanceRooms ?? []);
+                });
               @endphp
+              @forelse($displayOccupiedRooms as $idx => $rm)
+                @php
+                  $cleanNum = 'R' . preg_replace('/^r[-_\s]?/i', '', trim($rm->room_number));
+                  $isMaint = in_array($rm->id, $activeMaintenanceRooms ?? []);
+                  $activeBooking = $activeBookingsByRoom->get($rm->id);
+                  $isOccupied = ($activeBooking && !$isMaint);
+
+                  // Housekeeping State
+                  $latestHk = $rm->housekeepingHistories ? $rm->housekeepingHistories->sortByDesc('id')->first() : null;
+                  $hkName = $latestHk?->housekeepingStatus?->name ?? ($latestHk?->housekeepingState?->name ?? 'Clean');
+                  $hkRaw = strtolower($hkName);
+                  $isDirty = str_contains($hkRaw, 'dirty') || str_contains($hkRaw, 'cleaning') || str_contains($hkRaw, 'touch up');
+
+                  // Operational State
+                  $latestOp = $rm->operationalHistories ? $rm->operationalHistories->sortByDesc('id')->first() : null;
+                  $opName = $latestOp?->operationalStatus?->name ?? 'Active';
+                  $isOpBlocked = (bool)preg_match('/block|blok|maintenance|order/i', $opName);
+
+                  $n = $activeBooking ? max(1, (int)$activeBooking->total_nights) : 1;
+                  $dayRate = $activeBooking ? (float)($activeBooking->room_rate ?: ($activeBooking->total_amount / $n)) : 0.00;
+
+                  $filterType = $isMaint ? 'maintenance' : ($isOccupied ? 'occupied' : 'vacant');
+                @endphp
+                <tr class="room-row" data-type="{{ $filterType }}" data-dirty="{{ $isDirty ? '1' : '0' }}">
+                  <td style="text-align: center; font-weight: 800; color: #64748b; font-size: 11px; font-family: var(--font-mono, monospace);">
+                    {{ $idx + 1 }}
+                  </td>
+                  <td>
+                    <span style="font-weight: 800; color: #4338ca; background: #e0e7ff; padding: 2px 7px; border-radius: 6px; font-family: var(--font-mono, monospace); font-size: 11px;">
+                      {{ $cleanNum }}
+                    </span>
+                  </td>
+                  <td style="font-weight: 600; color: #1e293b;">
+                    {{ $rm->categoryRelation?->name ?? 'Standard' }}
+                  </td>
+                  <td style="font-size: 11px; color: #64748b;">
+                    Floor {{ $rm->floorRelation?->floor ?? '1' }}
+                  </td>
+                  <!-- Occupancy Status -->
+                  <td style="text-align: center;">
+                    @if($isMaint)
+                      <span class="status-pill" style="background: #fef3c7; color: #b45309; border: 1px solid #fde68a;">
+                        <i class="fa-solid fa-wrench"></i> Maintenance
+                      </span>
+                    @elseif($isOccupied)
+                      <span class="status-pill" style="background: #e0e7ff; color: #4338ca; border: 1px solid #c7d2fe;">
+                        <i class="fa-solid fa-door-closed"></i> Occupied
+                      </span>
+                    @else
+                      <span class="status-pill" style="background: #dcfce7; color: #15803d; border: 1px solid #86efac;">
+                        <i class="fa-solid fa-door-open"></i> Vacant
+                      </span>
+                    @endif
+                  </td>
+                  <!-- Guest & Folio -->
+                  <td>
+                    @if($isOccupied && $activeBooking)
+                      <div style="font-weight: 700; color: #0f172a; line-height: 1.2;">
+                        {{ ($activeBooking->guest?->title?->name ? $activeBooking->guest->title->name . ' ' : '') . ($activeBooking->guest?->guest_name ?? 'Guest') }}
+                      </div>
+                      <div style="font-size: 10px; color: #64748b; margin-top: 2px;">
+                        Folio #{{ $activeBooking->primary_booking_id ? $activeBooking->primary_booking_id : $activeBooking->id }}
+                      </div>
+                    @elseif($isMaint)
+                      <span style="color: #b45309; font-size: 11px; font-weight: 600;">Out of Service</span>
+                    @else
+                      <span style="color: #94a3b8; font-size: 11px;">Available</span>
+                    @endif
+                  </td>
+                  <!-- Check-in -->
+                  <td style="font-size: 11px; color: #475569;">
+                    {{ ($isOccupied && $activeBooking && $activeBooking->reserve_date) ? \Carbon\Carbon::parse($activeBooking->reserve_date)->format('d M Y') : '-' }}
+                  </td>
+                  <!-- Check-out -->
+                  <td style="font-size: 11px; color: #475569;">
+                    {{ ($isOccupied && $activeBooking && $activeBooking->checkout_date) ? \Carbon\Carbon::parse($activeBooking->checkout_date)->format('d M Y') : '-' }}
+                  </td>
+                  <!-- Operational Status -->
+                  <td style="text-align: center;">
+                    @if($isOpBlocked)
+                      <span style="font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 6px; background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5;">
+                        <i class="fa-solid fa-ban"></i> {{ $opName }}
+                      </span>
+                    @else
+                      <span style="font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 6px; background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0;">
+                        <i class="fa-solid fa-circle-check"></i> {{ $opName }}
+                      </span>
+                    @endif
+                  </td>
+                  <!-- Housekeeping -->
+                  <td style="text-align: center;">
+                    @if($isDirty)
+                      <span style="font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 6px; background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5;">
+                        <i class="fa-solid fa-broom"></i> {{ $hkName }}
+                      </span>
+                    @else
+                      <span style="font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 6px; background: #dcfce7; color: #15803d; border: 1px solid #86efac;">
+                        <i class="fa-solid fa-check"></i> {{ $hkName }}
+                      </span>
+                    @endif
+                  </td>
+                  <!-- Daily Rate -->
+                  <td style="text-align: right; font-weight: 900; font-family: var(--font-mono, monospace); font-size: 12px; color: #1e293b;">
+                    @if($dayRate > 0)
+                      ₹ {{ number_format($dayRate, 2) }}
+                    @else
+                      <span style="color: #94a3b8;">-</span>
+                    @endif
+                  </td>
+                </tr>
+              @empty
+                <tr>
+                  <td colspan="11" style="text-align: center; padding: 32px; color: #94a3b8; font-size: 12px;">
+                    <i class="fa-solid fa-door-open" style="font-size: 22px; color: #cbd5e1; margin-bottom: 8px; display: block;"></i>
+                    No rooms are currently occupied on this date ({{ \Carbon\Carbon::parse($selectedDate)->format('d M Y') }}).
+                  </td>
+                </tr>
+              @endforelse
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- SUBVIEW 2: TODAY'S HOUSEKEEPING HISTORIES -->
+      <div id="view-hk-history" class="room-subview" style="display: none;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+          <div>
+            <h4 style="margin: 0; font-size: 13px; font-weight: 800; color: #1e293b;">Today's Housekeeping History Logs</h4>
+            <p style="margin: 2px 0 0; font-size: 11px; color: #64748b;">Housekeeping states, cleaning events, and inspections recorded on this date.</p>
+          </div>
+          <span style="font-size: 11px; font-weight: 800; background: #e0e7ff; color: #4338ca; padding: 3px 10px; border-radius: 9999px;">
+            {{ count($todayHousekeepingHistories) }} Record(s) Logged
+          </span>
+        </div>
+
+        <div class="pms-table-box" style="border-radius: 12px; background: #ffffff; border: 1px solid #e2e8f0; overflow-x: auto;">
+          <table class="pms-table" style="width: 100%;">
+            <thead>
               <tr>
-                <td style="text-align: center; font-weight: 800; color: #64748b; font-size: 11px; font-family: var(--font-mono, monospace);">
-                  {{ $idx + 1 }}
-                </td>
-                <td>
-                  <span style="font-weight: 800; color: #4338ca; background: #e0e7ff; padding: 2px 7px; border-radius: 6px; font-family: var(--font-mono, monospace); font-size: 11px;">
-                    {{ $cleanNum }}
-                  </span>
-                </td>
-                <td style="font-weight: 600;">{{ $b->room?->categoryRelation?->name ?? 'Standard' }}</td>
-                <td style="font-size: 11px; color: #64748b;">Floor {{ $b->room?->floorRelation?->floor ?? '1' }}</td>
-                <td style="font-weight: 700; color: #0f172a;">
-                  {{ ($b->guest?->title?->name ? $b->guest->title->name . ' ' : '') . ($b->guest?->guest_name ?? 'Guest') }}
-                </td>
-                <td style="font-size: 11px; color: #475569;">
-                  {{ $b->reserve_date ? \Carbon\Carbon::parse($b->reserve_date)->format('d M Y') : 'N/A' }}
-                </td>
-                <td style="font-size: 11px; color: #475569;">
-                  {{ $b->checkout_date ? \Carbon\Carbon::parse($b->checkout_date)->format('d M Y') : 'N/A' }}
-                </td>
-                <td>
-                  <span class="plan-pill cp">
-                    {{ $b->plan?->plan_name ?: 'Room Only (EP)' }}
-                  </span>
-                </td>
-                <td style="text-align: right; font-weight: 900; font-family: var(--font-mono, monospace); font-size: 12px; color: #1e293b;">
-                  ₹ {{ number_format($dayRate, 2) }}
-                </td>
+                <th style="width: 45px; text-align: center;">SL</th>
+                <th style="width: 130px;">Time / Date</th>
+                <th>Room Number</th>
+                <th>Category</th>
+                <th>Floor</th>
+                <th style="text-align: center;">Housekeeping State</th>
+                <th style="text-align: center;">Task Status</th>
+                <th>Start Time</th>
+                <th>Completion Time</th>
               </tr>
-            @empty
+            </thead>
+            <tbody>
+              @forelse($todayHousekeepingHistories as $hkIdx => $hk)
+                @php
+                  $rmNum = $hk->room?->room_number ? ('R' . preg_replace('/^r[-_\s]?/i', '', trim($hk->room->room_number))) : 'Room #' . $hk->room_id;
+                  $stateName = $hk->housekeepingStatus?->name ?? 'Clean';
+                  $stateRaw = strtolower($stateName);
+                  $isDirtyState = str_contains($stateRaw, 'dirty') || str_contains($stateRaw, 'cleaning') || str_contains($stateRaw, 'touch up');
+                @endphp
+                <tr>
+                  <td style="text-align: center; font-weight: 800; color: #64748b; font-size: 11px; font-family: var(--font-mono, monospace);">
+                    {{ $hkIdx + 1 }}
+                  </td>
+                  <td style="font-size: 11px; font-weight: 600; color: #475569; font-family: var(--font-mono, monospace);">
+                    {{ $hk->created_at ? $hk->created_at->format('h:i A') : '-' }}
+                    <span style="display: block; font-size: 10px; color: #94a3b8;">{{ $hk->created_at ? $hk->created_at->format('d M Y') : '' }}</span>
+                  </td>
+                  <td>
+                    <span style="font-weight: 800; color: #4338ca; background: #e0e7ff; padding: 2px 7px; border-radius: 6px; font-family: var(--font-mono, monospace); font-size: 11px;">
+                      {{ $rmNum }}
+                    </span>
+                  </td>
+                  <td style="font-weight: 600; color: #1e293b;">
+                    {{ $hk->room?->categoryRelation?->name ?? 'Standard' }}
+                  </td>
+                  <td style="font-size: 11px; color: #64748b;">
+                    Floor {{ $hk->room?->floorRelation?->floor ?? '1' }}
+                  </td>
+                  <td style="text-align: center;">
+                    @if($isDirtyState)
+                      <span style="font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 6px; background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; display: inline-flex; align-items: center; gap: 4px;">
+                        <i class="fa-solid fa-broom"></i> {{ $stateName }}
+                      </span>
+                    @else
+                      <span style="font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 6px; background: #dcfce7; color: #15803d; border: 1px solid #86efac; display: inline-flex; align-items: center; gap: 4px;">
+                        <i class="fa-solid fa-circle-check"></i> {{ $stateName }}
+                      </span>
+                    @endif
+                  </td>
+                  <td style="text-align: center;">
+                    @if(strtolower($hk->status) === 'complete' || strtolower($hk->status) === 'completed')
+                      <span style="font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 6px; background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0;">
+                        <i class="fa-solid fa-check"></i> Complete
+                      </span>
+                    @else
+                      <span style="font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 6px; background: #fef3c7; color: #b45309; border: 1px solid #fde68a;">
+                        <i class="fa-solid fa-clock"></i> {{ ucfirst($hk->status ?? 'Pending') }}
+                      </span>
+                    @endif
+                  </td>
+                  <td style="font-size: 11px; color: #475569; font-family: var(--font-mono, monospace);">
+                    {{ $hk->start_time ? \Carbon\Carbon::parse($hk->start_time)->format('h:i A') : '-' }}
+                  </td>
+                  <td style="font-size: 11px; color: #475569; font-family: var(--font-mono, monospace);">
+                    {{ $hk->completion_time ? \Carbon\Carbon::parse($hk->completion_time)->format('h:i A') : '-' }}
+                  </td>
+                </tr>
+              @empty
+                <tr>
+                  <td colspan="9" style="text-align: center; padding: 32px; color: #94a3b8; font-size: 12px;">
+                    <i class="fa-solid fa-broom" style="font-size: 22px; color: #cbd5e1; margin-bottom: 8px; display: block;"></i>
+                    No housekeeping history logs recorded for this date ({{ \Carbon\Carbon::parse($selectedDate)->format('d M Y') }}).
+                  </td>
+                </tr>
+              @endforelse
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- SUBVIEW 3: TODAY'S OPERATIONAL HISTORIES -->
+      <div id="view-op-history" class="room-subview" style="display: none;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+          <div>
+            <h4 style="margin: 0; font-size: 13px; font-weight: 800; color: #1e293b;">Today's Operational History Logs</h4>
+            <p style="margin: 2px 0 0; font-size: 11px; color: #64748b;">Operational status changes (Active, In-Service, Out of Order, Blocked) logged on this date.</p>
+          </div>
+          <span style="font-size: 11px; font-weight: 800; background: #fef3c7; color: #b45309; padding: 3px 10px; border-radius: 9999px;">
+            {{ count($todayOperationalHistories) }} Record(s) Logged
+          </span>
+        </div>
+
+        <div class="pms-table-box" style="border-radius: 12px; background: #ffffff; border: 1px solid #e2e8f0; overflow-x: auto;">
+          <table class="pms-table" style="width: 100%;">
+            <thead>
               <tr>
-                <td colspan="9" style="text-align: center; padding: 24px; color: #94a3b8; font-size: 12px;">
-                  No occupied rooms on this date.
-                </td>
+                <th style="width: 45px; text-align: center;">SL</th>
+                <th style="width: 130px;">Time / Date</th>
+                <th>Room Number</th>
+                <th>Category</th>
+                <th>Floor</th>
+                <th style="text-align: center;">Operational Status</th>
+                <th style="text-align: center;">Room Model State</th>
               </tr>
-            @endforelse
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              @forelse($todayOperationalHistories as $opIdx => $op)
+                @php
+                  $rmNum = $op->room?->room_number ? ('R' . preg_replace('/^r[-_\s]?/i', '', trim($op->room->room_number))) : 'Room #' . $op->room_id;
+                  $opStatusName = $op->operationalStatus?->name ?? 'Active';
+                  $isOpBlocked = (bool)preg_match('/block|blok|maintenance|order/i', $opStatusName);
+                  $roomStatus = $op->room?->status ?? 'Active';
+                @endphp
+                <tr>
+                  <td style="text-align: center; font-weight: 800; color: #64748b; font-size: 11px; font-family: var(--font-mono, monospace);">
+                    {{ $opIdx + 1 }}
+                  </td>
+                  <td style="font-size: 11px; font-weight: 600; color: #475569; font-family: var(--font-mono, monospace);">
+                    {{ $op->created_at ? $op->created_at->format('h:i A') : '-' }}
+                    <span style="display: block; font-size: 10px; color: #94a3b8;">{{ $op->created_at ? $op->created_at->format('d M Y') : '' }}</span>
+                  </td>
+                  <td>
+                    <span style="font-weight: 800; color: #4338ca; background: #e0e7ff; padding: 2px 7px; border-radius: 6px; font-family: var(--font-mono, monospace); font-size: 11px;">
+                      {{ $rmNum }}
+                    </span>
+                  </td>
+                  <td style="font-weight: 600; color: #1e293b;">
+                    {{ $op->room?->categoryRelation?->name ?? 'Standard' }}
+                  </td>
+                  <td style="font-size: 11px; color: #64748b;">
+                    Floor {{ $op->room?->floorRelation?->floor ?? '1' }}
+                  </td>
+                  <td style="text-align: center;">
+                    @if($isOpBlocked)
+                      <span style="font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 6px; background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; display: inline-flex; align-items: center; gap: 4px;">
+                        <i class="fa-solid fa-ban"></i> {{ $opStatusName }}
+                      </span>
+                    @else
+                      <span style="font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 6px; background: #dcfce7; color: #15803d; border: 1px solid #86efac; display: inline-flex; align-items: center; gap: 4px;">
+                        <i class="fa-solid fa-circle-check"></i> {{ $opStatusName }}
+                      </span>
+                    @endif
+                  </td>
+                  <td style="text-align: center;">
+                    @if(strtolower($roomStatus) === 'active')
+                      <span style="font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 6px; background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0;">
+                        Active
+                      </span>
+                    @else
+                      <span style="font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 6px; background: #f1f5f9; color: #64748b; border: 1px solid #cbd5e1;">
+                        {{ $roomStatus }}
+                      </span>
+                    @endif
+                  </td>
+                </tr>
+              @empty
+                <tr>
+                  <td colspan="7" style="text-align: center; padding: 32px; color: #94a3b8; font-size: 12px;">
+                    <i class="fa-solid fa-sliders" style="font-size: 22px; color: #cbd5e1; margin-bottom: 8px; display: block;"></i>
+                    No operational history changes recorded for this date ({{ \Carbon\Carbon::parse($selectedDate)->format('d M Y') }}).
+                  </td>
+                </tr>
+              @endforelse
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
 
-    <!-- TAB 3: FOOD & MEALS -->
-    <div id="tab-food" class="audit-tab-pane">
-      <div class="pms-table-box" style="border-radius: 12px; background: #ffffff; border: 1px solid #e2e8f0; overflow-x: auto;">
-        <table class="pms-table" style="width: 100%;">
-          <thead>
-            <tr>
-              <th style="width: 45px; text-align: center;">SL</th>
-              <th>Room</th>
-              <th>Guest Name</th>
-              <th>Plan Code</th>
-              <th>Meal Plan Name</th>
-              <th>Meals Included</th>
-              <th style="text-align: right;">Price / Day</th>
-            </tr>
-          </thead>
-          <tbody>
-            @forelse($mealPlansList as $idx => $mp)
-              @php
-                $code = strtolower($mp['plan_code']);
-                $pillCls = ($code === 'cp') ? 'cp' : (($code === 'map') ? 'map' : (($code === 'ap') ? 'ap' : 'ep'));
-                $mealsText = ($code === 'ap') ? 'Breakfast + Lunch + Dinner' : (($code === 'map') ? 'Breakfast + Dinner' : (($code === 'cp') ? 'Breakfast Included' : 'Room Only'));
-              @endphp
-              <tr>
-                <td style="text-align: center; font-weight: 800; color: #64748b; font-size: 11px; font-family: var(--font-mono, monospace);">
-                  {{ $idx + 1 }}
-                </td>
-                <td>
-                  <span style="font-weight: 800; color: #4338ca; background: #e0e7ff; padding: 2px 7px; border-radius: 6px; font-family: var(--font-mono, monospace); font-size: 11px;">
-                    {{ $mp['room_number'] }}
-                  </span>
-                </td>
-                <td style="font-weight: 700; color: #0f172a;">
-                  {{ $mp['guest_name'] }}
-                </td>
-                <td>
-                  <span class="plan-pill {{ $pillCls }}">
-                    {{ $mp['plan_code'] }}
-                  </span>
-                </td>
-                <td style="font-weight: 600; color: #334155;">
-                  {{ $mp['plan_name'] }}
-                </td>
-                <td style="font-size: 11px; color: #64748b;">
-                  {{ $mealsText }}
-                </td>
-                <td style="text-align: right; font-weight: 800; font-family: var(--font-mono, monospace); font-size: 12px;">
-                  ₹ {{ number_format($mp['plan_price'], 2) }}
-                </td>
-              </tr>
-            @empty
-              <tr>
-                <td colspan="7" style="text-align: center; padding: 24px; color: #94a3b8; font-size: 12px;">
-                  No meal plan bookings recorded for this date.
-                </td>
-              </tr>
-            @endforelse
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- TAB 4: GUESTS -->
+    <!-- TAB 3: TODAY ALL GUESTS (All in-house, arriving, and departing guests) -->
     <div id="tab-guests" class="audit-tab-pane">
       <div class="pms-table-box" style="border-radius: 12px; background: #ffffff; border: 1px solid #e2e8f0; overflow-x: auto;">
         <table class="pms-table" style="width: 100%;">
@@ -725,18 +1027,46 @@
               <th>Room</th>
               <th>Guest Name</th>
               <th>Phone</th>
+              <th>Folio #</th>
               <th>Check-in</th>
               <th>Check-out</th>
-              <th>Nights</th>
-              <th>Status</th>
+              <th style="text-align: center;">Stay Status</th>
+              <th style="text-align: right;">Total Bill</th>
+              <th style="text-align: right;">Paid</th>
+              <th style="text-align: right;">Remaining</th>
+              <th style="text-align: center;">Settlement</th>
             </tr>
           </thead>
-          <tbody>
-            @forelse($inHouseBookings as $idx => $b)
+          <tbody id="guests-tbody">
+            @forelse($todayAllBookings as $idx => $b)
               @php
                 $cleanNum = $b->room?->room_number ? ('R' . preg_replace('/^r[-_\s]?/i', '', trim($b->room->room_number))) : 'Unassigned';
+                $isAdditional = !empty($b->primary_booking_id);
+                $master = ($isAdditional && $b->primaryBooking) ? $b->primaryBooking : $b;
+
+                $totalBill = (float)($master->payable_amount > 0 ? $master->payable_amount : ($master->total_amount > 0 ? $master->total_amount : 0));
+                $totalPaid = (float)($master->payments ? $master->payments->sum('amount') : 0);
+                if ($totalPaid <= 0 && (float)$master->advance_amount > 0) {
+                    $totalPaid = (float)$master->advance_amount;
+                }
+                $remaining = max(0, round($totalBill - $totalPaid, 2));
+
+                // Settled ONLY if remaining <= 0.01
+                $isSettled = ($remaining <= 0.01);
+
+                // Category classification for guest filters
+                $isTodayArr = ($b->reserve_date && \Carbon\Carbon::parse($b->reserve_date)->toDateString() === $selectedDate);
+                $isTodayDep = ($b->checkout_date && \Carbon\Carbon::parse($b->checkout_date)->toDateString() === $selectedDate);
+                $isInHouse = in_array($b->status, ['Checked In', 'Stay Over', 'Arrived']);
+
+                $guestFilterTypes = [];
+                if ($isSettled) $guestFilterTypes[] = 'settled';
+                else $guestFilterTypes[] = 'unsettled';
+                if ($isInHouse) $guestFilterTypes[] = 'inhouse';
+                if ($isTodayArr) $guestFilterTypes[] = 'arrivals';
+                if ($isTodayDep) $guestFilterTypes[] = 'departures';
               @endphp
-              <tr>
+              <tr class="guest-row" data-filters="{{ implode(' ', $guestFilterTypes) }}">
                 <td style="text-align: center; font-weight: 800; color: #64748b; font-size: 11px; font-family: var(--font-mono, monospace);">
                   {{ $idx + 1 }}
                 </td>
@@ -747,9 +1077,15 @@
                 </td>
                 <td style="font-weight: 700; color: #0f172a;">
                   {{ ($b->guest?->title?->name ? $b->guest->title->name . ' ' : '') . ($b->guest?->guest_name ?? 'Guest') }}
+                  @if($isAdditional)
+                    <span style="font-size: 10px; color: #64748b; font-weight: 600;">(Addl. Room)</span>
+                  @endif
                 </td>
                 <td style="font-family: var(--font-mono, monospace); font-size: 11px; color: #475569;">
                   {{ $b->guest?->mobile ?: 'N/A' }}
+                </td>
+                <td style="font-family: var(--font-mono, monospace); font-size: 11px; color: #6366f1; font-weight: 700;">
+                  {{ $b->folio_number ?: ($master->folio_number ?: '-') }}
                 </td>
                 <td style="font-size: 11px; color: #475569;">
                   {{ $b->reserve_date ? \Carbon\Carbon::parse($b->reserve_date)->format('d M Y') : 'N/A' }}
@@ -757,19 +1093,46 @@
                 <td style="font-size: 11px; color: #475569;">
                   {{ $b->checkout_date ? \Carbon\Carbon::parse($b->checkout_date)->format('d M Y') : 'N/A' }}
                 </td>
-                <td style="text-align: center; font-weight: 700; font-size: 11px;">
-                  {{ $b->total_nights }}
-                </td>
-                <td>
-                  <span style="font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 12px; background: #ecfdf5; color: #065f46;">
+                <!-- Stay Status -->
+                <td style="text-align: center;">
+                  <span style="font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 12px; background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1;">
                     {{ $b->status }}
                   </span>
+                </td>
+                <!-- Total Bill -->
+                <td style="text-align: right; font-weight: 800; font-family: var(--font-mono, monospace); font-size: 12px; color: #1e293b;">
+                  ₹ {{ number_format($totalBill, 2) }}
+                </td>
+                <!-- Paid -->
+                <td style="text-align: right; font-weight: 800; font-family: var(--font-mono, monospace); font-size: 12px; color: #059669;">
+                  ₹ {{ number_format($totalPaid, 2) }}
+                </td>
+                <!-- Remaining -->
+                <td style="text-align: right; font-weight: 800; font-family: var(--font-mono, monospace); font-size: 12px; color: {{ $remaining > 0.01 ? '#e11d48' : '#64748b' }};">
+                  ₹ {{ number_format($remaining, 2) }}
+                </td>
+                <!-- Settlement Status (Settled vs Unsettled) -->
+                <td style="text-align: center;">
+                  @if($isSettled)
+                    <span class="status-pill settled" title="Payment cleared in full">
+                      <i class="fa-solid fa-circle-check"></i> Settled
+                    </span>
+                  @else
+                    <span class="status-pill unsettled" title="Remaining balance of ₹ {{ number_format($remaining, 2) }}">
+                      <i class="fa-solid fa-clock"></i> Unsettled
+                    </span>
+                    @if($totalPaid > 0)
+                      <div style="font-size: 9px; color: #b91c1c; font-weight: 700; margin-top: 2px;">Advance Rem: ₹ {{ number_format($remaining, 0) }}</div>
+                    @else
+                      <div style="font-size: 9px; color: #b91c1c; font-weight: 700; margin-top: 2px;">Total Unpaid</div>
+                    @endif
+                  @endif
                 </td>
               </tr>
             @empty
               <tr>
-                <td colspan="8" style="text-align: center; padding: 24px; color: #94a3b8; font-size: 12px;">
-                  No in-house guests currently checked in.
+                <td colspan="12" style="text-align: center; padding: 24px; color: #94a3b8; font-size: 12px;">
+                  No guest bookings active for this date.
                 </td>
               </tr>
             @endforelse
@@ -869,8 +1232,10 @@
         <td style="padding: 6px; border: 1px solid #ddd;">₹ {{ number_format($dailyRoomRevenue, 2) }}</td>
       </tr>
       <tr>
-        <td style="padding: 6px; border: 1px solid #ddd;"><strong>Meal Plans:</strong></td>
-        <td style="padding: 6px; border: 1px solid #ddd;">₹ {{ number_format($dailyFoodRevenue, 2) }} (CP: {{ $mealPlanCounts['CP'] }}, MAP: {{ $mealPlanCounts['MAP'] }}, AP: {{ $mealPlanCounts['AP'] }}, EP: {{ $mealPlanCounts['EP'] }})</td>
+        <td style="padding: 6px; border: 1px solid #ddd;"><strong>Unsettled Balance:</strong></td>
+        <td style="padding: 6px; border: 1px solid #ddd; color: #b91c1c;">
+          <strong>₹ {{ number_format($totalUnsettledAmount, 2) }}</strong> ({{ $unsettledBookingsCount }} unsettled folio(s) pending payment)
+        </td>
       </tr>
       <tr>
         <td style="padding: 6px; border: 1px solid #ddd;"><strong>Total Revenue:</strong></td>
@@ -908,6 +1273,23 @@
     }
     if (el) {
       el.classList.add('active');
+    }
+  }
+
+  function switchRoomSubView(viewId, btn) {
+    var container = document.getElementById('tab-rooms');
+    if (!container) return;
+
+    var btns = container.querySelectorAll('.audit-subtab-btn');
+    btns.forEach(function(b) { b.classList.remove('active'); });
+    btn.classList.add('active');
+
+    var views = container.querySelectorAll('.room-subview');
+    views.forEach(function(v) { v.style.display = 'none'; });
+
+    var target = document.getElementById(viewId);
+    if (target) {
+      target.style.display = 'block';
     }
   }
 

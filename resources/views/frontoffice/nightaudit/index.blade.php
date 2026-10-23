@@ -247,6 +247,19 @@
   .mode-pill.bank { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
   .mode-pill.other { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
 
+  .status-pill {
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 10px;
+    font-weight: 800;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+  }
+  .status-pill.settled { background: #dcfce7; color: #15803d; border: 1px solid #86efac; }
+  .status-pill.unsettled { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; }
+
   .plan-pill {
     padding: 2px 8px;
     border-radius: 6px;
@@ -474,7 +487,10 @@
               <th>Guest Name</th>
               <th>Room</th>
               <th>Folio #</th>
-              <th>Payment Type</th>
+              <th style="text-align: right;">Total Balance</th>
+              <th style="text-align: right;">Paid</th>
+              <th style="text-align: right;">Remaining</th>
+              <th style="text-align: center;">Payment Type</th>
               <th>Mode</th>
               <th style="text-align: right;">Amount</th>
             </tr>
@@ -488,6 +504,20 @@
                              (str_contains($modeRaw, 'card') ? 'card' :
                              (str_contains($modeRaw, 'bank') ? 'bank' : 'other')));
                 $roomNum = $p->booking?->room?->room_number ? ('R' . preg_replace('/^r[-_\s]?/i', '', trim($p->booking->room->room_number))) : '-';
+
+                $booking = $p->booking;
+                $totalBill = $booking ? (float)($booking->payable_amount ?: $booking->total_amount) : (float)$p->amount;
+                $remaining = $booking ? max(0, (float)$booking->balance) : 0.00;
+                $isSettled = ($booking && in_array($booking->status, ['Settlement Done', 'Checked Out'])) || ($remaining <= 0.01);
+
+                if ($booking) {
+                    $totalPaid = max(0, $totalBill - $remaining);
+                    if ($totalPaid <= 0 && $booking->payments) {
+                        $totalPaid = (float)$booking->payments->sum('amount');
+                    }
+                } else {
+                    $totalPaid = (float)$p->amount;
+                }
               @endphp
               <tr>
                 <td style="text-align: center; font-weight: 800; color: #64748b; font-size: 11px; font-family: var(--font-mono, monospace);">
@@ -507,10 +537,29 @@
                 <td style="font-family: var(--font-mono, monospace); font-size: 11px; color: #6366f1; font-weight: 700;">
                   {{ $p->folio_number ?: ($p->booking?->folio_number ?: '-') }}
                 </td>
-                <td>
-                  <span style="font-size: 11px; font-weight: 700; color: #334155;">
-                    {{ $p->payment_type ?: 'General' }}
-                  </span>
+                <!-- Total Balance (Total Bill) -->
+                <td style="text-align: right; font-weight: 800; font-family: var(--font-mono, monospace); font-size: 12px; color: #1e293b;">
+                  ₹ {{ number_format($totalBill, 2) }}
+                </td>
+                <!-- Paid -->
+                <td style="text-align: right; font-weight: 800; font-family: var(--font-mono, monospace); font-size: 12px; color: #059669;">
+                  ₹ {{ number_format($totalPaid, 2) }}
+                </td>
+                <!-- Remaining -->
+                <td style="text-align: right; font-weight: 800; font-family: var(--font-mono, monospace); font-size: 12px; color: {{ $remaining > 0.01 ? '#e11d48' : '#64748b' }};">
+                  ₹ {{ number_format($remaining, 2) }}
+                </td>
+                <!-- Payment Type: Settled / Unsettled (No Advance shown) -->
+                <td style="text-align: center;">
+                  @if($isSettled)
+                    <span class="status-pill settled" title="Settlement Done">
+                      <i class="fa-solid fa-circle-check"></i> Settled
+                    </span>
+                  @else
+                    <span class="status-pill unsettled" title="Remaining balance of ₹ {{ number_format($remaining, 2) }}">
+                      <i class="fa-solid fa-clock"></i> Unsettled
+                    </span>
+                  @endif
                 </td>
                 <td>
                   <span class="mode-pill {{ $modeClass }}">
@@ -523,7 +572,7 @@
               </tr>
             @empty
               <tr>
-                <td colspan="8" style="text-align: center; padding: 24px; color: #94a3b8; font-size: 12px;">
+                <td colspan="11" style="text-align: center; padding: 24px; color: #94a3b8; font-size: 12px;">
                   No payments recorded for this date.
                 </td>
               </tr>
@@ -532,7 +581,7 @@
           @if(count($paymentsList) > 0)
             <tfoot>
               <tr style="background: #f8fafc; font-weight: 800;">
-                <td colspan="7" style="text-align: right; text-transform: uppercase; font-size: 11px; color: #64748b;">Total Collections:</td>
+                <td colspan="10" style="text-align: right; text-transform: uppercase; font-size: 11px; color: #64748b;">Total Collections:</td>
                 <td style="text-align: right; font-size: 13px; font-family: var(--font-mono, monospace); color: #059669;">
                   ₹ {{ number_format($totalPayments, 2) }}
                 </td>

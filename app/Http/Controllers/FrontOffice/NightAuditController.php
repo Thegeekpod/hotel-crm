@@ -43,7 +43,7 @@ class NightAuditController extends Controller
         $existingAudit = NightAudit::whereDate('audit_date', $selectedDate)->first();
 
         // 2. PAYMENTS & COLLECTIONS (Ajker Dine Koto Ki Payments Elo)
-        $paymentsQuery = Payment::with(['guest.title', 'booking.room', 'paymentMode'])
+        $paymentsQuery = Payment::with(['guest.title', 'booking.room', 'booking.payments', 'booking.settlements', 'paymentMode'])
             ->where(function($q) use ($selectedDate) {
                 $q->whereDate('payment_date', $selectedDate)
                   ->orWhere(function($sub) use ($selectedDate) {

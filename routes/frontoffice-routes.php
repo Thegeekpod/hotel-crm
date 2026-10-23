@@ -31,6 +31,7 @@ Route::prefix('front-office')->name('frontoffice.')->group(function () {
     Route::get('/folio/{id}/details', [FolioController::class, 'getDetails'])->name('folio.details');
     Route::post('/folio/{id}/settle', [FolioController::class, 'settle'])->name('folio.settle');
     Route::post('/folio/{id}/checkout', [FolioController::class, 'checkout'])->name('folio.checkout');
+    Route::post('/folio/early-checkout-guest/{bookingId}', [FolioController::class, 'earlyCheckoutGuest'])->name('folio.early-checkout-guest');
 
     // Night Audit Management
     Route::get('/nightaudit', [NightAuditController::class, 'index'])->name('nightaudit');

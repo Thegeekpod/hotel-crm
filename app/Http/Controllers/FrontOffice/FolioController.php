@@ -442,6 +442,128 @@ class FolioController extends Controller
     }
 
     /**
+     * Early check-out for a single individual guest/occupant in a multi-guest room
+     */
+    public function earlyCheckoutGuest(Request $request, $bookingId)
+    {
+        $occupantBooking = Booking::with(['guest', 'room'])->find($bookingId);
+        if (!$occupantBooking) {
+            return response()->json(['success' => false, 'error' => 'Guest booking record not found.'], 404);
+        }
+
+        if ($occupantBooking->status === 'Checked Out') {
+            return response()->json(['success' => false, 'error' => 'This guest is already checked out.'], 400);
+        }
+
+        // Validate that reservation settlement is completed before early checkout
+        $primaryBooking = $occupantBooking->primary_booking_id
+            ? Booking::find($occupantBooking->primary_booking_id)
+            : $occupantBooking;
+
+        if ($primaryBooking && (float)$primaryBooking->balance > 0.01 && !in_array($primaryBooking->status, ['Settlement Done', 'Checked Out'])) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Cannot early check out guest until all reservation settlement is completed. Outstanding balance: ₹ ' . number_format($primaryBooking->balance, 2)
+            ], 422);
+        }
+
+        DB::beginTransaction();
+        try {
+            $checkoutDate = now()->toDateString();
+            $checkoutTime = now()->format('H:i:s');
+
+            // 1. Update this specific occupant booking record
+            $occupantBooking->status = 'Checked Out';
+            $occupantBooking->checkout_date = $checkoutDate;
+            $occupantBooking->checkout_time = $checkoutTime;
+            $occupantBooking->save();
+
+            // 2. Create Checkout record for this specific guest
+            Checkout::create([
+                'guest_id' => $occupantBooking->guest_id,
+                'booking_id' => $occupantBooking->id,
+                'room_id' => $occupantBooking->room_id,
+                'settlement_id' => null,
+                'checkout_date' => $checkoutDate,
+                'checkout_time' => $checkoutTime,
+                'actual_checkout_at' => now(),
+                'total_nights' => $occupantBooking->total_nights ?: 1,
+                'room_charges' => 0.00,
+                'extra_charges' => 0.00,
+                'late_checkout_charge' => 0.00,
+                'discount_amount' => 0.00,
+                'tax_amount' => 0.00,
+                'grand_total' => 0.00,
+                'paid_amount' => 0.00,
+                'balance_amount' => 0.00,
+                'status' => 'Completed',
+                'remarks' => $request->input('remarks', 'Early check-out for individual occupant'),
+            ]);
+
+            // 3. Check if any other occupants remain in the same room
+            if ($occupantBooking->room_id) {
+                $remainingInRoom = Booking::where('room_id', $occupantBooking->room_id)
+                    ->where('reserve_id', $occupantBooking->reserve_id)
+                    ->where('id', '!=', $occupantBooking->id)
+                    ->where('status', '!=', 'Checked Out')
+                    ->count();
+
+                // If no remaining occupants in this room, set room housekeeping to dirty
+                if ($remainingInRoom === 0) {
+                    $dirtyState = HousekeepingState::where('name', 'like', '%dirty%')->first();
+                    if ($dirtyState) {
+                        RoomHousekeepingHistory::create([
+                            'room_id' => $occupantBooking->room_id,
+                            'housekeeping_status_id' => $dirtyState->id,
+                            'start_time' => now(),
+                            'status' => 'pending',
+                        ]);
+                    }
+                }
+            }
+
+            // 4. Check if all bookings across the entire reservation are now checked out
+            $remainingInReserve = Booking::where('reserve_id', $occupantBooking->reserve_id)
+                ->where('status', '!=', 'Checked Out')
+                ->count();
+
+            $isAllCheckedOut = ($remainingInReserve === 0);
+            if ($isAllCheckedOut) {
+                $masterBooking = Booking::where('reserve_id', $occupantBooking->reserve_id)
+                    ->whereNull('primary_booking_id')
+                    ->first();
+                if ($masterBooking && $masterBooking->status !== 'Checked Out') {
+                    $masterBooking->status = 'Checked Out';
+                    if (!$masterBooking->checkout_date) {
+                        $masterBooking->checkout_date = $checkoutDate;
+                        $masterBooking->checkout_time = $checkoutTime;
+                    }
+                    $masterBooking->save();
+                }
+            }
+
+            DB::commit();
+
+            $guestName = $occupantBooking->guest?->guest_name ?? 'Guest';
+            return response()->json([
+                'success' => true,
+                'message' => "Guest {$guestName} has been checked out early successfully.",
+                'guest_name' => $guestName,
+                'booking_id' => $occupantBooking->id,
+                'checkout_date' => Carbon::parse($checkoutDate)->format('d M Y'),
+                'checkout_time' => date('h:i A', strtotime($checkoutTime)),
+                'is_all_checked_out' => $isAllCheckedOut,
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'error' => 'Early check out failed: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * Helper to assemble a comprehensive, rich Folio data structure
      */
     protected function formatFolioData(Booking $booking): array
@@ -492,6 +614,9 @@ class FolioController extends Controller
                 'id_card_type' => $g?->idCardType?->name ?? 'ID Proof',
                 'id_card_number' => $g?->id_card_number ?: 'N/A',
                 'status' => $b->status,
+                'is_checked_out' => ($b->status === 'Checked Out'),
+                'checkout_date' => $b->checkout_date ? Carbon::parse($b->checkout_date)->format('d M Y') : null,
+                'checkout_time' => $b->checkout_time ? date('h:i A', strtotime($b->checkout_time)) : null,
             ];
         }
 

@@ -459,13 +459,71 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 6px 8px;
+    padding: 6px 10px;
     background: #f8fafc;
-    border-radius: 6px;
-    margin-bottom: 4px;
+    border-radius: 8px;
+    margin-bottom: 5px;
     font-size: 11px;
     flex-wrap: wrap;
-    gap: 6px;
+    gap: 8px;
+    border: 1px solid #f1f5f9;
+    transition: all 0.15s ease;
+  }
+  .occupant-badge-row.checked-out {
+    background: #f8fafc;
+    border-color: #e2e8f0;
+    opacity: 0.9;
+  }
+  .btn-early-checkout {
+    background: #fef2f2;
+    color: #dc2626;
+    border: 1px solid #fecaca;
+    padding: 3px 9px;
+    border-radius: 6px;
+    font-size: 10px;
+    font-weight: 800;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+  }
+  .btn-early-checkout:hover {
+    background: #dc2626;
+    color: #ffffff;
+    border-color: #dc2626;
+    box-shadow: 0 2px 6px rgba(220, 38, 38, 0.25);
+  }
+  .badge-checked-out-occupant {
+    background: #f1f5f9;
+    color: #475569;
+    border: 1px solid #cbd5e1;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 10px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-family: var(--font-mono, monospace);
+    white-space: nowrap;
+  }
+  #early-checkout-confirm-modal.modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 100099 !important;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(15, 23, 42, 0.55) !important;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    box-sizing: border-box;
+  }
+  #early-checkout-confirm-modal.open {
+    display: flex !important;
   }
 
   /* Settlement Inline Panel */
@@ -1387,6 +1445,75 @@
   </div>
 </div>
 
+<!-- ========================================================================= -->
+<!-- CONFIRMATION MODAL: EARLY CHECK-OUT INDIVIDUAL GUEST                     -->
+<!-- ========================================================================= -->
+<div class="modal-backdrop" id="early-checkout-confirm-modal">
+  <div class="modal-window" style="width: 480px; max-width: 95vw; border-radius: 16px; overflow: hidden; box-shadow: 0 25px 60px -15px rgba(0,0,0,0.45); border: none; background: #ffffff;">
+    
+    <div style="background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; color: #ffffff;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <div style="width: 34px; height: 34px; border-radius: 8px; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 15px; color: #ffffff;">
+          <i class="fa-solid fa-person-walking-arrow-right"></i>
+        </div>
+        <div>
+          <h4 style="margin: 0; font-size: 15px; font-weight: 800; color: #ffffff;">Early Check-Out Confirmation</h4>
+          <div style="font-size: 10px; opacity: 0.9; color: #fee2e2;">Individual Occupant Check-Out</div>
+        </div>
+      </div>
+      <button type="button" onclick="closeEarlyCheckoutConfirmModal()" style="background: rgba(255,255,255,0.2); border: none; color: #ffffff; width: 28px; height: 28px; border-radius: 50%; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s;">&times;</button>
+    </div>
+
+    <div style="padding: 20px; background: #ffffff;">
+      <div style="display: flex; gap: 14px; align-items: flex-start; margin-bottom: 16px;">
+        <div style="width: 40px; height: 40px; border-radius: 50%; background: #fee2e2; color: #dc2626; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+        </div>
+        <div>
+          <div style="font-size: 13px; font-weight: 800; color: #0f172a; margin-bottom: 3px;">
+            Are you sure you want to early check-out this guest?
+          </div>
+          <div style="font-size: 11px; color: #64748b; line-height: 1.5;">
+            Only this particular occupant will be marked as checked out. Other occupants and room billing stay active.
+          </div>
+        </div>
+      </div>
+
+      <!-- Guest and Checkout Info Box -->
+      <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 14px; font-size: 12px; display: flex; flex-direction: column; gap: 8px;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span style="color: #64748b; font-weight: 600;">Guest Name:</span>
+          <strong id="eccm-guest-name" style="color: #0f172a; font-size: 13px;">-</strong>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed #e2e8f0; padding-top: 6px;">
+          <span style="color: #64748b; font-weight: 600;">Allotted Room:</span>
+          <strong id="eccm-room-no" style="color: #4338ca; font-weight: 800;">-</strong>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed #e2e8f0; padding-top: 6px;">
+          <span style="color: #64748b; font-weight: 600;">Check-Out Date:</span>
+          <span id="eccm-checkout-date" style="font-family: var(--font-mono, monospace); font-weight: 800; color: #047857;">-</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed #e2e8f0; padding-top: 6px;">
+          <span style="color: #64748b; font-weight: 600;">Check-Out Time:</span>
+          <span id="eccm-checkout-time" style="font-family: var(--font-mono, monospace); font-weight: 800; color: #047857;">-</span>
+        </div>
+      </div>
+
+      <input type="hidden" id="eccm-booking-id" value="">
+    </div>
+
+    <div style="padding: 12px 20px; background: #f8fafc; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; gap: 10px; align-items: center;">
+      <button type="button" onclick="closeEarlyCheckoutConfirmModal()" style="padding: 7px 16px; border-radius: 8px; border: 1px solid #cbd5e1; background: #ffffff; color: #475569; font-size: 12px; font-weight: 700; cursor: pointer;">
+        Cancel
+      </button>
+      <button type="button" id="eccm-btn-confirm" onclick="executeEarlyCheckout()" style="padding: 7px 20px; border-radius: 8px; border: none; background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: #ffffff; font-size: 12px; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25);">
+        <i class="fa-solid fa-check"></i> Yes, Early Check Out
+      </button>
+    </div>
+
+  </div>
+</div>
+
 <!-- Hidden Clean Print Template Area -->
 <div id="folio-print-area" style="display: none;"></div>
 
@@ -1633,18 +1760,58 @@
       `;
 
       if (r.occupants && r.occupants.length > 0) {
+        const hasMultiple = r.occupants.length > 1;
+        const isSettled = activeFolioData && (Number(activeFolioData.balance) <= 0.01 || (activeFolioData.status || '').toLowerCase() === 'settlement done');
+
         r.occupants.forEach(occ => {
+          const isCheckedOut = occ.is_checked_out || (occ.status === 'Checked Out');
+          
+          let actionMarkup = '';
+          if (hasMultiple) {
+            if (isCheckedOut) {
+              const dtParts = [];
+              if (occ.checkout_date) dtParts.push(occ.checkout_date);
+              if (occ.checkout_time) dtParts.push(occ.checkout_time);
+              const dtText = dtParts.join(' ');
+              actionMarkup = `
+                <span class="badge-checked-out-occupant" title="This occupant is checked out">
+                  <i class="fa-solid fa-circle-check" style="color: #10b981;"></i> Checked Out ${dtText ? '(' + escapeHtml(dtText) + ')' : ''}
+                </span>
+              `;
+            } else if (isSettled && activeFolioData && activeFolioData.status !== 'Checked Out' && activeFolioData.status !== 'Cancelled') {
+              actionMarkup = `
+                <button type="button" 
+                        class="btn-early-checkout" 
+                        onclick="openEarlyCheckoutConfirmModal(${occ.booking_id}, '${escapeHtml(occ.name).replace(/'/g, "\\'")}', '${escapeHtml(r.room_number).replace(/'/g, "\\'")}')" 
+                        title="Early Check-out this specific guest from Room ${escapeHtml(r.room_number)}">
+                  <i class="fa-solid fa-person-walking-arrow-right"></i> Early Checkout
+                </button>
+              `;
+            }
+          } else if (isCheckedOut) {
+            const dtParts = [];
+            if (occ.checkout_date) dtParts.push(occ.checkout_date);
+            if (occ.checkout_time) dtParts.push(occ.checkout_time);
+            const dtText = dtParts.join(' ');
+            actionMarkup = `
+              <span class="badge-checked-out-occupant" title="This occupant is checked out">
+                <i class="fa-solid fa-circle-check" style="color: #10b981;"></i> Checked Out ${dtText ? '(' + escapeHtml(dtText) + ')' : ''}
+              </span>
+            `;
+          }
+
           html += `
-            <div class="occupant-badge-row">
+            <div class="occupant-badge-row ${isCheckedOut ? 'checked-out' : ''}">
               <div style="display: flex; align-items: center; gap: 6px;">
-                <i class="fa-solid ${occ.is_primary ? 'fa-star' : 'fa-user'}" style="color: ${occ.is_primary ? '#f59e0b' : '#94a3b8'};"></i>
-                <strong style="color: #1e293b;">${escapeHtml(occ.name)}</strong>
+                <i class="fa-solid ${occ.is_primary ? 'fa-star' : 'fa-user'}" style="color: ${isCheckedOut ? '#94a3b8' : (occ.is_primary ? '#f59e0b' : '#6366f1')};"></i>
+                <strong style="color: ${isCheckedOut ? '#64748b' : '#1e293b'}; ${isCheckedOut ? 'text-decoration: line-through;' : ''}">${escapeHtml(occ.name)}</strong>
                 ${occ.is_primary ? '<span style="background: #fef3c7; color: #b45309; font-size: 9px; font-weight: 800; padding: 1px 5px; border-radius: 4px;">Primary</span>' : ''}
               </div>
-              <div style="display: flex; align-items: center; gap: 12px; color: #64748b; font-family: var(--font-mono, monospace);">
+              <div style="display: flex; align-items: center; gap: 10px; color: #64748b; font-family: var(--font-mono, monospace);">
                 <span><i class="fa-solid fa-phone" style="font-size: 9px;"></i> ${escapeHtml(occ.mobile)}</span>
                 <span>•</span>
                 <span>${escapeHtml(occ.id_card_type)}: ${escapeHtml(occ.id_card_number)}</span>
+                ${actionMarkup}
               </div>
             </div>
           `;
@@ -1967,6 +2134,111 @@
     }
   }
 
+  function openEarlyCheckoutConfirmModal(bookingId, guestName, roomNumber) {
+    document.getElementById('eccm-booking-id').value = bookingId;
+    document.getElementById('eccm-guest-name').textContent = guestName;
+    document.getElementById('eccm-room-no').textContent = roomNumber;
+    
+    // Format current date and time
+    const now = new Date();
+    const dateFormatted = now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    const timeFormatted = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+
+    document.getElementById('eccm-checkout-date').textContent = dateFormatted;
+    document.getElementById('eccm-checkout-time').textContent = timeFormatted;
+
+    const btn = document.getElementById('eccm-btn-confirm');
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-check"></i> Yes, Early Check Out';
+    }
+
+    const modalEl = document.getElementById('early-checkout-confirm-modal');
+    if (modalEl) {
+      modalEl.classList.add('open');
+      modalEl.style.setProperty('display', 'flex', 'important');
+    }
+  }
+
+  function closeEarlyCheckoutConfirmModal() {
+    const modalEl = document.getElementById('early-checkout-confirm-modal');
+    if (modalEl) {
+      modalEl.classList.remove('open');
+      modalEl.style.setProperty('display', 'none', 'important');
+    }
+    if (typeof closeModal === 'function') {
+      try { closeModal('early-checkout-confirm-modal'); } catch (_) {}
+    }
+  }
+
+  function executeEarlyCheckout() {
+    const bookingId = document.getElementById('eccm-booking-id').value;
+    if (!bookingId) return;
+
+    const btn = document.getElementById('eccm-btn-confirm');
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Checking Out...';
+    }
+
+    fetch(`{{ url('front-office/folio/early-checkout-guest') }}/${bookingId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify({
+        remarks: 'Early checked out via view dossier'
+      })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-check"></i> Yes, Early Check Out';
+      }
+      closeEarlyCheckoutConfirmModal();
+
+      if (data.success) {
+        Swal.fire({
+          icon: 'success',
+          title: 'Guest Checked Out Early!',
+          text: data.message || 'Guest checked out successfully.',
+          confirmButtonColor: '#10b981',
+          confirmButtonText: 'OK'
+        }).then(() => {
+          if (activeFolioData && activeFolioData.id) {
+            openFolioModalById(activeFolioData.id, true);
+          }
+          if (data.is_all_checked_out) {
+            window.location.reload();
+          }
+        });
+      } else {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Notice',
+          text: data.error || data.message || 'Early check out could not be completed.',
+          confirmButtonColor: '#4f46e5'
+        });
+      }
+    })
+    .catch(err => {
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-check"></i> Yes, Early Check Out';
+      }
+      console.error(err);
+      Swal.fire({
+        icon: 'error',
+        title: 'System Error',
+        text: 'Network error while processing early check out. Please try again.',
+        confirmButtonColor: '#4f46e5'
+      });
+    });
+  }
+
   // Close on backdrop click & ESC key + Event Delegation for View Action Buttons
   document.addEventListener('DOMContentLoaded', function() {
     const modalBackdrop = document.getElementById('folio-details-modal');
@@ -1977,8 +2249,19 @@
         }
       });
     }
+
+    const earlyModalBackdrop = document.getElementById('early-checkout-confirm-modal');
+    if (earlyModalBackdrop) {
+      earlyModalBackdrop.addEventListener('click', function(e) {
+        if (e.target === this) {
+          closeEarlyCheckoutConfirmModal();
+        }
+      });
+    }
+
     document.addEventListener('keydown', function(e) {
       if (e.key === 'Escape') {
+        closeEarlyCheckoutConfirmModal();
         closeFolioModal();
       }
     });
@@ -2114,6 +2397,9 @@
   window.openFolioModalById = openFolioModalById;
   window.populateAndOpenFolioModal = populateAndOpenFolioModal;
   window.closeFolioModal = closeFolioModal;
+  window.openEarlyCheckoutConfirmModal = openEarlyCheckoutConfirmModal;
+  window.closeEarlyCheckoutConfirmModal = closeEarlyCheckoutConfirmModal;
+  window.executeEarlyCheckout = executeEarlyCheckout;
   window.executeFolioSettlement = executeFolioSettlement;
   window.executeFolioCheckout = executeFolioCheckout;
   window.toggleFolioSettlementPanel = toggleFolioSettlementPanel;

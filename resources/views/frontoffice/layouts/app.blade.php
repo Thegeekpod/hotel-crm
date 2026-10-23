@@ -374,7 +374,7 @@
 
   <!-- Top Module Navigation Tabs -->
   <nav class="pms-tabs-ribbon">
-    <a href="{{ route('frontoffice.dashboard') }}" class="pms-tab-link active">
+    <a href="{{ route('frontoffice.dashboard') }}" class="pms-tab-link {{ !request()->routeIs('frontoffice.housekeeping*') && (request()->routeIs('frontoffice.*') || request()->is('front-office*')) ? 'active' : '' }}">
       <i class="fa-solid fa-desktop tab-ico" style="color: #6366f1;"></i> Front Office
     </a>
     <a href="#" class="pms-tab-link" onclick="if(typeof PmsAlert !== 'undefined') PmsAlert.toast('POS Sales module queued.', 'info')">

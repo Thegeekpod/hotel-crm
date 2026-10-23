@@ -48,6 +48,7 @@
       try {
         setInitialDateTime();
         initPlanSelect2();
+        if (typeof updateReservationStatusUI === 'function') updateReservationStatusUI();
       } catch (e) {
         console.error('Error in setInitialDateTime:', e);
       }
@@ -129,6 +130,7 @@
 
     try {
       setInitialDateTime();
+      if (typeof updateReservationStatusUI === 'function') updateReservationStatusUI();
     } catch (e) {
       console.error('Error in setInitialDateTime:', e);
     }
@@ -1858,6 +1860,56 @@
     calculateReservationBilling();
     const datesAlert = document.getElementById('dates-conflict-alert');
     if (datesAlert) datesAlert.style.display = 'none';
+    if (typeof updateReservationStatusUI === 'function') updateReservationStatusUI();
+  }
+
+  function updateReservationStatusUI() {
+    const dateInput = document.getElementById('reserve-date-input');
+    const badge = document.getElementById('reservation-status-badge');
+    const modalTitle = document.getElementById('reserve-modal-title');
+    const modalSub = document.getElementById('reserve-modal-subtitle');
+    const submitBtn = document.getElementById('reserve-submit-btn');
+
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const todayStr = `${year}-${month}-${day}`;
+
+    const checkInVal = (dateInput && dateInput.value) ? dateInput.value : todayStr;
+    const isTodayOrPast = checkInVal <= todayStr;
+
+    if (badge) {
+      if (isTodayOrPast) {
+        badge.style.background = '#dcfce7';
+        badge.style.color = '#15803d';
+        badge.style.border = '1px solid #86efac';
+        badge.innerHTML = '<i class="fa-solid fa-key"></i> Status: Checked In';
+      } else {
+        badge.style.background = '#eff6ff';
+        badge.style.color = '#1d4ed8';
+        badge.style.border = '1px solid #bfdbfe';
+        badge.innerHTML = '<i class="fa-solid fa-calendar-check"></i> Status: Confirmed';
+      }
+    }
+
+    if (modalTitle) {
+      modalTitle.innerHTML = isTodayOrPast 
+        ? '<i class="fa-solid fa-key" style="margin-right: 6px;"></i> Guest Check-In' 
+        : '<i class="fa-solid fa-calendar-plus" style="margin-right: 6px;"></i> Advance Reservation';
+    }
+
+    if (modalSub) {
+      modalSub.innerHTML = isTodayOrPast 
+        ? 'Hotel Sagar Sonnet • Immediate Check-In (Status: <strong>Checked In</strong>)' 
+        : 'Hotel Sagar Sonnet • Future Booking (Status: <strong>Confirmed</strong>)';
+    }
+
+    if (submitBtn && !submitBtn.disabled) {
+      submitBtn.innerHTML = isTodayOrPast 
+        ? '<i class="fa-solid fa-key"></i> Complete Check-In' 
+        : '<i class="fa-solid fa-calendar-plus"></i> Save Confirmed Reservation';
+    }
   }
 
   function onCheckInDateChange() {
@@ -1880,6 +1932,7 @@
     }
     calculateReservationBilling();
     checkSelectedRoomAvailability();
+    if (typeof updateReservationStatusUI === 'function') updateReservationStatusUI();
   }
 
   function onCheckOutDateChange() {
@@ -2409,6 +2462,16 @@
     const newCompanyGstin = form.querySelector('input[name="new_company_gstin"]')?.value || '';
     const newCompanyPhone = form.querySelector('input[name="new_company_phone"]')?.value || '';
 
+    // Evaluate date-based autoStatus: Today (or earlier) => 'Checked In', Future => 'Confirmed'
+    const todayObj = new Date();
+    const curY = todayObj.getFullYear();
+    const curM = String(todayObj.getMonth() + 1).padStart(2, '0');
+    const curD = String(todayObj.getDate()).padStart(2, '0');
+    const todayIso = `${curY}-${curM}-${curD}`;
+    const checkInDateVal = reserveDate || todayIso;
+    const isTodayOrPast = checkInDateVal <= todayIso;
+    const computedStatus = isTodayOrPast ? 'Checked In' : 'Confirmed';
+
     // Collect Guests
     const guestBlocks = form.querySelectorAll('.guest-block');
     const guests = [];
@@ -2421,7 +2484,8 @@
       const city = block.querySelector('input[name="city"]')?.value?.trim();
       const mobile = block.querySelector('input[name="mobile"]')?.value?.trim();
       const email = block.querySelector('input[name="email"]')?.value?.trim();
-      const status = block.querySelector('select[name="status"]')?.value || 'Confirmed';
+      const statusSelect = block.querySelector('select[name="status"]');
+      const status = statusSelect ? statusSelect.value : computedStatus;
       const hasPriv = block.querySelector('.chk-privilege')?.checked || false;
       const privNo = block.querySelector('input[name="privilege_card_no"]')?.value?.trim();
       const roomId = block.querySelector('select[name="room_id"]')?.value;
@@ -2536,9 +2600,10 @@
           closeModal('reserve-modal');
 
           if (typeof Swal !== 'undefined') {
+            const isCheckInSuccess = data.status === 'Checked In';
             Swal.fire({
               icon: 'success',
-              title: 'Reservation Confirmed!',
+              title: isCheckInSuccess ? 'Guest Checked In Successfully!' : 'Reservation Confirmed!',
               html: `<b>Reserve ID:</b> <code style="font-size: 16px; color: #6366f1; font-weight: bold;">${escapeHtml(resId)}</code><br><br>${escapeHtml(data.message)}`,
               confirmButtonColor: '#10b981',
               confirmButtonText: '<i class="fa-solid fa-check"></i> Great',

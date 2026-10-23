@@ -1059,6 +1059,13 @@ class DashboardController extends Controller
             $checkoutDate = $request->input('checkout_date', date('Y-m-d', strtotime('+1 day')));
             $checkoutTime = $request->input('checkout_time', '11:00');
 
+            // Date-based automatic status rule:
+            // Today's date checkin => 'Checked In'
+            // Future date checkin => 'Confirmed'
+            $todayDate = now()->toDateString();
+            $reserveDateOnly = \Carbon\Carbon::parse($reserveDate)->toDateString();
+            $autoStatus = ($reserveDateOnly <= $todayDate) ? 'Checked In' : 'Confirmed';
+
             // Calculate stay duration (nights)
             $dIn = new \DateTime($reserveDate);
             $dOut = new \DateTime($checkoutDate);
@@ -1098,7 +1105,7 @@ class DashboardController extends Controller
                         'city' => $request->input('city'),
                         'mobile' => $request->input('mobile'),
                         'email' => $request->input('email'),
-                        'status' => $request->input('status', 'Confirmed'),
+                        'status' => $autoStatus,
                         'has_privilege_card' => $request->has('has_privilege_card') || $request->has('chk_privilege'),
                         'privilege_card_no' => $request->input('privilege_card_no'),
                         'room_id' => $request->input('room_id'),
@@ -1280,7 +1287,7 @@ class DashboardController extends Controller
                     'payable_amount' => ($idx === 0) ? $payableAmount : 0.00,
                     'advance_amount' => ($idx === 0) ? $advanceAmount : 0.00,
                     'balance' => $calculatedBalance,
-                    'status' => $gData['status'] ?? 'Confirmed',
+                    'status' => (empty($gData['status']) || in_array($gData['status'], ['Confirmed', 'Checked In'])) ? $autoStatus : $gData['status'],
                     'primary_booking_id' => $primaryBooking ? $primaryBooking->id : null,
                     'remarks' => ($idx === 0) ? $paymentRemarks : null,
                 ]);
@@ -1334,8 +1341,8 @@ class DashboardController extends Controller
 
                 $savedGuests[] = $bookingModel;
 
-                // If room is assigned, update housekeeping & operational state to ready/in-service
-                if ($roomObj) {
+                // If room is assigned and check-in is today (status Checked In), update housekeeping & operational state
+                if ($roomObj && $bookingModel->status === 'Checked In') {
                     $cleanedState = HousekeepingState::where('name', 'like', '%Cleaned%')->first();
                     $activeOp = OperationalStatus::where('name', 'like', '%Active%')->first();
 
@@ -1362,7 +1369,8 @@ class DashboardController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Reservation #' . $reserveId . ' saved successfully for ' . count($savedGuests) . ' guest(s)!',
+                'message' => 'Reservation #' . $reserveId . ' saved successfully with status "' . $autoStatus . '" for ' . count($savedGuests) . ' guest(s)!',
+                'status' => $autoStatus,
                 'reserve_id' => $reserveId,
                 'next_reserve_id' => Booking::generateNextReserveId(),
                 'guests' => $savedGuests,

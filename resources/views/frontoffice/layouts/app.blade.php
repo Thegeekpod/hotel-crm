@@ -453,8 +453,8 @@
             <i class="fa-solid fa-calendar-plus"></i>
           </div>
           <div>
-            <h3 style="margin: 0; font-size: 15px; font-weight: 800; letter-spacing: 0.3px; color: #ffffff;">New Reservation</h3>
-            <div style="font-size: 11px; opacity: 0.85; font-weight: 500;">Hotel Sagar Sonnet • Front Desk PMS</div>
+            <h3 id="reserve-modal-title" style="margin: 0; font-size: 15px; font-weight: 800; letter-spacing: 0.3px; color: #ffffff;">Guest Check-In</h3>
+            <div id="reserve-modal-subtitle" style="font-size: 11px; opacity: 0.85; font-weight: 500;">Hotel Sagar Sonnet • Immediate Check-In (Status: <strong>Checked In</strong>)</div>
           </div>
         </div>
         <button type="button" class="modal-close" onclick="closeModal('reserve-modal')" style="background: rgba(255,255,255,0.2); border: none; color: #ffffff; width: 30px; height: 30px; border-radius: 50%; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s;">&times;</button>
@@ -521,9 +521,14 @@
                     <span style="font-size: 11px; font-weight: 800; color: #334155; text-transform: uppercase; letter-spacing: 0.6px; display: flex; align-items: center; gap: 6px;">
                       <i class="fa-solid fa-calendar-days" style="color: #6366f1;"></i> Stay Schedule & Duration
                     </span>
-                    <span id="stay-nights-badge" style="font-size: 11px; font-weight: 800; background: #e0e7ff; color: #4338ca; padding: 2px 10px; border-radius: 20px; border: 1px solid #c7d2fe; display: inline-flex; align-items: center; gap: 4px;">
-                      <i class="fa-solid fa-moon"></i> 1 Night Stay
-                    </span>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                      <span id="reservation-status-badge" style="font-size: 11px; font-weight: 800; background: #dcfce7; color: #15803d; border: 1px solid #86efac; padding: 2px 10px; border-radius: 20px; display: inline-flex; align-items: center; gap: 5px; transition: all 0.2s;">
+                        <i class="fa-solid fa-key"></i> Status: Checked In
+                      </span>
+                      <span id="stay-nights-badge" style="font-size: 11px; font-weight: 800; background: #e0e7ff; color: #4338ca; padding: 2px 10px; border-radius: 20px; border: 1px solid #c7d2fe; display: inline-flex; align-items: center; gap: 4px;">
+                        <i class="fa-solid fa-moon"></i> 1 Night Stay
+                      </span>
+                    </div>
                   </div>
 
                   <div style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px;">
@@ -1090,8 +1095,8 @@
               </div>
               
               <div style="width: 100%; margin-top: auto;">
-                <button type="submit" class="btn-ui-success" style="width: 100%; height: 44px; justify-content: center; margin-bottom: 8px; font-size: 13px; font-weight: 800; border-radius: 8px; background: linear-gradient(135deg, #10b981, #059669); box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);">
-                  <i class="fa-solid fa-floppy-disk"></i> Save Reservation
+                <button type="submit" id="reserve-submit-btn" class="btn-ui-success" style="width: 100%; height: 44px; justify-content: center; margin-bottom: 8px; font-size: 13px; font-weight: 800; border-radius: 8px; background: linear-gradient(135deg, #10b981, #059669); box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);">
+                  <i class="fa-solid fa-key"></i> Complete Check-In
                 </button>
                 <button type="button" class="btn-ui-secondary" style="width: 100%; height: 38px; justify-content: center; font-size: 12px; font-weight: 700; border-radius: 8px; border: 1px solid #cbd5e1; background: #f1f5f9; color: #475569;" onclick="closeModal('reserve-modal')">
                   Cancel

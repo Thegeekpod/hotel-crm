@@ -538,7 +538,7 @@
               </span>
             @else
               <span style="font-size: 11px; font-weight: 700; background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; padding: 2px 10px; border-radius: 20px; display: inline-flex; align-items: center; gap: 6px;">
-                <i class="fa-solid fa-forward-step"></i> Upcoming Future Dates
+                <i class="fa-solid fa-users-viewfinder"></i> Confirmed & Upcoming Arrivals
               </span>
             @endif
           </h2>
@@ -546,7 +546,7 @@
             @if(!empty($selectedDate))
               Showing guests arriving on <strong>{{ \Carbon\Carbon::parse($selectedDate)->format('l, d F Y') }}</strong>.
             @else
-              Advance & upcoming guest arrivals (Check-in: Future dates after today) arranged latest first with indexing, search, status filter, and live reservation dossiers.
+              Confirmed bookings awaiting check-in & upcoming guest arrivals arranged chronologically with indexing, search, status filter, and live reservation dossiers.
             @endif
           </div>
         </div>
@@ -572,16 +572,15 @@
                    id="arrival-date-filter" 
                    class="pms-filter-date" 
                    value="{{ $selectedDate ?? '' }}" 
-                   min="{{ $today ?? date('Y-m-d') }}" 
                    onchange="onArrivalDateFilterChanged(this.value)"
-                   title="Choose date to see guests arriving on that date (Past dates disabled)">
+                   title="Choose date to see guests arriving on that date">
             @if(!empty($selectedDate))
               <button type="button" 
                       class="btn-ui-secondary" 
                       onclick="clearArrivalDateFilter()" 
                       style="padding: 6px 10px; font-size: 11px; height: 38px; border-radius: 8px; border: 1px solid #c7d2fe; background: #eef2ff; color: #4338ca; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;" 
-                      title="Clear date & view all upcoming arrivals">
-                <i class="fa-solid fa-xmark"></i> Future Only
+                      title="Clear date & view all arrivals">
+                <i class="fa-solid fa-xmark"></i> All Arrivals
               </button>
             @endif
           </div>
@@ -1264,6 +1263,15 @@
         if (item) {
           item.status = data.status;
           item.is_locked = ['Settlement Done', 'Checked Out'].includes(data.status);
+          if (Array.isArray(item.rooms)) {
+            item.rooms.forEach(r => {
+              if (Array.isArray(r.occupants)) {
+                r.occupants.forEach(occ => {
+                  occ.status = data.status;
+                });
+              }
+            });
+          }
         }
 
         // Re-render table row
@@ -1273,6 +1281,15 @@
         if (currentActiveGuest && String(currentActiveGuest.id) === String(guestId)) {
           currentActiveGuest.status = data.status;
           currentActiveGuest.is_locked = ['Settlement Done', 'Checked Out'].includes(data.status);
+          if (Array.isArray(currentActiveGuest.rooms)) {
+            currentActiveGuest.rooms.forEach(r => {
+              if (Array.isArray(r.occupants)) {
+                r.occupants.forEach(occ => {
+                  occ.status = data.status;
+                });
+              }
+            });
+          }
           const mdlBadge = document.getElementById('mdl-status-badge');
           if (mdlBadge) {
             mdlBadge.textContent = data.status;
@@ -1380,10 +1397,14 @@
                 <strong style="color: #1e293b;">${escapeHtml(occ.name)}</strong>
                 ${occ.is_primary ? '<span style="background: #fef3c7; color: #b45309; font-size: 9px; font-weight: 800; padding: 1px 5px; border-radius: 4px;">Primary</span>' : ''}
               </div>
-              <div style="display: flex; align-items: center; gap: 12px; color: #64748b; font-family: var(--font-mono, monospace); font-size: 11px;">
+              <div style="display: flex; align-items: center; gap: 10px; color: #64748b; font-family: var(--font-mono, monospace); font-size: 11px; flex-wrap: wrap;">
                 <span><i class="fa-solid fa-phone" style="font-size: 9px; color: #10b981;"></i> ${escapeHtml(occ.mobile)}</span>
                 <span>•</span>
                 <span>${escapeHtml(occ.id_card_type)}: ${escapeHtml(occ.id_card_number)}</span>
+                <span>•</span>
+                <span class="status-badge ${getStatusBadgeColor(occ.status || 'Confirmed')}" style="font-size: 9px; padding: 2px 8px; font-weight: 800; border-radius: 4px;">
+                  <i class="fa-solid fa-circle" style="font-size: 5px;"></i> ${escapeHtml(occ.status || 'Confirmed')}
+                </span>
               </div>
             </div>
           `;

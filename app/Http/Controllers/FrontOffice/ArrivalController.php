@@ -60,18 +60,25 @@ class ArrivalController extends Controller
         ->whereNull('primary_booking_id');
 
         if ($request->filled('date')) {
-            if ($selectedDate < $today) {
-                return redirect()->route('frontoffice.arrivals')
-                    ->with('warning', 'Past dates cannot be selected for arrivals.');
-            }
             $query->whereDate('reserve_date', $selectedDate);
             $baseQuery = Booking::whereNull('primary_booking_id')->whereDate('reserve_date', $selectedDate);
         } else {
-            $query->whereDate('reserve_date', '>', $today);
-            $baseQuery = Booking::whereNull('primary_booking_id')->whereDate('reserve_date', '>', $today);
+            // Hotel PMS Arrival Scoping:
+            // 1. All upcoming arrivals (checkin/reserve date >= today)
+            // 2. Any booking whose status is confirmed or arrived but has not checked in yet (even if date is earlier)
+            $arrivalScope = function ($q) use ($today) {
+                $q->whereDate('reserve_date', '>=', $today)
+                  ->orWhere(function ($sub) {
+                      $sub->whereIn('status', ['Confirmed', 'Arrived'])
+                          ->whereNotIn('status', ['Checked In', 'Stay Over', 'Checked Out', 'Settlement Done', 'Cancelled']);
+                  });
+            };
+            $query->where($arrivalScope);
+            $baseQuery = Booking::whereNull('primary_booking_id')->where($arrivalScope);
         }
 
-        $query->latest('id');
+        // Order chronologically by arrival date, then by ID
+        $query->orderBy('reserve_date', 'asc')->orderBy('id', 'asc');
 
         if ($request->filled('status') && $request->status !== 'All') {
             $query->where('status', $request->status);
@@ -160,81 +167,123 @@ class ArrivalController extends Controller
         $oldStatus = $booking->status ?: 'Confirmed';
         $newStatus = $validated['status'];
 
-        $hasSettled = $booking->settlements()->where('status', 'Settled')->exists()
-            || ($booking->settlements()->exists() && (float)$booking->balance <= 0.01)
-            || $booking->payments()->where('payment_type', 'Settlement')->exists()
-            || in_array(strtolower($booking->status ?? ''), ['settlement done', 'checked out'])
-            || ((float)$booking->balance <= 0.01 && (float)$booking->payable_amount > 0 && ((float)$booking->advance_amount > 0 || $booking->payments()->exists()));
+        // Find ALL related bookings under this reservation / room / guest dossier:
+        $masterBookingId = $booking->primary_booking_id ?: $booking->id;
+        $reserveId = $booking->reserve_id;
+        $folioNumber = $booking->folio_number;
 
-        // Strict Lock: Disallow modifying record once Settlement Done, Settled, or Checked Out
-        if ($hasSettled || in_array($booking->status, ['Settlement Done', 'Checked Out'])) {
-            return response()->json([
-                'success' => false,
-                'message' => "Record is locked. This guest has completed settlement (status: '{$booking->status}') and cannot be modified.",
-                'error' => "Record is locked. This guest has completed settlement (status: '{$booking->status}') and cannot be modified."
-            ], 403);
+        $allRelatedBookings = Booking::with(['room', 'guest', 'settlements'])
+            ->where(function ($q) use ($masterBookingId, $reserveId, $folioNumber) {
+                $q->where('id', $masterBookingId)
+                  ->orWhere('primary_booking_id', $masterBookingId);
+                if (!empty($reserveId)) {
+                    $q->orWhere('reserve_id', $reserveId);
+                }
+                if (!empty($folioNumber)) {
+                    $q->orWhere('folio_number', $folioNumber);
+                }
+            })
+            ->get();
+
+        if ($allRelatedBookings->isEmpty()) {
+            $allRelatedBookings = collect([$booking]);
         }
 
-        // Prevent checkout if there is still outstanding balance
-        if ($newStatus === 'Checked Out' && (float)$booking->balance > 0.01) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Cannot check out guest with outstanding balance of ₹ ' . number_format($booking->balance, 2) . '. Complete settlement first.',
-                'error' => 'Cannot check out guest with outstanding balance of ₹ ' . number_format($booking->balance, 2) . '. Complete settlement first.'
-            ], 422);
-        }
+        // Strict Lock: Disallow modifying record once any related booking is Settlement Done, Settled, or Checked Out
+        foreach ($allRelatedBookings as $relB) {
+            $hasSettled = $relB->settlements()->where('status', 'Settled')->exists()
+                || ($relB->settlements()->exists() && (float)$relB->balance <= 0.01)
+                || $relB->payments()->where('payment_type', 'Settlement')->exists()
+                || in_array(strtolower($relB->status ?? ''), ['settlement done', 'checked out'])
+                || ((float)$relB->balance <= 0.01 && (float)$relB->payable_amount > 0 && ((float)$relB->advance_amount > 0 || $relB->payments()->exists()));
 
-        $booking->status = $newStatus;
-        $booking->save();
-
-        // Synchronize status to all secondary bookings under the same reservation
-        if ($booking->reserve_id) {
-            Booking::where('reserve_id', $booking->reserve_id)
-                ->where('id', '!=', $booking->id)
-                ->update(['status' => $newStatus]);
-        }
-
-        if (in_array($newStatus, ['Arrived', 'Checked In']) && $booking->room) {
-            $activeOp = OperationalStatus::where('name', 'like', '%Active%')->first();
-            if ($activeOp) {
-                RoomOperationalHistory::create([
-                    'room_id' => $booking->room->id,
-                    'operational_status_id' => $activeOp->id,
-                ]);
+            if ($hasSettled || in_array($relB->status, ['Settlement Done', 'Checked Out'])) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "Record is locked. This reservation has completed settlement (status: '{$relB->status}') and cannot be modified.",
+                    'error' => "Record is locked. This reservation has completed settlement (status: '{$relB->status}') and cannot be modified."
+                ], 403);
             }
         }
 
-        if ($newStatus === 'Checked Out') {
-            $totalPaid = round((float)$booking->advance_amount + (float)Payment::where('booking_id', $booking->id)->where('payment_type', 'Settlement')->sum('amount'), 2);
-            $latestSettlement = Settlement::where('booking_id', $booking->id)->latest('id')->first();
-            Checkout::firstOrCreate(
-                ['booking_id' => $booking->id],
-                [
-                    'guest_id' => $booking->guest_id,
-                    'room_id' => $booking->room_id,
-                    'settlement_id' => $latestSettlement?->id,
-                    'checkout_date' => now()->toDateString(),
-                    'checkout_time' => now()->format('H:i'),
-                    'actual_checkout_at' => now(),
-                    'total_nights' => $booking->total_nights,
-                    'room_charges' => $booking->total_amount,
-                    'extra_charges' => 0.00,
-                    'late_checkout_charge' => 0.00,
-                    'discount_amount' => $booking->discount_amount,
-                    'tax_amount' => $booking->gst_amount,
-                    'grand_total' => $booking->payable_amount,
-                    'paid_amount' => $totalPaid ?: $booking->payable_amount,
-                    'balance_amount' => 0.00,
-                    'status' => 'Completed',
-                    'remarks' => 'Checked out via Arrivals manager',
-                ]
-            );
+        // Prevent checkout if there is still outstanding balance on any related booking
+        $totalOutstanding = $allRelatedBookings->sum(fn($b) => (float)$b->balance);
+        if ($newStatus === 'Checked Out' && $totalOutstanding > 0.01) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Cannot check out reservation with outstanding balance of ₹ ' . number_format($totalOutstanding, 2) . '. Complete settlement first.',
+                'error' => 'Cannot check out reservation with outstanding balance of ₹ ' . number_format($totalOutstanding, 2) . '. Complete settlement first.'
+            ], 422);
+        }
 
-            if ($booking->room_id) {
-                $dirtyState = HousekeepingState::where('name', 'like', '%dirty%')->first();
-                if ($dirtyState) {
+        // Synchronize status across ALL related bookings and guests
+        foreach ($allRelatedBookings as $b) {
+            $b->status = $newStatus;
+            if ($newStatus === 'Checked In') {
+                if (empty($b->checkin_date)) {
+                    $b->checkin_date = now()->toDateString();
+                }
+                if (empty($b->checkin_time)) {
+                    $b->checkin_time = now()->format('H:i');
+                }
+            } elseif ($newStatus === 'Checked Out') {
+                $b->checkout_date = now()->toDateString();
+                $b->checkout_time = now()->format('H:i');
+            }
+            $b->save();
+        }
+
+        // Collect all distinct rooms allocated across this reservation
+        $allRoomIds = $allRelatedBookings->pluck('room_id')->filter()->unique();
+
+        // If Arrived or Checked In, update room operational state to Active for ALL related rooms
+        if (in_array($newStatus, ['Arrived', 'Checked In']) && $allRoomIds->isNotEmpty()) {
+            $activeOp = OperationalStatus::where('name', 'like', '%Active%')->first();
+            if ($activeOp) {
+                foreach ($allRoomIds as $rId) {
+                    RoomOperationalHistory::create([
+                        'room_id' => $rId,
+                        'operational_status_id' => $activeOp->id,
+                    ]);
+                }
+            }
+        }
+
+        // If Checked Out, create checkout records & set dirty housekeeping state for ALL related bookings & rooms
+        if ($newStatus === 'Checked Out') {
+            $latestSettlement = Settlement::whereIn('booking_id', $allRelatedBookings->pluck('id'))->latest('id')->first();
+            $dirtyState = HousekeepingState::where('name', 'like', '%dirty%')->first();
+
+            foreach ($allRelatedBookings as $b) {
+                $totalPaid = round((float)$b->advance_amount + (float)Payment::where('booking_id', $b->id)->where('payment_type', 'Settlement')->sum('amount'), 2);
+                Checkout::firstOrCreate(
+                    ['booking_id' => $b->id],
+                    [
+                        'guest_id' => $b->guest_id,
+                        'room_id' => $b->room_id,
+                        'settlement_id' => $latestSettlement?->id,
+                        'checkout_date' => now()->toDateString(),
+                        'checkout_time' => now()->format('H:i'),
+                        'actual_checkout_at' => now(),
+                        'total_nights' => $b->total_nights ?: 1,
+                        'room_charges' => $b->total_amount ?: 0.00,
+                        'extra_charges' => 0.00,
+                        'late_checkout_charge' => 0.00,
+                        'discount_amount' => $b->discount_amount ?: 0.00,
+                        'tax_amount' => $b->gst_amount ?: 0.00,
+                        'grand_total' => $b->payable_amount ?: 0.00,
+                        'paid_amount' => $totalPaid ?: $b->payable_amount,
+                        'balance_amount' => 0.00,
+                        'status' => 'Completed',
+                        'remarks' => 'Checked out via Arrivals manager',
+                    ]
+                );
+            }
+
+            if ($dirtyState && $allRoomIds->isNotEmpty()) {
+                foreach ($allRoomIds as $rId) {
                     RoomHousekeepingHistory::create([
-                        'room_id' => $booking->room_id,
+                        'room_id' => $rId,
                         'housekeeping_status_id' => $dirtyState->id,
                         'start_time' => now(),
                         'status' => 'pending',
@@ -254,13 +303,17 @@ class ArrivalController extends Controller
             default => 'gray',
         };
 
-        $guestName = $booking->guest?->guest_name ?? 'Guest';
+        $guestNames = $allRelatedBookings->map(fn($b) => $b->guest?->guest_name)->filter()->unique()->values();
+        $namesStr = $guestNames->implode(', ');
 
         return response()->json([
             'success' => true,
-            'message' => "Guest {$guestName}'s status successfully updated from '{$oldStatus}' to '{$newStatus}'.",
+            'message' => "Reservation status updated to '{$newStatus}' for all {$allRelatedBookings->count()} guest(s) ({$namesStr}) and related rooms successfully.",
             'status' => $newStatus,
             'badge_class' => $badgeClass,
+            'updated_count' => $allRelatedBookings->count(),
+            'guests' => $guestNames,
+            'is_locked' => in_array($newStatus, ['Settlement Done', 'Checked Out'])
         ]);
     }
 

@@ -607,70 +607,96 @@ class GuestController extends Controller
             ], 422);
         }
 
-        $booking->status = $newStatus;
-        if ($newStatus === 'Checked Out') {
-            $booking->checkout_date = now()->toDateString();
-            $booking->checkout_time = now()->format('H:i');
-        }
-        $booking->save();
+        // Find ALL related bookings under this reservation / room / guest dossier:
+        $masterBookingId = $booking->primary_booking_id ?: $booking->id;
+        $reserveId = $booking->reserve_id;
+        $folioNumber = $booking->folio_number;
 
-        // Update secondary bookings under the same reservation dossier if any
-        if ($booking->reserve_id) {
-            $secondaryUpdate = ['status' => $newStatus];
-            if ($newStatus === 'Checked Out') {
-                $secondaryUpdate['checkout_date'] = now()->toDateString();
-                $secondaryUpdate['checkout_time'] = now()->format('H:i');
+        $allRelatedBookings = Booking::with(['room', 'guest', 'settlements'])
+            ->where(function ($q) use ($masterBookingId, $reserveId, $folioNumber) {
+                $q->where('id', $masterBookingId)
+                  ->orWhere('primary_booking_id', $masterBookingId);
+                if (!empty($reserveId)) {
+                    $q->orWhere('reserve_id', $reserveId);
+                }
+                if (!empty($folioNumber)) {
+                    $q->orWhere('folio_number', $folioNumber);
+                }
+            })
+            ->get();
+
+        if ($allRelatedBookings->isEmpty()) {
+            $allRelatedBookings = collect([$booking]);
+        }
+
+        // Synchronize status across ALL related bookings and guests
+        foreach ($allRelatedBookings as $b) {
+            $b->status = $newStatus;
+            if ($newStatus === 'Checked In') {
+                if (empty($b->checkin_date)) {
+                    $b->checkin_date = now()->toDateString();
+                }
+                if (empty($b->checkin_time)) {
+                    $b->checkin_time = now()->format('H:i');
+                }
+            } elseif ($newStatus === 'Checked Out') {
+                $b->checkout_date = now()->toDateString();
+                $b->checkout_time = now()->format('H:i');
             }
-            Booking::where('reserve_id', $booking->reserve_id)
-                ->where('id', '!=', $booking->id)
-                ->update($secondaryUpdate);
+            $b->save();
         }
 
-        // Room operational state update if arrived or checked in
-        if (in_array($newStatus, ['Arrived', 'Checked In']) && $booking->room) {
+        // Collect all distinct rooms allocated across this reservation
+        $allRoomIds = $allRelatedBookings->pluck('room_id')->filter()->unique();
+
+        // If Arrived or Checked In, update room operational state to Active for ALL related rooms
+        if (in_array($newStatus, ['Arrived', 'Checked In']) && $allRoomIds->isNotEmpty()) {
             $activeOp = OperationalStatus::where('name', 'like', '%Active%')->first();
             if ($activeOp) {
-                RoomOperationalHistory::create([
-                    'room_id' => $booking->room->id,
-                    'operational_status_id' => $activeOp->id,
-                ]);
+                foreach ($allRoomIds as $rId) {
+                    RoomOperationalHistory::create([
+                        'room_id' => $rId,
+                        'operational_status_id' => $activeOp->id,
+                    ]);
+                }
             }
         }
 
-        // Room housekeeping and checkout record if Checked Out
+        // If Checked Out, create checkout records & set dirty housekeeping state for ALL related bookings & rooms
         if ($newStatus === 'Checked Out') {
-            $totalPaid = round((float)$booking->advance_amount + (float)Payment::where('booking_id', $booking->id)->where('payment_type', 'Settlement')->sum('amount'), 2);
-            $latestSettlement = Settlement::where('booking_id', $booking->id)->latest('id')->first()
-                ?: Settlement::where('guest_id', $guest->id)->latest('id')->first();
+            $latestSettlement = Settlement::whereIn('booking_id', $allRelatedBookings->pluck('id'))->latest('id')->first();
+            $dirtyState = HousekeepingState::where('name', 'like', '%dirty%')->first();
 
-            Checkout::firstOrCreate(
-                ['booking_id' => $booking->id],
-                [
-                    'guest_id' => $guest->id,
-                    'room_id' => $booking->room_id,
-                    'settlement_id' => $latestSettlement?->id,
-                    'checkout_date' => now()->toDateString(),
-                    'checkout_time' => now()->format('H:i'),
-                    'actual_checkout_at' => now(),
-                    'total_nights' => $booking->total_nights,
-                    'room_charges' => $booking->total_amount,
-                    'extra_charges' => 0.00,
-                    'late_checkout_charge' => 0.00,
-                    'discount_amount' => $booking->discount_amount,
-                    'tax_amount' => $booking->gst_amount,
-                    'grand_total' => $booking->payable_amount,
-                    'paid_amount' => $totalPaid ?: $booking->payable_amount,
-                    'balance_amount' => 0.00,
-                    'status' => 'Completed',
-                    'remarks' => 'Checked out via Guest CRM Directory',
-                ]
-            );
+            foreach ($allRelatedBookings as $b) {
+                $totalPaid = round((float)$b->advance_amount + (float)Payment::where('booking_id', $b->id)->where('payment_type', 'Settlement')->sum('amount'), 2);
+                Checkout::firstOrCreate(
+                    ['booking_id' => $b->id],
+                    [
+                        'guest_id' => $b->guest_id,
+                        'room_id' => $b->room_id,
+                        'settlement_id' => $latestSettlement?->id,
+                        'checkout_date' => now()->toDateString(),
+                        'checkout_time' => now()->format('H:i'),
+                        'actual_checkout_at' => now(),
+                        'total_nights' => $b->total_nights ?: 1,
+                        'room_charges' => $b->total_amount ?: 0.00,
+                        'extra_charges' => 0.00,
+                        'late_checkout_charge' => 0.00,
+                        'discount_amount' => $b->discount_amount ?: 0.00,
+                        'tax_amount' => $b->gst_amount ?: 0.00,
+                        'grand_total' => $b->payable_amount ?: 0.00,
+                        'paid_amount' => $totalPaid ?: $b->payable_amount,
+                        'balance_amount' => 0.00,
+                        'status' => 'Completed',
+                        'remarks' => 'Checked out via Guest CRM Directory',
+                    ]
+                );
+            }
 
-            if ($booking->room_id) {
-                $dirtyState = HousekeepingState::where('name', 'like', '%dirty%')->first();
-                if ($dirtyState) {
+            if ($dirtyState && $allRoomIds->isNotEmpty()) {
+                foreach ($allRoomIds as $rId) {
                     RoomHousekeepingHistory::create([
-                        'room_id' => $booking->room_id,
+                        'room_id' => $rId,
                         'housekeeping_status_id' => $dirtyState->id,
                         'start_time' => now(),
                         'status' => 'pending',

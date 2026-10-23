@@ -37,14 +37,14 @@
   <a href="#" class="pms-tab-link" onclick="if(typeof PmsAlert !== 'undefined') PmsAlert.toast('Banquet & Services module queued for client review.', 'info')">
     <i class="fa-solid fa-champagne-glasses tab-ico" style="color: #fbbf24;"></i> Banquet & Services
   </a>
-  <a href="{{ route('admin.dashboard') }}" class="pms-tab-link {{ request()->routeIs('admin.utilities.*') || request()->routeIs('admin.roommanagement.*') || request()->routeIs('admin.roommaintain.*') || request()->routeIs('admin.dashboard') ? 'active' : '' }}">
+  <a href="{{ route('admin.dashboard') }}" class="pms-tab-link {{ request()->routeIs('admin.utilities.*') || request()->routeIs('admin.roommanagement.*') || request()->routeIs('admin.roommaintain.*') || request()->routeIs('admin.nightaudit.*') || request()->routeIs('admin.dashboard') ? 'active' : '' }}">
     <i class="fa-solid fa-user-gear tab-ico" style="color: #94a3b8;"></i> Administrator
   </a>
 </nav>
 
 <!-- Dynamic Action Sub-Ribbon (Hidden when Administrator tab is active) -->
 @php
-  $isAdminTabActive = request()->routeIs('admin.utilities.*') || request()->routeIs('admin.roommanagement.*') || request()->routeIs('admin.roommaintain.*') || request()->routeIs('admin.dashboard');
+  $isAdminTabActive = request()->routeIs('admin.utilities.*') || request()->routeIs('admin.roommanagement.*') || request()->routeIs('admin.roommaintain.*') || request()->routeIs('admin.nightaudit.*') || request()->routeIs('admin.dashboard');
 @endphp
 
 @if(!$isAdminTabActive)

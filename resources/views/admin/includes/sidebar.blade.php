@@ -60,6 +60,12 @@
     </ul>
   </div>
 
+  <!-- Main Item: Night Audit -->
+  <a href="{{ route('admin.nightaudit.index') }}" class="admin-nav-flat {{ request()->routeIs('admin.nightaudit.*') ? 'active' : '' }}" style="text-decoration: none; margin-bottom: 8px;">
+    <i class="fa-solid fa-moon" style="color: #8b5cf6; font-size: 13px;"></i>
+    <span>Night Audit</span>
+  </a>
+
   <!-- Group 2: Room Management Master -->
   <div class="admin-nav-group">
     <div class="admin-nav-header {{ request()->routeIs('admin.utilities.roommanage.*') || request()->routeIs('admin.roommanagement.*') || request()->routeIs('admin.roommaintain.*') ? 'active' : '' }}" onclick="toggleNavGroup(this)">

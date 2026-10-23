@@ -18,6 +18,7 @@ use App\Http\Controllers\Admin\Utilities\HousekeepingStateController;
 use App\Http\Controllers\Admin\Utilities\OperationalStatusController;
 use App\Http\Controllers\Admin\RoomManagementController;
 use App\Http\Controllers\Admin\RoomMaintainController;
+use App\Http\Controllers\Admin\NightAuditController as AdminNightAuditController;
 
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('/', function () {
@@ -31,6 +32,15 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('/login', function () {
         return view('admin.auth.login');
     })->name('login');
+
+    // Night Audit History Master in Admin
+    Route::prefix('nightaudit')->name('nightaudit.')->group(function () {
+        Route::get('/', [AdminNightAuditController::class, 'index'])->name('index');
+        Route::get('/{id}', [AdminNightAuditController::class, 'show'])->name('show');
+    });
+    Route::get('/night-audit', function () {
+        return redirect()->route('admin.nightaudit.index');
+    });
 
     // Room Management Core CRUD & Operations
     Route::prefix('room-management')->name('roommanagement.')->group(function () {

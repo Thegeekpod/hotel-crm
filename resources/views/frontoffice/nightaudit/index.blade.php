@@ -471,9 +471,6 @@
       <button type="button" class="audit-nav-tab" onclick="switchAuditTab('tab-guests', this)">
         <i class="fa-solid fa-users"></i> Guests ({{ $inHouseGuestsCount }})
       </button>
-      <button type="button" class="audit-nav-tab" onclick="switchAuditTab('tab-history', this)">
-        <i class="fa-solid fa-clock-rotate-left"></i> Audit History ({{ count($pastAudits) }})
-      </button>
     </div>
 
     <!-- TAB 1: PAYMENTS -->
@@ -773,75 +770,6 @@
               <tr>
                 <td colspan="8" style="text-align: center; padding: 24px; color: #94a3b8; font-size: 12px;">
                   No in-house guests currently checked in.
-                </td>
-              </tr>
-            @endforelse
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- TAB 5: AUDIT HISTORY -->
-    <div id="tab-history" class="audit-tab-pane">
-      <div class="pms-table-box" style="border-radius: 12px; background: #ffffff; border: 1px solid #e2e8f0; overflow-x: auto;">
-        <table class="pms-table" style="width: 100%;">
-          <thead>
-            <tr>
-              <th style="width: 45px; text-align: center;">SL</th>
-              <th>Date</th>
-              <th>Completed Time</th>
-              <th>Auditor</th>
-              <th>Occupancy %</th>
-              <th style="text-align: right;">Collections</th>
-              <th style="text-align: right;">Total Revenue</th>
-              <th style="text-align: center;">Status</th>
-              <th style="text-align: center;">View</th>
-            </tr>
-          </thead>
-          <tbody>
-            @forelse($pastAudits as $idx => $pa)
-              <tr>
-                <td style="text-align: center; font-weight: 800; color: #64748b; font-size: 11px; font-family: var(--font-mono, monospace);">
-                  {{ $idx + 1 }}
-                </td>
-                <td style="font-weight: 700;">
-                  <a href="{{ route('frontoffice.nightaudit', ['date' => $pa->audit_date->format('Y-m-d')]) }}" style="color: #4338ca; text-decoration: none;">
-                    {{ $pa->audit_date->format('d M Y') }}
-                  </a>
-                </td>
-                <td style="font-family: var(--font-mono, monospace); font-size: 11px; color: #64748b;">
-                  {{ $pa->completed_at ? $pa->completed_at->format('h:i A') : 'N/A' }}
-                </td>
-                <td style="font-size: 12px; color: #334155;">
-                  {{ $pa->auditor_name ?: ($pa->auditor?->name ?? 'Auditor') }}
-                </td>
-                <td style="font-weight: 700; color: #0f172a;">
-                  {{ $pa->occupancy_rate }}%
-                </td>
-                <td style="text-align: right; font-weight: 800; font-family: var(--font-mono, monospace); color: #059669;">
-                  ₹ {{ number_format($pa->total_payments, 2) }}
-                </td>
-                <td style="text-align: right; font-weight: 800; font-family: var(--font-mono, monospace); color: #7c3aed;">
-                  ₹ {{ number_format($pa->total_revenue, 2) }}
-                </td>
-                <td style="text-align: center;">
-                  <span class="audit-badge completed" style="padding: 2px 8px; font-size: 10px;">
-                    <i class="fa-solid fa-circle-check"></i> {{ $pa->status }}
-                  </span>
-                </td>
-                <td style="text-align: center;">
-                  <a href="{{ route('frontoffice.nightaudit', ['date' => $pa->audit_date->format('Y-m-d')]) }}" 
-                     class="btn-ui-secondary" 
-                     style="padding: 3px 8px; font-size: 11px;"
-                     title="View this Audit">
-                    <i class="fa-solid fa-eye"></i>
-                  </a>
-                </td>
-              </tr>
-            @empty
-              <tr>
-                <td colspan="9" style="text-align: center; padding: 24px; color: #94a3b8; font-size: 12px;">
-                  No past audits found.
                 </td>
               </tr>
             @endforelse

@@ -4,10 +4,57 @@
 
 @push('styles')
 <style>
-  /* Prevent any awkward text wrapping in table */
+  /* Prevent awkward text wrapping and provide responsive table behavior */
   .pms-table th,
   .pms-table td {
     white-space: nowrap !important;
+    padding: 10px 12px !important;
+  }
+
+  .pms-page-container {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .pms-page-content {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    padding: 0 0 16px 0 !important;
+  }
+
+  .pms-table-box {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    box-sizing: border-box !important;
+    border-radius: 14px !important;
+    box-shadow: 0 4px 20px -5px rgba(0,0,0,0.06) !important;
+    background: #ffffff !important;
+  }
+
+  /* Sleek custom scrollbar */
+  .pms-table-box::-webkit-scrollbar {
+    height: 7px;
+  }
+  .pms-table-box::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 4px;
+  }
+  .pms-table-box::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+  }
+  .pms-table-box::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+  }
+
+  .pms-table {
+    width: 100% !important;
+    min-width: 1050px;
+    border-collapse: collapse;
   }
 
   .folio-id-text {
@@ -66,31 +113,78 @@
     font-family: var(--font-mono, monospace);
   }
 
-  /* Header card styling like guest CRM */
+  /* Header card styling */
   .folio-header-card {
     background: #ffffff;
     border: 1px solid #e2e8f0;
     border-radius: 14px;
-    padding: 16px 20px;
-    margin-bottom: 16px;
+    padding: 14px 18px;
+    margin-bottom: 14px;
     box-shadow: 0 2px 10px -3px rgba(0,0,0,0.04);
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
   }
 
-  /* Toolbar styling like guest CRM */
+  /* Toolbar styling */
   .folio-toolbar {
     background: #ffffff;
     border: 1px solid #e2e8f0;
     border-radius: 12px;
-    padding: 12px 18px;
-    margin-bottom: 16px;
+    padding: 12px 16px;
+    margin-bottom: 14px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .folio-toolbar-inner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px 14px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .folio-toolbar-filters {
+    display: flex;
+    gap: 8px 12px;
+    align-items: center;
+    flex: 1 1 650px;
+    flex-wrap: wrap;
+    min-width: 0;
   }
 
   .search-box-wrap {
     position: relative;
-    flex: 1;
-    min-width: 260px;
-    max-width: 440px;
+    flex: 1 1 200px;
+    min-width: 180px;
+    max-width: 320px;
+  }
+
+  .folio-filter-group {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    flex-shrink: 0;
+  }
+
+  .folio-filter-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .folio-toolbar-pagesize {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-shrink: 0;
+    margin-left: auto;
   }
 
   .search-box-wrap i.search-icon {
@@ -860,16 +954,16 @@
                           $flrDisp = $uRoom->floorRelation?->floor ?? ($uRoom->floor ?? '1');
                           $catDisp = $uRoom->categoryRelation?->name ?? ($uRoom->category ?? 'Standard');
                         @endphp
-                        <div style="display: inline-flex; align-items: center; gap: 6px;">
+                        <div style="display: inline-flex; align-items: center; gap: 6px; flex-direction: row; ">
                           <span class="room-tag">
                             <i class="fa-solid fa-door-open" style="font-size: 10px;"></i>
                             {{ $rDisp }}
-                          </span>
+                          </span><br>
                           <span style="font-size: 10px; color: #64748b; font-weight: 700;">
                             Floor {{ $flrDisp }}
                           </span>
-                          <span style="color: #cbd5e1;">•</span>
-                          <span style="font-size: 10px; color: #94a3b8;">{{ $catDisp }}</span>
+                          <!-- <span style="color: #242425ff;">•</span> -->
+                          <!-- <span style="font-size: 10px; color: #94a3b8;">{{ $catDisp }}</span> -->
                         </div>
                       @endforeach
                     </div>

@@ -10,6 +10,39 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css">
   <style>
+    /* Responsive Viewport & Page Container Safety */
+    html, body {
+      max-width: 100vw !important;
+      overflow-x: hidden !important;
+    }
+    .pms-main-viewport {
+      min-width: 0 !important;
+      max-width: 100vw !important;
+      width: 100% !important;
+      box-sizing: border-box !important;
+      overflow-x: hidden !important;
+    }
+    .pms-page-container {
+      min-width: 0 !important;
+      max-width: calc(100% - 20px) !important;
+      width: calc(100% - 20px) !important;
+      box-sizing: border-box !important;
+      margin: 10px 10px 24px 10px !important;
+    }
+    .pms-page-content {
+      min-width: 0 !important;
+      max-width: 100% !important;
+      width: 100% !important;
+      box-sizing: border-box !important;
+    }
+    .pms-table-box {
+      width: 100% !important;
+      max-width: 100% !important;
+      overflow-x: auto !important;
+      -webkit-overflow-scrolling: touch !important;
+      box-sizing: border-box !important;
+    }
+
     /* Room Card Status Badge & Popover */
     .rack-badge {
       cursor: pointer !important;

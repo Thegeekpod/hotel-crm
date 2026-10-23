@@ -25,7 +25,7 @@
   <a href="#" class="pms-tab-link" onclick="if(typeof PmsAlert !== 'undefined') PmsAlert.toast('POS Sales master module queued for client review.', 'info')">
     <i class="fa-solid fa-utensils tab-ico" style="color: #10b981;"></i> POS Sales
   </a>
-  <a href="#" class="pms-tab-link" onclick="if(typeof PmsAlert !== 'undefined') PmsAlert.toast('House Keeping operational module queued.', 'info')">
+  <a href="{{ route('frontoffice.housekeeping') }}" class="pms-tab-link {{ request()->routeIs('frontoffice.housekeeping*') ? 'active' : '' }}">
     <i class="fa-solid fa-broom tab-ico" style="color: #f59e0b;"></i> House Keeping
   </a>
   <a href="#" class="pms-tab-link" onclick="if(typeof PmsAlert !== 'undefined') PmsAlert.toast('Stores & Inventory module queued for client review.', 'info')">

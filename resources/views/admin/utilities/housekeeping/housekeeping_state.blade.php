@@ -408,6 +408,7 @@
                   <th style="width: 40px; text-align: center;"><input type="checkbox" id="select-all-check" onchange="toggleSelectAll(this)" style="cursor: pointer;"></th>
                   <th style="width: 50px;">#</th>
                   <th>State Name</th>
+                  <th>Task Stage Type</th>
                   <th>Badge Color</th>
                   <th>System Status</th>
                   <th style="text-align: right; width: 120px;">Actions</th>
@@ -449,6 +450,17 @@
         <div class="admin-form-group">
           <label class="admin-form-label">State Name <span style="color: red;">*</span></label>
           <input type="text" id="form-name" class="admin-form-input" placeholder="e.g. Cleaned & Inspected" required>
+        </div>
+
+        <div class="admin-form-group" style="margin-bottom: 14px;">
+          <label class="admin-form-label">Task Stage Type <span style="color: red;">*</span></label>
+          <select id="form-type" class="admin-form-input" required>
+            <option value="assign_task">Assign Task (Pending Cleaning / Due)</option>
+            <option value="completed_task">Completed Task (Finished & Ready)</option>
+          </select>
+          <span style="font-size: 11px; color: var(--text-muted); margin-top: 3px; display: block;">
+            Determines whether rooms with this status belong to <strong>Tasks Queue</strong> or <strong>Completed Tasks</strong> in Front Desk.
+          </span>
         </div>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
@@ -630,6 +642,7 @@
     document.getElementById('modal-title').innerHTML = '<i class="fa-solid fa-plus-circle"></i> Add Housekeeping State';
     document.getElementById('item-id').value = '';
     document.getElementById('form-name').value = '';
+    document.getElementById('form-type').value = 'assign_task';
     document.getElementById('form-badge').value = 'green';
     document.getElementById('form-status').value = 'Active';
     openModal('crud-modal');
@@ -642,6 +655,7 @@
     document.getElementById('modal-title').innerHTML = '<i class="fa-solid fa-pen-to-square"></i> Edit Housekeeping State';
     document.getElementById('item-id').value = item.id;
     document.getElementById('form-name').value = item.name;
+    document.getElementById('form-type').value = item.type || (item.name.toLowerCase().includes('clean') || item.name.toLowerCase().includes('sanit') ? 'completed_task' : 'assign_task');
     document.getElementById('form-badge').value = item.badge_color || 'green';
     document.getElementById('form-status').value = item.status;
     openModal('crud-modal');
@@ -651,6 +665,7 @@
     e.preventDefault();
     const id = document.getElementById('item-id').value;
     const name = document.getElementById('form-name').value.trim();
+    const type = document.getElementById('form-type').value;
     const badge_color = document.getElementById('form-badge').value;
     const status = document.getElementById('form-status').value;
 
@@ -671,7 +686,7 @@
       return;
     }
 
-    const payload = { name, badge_color, status };
+    const payload = { name, type, badge_color, status };
     const url = id ? `${baseUrl}/${id}` : baseUrl;
     const method = id ? 'PUT' : 'POST';
 
@@ -729,6 +744,7 @@
     return tableRecords.filter(item => {
       const matchSearch = !searchQuery ||
         (item.name && item.name.toLowerCase().includes(searchQuery)) ||
+        (item.type && item.type.toLowerCase().includes(searchQuery)) ||
         (item.badge_color && item.badge_color.toLowerCase().includes(searchQuery)) ||
         (item.status && item.status.toLowerCase().includes(searchQuery));
 
@@ -753,13 +769,14 @@
 
     const tbody = document.getElementById('table-body');
     if (!pageItems.length) {
-      tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 40px; color: var(--text-muted);"><i class="fa-solid fa-inbox" style="font-size: 28px; margin-bottom: 10px; display: block;"></i>No matching records found.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 40px; color: var(--text-muted);"><i class="fa-solid fa-inbox" style="font-size: 28px; margin-bottom: 10px; display: block;"></i>No matching records found.</td></tr>`;
     } else {
       let html = '';
       pageItems.forEach((item, idx) => {
         const badgeColor = item.badge_color || 'green';
         const statusBadgeClass = item.status === 'Active' ? 'green' : 'yellow';
         const isSelected = selectedIds.has(item.id);
+        const isCompleted = item.type === 'completed_task';
 
         html += `
           <tr data-id="${item.id}" class="${isSelected ? 'row-selected' : ''}">
@@ -769,6 +786,12 @@
             <td style="font-family: var(--font-mono); font-weight: 700; color: var(--text-muted); font-size: 11px;">${startIdx + idx + 1}</td>
             <td style="font-weight: 800; color: var(--text-primary);">
               <span class="badge-tag ${badgeColor}" style="margin-right: 6px;"><i class="fa-solid fa-spray-can-sparkles" style="font-size: 9px;"></i>${item.name}</span>
+            </td>
+            <td>
+              <span class="badge-tag ${isCompleted ? 'green' : 'yellow'}" style="font-weight: 700;">
+                <i class="fa-solid ${isCompleted ? 'fa-circle-check' : 'fa-list-check'}" style="font-size: 8px;"></i>
+                ${isCompleted ? 'COMPLETED TASK' : 'ASSIGN TASK'}
+              </span>
             </td>
             <td>
               <span class="badge-tag ${badgeColor}">

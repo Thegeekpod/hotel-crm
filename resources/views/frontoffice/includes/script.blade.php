@@ -768,14 +768,21 @@
     if (numEl) numEl.textContent = roomNo;
     if (typeEl) typeEl.textContent = roomType;
 
-    // Populate Housekeeping Dropdown
+    // Populate Housekeeping Dropdown (Front Office dashboard assigns cleaning tasks to HK team)
     const hkSel = document.getElementById('rsp-hk-select');
     if (hkSel) {
-      const hkList = window.allHousekeepingStates || [];
+      const allHk = window.allHousekeepingStates || [];
+      // Filter for assign_task types (or current state if already on the room)
+      const hkList = allHk.filter(hk => {
+        if (!hk.type || hk.type === 'assign_task') return true;
+        if (String(hk.id) === String(curHkId) || (hk.name && hk.name.toLowerCase() === curHkName.toLowerCase())) return true;
+        return false;
+      });
       let hkHtml = '<option value="">Select Housekeeping Status</option>';
       hkList.forEach(hk => {
         const isSel = (String(hk.id) === String(curHkId)) || (hk.name && hk.name.toLowerCase() === curHkName.toLowerCase());
-        hkHtml += `<option value="${hk.id}" ${isSel ? 'selected' : ''}>${escapeHtml(hk.name)}</option>`;
+        const suffix = (hk.type === 'completed_task') ? ' (Current: Cleaned)' : '';
+        hkHtml += `<option value="${hk.id}" ${isSel ? 'selected' : ''}>${escapeHtml(hk.name)}${suffix}</option>`;
       });
       hkSel.innerHTML = hkHtml;
     }
@@ -892,7 +899,16 @@
 
     if (targetHkId) {
       const hkSel = document.getElementById('rsp-hk-select');
-      if (hkSel) hkSel.value = targetHkId;
+      if (hkSel) {
+        if (!hkSel.querySelector(`option[value="${targetHkId}"]`)) {
+          const opt = document.createElement('option');
+          opt.value = targetHkId;
+          const matched = (window.allHousekeepingStates || []).find(h => String(h.id) === String(targetHkId));
+          opt.textContent = (matched ? matched.name : 'Cleaned') + ' (Completed)';
+          hkSel.appendChild(opt);
+        }
+        hkSel.value = targetHkId;
+      }
     }
     if (targetOpId) {
       const opSel = document.getElementById('rsp-op-select');

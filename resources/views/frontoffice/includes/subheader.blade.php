@@ -22,6 +22,10 @@
         <span class="ico-box"><i class="fa-solid fa-moon" style="color: #8b5cf6;"></i></span>
         <span class="lbl-box">Night Audit</span>
       </a>
+      <a href="{{ route('frontoffice.housekeeping') }}" class="ribbon-btn {{ request()->routeIs('frontoffice.housekeeping*') ? 'active-btn' : '' }}">
+        <span class="ico-box"><i class="fa-solid fa-broom" style="color: #f59e0b;"></i></span>
+        <span class="lbl-box">House Keeping</span>
+      </a>
     </div>
   </div>
   <div style="font-size: 11px; font-weight: 700; color: var(--accent-emerald); display: flex; align-items: center; gap: 6px;">

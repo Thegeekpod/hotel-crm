@@ -130,6 +130,11 @@
           <i class="fa-solid fa-circle-nodes"></i> Operational Status
         </a>
       </li>
+      <li>
+        <a href="{{ route('frontoffice.housekeeping') }}" class="admin-sub-item {{ request()->routeIs('frontoffice.housekeeping*') ? 'active' : '' }}">
+          <i class="fa-solid fa-table-cells"></i> Live HK Dashboard
+        </a>
+      </li>
     </ul>
   </div>
 

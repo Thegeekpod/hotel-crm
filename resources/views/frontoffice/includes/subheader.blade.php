@@ -18,8 +18,8 @@
         <span class="ico-box"><i class="fa-solid fa-file-invoice-dollar" style="color: #6366f1;"></i></span>
         <span class="lbl-box">Sattlements</span>
       </a>
-      <a href="{{ route('frontoffice.folio') }}" class="ribbon-btn {{ request()->routeIs('frontoffice.folio*') ? 'active-btn' : '' }}">
-        <span class="ico-box"><i class="fa-solid fa-file-invoice-dollar" style="color: #6366f1;"></i></span>
+      <a href="{{ route('frontoffice.checkout') }}" class="ribbon-btn {{ request()->routeIs('frontoffice.checkout*') ? 'active-btn' : '' }}">
+        <span class="ico-box"><i class="fa-solid fa-person-walking-dashed-line-arrow-right" style="color: #ef4444;"></i></span>
         <span class="lbl-box">Checkout</span>
       </a>
       <a href="{{ route('frontoffice.nightaudit') }}" class="ribbon-btn {{ request()->routeIs('frontoffice.nightaudit*') || request()->routeIs('frontoffice.night-audit*') ? 'active-btn' : '' }}">

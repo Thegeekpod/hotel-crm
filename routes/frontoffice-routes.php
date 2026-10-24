@@ -6,6 +6,7 @@ use App\Http\Controllers\FrontOffice\ArrivalController;
 use App\Http\Controllers\FrontOffice\InhouseController;
 use App\Http\Controllers\FrontOffice\GuestController;
 use App\Http\Controllers\FrontOffice\FolioController;
+use App\Http\Controllers\FrontOffice\CheckoutController;
 use App\Http\Controllers\FrontOffice\NightAuditController;
 use App\Http\Controllers\FrontOffice\HousekeepingController;
 
@@ -33,6 +34,13 @@ Route::prefix('front-office')->name('frontoffice.')->group(function () {
     Route::post('/folio/{id}/settle', [FolioController::class, 'settle'])->name('folio.settle');
     Route::post('/folio/{id}/checkout', [FolioController::class, 'checkout'])->name('folio.checkout');
     Route::post('/folio/early-checkout-guest/{bookingId}', [FolioController::class, 'earlyCheckoutGuest'])->name('folio.early-checkout-guest');
+
+    // Checkout Management
+    Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
+    Route::get('/checkout/{id}/details', [CheckoutController::class, 'getDetails'])->name('checkout.details');
+    Route::post('/checkout/{id}/settle', [CheckoutController::class, 'settle'])->name('checkout.settle');
+    Route::post('/checkout/{id}/checkout', [CheckoutController::class, 'checkout'])->name('checkout.checkout');
+    Route::post('/checkout/early-checkout-guest/{bookingId}', [CheckoutController::class, 'earlyCheckoutGuest'])->name('checkout.early-checkout-guest');
 
     // Night Audit Management
     Route::get('/nightaudit', [NightAuditController::class, 'index'])->name('nightaudit');

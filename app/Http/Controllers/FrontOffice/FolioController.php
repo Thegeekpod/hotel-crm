@@ -20,6 +20,12 @@ class FolioController extends Controller
 {
     public function index(Request $request)
     {
+        $data = $this->getFolioIndexData($request);
+        return view('frontoffice.folio.index', $data);
+    }
+
+    public function getFolioIndexData(Request $request)
+    {
         $paymentModes = PaymentMode::where('status', 'Active')->get();
         $registrationTypes = \App\Models\RegistrationType::where('status', 'Active')->get();
 
@@ -201,7 +207,7 @@ class FolioController extends Controller
             return $this->formatFolioData($booking);
         });
 
-        return view('frontoffice.folio.index', compact(
+        return compact(
             'folios',
             'serializedFolios',
             'stats',
@@ -210,7 +216,7 @@ class FolioController extends Controller
             'fromDate',
             'toDate',
             'today'
-        ));
+        );
     }
 
     public function getDetails($id)

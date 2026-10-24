@@ -44,6 +44,7 @@ class FolioController extends Controller
             'additionalBookings.room.floorRelation',
             'additionalBookings.room.categoryRelation',
             'additionalBookings.room.beddingConfigRelation',
+            'roomServiceOrders.items',
         ])
         ->whereNull('primary_booking_id')
         ->orderBy('id', 'desc');
@@ -220,6 +221,7 @@ class FolioController extends Controller
             'additionalBookings.room.floorRelation',
             'additionalBookings.room.categoryRelation',
             'additionalBookings.room.beddingConfigRelation',
+            'roomServiceOrders.items',
         ])->find($id);
 
         if (!$booking) {
@@ -282,6 +284,13 @@ class FolioController extends Controller
                         'balance' => 0.00,
                         'status' => 'Settlement Done',
                     ]);
+            }
+
+            // 2b. If balance is fully settled, mark associated room service orders as settled
+            if ($newBalance <= 0) {
+                \App\Models\RoomServiceOrder::where('booking_id', $booking->id)
+                    ->where('payment_status', 'Charged to Room Folio')
+                    ->update(['payment_status' => 'Settled in Folio']);
             }
 
             // 3. Create Payment Record (payment_type = 'Settlement')
@@ -595,6 +604,43 @@ class FolioController extends Controller
         $totalPaid = round($advAmount + $settleAmount, 2);
         $balance = (float)$booking->balance;
 
+        // Room Service Orders & Additional Bills
+        $allBookingIds = $allBookings->pluck('id')->filter()->toArray();
+        $roomServiceOrders = \App\Models\RoomServiceOrder::with('items')
+            ->whereIn('booking_id', $allBookingIds)
+            ->latest()
+            ->get();
+
+        $serviceOrdersList = $roomServiceOrders->map(function ($ro) {
+            return [
+                'id' => $ro->id,
+                'order_number' => $ro->order_number,
+                'room_number' => $ro->room_number,
+                'guest_name' => $ro->guest_name,
+                'date' => $ro->created_at ? $ro->created_at->format('d M Y, h:i A') : 'N/A',
+                'subtotal' => (float)$ro->subtotal,
+                'tax_amount' => (float)$ro->tax_amount,
+                'total_amount' => (float)$ro->total_amount,
+                'payment_status' => $ro->payment_status,
+                'order_status' => $ro->order_status,
+                'served_by' => $ro->served_by,
+                'special_instructions' => $ro->special_instructions,
+                'items' => $ro->items->map(function ($it) {
+                    return [
+                        'item_name' => $it->item_name,
+                        'unit_price' => (float)$it->unit_price,
+                        'quantity' => (int)$it->quantity,
+                        'line_total' => (float)$it->line_total,
+                    ];
+                })->all(),
+            ];
+        })->values()->all();
+
+        $totalRoomServiceCharges = (float)$roomServiceOrders
+            ->where('payment_status', 'Charged to Room Folio')
+            ->where('order_status', '!=', 'Cancelled')
+            ->sum('total_amount');
+
         // Group rooms and their occupants
         $roomsMap = [];
         foreach ($allBookings as $b) {
@@ -731,6 +777,8 @@ class FolioController extends Controller
             'checkout_date_fmt' => $checkoutDateFmt,
             'checkout_time_fmt' => $checkoutTimeFmt,
             'settlements_history' => $settlementsHistory,
+            'room_service_orders' => $serviceOrdersList,
+            'total_room_service_charges' => $totalRoomServiceCharges,
         ];
     }
 }

@@ -1,3 +1,36 @@
+@if(request()->routeIs('banquet.*'))
+<!-- Action Sub-Ribbon (Banquet Halls & Room Service Orders) -->
+<div class="pms-sub-ribbon">
+  <div class="ribbon-left-section">
+    <div class="ribbon-action-buttons">
+      <a href="{{ route('banquet.index') }}" class="ribbon-btn active-btn">
+        <span class="ico-box"><i class="fa-solid fa-bell-concierge" style="color: #fbbf24;"></i></span>
+        <span class="lbl-box">Room Service &amp; Banquet</span>
+      </a>
+      <button type="button" class="ribbon-btn" onclick="openNewRoomOrderModal()">
+        <span class="ico-box"><i class="fa-solid fa-utensils" style="color: #10b981;"></i></span>
+        <span class="lbl-box">New Room Order</span>
+      </button>
+      <button type="button" class="ribbon-btn" onclick="openNewBanquetModal()">
+        <span class="ico-box"><i class="fa-solid fa-calendar-plus" style="color: #ec4899;"></i></span>
+        <span class="lbl-box">Book Event Hall</span>
+      </button>
+      <button type="button" class="ribbon-btn" onclick="switchBanquetTab('orders')">
+        <span class="ico-box"><i class="fa-solid fa-receipt" style="color: #6366f1;"></i></span>
+        <span class="lbl-box">Active Orders</span>
+      </button>
+      <button type="button" class="ribbon-btn" onclick="switchBanquetTab('menu')">
+        <span class="ico-box"><i class="fa-solid fa-book-open" style="color: #06b6d4;"></i></span>
+        <span class="lbl-box">Room Dining Menu</span>
+      </button>
+    </div>
+  </div>
+  <div style="font-size: 11px; font-weight: 700; color: #fbbf24; display: flex; align-items: center; gap: 6px;">
+    <span style="width: 6px; height: 6px; background: #fbbf24; border-radius: 50%; display: inline-block; box-shadow: 0 0 8px rgba(251, 191, 36, 0.6);"></span>
+    Banquet &amp; In-Room Dining Live
+  </div>
+</div>
+@else
 <!-- Action Sub-Ribbon (Only Front Office Options) -->
 <div class="pms-sub-ribbon">
   <div class="ribbon-left-section">
@@ -33,3 +66,4 @@
     Hotel Sagar Sonnet Live PMS
   </div>
 </div>
+@endif

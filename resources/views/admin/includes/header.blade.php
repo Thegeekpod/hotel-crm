@@ -34,7 +34,7 @@
   <a href="#" class="pms-tab-link" onclick="if(typeof PmsAlert !== 'undefined') PmsAlert.toast('Accounts & Finance module queued for client review.', 'info')">
     <i class="fa-solid fa-file-invoice-dollar tab-ico" style="color: #a78bfa;"></i> Accounts
   </a>
-  <a href="#" class="pms-tab-link" onclick="if(typeof PmsAlert !== 'undefined') PmsAlert.toast('Banquet & Services module queued for client review.', 'info')">
+  <a href="{{ route('banquet.index') }}" class="pms-tab-link {{ request()->routeIs('banquet.*') ? 'active' : '' }}">
     <i class="fa-solid fa-champagne-glasses tab-ico" style="color: #fbbf24;"></i> Banquet & Services
   </a>
   <a href="{{ route('admin.dashboard') }}" class="pms-tab-link {{ request()->routeIs('admin.utilities.*') || request()->routeIs('admin.roommanagement.*') || request()->routeIs('admin.roommaintain.*') || request()->routeIs('admin.nightaudit.*') || request()->routeIs('admin.dashboard') ? 'active' : '' }}">

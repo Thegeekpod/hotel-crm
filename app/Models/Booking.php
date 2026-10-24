@@ -275,4 +275,10 @@ class Booking extends Model
     {
         return $this->hasOne(Checkout::class, 'booking_id')->latestOfMany();
     }
+
+    public function roomServiceOrders(): HasMany
+    {
+        return $this->hasMany(RoomServiceOrder::class, 'booking_id')->latest();
+    }
 }
+

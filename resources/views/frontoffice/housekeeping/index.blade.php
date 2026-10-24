@@ -67,6 +67,10 @@
     color: #64748b;
   }
 
+  .d-none {
+    display: none !important;
+  }
+
   /* Main Task Tabs Switcher */
   .hk-main-tabs-bar {
     display: flex;
@@ -75,59 +79,59 @@
     background: #ffffff;
     border: 1px solid #e2e8f0;
     border-radius: 12px;
-    padding: 6px 12px;
-    margin-bottom: 12px;
+    padding: 8px 14px;
+    margin-bottom: 14px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
     flex-wrap: wrap;
-    gap: 10px;
+    gap: 12px;
   }
 
   .hk-tabs-nav {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
   }
 
   .hk-tab-btn {
-    border: none;
+    border: 1px solid #e2e8f0;
     background: #f8fafc;
     color: #475569;
-    padding: 7px 14px;
+    padding: 8px 16px;
     border-radius: 8px;
-    font-size: 12px;
+    font-size: 12.5px;
     font-weight: 700;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
     transition: all 0.15s ease-in-out;
-    border: 1px solid transparent;
   }
 
   .hk-tab-btn:hover {
     background: #f1f5f9;
     color: #0f172a;
+    border-color: #cbd5e1;
   }
 
   .hk-tab-btn.active-tab-pending {
     background: #fffbeb;
     color: #b45309;
-    border-color: #fde68a;
-    box-shadow: 0 1px 4px rgba(245, 158, 11, 0.12);
+    border-color: #f59e0b;
+    box-shadow: 0 2px 6px rgba(245, 158, 11, 0.15);
   }
 
   .hk-tab-btn.active-tab-completed {
     background: #ecfdf5;
     color: #047857;
-    border-color: #a7f3d0;
-    box-shadow: 0 1px 4px rgba(16, 185, 129, 0.12);
+    border-color: #10b981;
+    box-shadow: 0 2px 6px rgba(16, 185, 129, 0.15);
   }
 
   .hk-tab-btn.active-tab-all {
     background: #eef2ff;
     color: #4338ca;
-    border-color: #c7d2fe;
-    box-shadow: 0 1px 4px rgba(99, 102, 241, 0.12);
+    border-color: #6366f1;
+    box-shadow: 0 2px 6px rgba(99, 102, 241, 0.15);
   }
 
   .hk-tab-badge {
@@ -657,7 +661,7 @@
     border-radius: 10px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.02);
     overflow: hidden;
-    margin-top: 14px;
+    margin: 14px;
     margin-bottom: 24px;
   }
 
@@ -823,6 +827,9 @@
     font-weight: 600;
     margin-top: 2px;
   }
+  div#sectionPendingTasks {
+    padding: 10px;
+}
 </style>
 @endpush
 
@@ -1036,11 +1043,11 @@
     </div>
 
     <!-- TAB 1: PENDING TASKS SECTION -->
-    <div id="sectionPendingTasks">
+    <div id="sectionPendingTasks" style="display: block;">
       <div class="hk-section-bar">
         <h3 class="hk-section-title">
           <span class="hk-section-badge" style="background: #f59e0b;"></span>
-          Cleaning & Due Tasks Queue (<span class="pending-count-lbl">{{ count($pendingRooms) }}</span>)
+          Cleaning &amp; Due Tasks Queue (<span class="pending-count-lbl">{{ count($pendingRooms) }}</span>)
         </h3>
         <span class="hk-section-hint">Mark as clean to automatically move room to Completed Tasks</span>
       </div>
@@ -1050,10 +1057,25 @@
         @forelse($pendingRooms as $room)
           @include('frontoffice.housekeeping.room_card', ['room' => $room, 'isCompleteSection' => false])
         @empty
-          <div class="hk-empty-box" style="grid-column: 1 / -1; padding: 28px; text-align: center; background: #fff; border-radius: 10px; border: 1px dashed #cbd5e1;">
-            <i class="fa-solid fa-circle-check" style="font-size: 26px; color: #10b981; margin-bottom: 8px;"></i>
-            <h4 style="margin: 0; color: #0f172a; font-weight: 700; font-size: 13.5px;">No Pending Cleaning Tasks!</h4>
-            <p style="margin: 3px 0 0 0; font-size: 11.5px; color: #64748b;">All rooms are currently cleaned, inspected, or sanitized.</p>
+          <div class="hk-empty-hero" style="grid-column: 1 / -1; padding: 42px 24px; text-align: center; background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%); border-radius: 14px; border: 1px solid #e2e8f0; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
+            <div style="width: 58px; height: 58px; border-radius: 16px; background: #ecfdf5; border: 1px solid #a7f3d0; color: #10b981; display: inline-flex; align-items: center; justify-content: center; font-size: 26px; margin-bottom: 14px; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);">
+              <i class="fa-solid fa-sparkles"></i>
+            </div>
+            <div style="margin-bottom: 8px;">
+              <span style="background: #dcfce7; color: #15803d; font-size: 11px; font-weight: 800; padding: 3px 12px; border-radius: 20px; display: inline-flex; align-items: center; gap: 5px; border: 1px solid #86efac;">
+                <i class="fa-solid fa-circle-check"></i> 100% Rooms Clean &amp; Inspected
+              </span>
+            </div>
+            <h4 style="margin: 6px 0 4px 0; color: #0f172a; font-weight: 800; font-size: 16px;">No Pending Cleaning Tasks in Queue!</h4>
+            <p style="margin: 0 auto 18px auto; max-width: 480px; font-size: 12.5px; color: #64748b; line-height: 1.5;">All {{ $totalRooms }} rooms across all floors are currently sanitized, clean, and ready for guests. You can review all completed rooms or change individual statuses anytime.</p>
+            <div style="display: inline-flex; gap: 10px; align-items: center; flex-wrap: wrap; justify-content: center;">
+              <button type="button" onclick="switchSection('completed')" style="background: #10b981; color: #ffffff; border: none; padding: 8px 18px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(16, 185, 129, 0.25);">
+                <i class="fa-solid fa-circle-check"></i> View Completed Tasks ({{ count($completedRooms) }})
+              </button>
+              <button type="button" onclick="switchSection('all')" style="background: #ffffff; color: #4338ca; border: 1px solid #c7d2fe; padding: 8px 18px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                <i class="fa-solid fa-border-all"></i> Browse All Rooms ({{ count($filteredRooms) }})
+              </button>
+            </div>
           </div>
         @endforelse
       </div>
@@ -1079,7 +1101,7 @@
               @include('frontoffice.housekeeping.room_table_row', ['room' => $room, 'isCompleteSection' => false])
             @empty
               <tr>
-                <td colspan="9" style="text-align: center; padding: 20px; color: #64748b;">No pending cleaning tasks.</td>
+                <td colspan="9" style="text-align: center; padding: 24px; color: #64748b;">No pending cleaning tasks. All rooms are clean.</td>
               </tr>
             @endforelse
           </tbody>
@@ -1088,7 +1110,7 @@
     </div>
 
     <!-- TAB 2: COMPLETED TASKS SECTION -->
-    <div class="d-none" id="sectionCompletedTasks">
+    <div id="sectionCompletedTasks" class="d-none" style="display: none;">
       <div class="hk-section-bar">
         <h3 class="hk-section-title">
           <span class="hk-section-badge" style="background: #10b981;"></span>
@@ -1140,7 +1162,7 @@
     </div>
 
     <!-- TAB 3: ALL ROOMS SECTION -->
-    <div class="d-none" id="sectionAllRooms">
+    <div id="sectionAllRooms" class="d-none" style="display: none;">
       <div class="hk-section-bar">
         <h3 class="hk-section-title">
           <span class="hk-section-badge" style="background: #6366f1;"></span>
@@ -1384,25 +1406,25 @@
     const btnAll = document.getElementById('tabBtnAll');
 
     // Reset tab active classes
-    btnPending.classList.remove('active-tab-pending');
-    btnCompleted.classList.remove('active-tab-completed');
-    btnAll.classList.remove('active-tab-all');
+    if (btnPending) btnPending.classList.remove('active-tab-pending');
+    if (btnCompleted) btnCompleted.classList.remove('active-tab-completed');
+    if (btnAll) btnAll.classList.remove('active-tab-all');
 
     if (section === 'pending') {
-      secPending.style.display = 'block';
-      secCompleted.style.display = 'none';
-      secAll.style.display = 'none';
-      btnPending.classList.add('active-tab-pending');
+      if (secPending) { secPending.style.display = 'block'; secPending.classList.remove('d-none'); }
+      if (secCompleted) { secCompleted.style.display = 'none'; secCompleted.classList.add('d-none'); }
+      if (secAll) { secAll.style.display = 'none'; secAll.classList.add('d-none'); }
+      if (btnPending) btnPending.classList.add('active-tab-pending');
     } else if (section === 'completed') {
-      secPending.style.display = 'none';
-      secCompleted.style.display = 'block';
-      secAll.style.display = 'none';
-      btnCompleted.classList.add('active-tab-completed');
+      if (secPending) { secPending.style.display = 'none'; secPending.classList.add('d-none'); }
+      if (secCompleted) { secCompleted.style.display = 'block'; secCompleted.classList.remove('d-none'); }
+      if (secAll) { secAll.style.display = 'none'; secAll.classList.add('d-none'); }
+      if (btnCompleted) btnCompleted.classList.add('active-tab-completed');
     } else {
-      secPending.style.display = 'none';
-      secCompleted.style.display = 'none';
-      secAll.style.display = 'block';
-      btnAll.classList.add('active-tab-all');
+      if (secPending) { secPending.style.display = 'none'; secPending.classList.add('d-none'); }
+      if (secCompleted) { secCompleted.style.display = 'none'; secCompleted.classList.add('d-none'); }
+      if (secAll) { secAll.style.display = 'block'; secAll.classList.remove('d-none'); }
+      if (btnAll) btnAll.classList.add('active-tab-all');
     }
 
     clearSelection();

@@ -98,7 +98,7 @@
     @endif
 
     <button type="button" class="hk-btn-quick" onclick="openRoomStatusModal({{ $room->id }}, '{{ $room->room_number }}', {{ $latestHk?->housekeeping_status_id ?? $cleanStateId }}, '{{ $taskStatus }}')">
-      <i class="fa-solid fa-ellipsis"></i> Change
+      <i class="fa-solid fa-pen-to-square"></i> Change
     </button>
 
     <button type="button" class="hk-btn-history" title="Inspection & Cleaning History" onclick="viewRoomHistory({{ $room->id }}, '{{ $room->room_number }}')">

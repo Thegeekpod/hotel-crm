@@ -406,6 +406,85 @@
     border-radius: 8px;
     border: 1px solid #e2e8f0;
   }
+
+  /* Select2 Custom Styles for PMS */
+  .select2-container {
+    width: 100% !important;
+  }
+  .select2-container--default .select2-selection--single {
+    height: 38px !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 8px !important;
+    background-color: #ffffff !important;
+    display: flex !important;
+    align-items: center !important;
+    padding: 0 4px !important;
+    transition: all 0.2s ease !important;
+  }
+  .select2-container--default .select2-selection--single:focus,
+  .select2-container--default.select2-container--focus .select2-selection--single,
+  .select2-container--default.select2-container--open .select2-selection--single {
+    border-color: #10b981 !important;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15) !important;
+    outline: none !important;
+  }
+  .select2-container--default .select2-selection--single .select2-selection__rendered {
+    color: #0f172a !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    line-height: 36px !important;
+    padding-left: 8px !important;
+    padding-right: 24px !important;
+  }
+  .select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 36px !important;
+    right: 8px !important;
+  }
+  .select2-container--default .select2-selection--single .select2-selection__arrow b {
+    border-color: #64748b transparent transparent transparent !important;
+  }
+  .select2-container--default.select2-container--open .select2-selection--single .select2-selection__arrow b {
+    border-color: transparent transparent #64748b transparent !important;
+  }
+  .select2-dropdown {
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 10px !important;
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.15) !important;
+    z-index: 1000000 !important;
+    background: #ffffff !important;
+    overflow: hidden !important;
+  }
+  .select2-search--dropdown {
+    padding: 8px !important;
+    background: #f8fafc !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+  }
+  .select2-search--dropdown .select2-search__field {
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 6px !important;
+    padding: 6px 10px !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    outline: none !important;
+  }
+  .select2-search--dropdown .select2-search__field:focus {
+    border-color: #10b981 !important;
+  }
+  .select2-results__option {
+    padding: 8px 12px !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    color: #1e293b !important;
+  }
+  .select2-container--default .select2-results__option--highlighted[aria-selected] {
+    background-color: #10b981 !important;
+    color: #ffffff !important;
+  }
+  .select2-container--default .select2-results__option[aria-selected="true"] {
+    background-color: #ecfdf5 !important;
+    color: #065f46 !important;
+    font-weight: 700 !important;
+  }
 </style>
 @endpush
 
@@ -679,7 +758,7 @@
         <div class="form-grid-2">
           <div class="form-group-srv">
             <label>Select In-House Room *</label>
-            <select name="room_id" id="ro-room-select" required onchange="updateRoomOrderGuest()">
+            <select name="room_id" id="ro-room-select" required style="width: 100%;">
               <option value="">Choose Occupied Room</option>
               @foreach($activeRooms as $rm)
                 @php
@@ -712,7 +791,7 @@
         <div class="form-grid-2" style="margin-top: 14px;">
           <div class="form-group-srv">
             <label>Billing &amp; Settlement *</label>
-            <select name="payment_status" required>
+            <select name="payment_status" id="ro-payment-status" required style="width: 100%;">
               <option value="Charged to Room Folio">Charged to Room Folio (Bill at Checkout)</option>
               <option value="Paid Cash">Cash Paid upon Delivery</option>
               <option value="Paid UPI/Card">Digital UPI / POS Card Paid</option>
@@ -797,10 +876,22 @@
     if (el) el.style.display = 'none';
   }
 
-  function openNewRoomOrderModal() {
+  function openNewRoomOrderModal(initialServiceId = null) {
     document.getElementById('form-room-order').reset();
     document.getElementById('order-line-items-container').innerHTML = '';
-    if (servicesCatalog.length > 0) {
+    
+    // Reset Select2 fields
+    if ($('#ro-room-select').data('select2')) {
+      $('#ro-room-select').val('').trigger('change');
+    }
+    if ($('#ro-payment-status').data('select2')) {
+      $('#ro-payment-status').val('Charged to Room Folio').trigger('change');
+    }
+    document.getElementById('ro-guest-display').value = '';
+
+    if (initialServiceId) {
+      addOrderLineItem(initialServiceId);
+    } else if (servicesCatalog.length > 0) {
       addOrderLineItem(servicesCatalog[0].id);
     } else {
       addOrderLineItem(null);
@@ -810,14 +901,12 @@
   }
 
   function quickOrderThisService(serviceId, name, price) {
-    openNewRoomOrderModal();
-    document.getElementById('order-line-items-container').innerHTML = '';
-    addOrderLineItem(serviceId);
-    calculateRoomOrderTotal();
+    openNewRoomOrderModal(serviceId);
   }
 
   function updateRoomOrderGuest() {
     const select = document.getElementById('ro-room-select');
+    if (!select || select.selectedIndex < 0) return;
     const opt = select.options[select.selectedIndex];
     const guestInput = document.getElementById('ro-guest-display');
     if (opt && opt.value) {
@@ -827,7 +916,7 @@
     }
   }
 
-  // Order Line Items Builder
+  // Order Line Items Builder with Select2
   let itemCounter = 0;
   function addOrderLineItem(selectedServiceId = null) {
     itemCounter++;
@@ -836,39 +925,51 @@
     row.className = 'order-item-row';
     row.id = `item-row-${itemCounter}`;
 
-    let optionsHtml = '<option value="">-- Choose Hotel Service / Food Item --</option>';
+    let optionsHtml = '<option value="">-- Search &amp; Choose Hotel Service / Food Item --</option>';
     servicesCatalog.forEach(s => {
-      const isSelected = selectedServiceId && s.id == selectedServiceId ? 'selected' : '';
+      const isSelected = selectedServiceId && String(s.id) === String(selectedServiceId) ? 'selected' : '';
       optionsHtml += `<option value="${s.id}" data-price="${s.price}" data-name="${s.name}" ${isSelected}>[${s.code || 'SRV'}] ${s.name} (₹ ${parseFloat(s.price).toFixed(2)})</option>`;
     });
 
     row.innerHTML = `
-      <div style="flex: 2;">
-        <select class="item-service-select" onchange="onServiceSelectChange(${itemCounter})" style="padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 11px; width: 100%;">
+      <div style="flex: 2; min-width: 0;">
+        <select class="item-service-select" id="item-service-select-${itemCounter}" style="width: 100%;">
           ${optionsHtml}
         </select>
         <input type="hidden" name="items[${itemCounter}][service_id]" id="input-service-id-${itemCounter}" value="${selectedServiceId || ''}">
-        <input type="text" name="items[${itemCounter}][name]" id="input-item-name-${itemCounter}" placeholder="Custom item description" style="padding: 5px 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 11px; width: 100%; margin-top: 4px; display: none;">
+        <input type="text" name="items[${itemCounter}][name]" id="input-item-name-${itemCounter}" placeholder="Custom item description" style="padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 11px; width: 100%; margin-top: 4px; display: none; box-sizing: border-box;">
       </div>
-      <div style="width: 80px;">
-        <input type="number" step="0.01" name="items[${itemCounter}][price]" id="input-item-price-${itemCounter}" placeholder="Price" value="0.00" onkeyup="calculateRoomOrderTotal()" onchange="calculateRoomOrderTotal()" style="padding: 6px 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 11px; width: 100%; font-family: var(--font-mono, monospace); font-weight: 700;">
+      <div style="width: 85px; flex-shrink: 0;">
+        <input type="number" step="0.01" name="items[${itemCounter}][price]" id="input-item-price-${itemCounter}" placeholder="Price" value="0.00" onkeyup="calculateRoomOrderTotal()" onchange="calculateRoomOrderTotal()" style="padding: 8px 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 11px; width: 100%; font-family: var(--font-mono, monospace); font-weight: 700; box-sizing: border-box;">
       </div>
-      <div style="width: 60px;">
-        <input type="number" name="items[${itemCounter}][quantity]" id="input-item-qty-${itemCounter}" value="1" min="1" onkeyup="calculateRoomOrderTotal()" onchange="calculateRoomOrderTotal()" style="padding: 6px 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 11px; width: 100%; font-family: var(--font-mono, monospace); font-weight: 700;">
+      <div style="width: 60px; flex-shrink: 0;">
+        <input type="number" name="items[${itemCounter}][quantity]" id="input-item-qty-${itemCounter}" value="1" min="1" onkeyup="calculateRoomOrderTotal()" onchange="calculateRoomOrderTotal()" style="padding: 8px 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 11px; width: 100%; font-family: var(--font-mono, monospace); font-weight: 700; box-sizing: border-box;">
       </div>
-      <button type="button" onclick="removeOrderLineItem(${itemCounter})" style="background: #fff1f2; border: 1px solid #fecdd3; color: #e11d48; width: 28px; height: 28px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+      <button type="button" onclick="removeOrderLineItem(${itemCounter})" style="background: #fff1f2; border: 1px solid #fecdd3; color: #e11d48; width: 34px; height: 34px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
         <i class="fa-solid fa-trash-can" style="font-size: 11px;"></i>
       </button>
     `;
 
     container.appendChild(row);
 
+    const currIdx = itemCounter;
+    $(`#item-service-select-${currIdx}`).select2({
+      dropdownParent: $('#modal-new-room-order'),
+      width: '100%',
+      placeholder: 'Search dish, laundry, amenity...'
+    }).on('select2:select change', function() {
+      onServiceSelectChange(currIdx);
+    });
+
     if (selectedServiceId) {
-      onServiceSelectChange(itemCounter);
+      $(`#item-service-select-${currIdx}`).val(selectedServiceId).trigger('change');
     }
   }
 
   function removeOrderLineItem(index) {
+    if ($(`#item-service-select-${index}`).data('select2')) {
+      $(`#item-service-select-${index}`).select2('destroy');
+    }
     const row = document.getElementById(`item-row-${index}`);
     if (row) row.remove();
     calculateRoomOrderTotal();
@@ -876,7 +977,9 @@
 
   function onServiceSelectChange(index) {
     const row = document.getElementById(`item-row-${index}`);
+    if (!row) return;
     const select = row.querySelector('.item-service-select');
+    if (!select || select.selectedIndex < 0) return;
     const selectedOpt = select.options[select.selectedIndex];
     const nameInput = document.getElementById(`input-item-name-${index}`);
     const priceInput = document.getElementById(`input-item-price-${index}`);
@@ -1048,5 +1151,36 @@
       alert('Unable to load order dossier.');
     }
   }
+
+  // Initialize Select2 dropdowns on document ready
+  $(document).ready(function() {
+    // Auto-focus search input when any Select2 opens
+    $(document).on('select2:open', () => {
+      setTimeout(() => {
+        const searchField = document.querySelector('.select2-container--open .select2-search__field');
+        if (searchField) searchField.focus();
+      }, 50);
+    });
+
+    $('#filter-order-status').select2({
+      width: '200px',
+      placeholder: 'All Order Statuses'
+    }).on('select2:select change', function() {
+      filterOrdersTable();
+    });
+
+    $('#ro-room-select').select2({
+      dropdownParent: $('#modal-new-room-order'),
+      width: '100%',
+      placeholder: 'Search Room # or Guest Name...'
+    }).on('select2:select change', function() {
+      updateRoomOrderGuest();
+    });
+
+    $('#ro-payment-status').select2({
+      dropdownParent: $('#modal-new-room-order'),
+      width: '100%'
+    });
+  });
 </script>
 @endpush

@@ -437,6 +437,48 @@
     border-color: #6366f1;
     box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
   }
+
+  /* Select2 Styling Enhancements */
+  .select2-container {
+    max-width: 100%;
+  }
+  .select2-container--default .select2-selection--single {
+    height: 38px !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 8px !important;
+    background-color: #f8fafc !important;
+    display: flex !important;
+    align-items: center !important;
+    padding: 0 4px !important;
+  }
+  .select2-container--default .select2-selection--single:focus,
+  .select2-container--default.select2-container--focus .select2-selection--single,
+  .select2-container--default.select2-container--open .select2-selection--single {
+    border-color: #6366f1 !important;
+    background-color: #ffffff !important;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15) !important;
+  }
+  .select2-container--default .select2-selection--single .select2-selection__rendered {
+    color: #1e293b !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    line-height: 36px !important;
+    padding-left: 8px !important;
+  }
+  .select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 36px !important;
+    right: 8px !important;
+  }
+  .select2-dropdown {
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 10px !important;
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.15) !important;
+    z-index: 1000000 !important;
+  }
+  .select2-container--default .select2-results__option--highlighted[aria-selected] {
+    background-color: #6366f1 !important;
+    color: #ffffff !important;
+  }
 </style>
 @endpush
 
@@ -716,21 +758,25 @@
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
           <div class="admin-form-group">
             <label class="admin-form-label" for="form-category">Category <span style="color: #ef4444;">*</span></label>
-            <input type="text" id="form-category" list="category-datalist" class="admin-form-input" placeholder="e.g. Room Dining" required>
-            <datalist id="category-datalist">
-              <option value="Room Dining">
-              <option value="Laundry & Dry Clean">
-              <option value="Concierge & Transport">
-              <option value="Room Addon">
-              <option value="Spa & Wellness">
-              <option value="Banquet Addon">
-              <option value="Housekeeping Amenity">
-            </datalist>
+            <select id="form-category" class="admin-form-select" required style="width: 100%;">
+              <option value="Room Dining">Room Dining</option>
+              <option value="Laundry & Dry Clean">Laundry & Dry Clean</option>
+              <option value="Concierge & Transport">Concierge & Transport</option>
+              <option value="Room Addon">Room Addon</option>
+              <option value="Spa & Wellness">Spa & Wellness</option>
+              <option value="Banquet Addon">Banquet Addon</option>
+              <option value="Housekeeping Amenity">Housekeeping Amenity</option>
+              @foreach(($allCategories ?? []) as $cat)
+                @if(!in_array($cat, ['Room Dining', 'Laundry & Dry Clean', 'Concierge & Transport', 'Room Addon', 'Spa & Wellness', 'Banquet Addon', 'Housekeeping Amenity']))
+                  <option value="{{ $cat }}">{{ $cat }}</option>
+                @endif
+              @endforeach
+            </select>
           </div>
 
           <div class="admin-form-group">
             <label class="admin-form-label" for="form-unit">Pricing Unit / Serving <span style="color: #ef4444;">*</span></label>
-            <select id="form-unit" class="admin-form-select" required>
+            <select id="form-unit" class="admin-form-select" required style="width: 100%;">
               <option value="Per Order">Per Order</option>
               <option value="Per Item">Per Item</option>
               <option value="Per Piece">Per Piece</option>
@@ -756,7 +802,7 @@
 
           <div class="admin-form-group">
             <label class="admin-form-label" for="form-status">Status <span style="color: #ef4444;">*</span></label>
-            <select id="form-status" class="admin-form-select" required>
+            <select id="form-status" class="admin-form-select" required style="width: 100%;">
               <option value="Active">Active</option>
               <option value="Inactive">Inactive</option>
             </select>
@@ -994,10 +1040,22 @@
     document.getElementById('item-id').value = '';
     document.getElementById('form-name').value = '';
     document.getElementById('form-code').value = '';
-    document.getElementById('form-category').value = 'Room Dining';
+    if ($('#form-category').data('select2')) {
+      $('#form-category').val('Room Dining').trigger('change');
+    } else {
+      document.getElementById('form-category').value = 'Room Dining';
+    }
     document.getElementById('form-price').value = '0.00';
-    document.getElementById('form-unit').value = 'Per Order';
-    document.getElementById('form-status').value = 'Active';
+    if ($('#form-unit').data('select2')) {
+      $('#form-unit').val('Per Order').trigger('change');
+    } else {
+      document.getElementById('form-unit').value = 'Per Order';
+    }
+    if ($('#form-status').data('select2')) {
+      $('#form-status').val('Active').trigger('change');
+    } else {
+      document.getElementById('form-status').value = 'Active';
+    }
     document.getElementById('form-desc').value = '';
 
     openModal('crud-modal');
@@ -1011,10 +1069,29 @@
     document.getElementById('item-id').value = item.id;
     document.getElementById('form-name').value = item.name || '';
     document.getElementById('form-code').value = item.code || '';
-    document.getElementById('form-category').value = item.category || 'Room Dining';
+    
+    if ($('#form-category').find(`option[value="${item.category}"]`).length === 0 && item.category) {
+      $('#form-category').append(new Option(item.category, item.category, true, true));
+    }
+    if ($('#form-category').data('select2')) {
+      $('#form-category').val(item.category || 'Room Dining').trigger('change');
+    } else {
+      document.getElementById('form-category').value = item.category || 'Room Dining';
+    }
+
     document.getElementById('form-price').value = parseFloat(item.price || 0).toFixed(2);
-    document.getElementById('form-unit').value = item.unit || 'Per Order';
-    document.getElementById('form-status').value = item.status || 'Active';
+    
+    if ($('#form-unit').data('select2')) {
+      $('#form-unit').val(item.unit || 'Per Order').trigger('change');
+    } else {
+      document.getElementById('form-unit').value = item.unit || 'Per Order';
+    }
+    
+    if ($('#form-status').data('select2')) {
+      $('#form-status').val(item.status || 'Active').trigger('change');
+    } else {
+      document.getElementById('form-status').value = item.status || 'Active';
+    }
     document.getElementById('form-desc').value = item.description || '';
 
     openModal('crud-modal');
@@ -1042,10 +1119,10 @@
     const id = document.getElementById('item-id').value;
     const name = document.getElementById('form-name').value.trim();
     const code = document.getElementById('form-code').value.trim();
-    const category = document.getElementById('form-category').value.trim();
+    const category = $('#form-category').val() || document.getElementById('form-category').value.trim();
     const price = parseFloat(document.getElementById('form-price').value || 0);
-    const unit = document.getElementById('form-unit').value;
-    const status = document.getElementById('form-status').value;
+    const unit = $('#form-unit').val() || document.getElementById('form-unit').value;
+    const status = $('#form-status').val() || document.getElementById('form-status').value;
     const description = document.getElementById('form-desc').value.trim();
 
     const saveBtn = document.getElementById('btn-save');
@@ -1291,9 +1368,62 @@
     document.body.removeChild(link);
   }
 
-  // Initial table render
-  document.addEventListener('DOMContentLoaded', () => {
+  // Initial table render & Select2 Initialization
+  $(document).ready(function() {
     renderTable();
+
+    // Auto-focus search input when any Select2 opens
+    $(document).on('select2:open', () => {
+      setTimeout(() => {
+        const searchField = document.querySelector('.select2-container--open .select2-search__field');
+        if (searchField) searchField.focus();
+      }, 50);
+    });
+
+    // Toolbar Category Filter (Searchable Select2)
+    $('#category-filter').select2({
+      width: '180px',
+      placeholder: 'All Categories'
+    }).on('select2:select change', function() {
+      handleCategoryFilter(this.value);
+    });
+
+    // Toolbar Status Filter (Searchable Select2)
+    $('#status-filter').select2({
+      width: '140px',
+      placeholder: 'All Statuses'
+    }).on('select2:select change', function() {
+      handleStatusFilter(this.value);
+    });
+
+    // Pagination per page (Select2)
+    $('#rows-per-page').select2({
+      width: '80px',
+      minimumResultsForSearch: Infinity
+    }).on('select2:select change', function() {
+      handlePageSizeChange(this.value);
+    });
+
+    // Modal Category (Searchable Select2 with tag creation)
+    $('#form-category').select2({
+      dropdownParent: $('#crud-modal'),
+      width: '100%',
+      tags: true,
+      placeholder: 'Search or type category...'
+    });
+
+    // Modal Pricing Unit (Searchable Select2)
+    $('#form-unit').select2({
+      dropdownParent: $('#crud-modal'),
+      width: '100%',
+      placeholder: 'Select pricing unit'
+    });
+
+    // Modal Status (Searchable Select2)
+    $('#form-status').select2({
+      dropdownParent: $('#crud-modal'),
+      width: '100%'
+    });
   });
 </script>
 @endpush

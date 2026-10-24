@@ -99,6 +99,30 @@
     vertical-align: middle;
   }
 
+  .badge-settle-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    font-weight: 800;
+    padding: 2px 8px;
+    border-radius: 9999px;
+    white-space: nowrap;
+    line-height: 1.2;
+    vertical-align: middle;
+    letter-spacing: 0.2px;
+  }
+  .badge-settle-pill.settled {
+    background: #ecfdf5;
+    color: #047857;
+    border: 1px solid #a7f3d0;
+  }
+  .badge-settle-pill.unsettled {
+    background: #fff1f2;
+    color: #be123c;
+    border: 1px solid #fecdd3;
+  }
+
   .room-tag {
     display: inline-flex;
     align-items: center;
@@ -819,15 +843,26 @@
                    title="Filter by Check-in Date To">
           </div>
 
-          <!-- Status Filter Dropdown (Settled / Unsettled) -->
+          <!-- Status Filter Dropdown (Guest Status & Settlement Status) -->
           <div style="display: inline-flex; align-items: center; gap: 6px;">
             <label for="folio-status-filter" style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">
               <i class="fa-solid fa-filter" style="color: #6366f1;"></i> Status:
             </label>
             <select name="status" id="folio-status-filter" class="pms-filter-select" onchange="this.form.submit()">
               <option value="all" {{ request('status') === 'all' || !request()->filled('status') ? 'selected' : '' }}>All Statuses</option>
-              <option value="Settled" {{ in_array(strtolower(request('status') ?? ''), ['settled', 'sattled']) ? 'selected' : '' }}>Settled (Payments Clear)</option>
-              <option value="Unsettled" {{ in_array(strtolower(request('status') ?? ''), ['unsettled', 'unsattled']) ? 'selected' : '' }}>Unsettled (Payment Due)</option>
+              <optgroup label="Guest / Reservation Status">
+                <option value="Checked In" {{ request('status') === 'Checked In' ? 'selected' : '' }}>Checked In</option>
+                <option value="Checked Out" {{ request('status') === 'Checked Out' ? 'selected' : '' }}>Checked Out</option>
+                <option value="Stay Over" {{ request('status') === 'Stay Over' ? 'selected' : '' }}>Stay Over</option>
+                <option value="Confirmed" {{ request('status') === 'Confirmed' ? 'selected' : '' }}>Confirmed</option>
+                <option value="Arrived" {{ request('status') === 'Arrived' ? 'selected' : '' }}>Arrived</option>
+                <option value="Settlement Done" {{ request('status') === 'Settlement Done' ? 'selected' : '' }}>Settlement Done</option>
+                <option value="Cancelled" {{ request('status') === 'Cancelled' ? 'selected' : '' }}>Cancelled</option>
+              </optgroup>
+              <optgroup label="Settlement Payment Status">
+                <option value="Settled" {{ in_array(strtolower(request('status') ?? ''), ['settled', 'sattled']) ? 'selected' : '' }}>Settled (Payments Clear)</option>
+                <option value="Unsettled" {{ in_array(strtolower(request('status') ?? ''), ['unsettled', 'unsattled']) ? 'selected' : '' }}>Unsettled (Payment Due)</option>
+              </optgroup>
             </select>
           </div>
 
@@ -978,14 +1013,25 @@
                   </div>
                 </td>
 
-                <!-- 3. Primary Guest Details with Dynamic +N persons -->
+                <!-- 3. Primary Guest Details with Dynamic +N persons and Settled / Unsettled Badge -->
                 <td style="white-space: nowrap;">
-                  <div style="font-weight: 800; color: #0f172a; font-size: 13px; display: inline-flex; align-items: center;">
+                  <div style="font-weight: 800; color: #0f172a; font-size: 13px; display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap;">
                     <span>{{ $primaryGuestName }}</span>
                     @if($extraCount > 0)
                       <span class="badge-extra-guests" title="{{ $extraCount }} additional person(s) registered under this booking">
                         <i class="fa-solid fa-user-plus" style="font-size: 9px;"></i>
                         +{{ $extraCount }} {{ $extraCount === 1 ? 'person' : 'persons' }}
+                      </span>
+                    @endif
+                    @if($isSettled)
+                      <span class="badge-settle-pill settled" title="Settled: All payments cleared (Balance ₹0.00)">
+                        <i class="fa-solid fa-circle-check" style="font-size: 8px;"></i>
+                        <span>Settled</span>
+                      </span>
+                    @else
+                      <span class="badge-settle-pill unsettled" title="Unsettled: Pending balance ₹{{ number_format($balanceVal, 2) }}">
+                        <i class="fa-solid fa-clock" style="font-size: 8px;"></i>
+                        <span>Unsettled</span>
                       </span>
                     @endif
                   </div>
@@ -1068,19 +1114,39 @@
                   @endif
                 </td>
 
-                <!-- 9. Status: Only Settled (payments all clear) & Unsettled (not settled) -->
+                <!-- 9. Actual Guest / Reservation Status -->
                 <td style="text-align: center; white-space: nowrap;">
-                  @if($isSettled)
-                    <span class="status-badge settled" title="Settled: All payments cleared (Balance ₹0.00)">
-                      <i class="fa-solid fa-circle-check" style="font-size: 8px;"></i>
-                      <span>Settled</span>
-                    </span>
-                  @else
-                    <span class="status-badge unsettled" title="Unsettled: Pending balance ₹{{ number_format($balanceVal, 2) }}">
-                      <i class="fa-solid fa-clock" style="font-size: 8px;"></i>
-                      <span>Unsettled</span>
-                    </span>
-                  @endif
+                  @php
+                    $guestStatusNormalized = strtolower($item->status ?? 'confirmed');
+                    $guestStatusClass = match($guestStatusNormalized) {
+                      'settlement done', 'settled' => 'settled',
+                      'confirmed' => 'confirmed',
+                      'arrived' => 'arrived',
+                      'checked in', 'checked-in', 'checkedin' => 'checkedin',
+                      'stay over', 'stayover' => 'stayover',
+                      'checked out', 'checked-out', 'checkedout' => 'checkedout',
+                      'cancelled' => 'cancelled',
+                      default => 'confirmed'
+                    };
+                  @endphp
+                  <span class="status-badge {{ $guestStatusClass }}">
+                    @if(in_array($guestStatusNormalized, ['checked out', 'checked-out', 'checkedout']))
+                      <i class="fa-solid fa-right-from-bracket" style="font-size: 8px;"></i>
+                    @elseif(in_array($guestStatusNormalized, ['checked in', 'checked-in', 'checkedin']))
+                      <i class="fa-solid fa-key" style="font-size: 8px;"></i>
+                    @elseif(in_array($guestStatusNormalized, ['settlement done', 'settled']))
+                      <i class="fa-solid fa-lock" style="font-size: 8px;"></i>
+                    @elseif(in_array($guestStatusNormalized, ['arrived']))
+                      <i class="fa-solid fa-plane-arrival" style="font-size: 8px;"></i>
+                    @elseif(in_array($guestStatusNormalized, ['stay over', 'stayover']))
+                      <i class="fa-solid fa-bed" style="font-size: 8px;"></i>
+                    @elseif(in_array($guestStatusNormalized, ['cancelled']))
+                      <i class="fa-solid fa-ban" style="font-size: 8px;"></i>
+                    @else
+                      <i class="fa-solid fa-circle" style="font-size: 6px;"></i>
+                    @endif
+                    <span>{{ $item->status ?? 'Confirmed' }}</span>
+                  </span>
                 </td>
 
                 <!-- 10. Action: View Details Modal -->

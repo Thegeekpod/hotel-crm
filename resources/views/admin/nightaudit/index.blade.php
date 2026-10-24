@@ -436,6 +436,29 @@
     box-shadow: 0 3px 8px rgba(51, 65, 85, 0.25);
   }
 
+  .btn-action-reaudit {
+    background: rgba(245, 158, 11, 0.1);
+    color: #d97706;
+    border: 1px solid rgba(245, 158, 11, 0.25);
+    border-radius: 6px;
+    width: 32px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.2s;
+    text-decoration: none;
+  }
+  .btn-action-reaudit:hover {
+    background: #d97706;
+    color: #ffffff;
+    border-color: #d97706;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(217, 119, 6, 0.25);
+  }
+
   /* Table Customization */
   .pms-table-box {
     border-radius: var(--radius-md, 8px);
@@ -519,36 +542,42 @@
   }
 
   /* Dossier Tabs & Tables */
+  /* Dossier Tabs & Tables */
   .dossier-nav-tabs {
     display: flex;
-    gap: 4px;
+    gap: 6px;
     border-bottom: 2px solid #e2e8f0;
-    padding: 0 16px;
+    padding: 0 20px;
     background: #ffffff;
     overflow-x: auto;
+    flex-shrink: 0 !important;
+    min-height: 48px;
+    align-items: stretch;
   }
   .dossier-tab-btn {
-    padding: 10px 14px;
-    font-size: 12px;
+    padding: 12px 18px;
+    font-size: 13px;
     font-weight: 700;
     color: #64748b;
     border: none;
     background: transparent;
     border-bottom: 3px solid transparent;
     cursor: pointer;
-    transition: all 0.15s;
+    transition: all 0.15s ease;
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
     white-space: nowrap;
   }
   .dossier-tab-btn:hover {
     color: #4f46e5;
+    background: #f8fafc;
   }
   .dossier-tab-btn.active {
     color: #4f46e5;
     font-weight: 800;
     border-bottom-color: #4f46e5;
+    background: #ffffff;
   }
   .dossier-tab-pane {
     display: none;
@@ -558,33 +587,105 @@
   }
   .dossier-table {
     width: 100%;
+    min-width: 1100px;
     border-collapse: collapse;
-    font-size: 11.5px;
+    font-size: 12px;
   }
   .dossier-table th {
     background: #f8fafc;
     color: #475569;
     font-weight: 800;
     text-transform: uppercase;
-    font-size: 10.5px;
-    letter-spacing: 0.3px;
-    padding: 9px 12px;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    padding: 12px 14px;
     border-bottom: 1px solid #e2e8f0;
     text-align: left;
-    white-space: nowrap;
+    white-space: nowrap !important;
   }
   .dossier-table td {
-    padding: 8px 12px;
+    padding: 11px 14px;
     border-bottom: 1px solid #f1f5f9;
     color: #1e293b;
     vertical-align: middle;
+    white-space: nowrap !important;
+  }
+  .dossier-table tbody tr {
+    transition: background-color 0.15s ease;
   }
   .dossier-table tbody tr:hover {
     background: #f8fafc;
   }
+  .dossier-table tfoot tr {
+    background: #f8fafc;
+  }
+  .dossier-table tfoot td {
+    border-top: 2px solid #e2e8f0;
+    white-space: nowrap !important;
+  }
 
-  /* Print Styles */
+  /* Status Pills matching Front Office design */
+  .status-pill {
+    padding: 3px 9px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap !important;
+    line-height: 1.2;
+  }
+  .status-pill.settled { 
+    background: #dcfce7; 
+    color: #15803d; 
+    border: 1px solid #86efac; 
+  }
+  .status-pill.unsettled { 
+    background: #fee2e2; 
+    color: #b91c1c; 
+    border: 1px solid #fca5a5; 
+  }
+
+  .stay-badge {
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 10.5px;
+    font-weight: 700;
+    background: #f1f5f9;
+    color: #334155;
+    border: 1px solid #cbd5e1;
+    display: inline-block;
+    white-space: nowrap !important;
+    line-height: 1.2;
+  }
+
+  .room-pill {
+    font-weight: 800;
+    color: #4338ca;
+    background: #e0e7ff;
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-family: var(--font-mono, monospace);
+    font-size: 11px;
+    display: inline-block;
+    white-space: nowrap !important;
+  }
+
+  /* Proper Print Layout Stylesheet */
   @media print {
+    @page {
+      size: A4 portrait;
+      margin: 12mm 10mm;
+    }
+    html, body {
+      background: #ffffff !important;
+      color: #0f172a !important;
+      font-size: 11px !important;
+      line-height: 1.4 !important;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
     body * { visibility: hidden !important; }
     #printable-audit-container, #printable-audit-container * { visibility: visible !important; }
     #printable-audit-container {
@@ -594,8 +695,27 @@
       width: 100% !important;
       background: #ffffff !important;
       display: block !important;
-      padding: 24px !important;
-      color: #000000 !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      color: #0f172a !important;
+    }
+    .print-avoid-break {
+      page-break-inside: avoid !important;
+      break-inside: avoid !important;
+    }
+    .print-table {
+      width: 100% !important;
+      border-collapse: collapse !important;
+    }
+    .print-table th, .print-table td {
+      border: 1px solid #cbd5e1 !important;
+      padding: 6px 8px !important;
+    }
+    .print-table th {
+      background: #f1f5f9 !important;
+      font-weight: 800 !important;
+      text-transform: uppercase !important;
+      font-size: 10px !important;
     }
   }
 </style>
@@ -666,19 +786,19 @@
           </div>
         </div>
 
-        <!-- Card 2: Audited Revenue -->
+        <!-- Card 2: Audited Total Bill -->
         <div class="room-kpi-card">
           <div class="room-kpi-bar" style="background: linear-gradient(90deg, #6366f1, #3b82f6);"></div>
           <div style="display: flex; justify-content: space-between; align-items: flex-start;">
             <div>
-              <div class="kpi-label">Audited Revenue</div>
+              <div class="kpi-label">Audited Total Bill</div>
               <div class="kpi-value" style="color: #4338ca;">₹ {{ number_format($totalAuditedRevenue, 2) }}</div>
               <div class="kpi-subtext">
-                <i class="fa-solid fa-chart-line" style="color: #6366f1; font-size: 10px;"></i> Total Hotel Sales Recorded
+                <i class="fa-solid fa-receipt" style="color: #6366f1; font-size: 10px;"></i> Total Hotel Billing Recorded
               </div>
             </div>
             <div class="kpi-icon-bubble" style="background: rgba(99, 102, 241, 0.1); color: #6366f1;">
-              <i class="fa-solid fa-coins"></i>
+              <i class="fa-solid fa-receipt"></i>
             </div>
           </div>
         </div>
@@ -772,11 +892,11 @@
               <th>Completion Time</th>
               <th>Auditor Name</th>
               <th style="text-align: center;">Occupancy</th>
+              <th style="text-align: right;">Total Bill (₹)</th>
               <th style="text-align: right;">Collections (₹)</th>
-              <th style="text-align: right;">Room Revenue (₹)</th>
-              <th style="text-align: right;">Total Revenue (₹)</th>
+              <th style="text-align: right;">Outstanding (₹)</th>
               <th style="text-align: center;">Status</th>
-              <th style="text-align: center; width: 70px;">Actions</th>
+              <th style="text-align: center; width: 100px;">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -785,6 +905,23 @@
                 $sl = ($audits->currentPage() - 1) * $audits->perPage() + $idx + 1;
                 $occRate = (float)$a->occupancy_rate;
                 $occClass = $occRate >= 70 ? 'occupancy-high' : ($occRate >= 30 ? 'occupancy-mid' : 'occupancy-low');
+
+                // Accurate calculations from snapshot
+                $snap = $a->audit_snapshot;
+                $rowBill = 0;
+                $rowPaid = (float)$a->total_payments;
+                $rowDue = 0;
+                if (!empty($snap['guests_list']) && is_array($snap['guests_list'])) {
+                  foreach ($snap['guests_list'] as $g) {
+                    $rowBill += (float)($g['total_bill'] ?? 0);
+                    $rowDue += (float)($g['remaining_amount'] ?? 0);
+                  }
+                }
+                if ($rowBill <= 0) {
+                  $rowBill = (float)$a->total_revenue;
+                  $rowDue = max(0, $rowBill - $rowPaid);
+                }
+                $isTodayAudit = $a->audit_date ? \Carbon\Carbon::parse($a->audit_date)->isToday() : false;
               @endphp
               <tr>
                 <!-- SL -->
@@ -830,19 +967,19 @@
                   </span>
                 </td>
 
-                <!-- Collections -->
-                <td style="text-align: right; font-weight: 800; font-family: var(--font-mono, monospace); font-size: 12px; color: #059669;" title="Cash: ₹{{ number_format($a->cash_collection, 2) }} • UPI: ₹{{ number_format($a->upi_collection, 2) }} • Card: ₹{{ number_format($a->card_collection, 2) }} • Bank: ₹{{ number_format($a->bank_collection, 2) }}">
-                  ₹ {{ number_format($a->total_payments, 2) }}
-                </td>
-
-                <!-- Room Revenue -->
+                <!-- Total Bill (₹) -->
                 <td style="text-align: right; font-weight: 800; font-family: var(--font-mono, monospace); font-size: 12px; color: #4338ca;">
-                  ₹ {{ number_format($a->room_revenue, 2) }}
+                  ₹ {{ number_format($rowBill, 2) }}
                 </td>
 
-                <!-- Total Revenue -->
-                <td style="text-align: right; font-weight: 900; font-family: var(--font-mono, monospace); font-size: 12.5px; color: #7c3aed;">
-                  ₹ {{ number_format($a->total_revenue, 2) }}
+                <!-- Collections (₹) -->
+                <td style="text-align: right; font-weight: 800; font-family: var(--font-mono, monospace); font-size: 12px; color: #059669;" title="Cash: ₹{{ number_format($a->cash_collection, 2) }} • UPI: ₹{{ number_format($a->upi_collection, 2) }} • Card: ₹{{ number_format($a->card_collection, 2) }} • Bank: ₹{{ number_format($a->bank_collection, 2) }}">
+                  ₹ {{ number_format($rowPaid, 2) }}
+                </td>
+
+                <!-- Outstanding (₹) -->
+                <td style="text-align: right; font-weight: 800; font-family: var(--font-mono, monospace); font-size: 12px; color: {{ $rowDue > 0 ? '#e11d48' : '#059669' }};">
+                  ₹ {{ number_format($rowDue, 2) }}
                 </td>
 
                 <!-- Status -->
@@ -852,11 +989,21 @@
                   </span>
                 </td>
 
-                <!-- Actions (View Only) -->
+                <!-- Actions -->
                 <td style="text-align: center;">
-                  <button type="button" class="btn-action-view" onclick="viewAuditDossier({{ $a->id }})" title="View Details">
-                    <i class="fa-solid fa-eye"></i>
-                  </button>
+                  <div style="display: inline-flex; align-items: center; gap: 5px; justify-content: center;">
+                    <button type="button" class="btn-action-view" onclick="viewAuditDossier({{ $a->id }})" title="View Details">
+                      <i class="fa-solid fa-eye"></i>
+                    </button>
+                    <button type="button" class="btn-action-print" onclick="printAuditById({{ $a->id }})" title="Print Executive Dossier">
+                      <i class="fa-solid fa-print"></i>
+                    </button>
+                    @if($isTodayAudit)
+                      <a href="{{ route('frontoffice.nightaudit') }}" class="btn-action-reaudit" title="Re-Run Today's Audit">
+                        <i class="fa-solid fa-rotate"></i>
+                      </a>
+                    @endif
+                  </div>
                 </td>
               </tr>
             @empty
@@ -900,7 +1047,7 @@
 
 <!-- AUDIT DOSSIER MODAL -->
 <div class="modal-backdrop" id="audit-dossier-modal" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(5px); z-index: 99999; align-items: center; justify-content: center;">
-  <div style="background: #ffffff; width: 1050px; max-width: 96vw; max-height: 92vh; border-radius: 16px; overflow: hidden; box-shadow: 0 25px 60px rgba(0, 0, 0, 0.25); border: 1px solid #e2e8f0; display: flex; flex-direction: column;">
+  <div style="background: #ffffff; width: 1320px; max-width: 96vw; max-height: 92vh; border-radius: 16px; overflow: hidden; box-shadow: 0 25px 60px rgba(0, 0, 0, 0.25); border: 1px solid #e2e8f0; display: flex; flex-direction: column;">
     
     <!-- Modal Top Header -->
     <div style="background: #4f46e5; color: #ffffff; padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;">
@@ -986,6 +1133,32 @@
         const guestsList = snapshot.guests_list || [];
         const unsettled = snapshot.unsettled_summary || {};
 
+        let totalBill = 0;
+        let totalPaid = 0;
+        let totalDue = 0;
+        let settledCount = 0;
+        let unsettledCount = 0;
+
+        if (guestsList && guestsList.length > 0) {
+          guestsList.forEach(g => {
+            const b = Number(g.total_bill || 0);
+            const p = Number(g.paid_amount || 0);
+            const d = Number(g.remaining_amount || 0);
+            totalBill += b;
+            totalPaid += p;
+            totalDue += d;
+            if (d <= 0.01) {
+              settledCount++;
+            } else {
+              unsettledCount++;
+            }
+          });
+        } else {
+          totalBill = Number(a.total_revenue || a.room_revenue || 0);
+          totalPaid = Number(a.total_payments || 0);
+          totalDue = Math.max(0, totalBill - totalPaid);
+        }
+
         content.innerHTML = `
           <!-- Fixed Modal Navigation Tabs -->
           <div class="dossier-nav-tabs">
@@ -993,7 +1166,7 @@
               <i class="fa-solid fa-chart-pie"></i> Summary &amp; Reconciliations
             </button>
             <button type="button" class="dossier-tab-btn" onclick="switchDossierTab('md-tab-payments', this)">
-              <i class="fa-solid fa-receipt"></i> Payments (${payments.length})
+              <i class="fa-solid fa-receipt"></i> Today Payments (${guestsList.length})
             </button>
             <button type="button" class="dossier-tab-btn" onclick="switchDossierTab('md-tab-rooms', this)">
               <i class="fa-solid fa-bed"></i> Occupied Rooms (${occupiedRooms.length})
@@ -1003,9 +1176,6 @@
             </button>
             <button type="button" class="dossier-tab-btn" onclick="switchDossierTab('md-tab-op', this)">
               <i class="fa-solid fa-sliders"></i> Operational (${opHistories.length})
-            </button>
-            <button type="button" class="dossier-tab-btn" onclick="switchDossierTab('md-tab-guests', this)">
-              <i class="fa-solid fa-users"></i> Guests (${guestsList.length})
             </button>
           </div>
 
@@ -1132,40 +1302,48 @@
 
             </div>
 
-            <!-- TAB 2: PAYMENTS LIST -->
+            <!-- TAB 2: TODAY PAYMENTS (Guest Billings & Settlements) -->
             <div id="md-tab-payments" class="dossier-tab-pane">
               <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; overflow-x: auto;">
                 <table class="dossier-table">
                   <thead>
                     <tr>
-                      <th style="width: 40px; text-align: center;">SL</th>
-                      <th>Time</th>
-                      <th>Guest Name</th>
-                      <th>Room</th>
-                      <th>Folio #</th>
-                      <th style="text-align: right;">Total Bill</th>
-                      <th style="text-align: right;">Paid</th>
-                      <th style="text-align: right;">Remaining</th>
-                      <th style="text-align: center;">Status</th>
-                      <th>Mode</th>
-                      <th style="text-align: right;">Amount</th>
+                      <th style="width: 45px; text-align: center;">SL</th>
+                      <th>ROOM</th>
+                      <th>GUEST NAME</th>
+                      <th>PHONE</th>
+                      <th>SETTLE #</th>
+                      <th>CHECK-IN</th>
+                      <th>CHECK-OUT</th>
+                      <th style="text-align: center;">STAY STATUS</th>
+                      <th style="text-align: right;">TOTAL BILL</th>
+                      <th style="text-align: right;">PAID</th>
+                      <th style="text-align: right;">REMAINING</th>
+                      <th style="text-align: center;">SETTLEMENT</th>
                     </tr>
                   </thead>
                   <tbody>
-                    ${payments.length > 0 ? payments.map((p, idx) => `
+                    ${guestsList.length > 0 ? guestsList.map((g, idx) => `
                       <tr>
                         <td style="text-align: center; font-weight: 800; color: #64748b; font-family: var(--font-mono, monospace);">${idx + 1}</td>
-                        <td style="font-family: var(--font-mono, monospace); font-size: 11px; color: #475569;">${escapeHtml(p.time || '-')}</td>
-                        <td style="font-weight: 700; color: #0f172a;">${escapeHtml(p.guest_name || 'Guest')}</td>
-                        <td><span style="font-weight: 800; color: #4338ca; background: #e0e7ff; padding: 2px 7px; border-radius: 6px; font-family: var(--font-mono, monospace); font-size: 11px;">${escapeHtml(p.room_number || '-')}</span></td>
-                        <td style="font-family: var(--font-mono, monospace); font-size: 11px; color: #475569;">${escapeHtml(p.folio_number || '-')}</td>
-                        <td style="text-align: right; font-family: var(--font-mono, monospace); font-weight: 600;">₹ ${fmt(p.total_bill)}</td>
-                        <td style="text-align: right; font-family: var(--font-mono, monospace); color: #059669; font-weight: 600;">₹ ${fmt(p.paid_amount)}</td>
-                        <td style="text-align: right; font-family: var(--font-mono, monospace); color: ${p.remaining_amount > 0 ? '#b91c1c' : '#059669'}; font-weight: 700;">₹ ${fmt(p.remaining_amount)}</td>
+                        <td><span style="font-weight: 800; color: #4338ca; background: #e0e7ff; padding: 2px 7px; border-radius: 6px; font-family: var(--font-mono, monospace); font-size: 11px;">${escapeHtml(g.room_number || '-')}</span></td>
+                        <td style="font-weight: 700; color: #0f172a;">${escapeHtml(g.guest_name || 'Guest')}</td>
+                        <td style="font-family: var(--font-mono, monospace); font-size: 11px; color: #475569;">${escapeHtml(g.mobile_no || '-')}</td>
+                        <td style="font-family: var(--font-mono, monospace); font-size: 11px; font-weight: 700; color: #4338ca;">${escapeHtml(g.settle_number || g.folio_number || '-')}</td>
+                        <td style="font-size: 11px; color: #475569;">${escapeHtml(g.checkin_date || '-')}</td>
+                        <td style="font-size: 11px; color: #475569;">${escapeHtml(g.checkout_date || '-')}</td>
                         <td style="text-align: center;">
-                          ${p.is_settled ? `
+                          <span style="font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 12px; background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1;">
+                            ${escapeHtml(g.status || 'Active')}
+                          </span>
+                        </td>
+                        <td style="text-align: right; font-family: var(--font-mono, monospace); font-weight: 700; color: #1e293b;">₹ ${fmt(g.total_bill)}</td>
+                        <td style="text-align: right; font-family: var(--font-mono, monospace); color: #059669; font-weight: 700;">₹ ${fmt(g.paid_amount)}</td>
+                        <td style="text-align: right; font-family: var(--font-mono, monospace); color: ${Number(g.remaining_amount || 0) > 0.01 ? '#b91c1c' : '#059669'}; font-weight: 700;">₹ ${fmt(g.remaining_amount)}</td>
+                        <td style="text-align: center;">
+                          ${g.is_settled ? `
                             <span style="font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 6px; background: #dcfce7; color: #15803d; border: 1px solid #86efac;">
-                              <i class="fa-solid fa-check"></i> Settled
+                              <i class="fa-solid fa-circle-check"></i> Settled
                             </span>
                           ` : `
                             <span style="font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 6px; background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5;">
@@ -1173,20 +1351,31 @@
                             </span>
                           `}
                         </td>
-                        <td><span class="mode-pill ${String(p.mode).toLowerCase()}">${escapeHtml(p.mode || 'Cash')}</span></td>
-                        <td style="text-align: right; font-weight: 800; font-family: var(--font-mono, monospace); color: #059669; font-size: 12.5px;">₹ ${fmt(p.amount)}</td>
                       </tr>
                     `).join('') : `
                       <tr>
-                        <td colspan="11" style="text-align: center; padding: 32px; color: #94a3b8;">No payment records recorded for this audit date.</td>
+                        <td colspan="12" style="text-align: center; padding: 32px; color: #94a3b8;">No guest payment records recorded for this audit date.</td>
                       </tr>
                     `}
                   </tbody>
-                  ${payments.length > 0 ? `
+                  ${guestsList.length > 0 ? `
                     <tfoot>
                       <tr style="background: #f8fafc; font-weight: 800;">
-                        <td colspan="10" style="text-align: right; text-transform: uppercase; font-size: 11px; color: #64748b; padding: 10px 12px;">Total Collections:</td>
-                        <td style="text-align: right; font-size: 13px; font-family: var(--font-mono, monospace); color: #059669; padding: 10px 12px;">₹ ${fmt(a.total_payments)}</td>
+                        <td colspan="8" style="text-align: right; font-size: 11px; color: #64748b; text-transform: uppercase; padding: 10px 12px;">
+                          TOTAL BILL / COLLECTIONS / OUTSTANDING:
+                        </td>
+                        <td style="text-align: right; font-size: 12px; font-family: var(--font-mono, monospace); color: #1e293b; padding: 10px 12px;">
+                          ₹ ${fmt(totalBill)}
+                        </td>
+                        <td style="text-align: right; font-size: 12px; font-family: var(--font-mono, monospace); color: #059669; padding: 10px 12px;">
+                          ₹ ${fmt(totalPaid)}
+                        </td>
+                        <td style="text-align: right; font-size: 12px; font-family: var(--font-mono, monospace); color: ${totalDue > 0.01 ? '#b91c1c' : '#64748b'}; padding: 10px 12px;">
+                          ₹ ${fmt(totalDue)}
+                        </td>
+                        <td style="text-align: center; font-size: 11px; color: ${unsettledCount > 0 ? '#b91c1c' : '#15803d'}; padding: 10px 12px;">
+                          ${unsettledCount} Unsettled
+                        </td>
                       </tr>
                     </tfoot>
                   ` : ''}
@@ -1204,7 +1393,7 @@
                       <th>Room</th>
                       <th>Category</th>
                       <th>Floor</th>
-                      <th>Guest &amp; Folio</th>
+                      <th>Guest &amp; Settle #</th>
                       <th>Check-in</th>
                       <th>Check-out</th>
                       <th style="text-align: center;">Operational Status</th>
@@ -1221,7 +1410,7 @@
                         <td style="font-size: 11px; color: #64748b;">${escapeHtml(rm.floor || 'Floor 1')}</td>
                         <td>
                           <div style="font-weight: 700; color: #0f172a;">${escapeHtml(rm.guest_name || 'Guest')}</div>
-                          <div style="font-size: 10px; color: #64748b; margin-top: 2px;">Folio #${escapeHtml(rm.folio_number || '-')}</div>
+                          <div style="font-size: 10px; color: #4338ca; font-weight: 700; font-family: var(--font-mono, monospace); margin-top: 2px;">${escapeHtml(rm.settle_number || rm.folio_number || '-')}</div>
                         </td>
                         <td style="font-size: 11px; color: #475569;">${escapeHtml(rm.checkin_date || '-')}</td>
                         <td style="font-size: 11px; color: #475569;">${escapeHtml(rm.checkout_date || '-')}</td>
@@ -1345,62 +1534,7 @@
               </div>
             </div>
 
-            <!-- TAB 6: TODAY'S GUESTS -->
-            <div id="md-tab-guests" class="dossier-tab-pane">
-              <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; overflow-x: auto;">
-                <table class="dossier-table">
-                  <thead>
-                    <tr>
-                      <th style="width: 40px; text-align: center;">SL</th>
-                      <th>Folio #</th>
-                      <th>Guest Details</th>
-                      <th>Room</th>
-                      <th>Category</th>
-                      <th>Check-in</th>
-                      <th>Check-out</th>
-                      <th style="text-align: right;">Total Bill</th>
-                      <th style="text-align: right;">Paid</th>
-                      <th style="text-align: right;">Remaining</th>
-                      <th style="text-align: center;">Folio Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    ${guestsList.length > 0 ? guestsList.map((g, idx) => `
-                      <tr>
-                        <td style="text-align: center; font-weight: 800; color: #64748b; font-family: var(--font-mono, monospace);">${idx + 1}</td>
-                        <td style="font-family: var(--font-mono, monospace); font-size: 11px; font-weight: 700; color: #4338ca;">${escapeHtml(g.folio_number || '-')}</td>
-                        <td>
-                          <div style="font-weight: 700; color: #0f172a;">${escapeHtml(g.guest_name || 'Guest')}</div>
-                          <div style="font-size: 10px; color: #64748b; margin-top: 1px;"><i class="fa-solid fa-phone" style="font-size: 9px;"></i> ${escapeHtml(g.mobile_no || '-')}</div>
-                        </td>
-                        <td><span style="font-weight: 800; color: #4338ca; background: #e0e7ff; padding: 2px 7px; border-radius: 6px; font-family: var(--font-mono, monospace); font-size: 11px;">${escapeHtml(g.room_number || '-')}</span></td>
-                        <td style="font-weight: 600; color: #1e293b;">${escapeHtml(g.category || 'Standard')}</td>
-                        <td style="font-size: 11px; color: #475569;">${escapeHtml(g.checkin_date || '-')}</td>
-                        <td style="font-size: 11px; color: #475569;">${escapeHtml(g.checkout_date || '-')}</td>
-                        <td style="text-align: right; font-family: var(--font-mono, monospace); font-weight: 600;">₹ ${fmt(g.total_bill)}</td>
-                        <td style="text-align: right; font-family: var(--font-mono, monospace); color: #059669; font-weight: 600;">₹ ${fmt(g.paid_amount)}</td>
-                        <td style="text-align: right; font-family: var(--font-mono, monospace); color: ${g.remaining_amount > 0 ? '#b91c1c' : '#059669'}; font-weight: 700;">₹ ${fmt(g.remaining_amount)}</td>
-                        <td style="text-align: center;">
-                          ${g.is_settled ? `
-                            <span style="font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 6px; background: #dcfce7; color: #15803d; border: 1px solid #86efac;">
-                              <i class="fa-solid fa-check"></i> Settled
-                            </span>
-                          ` : `
-                            <span style="font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 6px; background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5;">
-                              <i class="fa-solid fa-clock"></i> Unsettled
-                            </span>
-                          `}
-                        </td>
-                      </tr>
-                    `).join('') : `
-                      <tr>
-                        <td colspan="11" style="text-align: center; padding: 32px; color: #94a3b8;">No guest folios active on this audit date.</td>
-                      </tr>
-                    `}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+
 
           </div>
         `;
@@ -1442,65 +1576,399 @@
   });
 
   function printAuditById(auditId) {
-    fetch(`{{ url('/admin/nightaudit') }}/${auditId}`)
+    var toast = document.createElement('div');
+    toast.id = 'print-loading-toast';
+    toast.innerHTML = '<div style="position:fixed;bottom:24px;right:24px;background:#0f172a;color:#ffffff;padding:12px 20px;border-radius:8px;box-shadow:0 10px 25px rgba(0,0,0,0.3);z-index:99999;display:flex;align-items:center;gap:10px;font-size:12px;font-weight:700;"><i class="fa-solid fa-spinner fa-spin" style="color:#6366f1;"></i> Preparing audit print dossier...</div>';
+    document.body.appendChild(toast);
+
+    fetch(`{{ url('/admin/nightaudit') }}/${auditId}`, {
+      headers: {
+        'Accept': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    })
       .then(res => res.json())
       .then(data => {
+        var t = document.getElementById('print-loading-toast');
+        if (t) t.remove();
         if (data.success && data.audit) {
           printAuditObject(data.audit);
+        } else {
+          alert(data.error || 'Failed to load audit record for printing.');
         }
+      })
+      .catch(err => {
+        var t = document.getElementById('print-loading-toast');
+        if (t) t.remove();
+        console.error(err);
+        alert('Could not connect to server to print night audit.');
       });
   }
 
   function printAuditObject(a) {
     const printArea = document.getElementById('printable-audit-container');
+    if (!printArea) return;
+
+    const snap = a.audit_snapshot || {};
+    const payments = snap.payments_list || [];
+    const occupied = snap.occupied_rooms || [];
+    const hks = snap.housekeeping_histories || [];
+    const ops = snap.operational_histories || [];
+    const guests = snap.guests_list || [];
+    const unsettled = snap.unsettled_summary || {};
+
+    let totalBill = 0;
+    let totalDue = 0;
+    let settledCount = 0;
+    let unsettledCount = 0;
+
+    if (guests && guests.length > 0) {
+      guests.forEach(g => {
+        totalBill += Number(g.total_bill || 0);
+        const due = Number(g.remaining_amount || 0);
+        totalDue += due;
+        if (due <= 0.01) settledCount++;
+        else unsettledCount++;
+      });
+    } else {
+      totalBill = Number(a.total_revenue || 0);
+      totalDue = Math.max(0, totalBill - Number(a.total_payments || 0));
+    }
+
+    const totalPaid = Number(a.total_payments || 0);
+    const occupancyRate = Number(a.occupancy_rate || 0).toFixed(1);
+    const totalRooms = a.total_rooms || 0;
+    const occupiedCount = a.occupied_rooms || occupied.length || 0;
+    const vacantCount = a.vacant_rooms || 0;
+    const maintCount = a.maintenance_rooms || 0;
+    const hkCount = hks.length;
+    const opCount = ops.length;
+
     const auditDateFormatted = a.audit_date ? new Date(a.audit_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : 'N/A';
+    const auditDay = a.audit_date ? new Date(a.audit_date).toLocaleDateString('en-US', { weekday: 'long' }) : '';
     const completedTime = a.completed_at ? new Date(a.completed_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : 'N/A';
+    const auditorName = a.auditor_name || (a.auditor ? a.auditor.name : 'Front Office Night Auditor');
 
     printArea.innerHTML = `
-      <div style="max-width: 800px; margin: 0 auto; font-family: sans-serif; padding: 20px;">
-        <div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 12px; margin-bottom: 16px;">
-          <h2 style="margin: 0; font-size: 20px; text-transform: uppercase; letter-spacing: 1px;">Hotel Sagar Sonnet</h2>
-          <div style="font-size: 12px; margin-top: 3px; font-weight: 600;">Daily Night Audit Verification & Financial Dossier</div>
-          <div style="font-size: 13px; font-weight: bold; margin-top: 6px;">Audit Date: ${auditDateFormatted} • Completed at: ${completedTime}</div>
-          <div style="font-size: 11px; color: #444; margin-top: 2px;">Audited & Signed by: <strong>${a.auditor_name || (a.auditor ? a.auditor.name : 'Front Office Auditor')}</strong></div>
+      <div style="max-width: 800px; margin: 0 auto; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #0f172a; line-height: 1.4; padding: 10px;">
+        
+        <!-- Header -->
+        <div style="border-bottom: 2px solid #0f172a; padding-bottom: 12px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: flex-start;">
+          <div>
+            <h1 style="margin: 0; font-size: 20px; font-weight: 900; letter-spacing: 0.5px; text-transform: uppercase; color: #0f172a;">Hotel Sagar Sonnet</h1>
+            <div style="font-size: 11px; font-weight: 700; color: #4338ca; text-transform: uppercase; letter-spacing: 0.8px; margin-top: 2px;">Daily Night Audit Executive Dossier &amp; Financial Reconciliation</div>
+            <div style="font-size: 9.5px; color: #64748b; margin-top: 1px;">Station Road, Hotel Sagar Sonnet PMS Verification System</div>
+          </div>
+          <div style="text-align: right;">
+            <div style="font-size: 12px; font-weight: 800; color: #0f172a;">Audit Date: ${auditDateFormatted} (${auditDay})</div>
+            <div style="font-size: 10px; color: #475569; margin-top: 2px;">Completed at: <strong>${completedTime}</strong></div>
+            <div style="font-size: 10px; color: #475569;">Auditor: <strong>${escapeHtml(auditorName)}</strong></div>
+            <span style="display: inline-block; font-size: 9px; font-weight: 800; padding: 2px 8px; border-radius: 4px; background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; margin-top: 3px; text-transform: uppercase;">
+              Audit Completed &amp; Verified
+            </span>
+          </div>
         </div>
 
-        <table style="width: 100%; border-collapse: collapse; margin-bottom: 16px; font-size: 12px;">
-          <tr>
-            <td style="padding: 8px; border: 1px solid #ddd; width: 35%; background: #f9f9f9;"><strong>Total Collections Reconciled:</strong></td>
-            <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold; color: #059669;">₹ ${Number(a.total_payments || 0).toLocaleString('en-IN', {minimumFractionDigits: 2})} (Cash: ₹${Number(a.cash_collection||0).toFixed(0)}, UPI: ₹${Number(a.upi_collection||0).toFixed(0)}, Card: ₹${Number(a.card_collection||0).toFixed(0)}, Bank: ₹${Number(a.bank_collection||0).toFixed(0)})</td>
-          </tr>
-          <tr>
-            <td style="padding: 8px; border: 1px solid #ddd; background: #f9f9f9;"><strong>Room Tariff Revenue:</strong></td>
-            <td style="padding: 8px; border: 1px solid #ddd;">₹ ${Number(a.room_revenue || 0).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
-          </tr>
-          <tr>
-            <td style="padding: 8px; border: 1px solid #ddd; background: #f9f9f9;"><strong>Meal Plan Revenue:</strong></td>
-            <td style="padding: 8px; border: 1px solid #ddd;">₹ ${Number(a.food_revenue || 0).toLocaleString('en-IN', {minimumFractionDigits: 2})} (EP: ${a.ep_plan_count||0}, CP: ${a.cp_plan_count||0}, MAP: ${a.map_plan_count||0}, AP: ${a.ap_plan_count||0})</td>
-          </tr>
-          <tr>
-            <td style="padding: 8px; border: 1px solid #ddd; background: #f9f9f9;"><strong>Total Hotel Sales (Revenue):</strong></td>
-            <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold; color: #7c3aed;">₹ ${Number(a.total_revenue || 0).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
-          </tr>
-          <tr>
-            <td style="padding: 8px; border: 1px solid #ddd; background: #f9f9f9;"><strong>Occupancy Status:</strong></td>
-            <td style="padding: 8px; border: 1px solid #ddd;">${Number(a.occupancy_rate || 0).toFixed(1)}% (${a.occupied_rooms||0}/${a.total_rooms||0} Occupied, ${a.vacant_rooms||0} Vacant)</td>
-          </tr>
+        <!-- 1. Daily Operational Activity Summary Strip -->
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 12px;">
+          <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; padding: 8px; text-align: center;">
+            <div style="font-size: 9px; font-weight: 800; color: #475569; text-transform: uppercase;">Today Payments</div>
+            <div style="font-size: 17px; font-weight: 900; color: #059669; font-family: monospace; margin-top: 2px;">${payments.length || (totalPaid > 0 ? 1 : 0)}</div>
+            <div style="font-size: 8.5px; color: #64748b;">₹ ${fmt(totalPaid)} Reconciled</div>
+          </div>
+          <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; padding: 8px; text-align: center;">
+            <div style="font-size: 9px; font-weight: 800; color: #475569; text-transform: uppercase;">Occupied Rooms</div>
+            <div style="font-size: 17px; font-weight: 900; color: #2563eb; font-family: monospace; margin-top: 2px;">${occupiedCount}</div>
+            <div style="font-size: 8.5px; color: #64748b;">${occupancyRate}% Occupancy</div>
+          </div>
+          <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; padding: 8px; text-align: center;">
+            <div style="font-size: 9px; font-weight: 800; color: #475569; text-transform: uppercase;">Housekeeping</div>
+            <div style="font-size: 17px; font-weight: 900; color: #16a34a; font-family: monospace; margin-top: 2px;">${hkCount}</div>
+            <div style="font-size: 8.5px; color: #64748b;">Activity Logged</div>
+          </div>
+          <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; padding: 8px; text-align: center;">
+            <div style="font-size: 9px; font-weight: 800; color: #475569; text-transform: uppercase;">Operational</div>
+            <div style="font-size: 17px; font-weight: 900; color: #d97706; font-family: monospace; margin-top: 2px;">${opCount}</div>
+            <div style="font-size: 8.5px; color: #64748b;">Room Status Logs</div>
+          </div>
+        </div>
+
+        <!-- 2. Clean 4 Financial KPI Cards -->
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 14px;">
+          <div style="background: #ffffff; border: 1.5px solid #6366f1; border-radius: 6px; padding: 8px;">
+            <div style="font-size: 9px; font-weight: 800; color: #4338ca; text-transform: uppercase;">Total Bill</div>
+            <div style="font-size: 14px; font-weight: 900; color: #4338ca; font-family: monospace; margin-top: 2px;">₹ ${fmt(totalBill)}</div>
+            <div style="font-size: 8px; color: #64748b;">${guests.length} booking folio(s)</div>
+          </div>
+          <div style="background: #ffffff; border: 1.5px solid #10b981; border-radius: 6px; padding: 8px;">
+            <div style="font-size: 9px; font-weight: 800; color: #059669; text-transform: uppercase;">Collections</div>
+            <div style="font-size: 14px; font-weight: 900; color: #059669; font-family: monospace; margin-top: 2px;">₹ ${fmt(totalPaid)}</div>
+            <div style="font-size: 8px; color: #64748b;">Reconciled on date</div>
+          </div>
+          <div style="background: #ffffff; border: 1.5px solid #3b82f6; border-radius: 6px; padding: 8px;">
+            <div style="font-size: 9px; font-weight: 800; color: #1d4ed8; text-transform: uppercase;">Room Occupancy</div>
+            <div style="font-size: 14px; font-weight: 900; color: #1d4ed8; font-family: monospace; margin-top: 2px;">${occupancyRate}%</div>
+            <div style="font-size: 8px; color: #64748b;">${occupiedCount} / ${totalRooms} rooms</div>
+          </div>
+          <div style="background: #ffffff; border: 1.5px solid #e11d48; border-radius: 6px; padding: 8px;">
+            <div style="font-size: 9px; font-weight: 800; color: #e11d48; text-transform: uppercase;">Unsettled Balance</div>
+            <div style="font-size: 14px; font-weight: 900; color: #e11d48; font-family: monospace; margin-top: 2px;">₹ ${fmt(totalDue)}</div>
+            <div style="font-size: 8px; color: #64748b;">${unsettledCount} pending folio(s)</div>
+          </div>
+        </div>
+
+        <!-- 3. Collections Breakdown & Revenue Reconciliations (2 columns) -->
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 14px;">
+          <!-- Collections Table -->
+          <div>
+            <div style="font-size: 10.5px; font-weight: 800; text-transform: uppercase; color: #1e1b4b; border-bottom: 1px solid #cbd5e1; padding-bottom: 4px; margin-bottom: 5px;">
+              Reconciled Collections By Mode
+            </div>
+            <table class="print-table" style="font-size: 9.5px;">
+              <thead>
+                <tr>
+                  <th>Payment Mode</th>
+                  <th style="text-align: right;">Amount (₹)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>Cash Collection</td><td style="text-align: right; font-family: monospace; font-weight: 700; color: #059669;">₹ ${fmt(a.cash_collection)}</td></tr>
+                <tr><td>UPI / Digital (GPay/PhonePe)</td><td style="text-align: right; font-family: monospace; font-weight: 700; color: #4338ca;">₹ ${fmt(a.upi_collection)}</td></tr>
+                <tr><td>Card / POS Machine</td><td style="text-align: right; font-family: monospace; font-weight: 700; color: #b45309;">₹ ${fmt(a.card_collection)}</td></tr>
+                <tr><td>Bank Transfer (NEFT/RTGS)</td><td style="text-align: right; font-family: monospace; font-weight: 700; color: #0284c7;">₹ ${fmt(a.bank_collection)}</td></tr>
+                ${Number(a.other_collection || 0) > 0 ? `<tr><td>Other Modes</td><td style="text-align: right; font-family: monospace; font-weight: 700;">₹ ${fmt(a.other_collection)}</td></tr>` : ''}
+              </tbody>
+              <tfoot>
+                <tr style="background: #f1f5f9; font-weight: 800;">
+                  <td>Total Collections:</td>
+                  <td style="text-align: right; font-family: monospace; color: #059669;">₹ ${fmt(totalPaid)}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+
+          <!-- Room & Inventory Metrics -->
+          <div>
+            <div style="font-size: 10.5px; font-weight: 800; text-transform: uppercase; color: #1e1b4b; border-bottom: 1px solid #cbd5e1; padding-bottom: 4px; margin-bottom: 5px;">
+              Rooms &amp; Operational Statistics
+            </div>
+            <table class="print-table" style="font-size: 9.5px;">
+              <tbody>
+                <tr><td>Total Hotel Rooms Inventory</td><td style="text-align: right; font-family: monospace; font-weight: 700;">${totalRooms} Rooms</td></tr>
+                <tr><td>Occupied Rooms Sold</td><td style="text-align: right; font-family: monospace; font-weight: 700; color: #2563eb;">${occupiedCount} Rooms (${occupancyRate}%)</td></tr>
+                <tr><td>Vacant Available Rooms</td><td style="text-align: right; font-family: monospace; font-weight: 700; color: #059669;">${vacantCount} Rooms</td></tr>
+                <tr><td>Maintenance / Out of Order</td><td style="text-align: right; font-family: monospace; font-weight: 700; color: #d97706;">${maintCount} Rooms</td></tr>
+                <tr><td>Average Daily Rate (ADR) / RevPAR</td><td style="text-align: right; font-family: monospace; font-weight: 700;">₹ ${fmt(a.adr)} / ₹ ${fmt(a.revpar)}</td></tr>
+                <tr style="background: #f1f5f9; font-weight: 800;">
+                  <td>Active Meal Plans (EP/CP/MAP/AP)</td>
+                  <td style="text-align: right; font-family: monospace;">${a.ep_plan_count || 0} / ${a.cp_plan_count || 0} / ${a.map_plan_count || 0} / ${a.ap_plan_count || 0}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 4. Guest Billings, Settlements & Outstanding Balances Table -->
+        <div class="print-avoid-break" style="margin-bottom: 14px;">
+          <div style="font-size: 10.5px; font-weight: 800; text-transform: uppercase; color: #1e1b4b; border-bottom: 1px solid #cbd5e1; padding-bottom: 4px; margin-bottom: 5px; display: flex; justify-content: space-between;">
+            <span>Guest Billings, Settlements &amp; Outstanding Balances (${guests.length} Bookings)</span>
+            <span style="font-size: 9.5px; color: #64748b; text-transform: none;">All amounts in INR (₹)</span>
+          </div>
+          <table class="print-table" style="font-size: 9px;">
+            <thead>
+              <tr>
+                <th style="width: 25px; text-align: center;">SL</th>
+                <th>Guest Name</th>
+                <th style="text-align: center;">Room</th>
+                <th>Settle #</th>
+                <th>Dates</th>
+                <th style="text-align: right;">Total Bill</th>
+                <th style="text-align: right;">Paid Amt</th>
+                <th style="text-align: right;">Remaining</th>
+                <th style="text-align: center;">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${guests.length > 0 ? guests.map((g, idx) => `
+                <tr>
+                  <td style="text-align: center; font-family: monospace;">${idx + 1}</td>
+                  <td style="font-weight: 700;">${escapeHtml(g.guest_name || 'Guest')}</td>
+                  <td style="text-align: center; font-weight: 700; font-family: monospace;">${escapeHtml(g.room_number || '-')}</td>
+                  <td style="font-family: monospace; font-weight: 700; color: #4338ca;">${escapeHtml(g.settle_number || g.folio_number || '-')}</td>
+                  <td style="font-size: 8.5px; color: #475569;">${escapeHtml(g.checkin_date || '-')} - ${escapeHtml(g.checkout_date || '-')}</td>
+                  <td style="text-align: right; font-family: monospace; font-weight: 700;">₹ ${fmt(g.total_bill)}</td>
+                  <td style="text-align: right; font-family: monospace; color: #15803d; font-weight: 700;">₹ ${fmt(g.paid_amount)}</td>
+                  <td style="text-align: right; font-family: monospace; font-weight: 800; color: ${Number(g.remaining_amount || 0) > 0.01 ? '#b91c1c' : '#15803d'};">₹ ${fmt(g.remaining_amount)}</td>
+                  <td style="text-align: center; font-size: 8.5px; font-weight: 800; text-transform: uppercase;">${g.is_settled ? 'SETTLED' : 'UNSETTLED'}</td>
+                </tr>
+              `).join('') : `
+                <tr><td colspan="9" style="text-align: center; padding: 12px; color: #94a3b8;">No guest settlement records logged for this audit date.</td></tr>
+              `}
+            </tbody>
+            ${guests.length > 0 ? `
+              <tfoot>
+                <tr style="background: #f1f5f9; font-weight: 800;">
+                  <td colspan="5" style="text-align: right; text-transform: uppercase; font-size: 9.5px;">Audit Grand Totals:</td>
+                  <td style="text-align: right; font-family: monospace; font-size: 9.5px;">₹ ${fmt(totalBill)}</td>
+                  <td style="text-align: right; font-family: monospace; font-size: 9.5px; color: #15803d;">₹ ${fmt(totalPaid)}</td>
+                  <td style="text-align: right; font-family: monospace; font-size: 9.5px; color: ${totalDue > 0.01 ? '#b91c1c' : '#15803d'};">₹ ${fmt(totalDue)}</td>
+                  <td style="text-align: center; font-size: 8.5px;">${settledCount}S / ${unsettledCount}U</td>
+                </tr>
+              </tfoot>
+            ` : ''}
+          </table>
+        </div>
+
+        <!-- 5. Occupied Rooms Sold Detail Table (if any) -->
+        ${occupied.length > 0 ? `
+          <div class="print-avoid-break" style="margin-bottom: 14px;">
+            <div style="font-size: 10.5px; font-weight: 800; text-transform: uppercase; color: #1e1b4b; border-bottom: 1px solid #cbd5e1; padding-bottom: 4px; margin-bottom: 5px;">
+              Occupied Rooms Sold Summary (${occupied.length} Rooms)
+            </div>
+            <table class="print-table" style="font-size: 9px;">
+              <thead>
+                <tr>
+                  <th style="width: 25px; text-align: center;">SL</th>
+                  <th>Room</th>
+                  <th>Category</th>
+                  <th>Floor</th>
+                  <th>Primary Guest</th>
+                  <th>Settle #</th>
+                  <th style="text-align: center;">Housekeeping</th>
+                  <th style="text-align: right;">Rate / Day</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${occupied.map((rm, idx) => `
+                  <tr>
+                    <td style="text-align: center; font-family: monospace;">${idx + 1}</td>
+                    <td style="font-weight: 700; font-family: monospace;">${escapeHtml(rm.room_number)}</td>
+                    <td>${escapeHtml(rm.category || 'Standard')}</td>
+                    <td>${escapeHtml(rm.floor || 'Floor 1')}</td>
+                    <td>${escapeHtml(rm.guest_name || 'Guest')}</td>
+                    <td style="font-family: monospace; font-weight: 700; color: #4338ca;">${escapeHtml(rm.settle_number || rm.folio_number || '-')}</td>
+                    <td style="text-align: center;">${escapeHtml(rm.housekeeping_status || 'Clean')}</td>
+                    <td style="text-align: right; font-family: monospace; font-weight: 700;">₹ ${fmt(rm.day_rate)}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        ` : ''}
+
+        <!-- 6. Housekeeping History Logs (Print) -->
+        ${hks.length > 0 ? `
+          <div class="print-avoid-break" style="margin-bottom: 14px;">
+            <div style="font-size: 10.5px; font-weight: 800; text-transform: uppercase; color: #1e1b4b; border-bottom: 1px solid #cbd5e1; padding-bottom: 4px; margin-bottom: 5px; display: flex; justify-content: space-between;">
+              <span>Housekeeping Activity &amp; Status Logs (${hks.length} Records)</span>
+              <span style="font-size: 9px; color: #64748b; text-transform: none;">Audited date activity</span>
+            </div>
+            <table class="print-table" style="font-size: 8.5px;">
+              <thead>
+                <tr>
+                  <th style="width: 25px; text-align: center;">SL</th>
+                  <th>Time</th>
+                  <th>Room</th>
+                  <th>Category</th>
+                  <th>Floor</th>
+                  <th style="text-align: center;">Housekeeping State</th>
+                  <th style="text-align: center;">Status</th>
+                  <th>Start Time</th>
+                  <th>Completion Time</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${hks.map((hk, idx) => `
+                  <tr>
+                    <td style="text-align: center; font-family: monospace;">${idx + 1}</td>
+                    <td style="font-family: monospace;">${escapeHtml(hk.time || '-')}</td>
+                    <td style="font-weight: 700; font-family: monospace;">${escapeHtml(hk.room_number)}</td>
+                    <td>${escapeHtml(hk.category || 'Standard')}</td>
+                    <td>${escapeHtml(hk.floor || 'Floor 1')}</td>
+                    <td style="text-align: center; font-weight: 700;">${escapeHtml(hk.housekeeping_status || 'Clean')}</td>
+                    <td style="text-align: center; text-transform: uppercase;">${escapeHtml(hk.status || 'Complete')}</td>
+                    <td style="font-family: monospace;">${escapeHtml(hk.start_time || '-')}</td>
+                    <td style="font-family: monospace;">${escapeHtml(hk.completion_time || '-')}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        ` : ''}
+
+        <!-- 7. Operational Room Status Logs (Print) -->
+        ${ops.length > 0 ? `
+          <div class="print-avoid-break" style="margin-bottom: 14px;">
+            <div style="font-size: 10.5px; font-weight: 800; text-transform: uppercase; color: #1e1b4b; border-bottom: 1px solid #cbd5e1; padding-bottom: 4px; margin-bottom: 5px; display: flex; justify-content: space-between;">
+              <span>Operational Room Status Logs (${ops.length} Records)</span>
+              <span style="font-size: 9px; color: #64748b; text-transform: none;">Service &amp; Maintenance Tracking</span>
+            </div>
+            <table class="print-table" style="font-size: 8.5px;">
+              <thead>
+                <tr>
+                  <th style="width: 25px; text-align: center;">SL</th>
+                  <th>Time</th>
+                  <th>Room</th>
+                  <th>Category</th>
+                  <th>Floor</th>
+                  <th style="text-align: center;">Operational Status</th>
+                  <th style="text-align: center;">Model State</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${ops.map((op, idx) => `
+                  <tr>
+                    <td style="text-align: center; font-family: monospace;">${idx + 1}</td>
+                    <td style="font-family: monospace;">${escapeHtml(op.time || '-')}</td>
+                    <td style="font-weight: 700; font-family: monospace;">${escapeHtml(op.room_number)}</td>
+                    <td>${escapeHtml(op.category || 'Standard')}</td>
+                    <td>${escapeHtml(op.floor || 'Floor 1')}</td>
+                    <td style="text-align: center; font-weight: 700;">${escapeHtml(op.operational_status || 'Active')}</td>
+                    <td style="text-align: center; text-transform: uppercase;">${escapeHtml(op.room_status || 'Active')}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        ` : ''}
+
+        <!-- 8. Closing Remarks & Sign-off Footer -->
+        <div class="print-avoid-break" style="margin-top: 20px; padding-top: 8px; border-top: 1px solid #cbd5e1;">
           ${a.remarks ? `
-          <tr>
-            <td style="padding: 8px; border: 1px solid #ddd; background: #f9f9f9;"><strong>Remarks:</strong></td>
-            <td style="padding: 8px; border: 1px solid #ddd;">${escapeHtml(a.remarks)}</td>
-          </tr>` : ''}
-        </table>
+            <div style="font-size: 9.5px; color: #475569; margin-bottom: 18px; background: #f8fafc; padding: 6px 10px; border: 1px solid #e2e8f0; border-radius: 4px;">
+              <strong>Closing Remarks:</strong> ${escapeHtml(a.remarks)}
+            </div>
+          ` : ''}
 
-        <div style="margin-top: 60px; display: flex; justify-content: space-between; font-size: 11px;">
-          <div style="border-top: 1px solid #000; width: 180px; text-align: center; padding-top: 4px;">Night Auditor Signature</div>
-          <div style="border-top: 1px solid #000; width: 180px; text-align: center; padding-top: 4px;">General Manager Sign-off</div>
+          <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 28px;">
+            <div style="text-align: center; width: 200px;">
+              <div style="border-bottom: 1px solid #0f172a; height: 26px; margin-bottom: 5px;"></div>
+              <div style="font-size: 10.5px; font-weight: 800; color: #0f172a;">Night Auditor / Front Desk</div>
+              <div style="font-size: 9px; color: #64748b;">${escapeHtml(auditorName)}</div>
+            </div>
+            <div style="text-align: center; width: 150px; font-size: 9px; color: #64748b;">
+              Hotel Sagar Sonnet PMS<br>
+              Official Verification Stamp
+            </div>
+            <div style="text-align: center; width: 200px;">
+              <div style="border-bottom: 1px solid #0f172a; height: 26px; margin-bottom: 5px;"></div>
+              <div style="font-size: 10.5px; font-weight: 800; color: #0f172a;">Duty Manager / General Manager</div>
+              <div style="font-size: 9px; color: #64748b;">Signature &amp; Verification</div>
+            </div>
+          </div>
         </div>
+
       </div>
     `;
 
-    window.print();
+    printArea.style.display = 'block';
+
+    setTimeout(() => {
+      window.print();
+      setTimeout(() => {
+        printArea.style.display = 'none';
+      }, 500);
+    }, 250);
   }
 
   function escapeHtml(text) {

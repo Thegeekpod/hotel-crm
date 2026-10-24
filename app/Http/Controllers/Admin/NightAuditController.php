@@ -156,14 +156,17 @@ class NightAuditController extends Controller
                 $n = max(1, (int)$activeB->total_nights);
                 $dayRate = (float)($activeB->room_rate ?: ($activeB->total_amount / $n));
 
+                $rmPart = preg_replace('/^r[-_\s]?/i', '', trim($rm->room_number)) ?: '100';
+                $activeSettle = $activeB->settle_number ?: ($activeB->folio_number ?: ($activeB->primary_booking_id ?: ('SET-' . $rmPart . '-' . $activeB->id)));
+
                 $occupiedRoomsList[] = [
                     'room_id' => $rm->id,
                     'room_number' => 'R' . preg_replace('/^r[-_\s]?/i', '', trim($rm->room_number)),
                     'category' => $rm->categoryRelation?->name ?? 'Standard',
                     'floor' => 'Floor ' . ($rm->floorRelation?->floor ?? '1'),
                     'guest_name' => ($activeB->guest?->title?->name ? $activeB->guest->title->name . ' ' : '') . ($activeB->guest?->guest_name ?? 'Guest'),
-                    'settle_number' => $activeB->primary_booking_id ?: '#BK-' . $activeB->id,
-                    'folio_number' => $activeB->primary_booking_id ?: '#BK-' . $activeB->id,
+                    'settle_number' => $activeSettle,
+                    'folio_number' => $activeSettle,
                     'checkin_date' => $activeB->reserve_date ? Carbon::parse($activeB->reserve_date)->format('d M Y') : '-',
                     'checkout_date' => $activeB->checkout_date ? Carbon::parse($activeB->checkout_date)->format('d M Y') : '-',
                     'operational_status' => $opName,
@@ -263,12 +266,15 @@ class NightAuditController extends Controller
                 }
             }
 
+            $roomPart = $b->room?->room_number ? preg_replace('/^r[-_\s]?/i', '', trim($b->room->room_number)) : '100';
+            $settleNo = $b->settle_number ?: ($b->folio_number ?: ($master->settle_number ?: ($master->folio_number ?: ($b->primary_booking_id ?: ('SET-' . $roomPart . '-' . $b->id)))));
+
             return [
                 'id' => $b->id,
-                'settle_number' => $b->primary_booking_id ?: ('#BK-' . $b->id),
-                'folio_number' => $b->primary_booking_id ?: ('#BK-' . $b->id),
+                'settle_number' => $settleNo,
+                'folio_number' => $settleNo,
                 'guest_name' => ($b->guest?->title?->name ? $b->guest->title->name . ' ' : '') . ($b->guest?->guest_name ?? 'Guest'),
-                'mobile_no' => $b->guest?->mobile_no ?: '-',
+                'mobile_no' => $b->guest?->mobile ?: ($b->guest?->mobile_no ?: '-'),
                 'room_number' => $b->room?->room_number ? ('R' . preg_replace('/^r[-_\s]?/i', '', trim($b->room->room_number))) : '-',
                 'category' => $b->room?->categoryRelation?->name ?? 'Standard',
                 'checkin_date' => $b->reserve_date ? Carbon::parse($b->reserve_date)->format('d M Y') : '-',

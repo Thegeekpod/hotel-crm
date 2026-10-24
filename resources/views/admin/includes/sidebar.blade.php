@@ -139,8 +139,8 @@
   </div>
 
   <!-- Main Item: Extra Services -->
-  <a href="{{ route('admin.nightaudit.index') }}" class="admin-nav-flat {{ request()->routeIs('admin.nightaudit.*') ? 'active' : '' }}" style="text-decoration: none; margin-bottom: 8px;">
-    <i class="fa-solid fa-moon" style="color: #8b5cf6; font-size: 13px;"></i>
+  <a href="{{ route('admin.services.index') }}" class="admin-nav-flat {{ request()->routeIs('admin.services.*') ? 'active' : '' }}" style="text-decoration: none; margin-bottom: 6px;">
+    <i class="fa-solid fa-bell-concierge" style="color: #6366f1; font-size: 13px;"></i>
     <span>Extra Services</span>
   </a>
 
@@ -154,7 +154,7 @@
     <span>Accounts & Finance</span>
   </div>
 
-  <a href="{{ route('banquet.index') }}" class="admin-nav-flat {{ request()->routeIs('banquet.*') ? 'active' : '' }}" style="text-decoration: none; color: inherit;">
+  <a href="{{ route('banquet.index') }}" class="admin-nav-flat {{ request()->routeIs('banquet.*') ? 'active' : '' }}" style="text-decoration: none; color: inherit; margin-bottom: 6px;">
     <i class="fa-solid fa-champagne-glasses" style="color: #fbbf24;"></i>
     <span>Banquet & Services</span>
   </a>

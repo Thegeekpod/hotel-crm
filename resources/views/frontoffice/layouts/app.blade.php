@@ -374,7 +374,7 @@
 
   <!-- Top Module Navigation Tabs -->
   <nav class="pms-tabs-ribbon">
-    <a href="{{ route('frontoffice.dashboard') }}" class="pms-tab-link {{ !request()->routeIs('frontoffice.housekeeping*') && (request()->routeIs('frontoffice.*') || request()->is('front-office*')) ? 'active' : '' }}">
+    <a href="{{ route('frontoffice.dashboard') }}" class="pms-tab-link {{ !request()->routeIs('frontoffice.services*') && !request()->routeIs('frontoffice.housekeeping*') && (request()->routeIs('frontoffice.*') || request()->is('front-office*')) ? 'active' : '' }}">
       <i class="fa-solid fa-desktop tab-ico" style="color: #6366f1;"></i> Front Office
     </a>
     <a href="#" class="pms-tab-link" onclick="if(typeof PmsAlert !== 'undefined') PmsAlert.toast('POS Sales module queued.', 'info')">
@@ -389,8 +389,11 @@
     <a href="#" class="pms-tab-link" onclick="if(typeof PmsAlert !== 'undefined') PmsAlert.toast('Accounts module queued.', 'info')">
       <i class="fa-solid fa-file-invoice-dollar tab-ico" style="color: #a78bfa;"></i> Accounts
     </a>
+    <a href="{{ route('frontoffice.services.index') }}" class="pms-tab-link {{ request()->routeIs('frontoffice.services.*') ? 'active' : '' }}">
+      <i class="fa-solid fa-bell-concierge tab-ico" style="color: #10b981;"></i> Extra Services
+    </a>
     <a href="{{ route('banquet.index') }}" class="pms-tab-link {{ request()->routeIs('banquet.*') ? 'active' : '' }}">
-      <i class="fa-solid fa-champagne-glasses tab-ico" style="color: #fbbf24;"></i> Banquet & Services
+      <i class="fa-solid fa-champagne-glasses tab-ico" style="color: #fbbf24;"></i> Banquet
     </a>
     <a href="{{ route('admin.dashboard') }}" class="pms-tab-link">
       <i class="fa-solid fa-user-gear tab-ico" style="color: #94a3b8;"></i> Administrator

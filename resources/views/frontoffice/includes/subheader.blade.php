@@ -30,6 +30,26 @@
     Banquet &amp; In-Room Dining Live
   </div>
 </div>
+@elseif(request()->routeIs('frontoffice.services.*'))
+<!-- Action Sub-Ribbon (Extra Services & Room Dining) -->
+<div class="pms-sub-ribbon">
+  <div class="ribbon-left-section">
+    <div class="ribbon-action-buttons">
+      <a href="{{ route('frontoffice.services.index') }}" class="ribbon-btn active-btn">
+        <span class="ico-box"><i class="fa-solid fa-bell-concierge" style="color: #10b981;"></i></span>
+        <span class="lbl-box">Active Orders</span>
+      </a>
+      <button type="button" class="ribbon-btn" onclick="openNewRoomOrderModal()">
+        <span class="ico-box"><i class="fa-solid fa-utensils" style="color: #10b981;"></i></span>
+        <span class="lbl-box">New Room Order</span>
+      </button>
+    </div>
+  </div>
+  <div style="font-size: 11px; font-weight: 700; color: #10b981; display: flex; align-items: center; gap: 6px;">
+    <span style="width: 6px; height: 6px; background: #10b981; border-radius: 50%; display: inline-block; box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);"></span>
+    In-Room Dining &amp; Extra Services Live
+  </div>
+</div>
 @else
 <!-- Action Sub-Ribbon (Only Front Office Options) -->
 <div class="pms-sub-ribbon">
@@ -54,6 +74,10 @@
       <a href="{{ route('frontoffice.checkout') }}" class="ribbon-btn {{ request()->routeIs('frontoffice.checkout*') ? 'active-btn' : '' }}">
         <span class="ico-box"><i class="fa-solid fa-person-walking-dashed-line-arrow-right" style="color: #ef4444;"></i></span>
         <span class="lbl-box">Checkout</span>
+      </a>
+      <a href="{{ route('frontoffice.services.index') }}" class="ribbon-btn {{ request()->routeIs('frontoffice.services*') ? 'active-btn' : '' }}">
+        <span class="ico-box"><i class="fa-solid fa-bell-concierge" style="color: #10b981;"></i></span>
+        <span class="lbl-box">Extra Services</span>
       </a>
       <a href="{{ route('frontoffice.nightaudit') }}" class="ribbon-btn {{ request()->routeIs('frontoffice.nightaudit*') || request()->routeIs('frontoffice.night-audit*') ? 'active-btn' : '' }}">
         <span class="ico-box"><i class="fa-solid fa-moon" style="color: #8b5cf6;"></i></span>

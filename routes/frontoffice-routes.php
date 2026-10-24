@@ -9,6 +9,7 @@ use App\Http\Controllers\FrontOffice\FolioController;
 use App\Http\Controllers\FrontOffice\CheckoutController;
 use App\Http\Controllers\FrontOffice\NightAuditController;
 use App\Http\Controllers\FrontOffice\HousekeepingController;
+use App\Http\Controllers\FrontOffice\ServiceController;
 
 // Front Office Module Routes (Arrivals, Guest CRM, In-House, Reservations)
 Route::prefix('front-office')->name('frontoffice.')->group(function () {
@@ -54,6 +55,14 @@ Route::prefix('front-office')->name('frontoffice.')->group(function () {
     Route::post('/housekeeping/bulk-update', [HousekeepingController::class, 'bulkUpdate'])->name('housekeeping.bulk-update');
     Route::get('/housekeeping/{id}/history', [HousekeepingController::class, 'getRoomHistory'])->name('housekeeping.history');
 
+    // Extra Services & In-Room Dining Orders
+    Route::prefix('services')->name('services.')->group(function () {
+        Route::get('/', [ServiceController::class, 'index'])->name('index');
+        Route::post('/orders', [ServiceController::class, 'storeOrder'])->name('orders.store');
+        Route::get('/orders/{order}', [ServiceController::class, 'getOrderDetails'])->name('orders.show');
+        Route::post('/orders/{order}/status', [ServiceController::class, 'updateOrderStatus'])->name('orders.status');
+    });
+
     Route::get('/reserve', [DashboardController::class, 'reserve'])->name('reserve');
     
     // Dynamic Reservation, Check-in & Room Status Endpoints
@@ -63,4 +72,5 @@ Route::prefix('front-office')->name('frontoffice.')->group(function () {
     Route::get('/check-room-availability', [DashboardController::class, 'checkRoomAvailability'])->name('room.check-availability');
     Route::post('/room/update-status', [DashboardController::class, 'updateRoomStatus'])->name('room.update-status');
 });
+
 

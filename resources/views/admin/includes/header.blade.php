@@ -18,7 +18,7 @@
 
 <!-- Module Navigation Tabs Ribbon -->
 <nav class="pms-tabs-ribbon">
-  <a href="{{ route('frontoffice.dashboard') }}" class="pms-tab-link {{ request()->routeIs('frontoffice.*') ? 'active' : '' }}">
+  <a href="{{ route('frontoffice.dashboard') }}" class="pms-tab-link {{ !request()->routeIs('frontoffice.services.*') && !request()->routeIs('frontoffice.housekeeping*') && (request()->routeIs('frontoffice.*') || request()->is('front-office*')) ? 'active' : '' }}">
     <i class="fa-solid fa-desktop tab-ico" style="color: #6366f1;"></i> Front Office
   </a>
 
@@ -34,20 +34,20 @@
   <a href="#" class="pms-tab-link" onclick="if(typeof PmsAlert !== 'undefined') PmsAlert.toast('Accounts & Finance module queued for client review.', 'info')">
     <i class="fa-solid fa-file-invoice-dollar tab-ico" style="color: #a78bfa;"></i> Accounts
   </a>
-  <a href="{{ route('banquet.index') }}" class="pms-tab-link {{ request()->routeIs('banquet.*') ? 'active' : '' }}">
-    <i class="fa-solid fa-champagne-glasses tab-ico" style="color: #fbbf24;"></i> Extra Services
+  <a href="{{ route('frontoffice.services.index') }}" class="pms-tab-link {{ request()->routeIs('frontoffice.services.*') ? 'active' : '' }}">
+    <i class="fa-solid fa-bell-concierge tab-ico" style="color: #10b981;"></i> Extra Services
   </a>
   <a href="{{ route('banquet.index') }}" class="pms-tab-link {{ request()->routeIs('banquet.*') ? 'active' : '' }}">
     <i class="fa-solid fa-champagne-glasses tab-ico" style="color: #fbbf24;"></i> Banquet
   </a>
-  <a href="{{ route('admin.dashboard') }}" class="pms-tab-link {{ request()->routeIs('admin.utilities.*') || request()->routeIs('admin.roommanagement.*') || request()->routeIs('admin.roommaintain.*') || request()->routeIs('admin.nightaudit.*') || request()->routeIs('admin.dashboard') ? 'active' : '' }}">
+  <a href="{{ route('admin.dashboard') }}" class="pms-tab-link {{ request()->routeIs('admin.utilities.*') || request()->routeIs('admin.roommanagement.*') || request()->routeIs('admin.roommaintain.*') || request()->routeIs('admin.nightaudit.*') || request()->routeIs('admin.services.*') || request()->routeIs('admin.dashboard') ? 'active' : '' }}">
     <i class="fa-solid fa-user-gear tab-ico" style="color: #94a3b8;"></i> Administrator
   </a>
 </nav>
 
 <!-- Dynamic Action Sub-Ribbon (Hidden when Administrator tab is active) -->
 @php
-  $isAdminTabActive = request()->routeIs('admin.utilities.*') || request()->routeIs('admin.roommanagement.*') || request()->routeIs('admin.roommaintain.*') || request()->routeIs('admin.nightaudit.*') || request()->routeIs('admin.dashboard');
+  $isAdminTabActive = request()->routeIs('admin.utilities.*') || request()->routeIs('admin.roommanagement.*') || request()->routeIs('admin.roommaintain.*') || request()->routeIs('admin.nightaudit.*') || request()->routeIs('admin.services.*') || request()->routeIs('admin.dashboard');
 @endphp
 
 @if(!$isAdminTabActive)

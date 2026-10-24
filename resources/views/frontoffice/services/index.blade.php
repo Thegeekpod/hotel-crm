@@ -1,34 +1,32 @@
 @extends('frontoffice.layouts.app')
 
-@section('title', 'Extra Services, Room Dining & Amenities - Hotel Sagar Sonnet')
+@section('title', 'Extra Services & In-Room Dining - Hotel Sagar Sonnet')
 
 @push('styles')
 <style>
   :root {
-    --bnq-gold: #f59e0b;
-    --bnq-gold-dark: #d97706;
-    --bnq-gold-light: #fffbeb;
-    --bnq-rose: #f43f5e;
-    --bnq-emerald: #10b981;
-    --bnq-indigo: #6366f1;
-    --bnq-cyan: #06b6d4;
+    --srv-emerald: #10b981;
+    --srv-indigo: #6366f1;
+    --srv-amber: #f59e0b;
+    --srv-rose: #f43f5e;
+    --srv-cyan: #06b6d4;
   }
 
-  .banquet-container {
+  .services-container {
     padding: 16px 20px;
     background: #f1f5f9;
     min-height: calc(100vh - 110px);
   }
 
   /* Metric KPI Cards */
-  .banquet-kpi-grid {
+  .services-kpi-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: 14px;
     margin-bottom: 16px;
   }
 
-  .kpi-card-bnq {
+  .kpi-card-srv {
     background: #ffffff;
     border-radius: 12px;
     padding: 14px 18px;
@@ -40,12 +38,12 @@
     transition: transform 0.15s ease, box-shadow 0.15s ease;
   }
 
-  .kpi-card-bnq:hover {
+  .kpi-card-srv:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0,0,0,0.06);
   }
 
-  .kpi-icon-bnq {
+  .kpi-icon-srv {
     width: 44px;
     height: 44px;
     border-radius: 10px;
@@ -56,7 +54,7 @@
     flex-shrink: 0;
   }
 
-  .kpi-meta-bnq h4 {
+  .kpi-meta-srv h4 {
     font-size: 11px;
     text-transform: uppercase;
     font-weight: 700;
@@ -65,7 +63,7 @@
     letter-spacing: 0.5px;
   }
 
-  .kpi-meta-bnq .kpi-num {
+  .kpi-meta-srv .kpi-num {
     font-size: 20px;
     font-weight: 800;
     color: #0f172a;
@@ -73,7 +71,7 @@
   }
 
   /* Header Banner */
-  .bnq-header-banner {
+  .srv-header-banner {
     background: #ffffff;
     border: 1px solid #e2e8f0;
     border-radius: 12px;
@@ -86,26 +84,26 @@
     gap: 12px;
   }
 
-  .bnq-header-left {
+  .srv-header-left {
     display: flex;
     align-items: center;
     gap: 12px;
   }
 
-  .bnq-header-badge {
+  .srv-header-badge {
     width: 42px;
     height: 42px;
     border-radius: 10px;
-    background: linear-gradient(135deg, #f59e0b, #d97706);
+    background: linear-gradient(135deg, #10b981, #059669);
     color: #ffffff;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 20px;
-    box-shadow: 0 4px 10px rgba(245, 158, 11, 0.3);
+    box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);
   }
 
-  .bnq-header-left h2 {
+  .srv-header-left h2 {
     font-size: 17px;
     font-weight: 800;
     color: #0f172a;
@@ -115,13 +113,13 @@
     gap: 8px;
   }
 
-  .bnq-header-left p {
+  .srv-header-left p {
     margin: 2px 0 0 0;
     font-size: 12px;
     color: #64748b;
   }
 
-  .bnq-header-actions {
+  .srv-header-actions {
     display: flex;
     align-items: center;
     gap: 8px;
@@ -129,7 +127,7 @@
   }
 
   /* Segmented Nav Tabs */
-  .bnq-nav-tabs {
+  .srv-nav-tabs {
     display: flex;
     gap: 6px;
     background: #e2e8f0;
@@ -139,7 +137,7 @@
     width: fit-content;
   }
 
-  .bnq-tab-btn {
+  .srv-tab-btn {
     border: none;
     background: transparent;
     padding: 8px 16px;
@@ -154,25 +152,25 @@
     transition: all 0.15s ease;
   }
 
-  .bnq-tab-btn:hover {
+  .srv-tab-btn:hover {
     color: #0f172a;
   }
 
-  .bnq-tab-btn.active {
+  .srv-tab-btn.active {
     background: #ffffff;
     color: #0f172a;
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
   }
 
-  .bnq-tab-btn .badge-pill {
-    padding: 2px 6px;
+  .srv-tab-btn .badge-pill {
+    padding: 2px 7px;
     font-size: 10px;
     border-radius: 12px;
     font-weight: 800;
   }
 
   /* Filter Toolbar */
-  .bnq-filter-toolbar {
+  .srv-filter-toolbar {
     background: #ffffff;
     border: 1px solid #e2e8f0;
     border-radius: 10px;
@@ -185,21 +183,21 @@
     gap: 10px;
   }
 
-  .bnq-search-box {
+  .srv-search-box {
     min-width: 260px;
     position: relative;
     display: flex;
     align-items: center;
   }
 
-  .bnq-search-box i {
+  .srv-search-box i {
     position: absolute;
     left: 12px;
     color: #94a3b8;
     font-size: 13px;
   }
 
-  .bnq-search-box input {
+  .srv-search-box input {
     width: 100%;
     padding: 7px 12px 7px 34px;
     border: 1px solid #cbd5e1;
@@ -211,28 +209,29 @@
     outline: none;
   }
 
-  .bnq-search-box input:focus {
-    border-color: var(--bnq-gold);
+  .srv-search-box input:focus {
+    border-color: #10b981;
     background: #ffffff;
-    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15);
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
   }
 
   /* Table styling */
-  .bnq-table-card {
+  .srv-table-card {
     background: #ffffff;
     border: 1px solid #e2e8f0;
     border-radius: 12px;
-    overflow: hidden;
+    overflow-x: auto;
     box-shadow: 0 1px 3px rgba(0,0,0,0.02);
   }
 
-  .bnq-table {
+  .srv-table {
     width: 100%;
     border-collapse: collapse;
     font-size: 12px;
+    min-width: 850px;
   }
 
-  .bnq-table th {
+  .srv-table th {
     background: #f8fafc;
     padding: 10px 14px;
     font-size: 11px;
@@ -245,14 +244,14 @@
     white-space: nowrap;
   }
 
-  .bnq-table td {
+  .srv-table td {
     padding: 12px 14px;
     border-bottom: 1px solid #f1f5f9;
     color: #1e293b;
     vertical-align: middle;
   }
 
-  .bnq-table tr:hover td {
+  .srv-table tr:hover td {
     background: #f8fafc;
   }
 
@@ -286,76 +285,8 @@
   .order-status-badge.delivered { background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; }
   .order-status-badge.cancelled { background: #fff1f2; color: #e11d48; border: 1px solid #fecdd3; }
 
-  /* Hall Card Grid for Venues */
-  .halls-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
-    gap: 16px;
-    margin-bottom: 20px;
-  }
-
-  .hall-venue-card {
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    padding: 16px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    transition: transform 0.15s, box-shadow 0.15s;
-  }
-
-  .hall-venue-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(0,0,0,0.06);
-  }
-
-  .hall-card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 10px;
-  }
-
-  .hall-card-header h3 {
-    margin: 0;
-    font-size: 14px;
-    font-weight: 800;
-    color: #0f172a;
-    line-height: 1.3;
-  }
-
-  .hall-meta-row {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    font-size: 12px;
-    color: #64748b;
-    margin: 8px 0;
-  }
-
-  .hall-amenities-text {
-    font-size: 11px;
-    color: #475569;
-    background: #f8fafc;
-    padding: 8px 10px;
-    border-radius: 8px;
-    border: 1px solid #f1f5f9;
-    margin: 10px 0;
-    line-height: 1.4;
-  }
-
-  .hall-card-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding-top: 10px;
-    border-top: 1px solid #f1f5f9;
-  }
-
   /* Modals */
-  .bnq-modal-overlay {
+  .srv-modal-overlay {
     position: fixed;
     top: 0;
     left: 0;
@@ -370,23 +301,23 @@
     padding: 20px;
   }
 
-  .bnq-modal-window {
+  .srv-modal-window {
     background: #ffffff;
     border-radius: 14px;
     width: 680px;
     max-width: 95vw;
     box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
     overflow: hidden;
-    animation: bnqModalPop 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    animation: srvModalPop 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
-  @keyframes bnqModalPop {
+  @keyframes srvModalPop {
     from { opacity: 0; transform: scale(0.96); }
     to { opacity: 1; transform: scale(1); }
   }
 
-  .bnq-modal-header {
-    background: linear-gradient(135deg, #d97706, #b45309);
+  .srv-modal-header {
+    background: linear-gradient(135deg, #10b981, #059669);
     color: #ffffff;
     padding: 14px 20px;
     display: flex;
@@ -394,7 +325,7 @@
     align-items: center;
   }
 
-  .bnq-modal-header h3 {
+  .srv-modal-header h3 {
     margin: 0;
     font-size: 15px;
     font-weight: 800;
@@ -403,7 +334,7 @@
     gap: 8px;
   }
 
-  .bnq-modal-close {
+  .srv-modal-close {
     background: rgba(255,255,255,0.2);
     border: none;
     color: #ffffff;
@@ -417,13 +348,13 @@
     justify-content: center;
   }
 
-  .bnq-modal-body {
+  .srv-modal-body {
     padding: 20px;
     max-height: calc(85vh - 120px);
     overflow-y: auto;
   }
 
-  .bnq-modal-footer {
+  .srv-modal-footer {
     padding: 12px 20px;
     background: #f8fafc;
     border-top: 1px solid #e2e8f0;
@@ -438,11 +369,11 @@
     gap: 14px;
   }
 
-  .form-group-bnq {
+  .form-group-srv {
     margin-bottom: 12px;
   }
 
-  .form-group-bnq label {
+  .form-group-srv label {
     display: block;
     font-size: 11px;
     font-weight: 700;
@@ -451,9 +382,9 @@
     margin-bottom: 5px;
   }
 
-  .form-group-bnq input,
-  .form-group-bnq select,
-  .form-group-bnq textarea {
+  .form-group-srv input,
+  .form-group-srv select,
+  .form-group-srv textarea {
     width: 100%;
     padding: 8px 12px;
     border: 1px solid #cbd5e1;
@@ -479,45 +410,45 @@
 @endpush
 
 @section('content')
-<main class="banquet-container">
+<main class="services-container">
 
   <!-- KPI Overview Cards -->
-  <div class="banquet-kpi-grid">
-    <div class="kpi-card-bnq">
-      <div class="kpi-icon-bnq" style="background: #fffbeb; color: #d97706;">
-        <i class="fa-solid fa-champagne-glasses"></i>
+  <div class="services-kpi-grid">
+    <div class="kpi-card-srv">
+      <div class="kpi-icon-srv" style="background: #ecfdf5; color: #059669;">
+        <i class="fa-solid fa-bell-concierge"></i>
       </div>
-      <div class="kpi-meta-bnq">
-        <h4>Banquet Halls &amp; Lawns</h4>
-        <div class="kpi-num">{{ $totalHalls }} <span style="font-size: 11px; color: #64748b; font-weight: 500;">Venues</span></div>
+      <div class="kpi-meta-srv">
+        <h4>Available Services</h4>
+        <div class="kpi-num">{{ $totalServicesCount }} <span style="font-size: 11px; color: #64748b; font-weight: 500;">Active Items</span></div>
       </div>
     </div>
 
-    <div class="kpi-card-bnq">
-      <div class="kpi-icon-bnq" style="background: #eff6ff; color: #2563eb;">
-        <i class="fa-solid fa-bell-concierge"></i>
+    <div class="kpi-card-srv">
+      <div class="kpi-icon-srv" style="background: #eff6ff; color: #2563eb;">
+        <i class="fa-solid fa-fire"></i>
       </div>
-      <div class="kpi-meta-bnq">
+      <div class="kpi-meta-srv">
         <h4>Active Room Orders</h4>
         <div class="kpi-num">{{ $activeRoomOrdersCount }} <span style="font-size: 11px; color: #64748b; font-weight: 500;">In Progress</span></div>
       </div>
     </div>
 
-    <div class="kpi-card-bnq">
-      <div class="kpi-icon-bnq" style="background: #fdf2f8; color: #db2777;">
-        <i class="fa-solid fa-calendar-check"></i>
+    <div class="kpi-card-srv">
+      <div class="kpi-icon-srv" style="background: #f0fdf4; color: #16a34a;">
+        <i class="fa-solid fa-circle-check"></i>
       </div>
-      <div class="kpi-meta-bnq">
-        <h4>Confirmed Events</h4>
-        <div class="kpi-num">{{ $totalEventsBooked }} <span style="font-size: 11px; color: #64748b; font-weight: 500;">Bookings</span></div>
+      <div class="kpi-meta-srv">
+        <h4>Delivered Orders</h4>
+        <div class="kpi-num">{{ $deliveredOrdersCount }} <span style="font-size: 11px; color: #64748b; font-weight: 500;">Completed</span></div>
       </div>
     </div>
 
-    <div class="kpi-card-bnq">
-      <div class="kpi-icon-bnq" style="background: #ecfdf5; color: #059669;">
+    <div class="kpi-card-srv">
+      <div class="kpi-icon-srv" style="background: #fffbeb; color: #d97706;">
         <i class="fa-solid fa-indian-rupee-sign"></i>
       </div>
-      <div class="kpi-meta-bnq">
+      <div class="kpi-meta-srv">
         <h4>Services Revenue</h4>
         <div class="kpi-num" style="color: #059669;">₹ {{ number_format($totalServicesRevenue, 2) }}</div>
       </div>
@@ -525,28 +456,43 @@
   </div>
 
   <!-- Header Action Banner -->
-  <div class="bnq-header-banner">
-    <div class="bnq-header-left">
-      <div class="bnq-header-badge">
+  <div class="srv-header-banner">
+    <div class="srv-header-left">
+      <div class="srv-header-badge">
         <i class="fa-solid fa-bell-concierge"></i>
       </div>
       <div>
-        <h2>Extra Services&amp; In-Room</h2>
-        <p>Manage extra service orders, Londry and Amenities etc.</p>
+        <h2>Extra Services &amp; In-Room Dining</h2>
+        <p>Manage guest room service orders, food dishes, laundry tariffs, and room amenities.</p>
       </div>
     </div>
-    <div class="bnq-header-actions">
+    <!-- <div class="srv-header-actions">
+      <a href="{{ route('admin.services.index') }}" class="btn-ui-secondary" style="text-decoration: none;">
+        <i class="fa-solid fa-sliders"></i> Manage Catalog (Admin)
+      </a>
       <button type="button" class="btn-ui-primary" onclick="openNewRoomOrderModal()" style="background: #10b981; border-color: #10b981;">
-        <i class="fa-solid fa-utensils"></i> New Room Order
+        <i class="fa-solid fa-utensils"></i> Place Room Order
       </button>
-    </div>
+    </div> -->
+  </div>
+
+  <!-- Segmented Nav Tabs -->
+  <div class="srv-nav-tabs">
+    <button type="button" class="srv-tab-btn active" id="tab-btn-orders" onclick="switchServicesTab('orders')">
+      <i class="fa-solid fa-receipt"></i> Room Orders 
+      <span class="badge-pill" style="background: #dbeafe; color: #1e40af;">{{ count($roomOrders) }}</span>
+    </button>
+    <button type="button" class="srv-tab-btn" id="tab-btn-menu" onclick="switchServicesTab('menu')">
+      <i class="fa-solid fa-book-open"></i> Services Catalog
+      <span class="badge-pill" style="background: #e0e7ff; color: #3730a3;">{{ count($services) }}</span>
+    </button>
   </div>
 
   <!-- TAB 1: ROOM SERVICE & AMENITY ORDERS -->
-  <div id="bnq-tab-orders" class="bnq-tab-pane">
-    <div class="bnq-filter-toolbar">
+  <div id="srv-tab-orders" class="srv-tab-pane">
+    <div class="srv-filter-toolbar">
       <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; flex: 1;">
-        <div class="bnq-search-box">
+        <div class="srv-search-box">
           <i class="fa-solid fa-magnifying-glass"></i>
           <input type="text" id="order-search-box" placeholder="Search Room #, Guest, Order ID..." onkeyup="filterOrdersTable()">
         </div>
@@ -567,8 +513,8 @@
     </div>
 
     <!-- Orders Table -->
-    <div class="bnq-table-card">
-      <table class="bnq-table">
+    <div class="srv-table-card">
+      <table class="srv-table">
         <thead>
           <tr>
             <th>Order #</th>
@@ -660,7 +606,7 @@
             <tr>
               <td colspan="9" style="text-align: center; padding: 30px; color: #64748b;">
                 <i class="fa-solid fa-bell-concierge" style="font-size: 24px; margin-bottom: 8px; color: #cbd5e1; display: block;"></i>
-                No room service orders placed today. Click <strong>"New Room Order"</strong> above to send food, beverages, or amenities directly to an in-house room.
+                No room service orders placed today. Click <strong>"Place Room Order"</strong> above to send food, beverages, or amenities directly to an in-house room.
               </td>
             </tr>
           @endforelse
@@ -669,21 +615,21 @@
     </div>
   </div>
 
-
-
-  <!-- TAB 3: IN-ROOM MENU & SERVICES CATALOG -->
-  <div id="bnq-tab-menu" class="bnq-tab-pane" style="display: none;">
-    <div class="bnq-filter-toolbar">
+  <!-- TAB 2: IN-ROOM MENU & SERVICES CATALOG -->
+  <div id="srv-tab-menu" class="srv-tab-pane" style="display: none;">
+    <div class="srv-filter-toolbar">
       <div style="font-weight: 800; color: #0f172a; font-size: 13px; display: flex; align-items: center; gap: 8px;">
         <i class="fa-solid fa-book-open" style="color: #0891b2;"></i> Available Room Dining Dishes &amp; Guest Amenities
       </div>
-      <div style="font-size: 11px; color: #64748b;">
-        Synchronized with Front Desk, Housekeeping and Room Service Kitchen
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <a href="{{ route('admin.services.index') }}" class="btn-ui-secondary" style="font-size: 11px; padding: 4px 10px; text-decoration: none;">
+          <i class="fa-solid fa-plus"></i> Add New in Admin
+        </a>
       </div>
     </div>
 
-    <div class="bnq-table-card">
-      <table class="bnq-table">
+    <div class="srv-table-card">
+      <table class="srv-table">
         <thead>
           <tr>
             <th style="width: 80px;">Code</th>
@@ -704,7 +650,7 @@
               <td><span class="badge-tag blue">{{ $srv->category }}</span></td>
               <td style="color: #64748b;">{{ $srv->unit }}</td>
               <td style="text-align: right; font-family: var(--font-mono, monospace); font-weight: 800; color: #0f172a;">₹ {{ number_format($srv->price, 2) }}</td>
-              <td style="font-size: 11px; color: #475569; max-width: 300px;">{{ $srv->description }}</td>
+              <td style="font-size: 11px; color: #475569; max-width: 300px;">{{ $srv->description ?: '-' }}</td>
               <td style="text-align: center;"><span class="badge-tag green">Available</span></td>
               <td style="text-align: right;">
                 <button type="button" class="btn-ui-primary" style="padding: 4px 10px; font-size: 11px; background: #10b981; border-color: #10b981;" onclick="quickOrderThisService({{ $srv->id }}, '{{ addslashes($srv->name) }}', {{ $srv->price }})">
@@ -721,24 +667,23 @@
 </main>
 
 <!-- MODAL 1: NEW ROOM SERVICE ORDER -->
-<div class="bnq-modal-overlay" id="modal-new-room-order">
-  <div class="bnq-modal-window" style="width: 720px;">
-    <div class="bnq-modal-header" style="background: linear-gradient(135deg, #10b981, #059669);">
+<div class="srv-modal-overlay" id="modal-new-room-order">
+  <div class="srv-modal-window" style="width: 720px;">
+    <div class="srv-modal-header" style="background: linear-gradient(135deg, #10b981, #059669);">
       <h3><i class="fa-solid fa-utensils"></i> In-Room Dining &amp; Service Order</h3>
-      <button type="button" class="bnq-modal-close" onclick="closeBnqModal('modal-new-room-order')">&times;</button>
+      <button type="button" class="srv-modal-close" onclick="closeSrvModal('modal-new-room-order')">&times;</button>
     </div>
     <form id="form-room-order" onsubmit="submitRoomOrder(event)">
       @csrf
-      <div class="bnq-modal-body">
+      <div class="srv-modal-body">
         <div class="form-grid-2">
-          <div class="form-group-bnq">
+          <div class="form-group-srv">
             <label>Select In-House Room *</label>
             <select name="room_id" id="ro-room-select" required onchange="updateRoomOrderGuest()">
               <option value="">Choose Occupied Room</option>
               @foreach($activeRooms as $rm)
                 @php
                   $occGuest = $rm->activeBooking?->guest?->guest_name ?? ($rm->status === 'Occupied' ? 'Occupied Guest' : 'Vacant Room');
-                  $isOcc = $rm->status === 'Occupied' || $rm->activeBooking;
                 @endphp
                 <option value="{{ $rm->id }}" data-guest="{{ $occGuest }}" data-room="{{ $rm->room_number }}">
                   Room #{{ $rm->room_number }} ({{ $rm->categoryRelation?->name ?? 'Standard' }}) - {{ $occGuest }}
@@ -746,7 +691,7 @@
               @endforeach
             </select>
           </div>
-          <div class="form-group-bnq">
+          <div class="form-group-srv">
             <label>Guest Name</label>
             <input type="text" id="ro-guest-display" readonly placeholder="Guest name will load here" style="background: #f8fafc;">
           </div>
@@ -765,7 +710,7 @@
         </div>
 
         <div class="form-grid-2" style="margin-top: 14px;">
-          <div class="form-group-bnq">
+          <div class="form-group-srv">
             <label>Billing &amp; Settlement *</label>
             <select name="payment_status" required>
               <option value="Charged to Room Folio">Charged to Room Folio (Bill at Checkout)</option>
@@ -774,14 +719,14 @@
               <option value="Pending">Pending Collection</option>
             </select>
           </div>
-          <div class="form-group-bnq">
+          <div class="form-group-srv">
             <label>Delivery Staff / Order Taker</label>
             <input type="text" name="served_by" placeholder="Server Name" value="Room Service Desk">
           </div>
         </div>
 
-        <div class="form-group-bnq">
-          <label>Kitchen / Preparation Instructions</label>
+        <div class="form-group-srv">
+          <label>Kitchen / Delivery Instructions</label>
           <textarea name="special_instructions" rows="2" placeholder="e.g. Less spicy, send extra napkins & cutlery, deliver at 8:30 PM"></textarea>
         </div>
 
@@ -796,9 +741,9 @@
           </div>
         </div>
       </div>
-      <div class="bnq-modal-footer">
-        <button type="button" class="btn-ui-secondary" onclick="closeBnqModal('modal-new-room-order')">Cancel</button>
-        <button type="submit" class="btn-ui-primary" style="background: #10b981; border-color: #10b981;">
+      <div class="srv-modal-footer">
+        <button type="button" class="btn-ui-secondary" onclick="closeSrvModal('modal-new-room-order')">Cancel</button>
+        <button type="submit" class="btn-ui-primary" id="btn-submit-order" style="background: #10b981; border-color: #10b981;">
           <i class="fa-solid fa-check"></i> Place Room Order
         </button>
       </div>
@@ -806,19 +751,18 @@
   </div>
 </div>
 
-
-<!-- MODAL 3: VIEW ORDER DOSSIER -->
-<div class="bnq-modal-overlay" id="modal-order-dossier">
-  <div class="bnq-modal-window">
-    <div class="bnq-modal-header" style="background: linear-gradient(135deg, #2563eb, #1d4ed8);">
+<!-- MODAL 2: VIEW ORDER DOSSIER -->
+<div class="srv-modal-overlay" id="modal-order-dossier">
+  <div class="srv-modal-window">
+    <div class="srv-modal-header" style="background: linear-gradient(135deg, #2563eb, #1d4ed8);">
       <h3 id="dossier-order-title"><i class="fa-solid fa-receipt"></i> Room Order Dossier</h3>
-      <button type="button" class="bnq-modal-close" onclick="closeBnqModal('modal-order-dossier')">&times;</button>
+      <button type="button" class="srv-modal-close" onclick="closeSrvModal('modal-order-dossier')">&times;</button>
     </div>
-    <div class="bnq-modal-body" id="dossier-order-content">
+    <div class="srv-modal-body" id="dossier-order-content">
       <!-- Loaded dynamically -->
     </div>
-    <div class="bnq-modal-footer">
-      <button type="button" class="btn-ui-secondary" onclick="closeBnqModal('modal-order-dossier')">Close</button>
+    <div class="srv-modal-footer">
+      <button type="button" class="btn-ui-secondary" onclick="closeSrvModal('modal-order-dossier')">Close</button>
     </div>
   </div>
 </div>
@@ -826,15 +770,16 @@
 
 @push('scripts')
 <script>
-  // Services catalog JSON for order builder
   const servicesCatalog = @json($services);
+  const orderStoreUrl = "{{ route('frontoffice.services.orders.store') }}";
+  const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}';
 
   // Tab switching
-  function switchBanquetTab(tabName) {
-    document.querySelectorAll('.bnq-tab-pane').forEach(el => el.style.display = 'none');
-    document.querySelectorAll('.bnq-tab-btn').forEach(btn => btn.classList.remove('active'));
+  function switchServicesTab(tabName) {
+    document.querySelectorAll('.srv-tab-pane').forEach(el => el.style.display = 'none');
+    document.querySelectorAll('.srv-tab-btn').forEach(btn => btn.classList.remove('active'));
 
-    const targetPane = document.getElementById('bnq-tab-' + tabName);
+    const targetPane = document.getElementById('srv-tab-' + tabName);
     const targetBtn = document.getElementById('tab-btn-' + tabName);
 
     if (targetPane) targetPane.style.display = 'block';
@@ -842,12 +787,12 @@
   }
 
   // Modal handlers
-  function openBnqModal(id) {
+  function openSrvModal(id) {
     const el = document.getElementById(id);
     if (el) el.style.display = 'flex';
   }
 
-  function closeBnqModal(id) {
+  function closeSrvModal(id) {
     const el = document.getElementById(id);
     if (el) el.style.display = 'none';
   }
@@ -855,25 +800,13 @@
   function openNewRoomOrderModal() {
     document.getElementById('form-room-order').reset();
     document.getElementById('order-line-items-container').innerHTML = '';
-    // add first 2 default rows
-    addOrderLineItem(servicesCatalog[0]?.id || null);
-    addOrderLineItem(servicesCatalog[1]?.id || null);
+    if (servicesCatalog.length > 0) {
+      addOrderLineItem(servicesCatalog[0].id);
+    } else {
+      addOrderLineItem(null);
+    }
     calculateRoomOrderTotal();
-    openBnqModal('modal-new-room-order');
-  }
-
-  function openNewBanquetModal() {
-    document.getElementById('form-banquet-booking').reset();
-    calculateBanquetTariff();
-    openBnqModal('modal-new-banquet');
-  }
-
-  function openBookSpecificHallModal(hallId, hallName, baseTariff) {
-    openNewBanquetModal();
-    const sel = document.getElementById('bq-hall-select');
-    sel.value = hallId;
-    document.getElementById('bq-rental').value = baseTariff;
-    calculateBanquetTariff();
+    openSrvModal('modal-new-room-order');
   }
 
   function quickOrderThisService(serviceId, name, price) {
@@ -903,10 +836,10 @@
     row.className = 'order-item-row';
     row.id = `item-row-${itemCounter}`;
 
-    let optionsHtml = '<option value="">Custom Food / Amenity Item</option>';
+    let optionsHtml = '<option value="">-- Choose Hotel Service / Food Item --</option>';
     servicesCatalog.forEach(s => {
       const isSelected = selectedServiceId && s.id == selectedServiceId ? 'selected' : '';
-      optionsHtml += `<option value="${s.id}" data-price="${s.price}" data-name="${s.name}" ${isSelected}>[${s.code}] ${s.name} (₹ ${s.price})</option>`;
+      optionsHtml += `<option value="${s.id}" data-price="${s.price}" data-name="${s.name}" ${isSelected}>[${s.code || 'SRV'}] ${s.name} (₹ ${parseFloat(s.price).toFixed(2)})</option>`;
     });
 
     row.innerHTML = `
@@ -915,7 +848,7 @@
           ${optionsHtml}
         </select>
         <input type="hidden" name="items[${itemCounter}][service_id]" id="input-service-id-${itemCounter}" value="${selectedServiceId || ''}">
-        <input type="text" name="items[${itemCounter}][name]" id="input-item-name-${itemCounter}" placeholder="Item description" style="padding: 5px 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 11px; width: 100%; margin-top: 4px; display: none;">
+        <input type="text" name="items[${itemCounter}][name]" id="input-item-name-${itemCounter}" placeholder="Custom item description" style="padding: 5px 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 11px; width: 100%; margin-top: 4px; display: none;">
       </div>
       <div style="width: 80px;">
         <input type="number" step="0.01" name="items[${itemCounter}][price]" id="input-item-price-${itemCounter}" placeholder="Price" value="0.00" onkeyup="calculateRoomOrderTotal()" onchange="calculateRoomOrderTotal()" style="padding: 6px 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 11px; width: 100%; font-family: var(--font-mono, monospace); font-weight: 700;">
@@ -977,25 +910,6 @@
     document.getElementById('ro-total-display').innerText = `₹ ${total.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   }
 
-  function calculateBanquetTariff() {
-    const hallSelect = document.getElementById('bq-hall-select');
-    const opt = hallSelect.options[hallSelect.selectedIndex];
-    if (opt && opt.value && !document.getElementById('bq-rental').value) {
-      document.getElementById('bq-rental').value = opt.getAttribute('data-tariff') || 50000;
-    }
-
-    const rental = parseFloat(document.getElementById('bq-rental').value) || 0;
-    const pax = parseInt(document.getElementById('bq-pax').value) || 0;
-    const plate = parseFloat(document.getElementById('bq-plate').value) || 0;
-    const advance = parseFloat(document.getElementById('bq-advance').value) || 0;
-
-    const total = rental + (pax * plate);
-    const balance = Math.max(0, total - advance);
-
-    document.getElementById('bq-total-display').innerText = `₹ ${total.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-    document.getElementById('bq-balance-display').innerText = `₹ ${balance.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-  }
-
   // Filter orders
   function filterOrdersTable() {
     const q = document.getElementById('order-search-box').value.toLowerCase().trim();
@@ -1015,17 +929,19 @@
     });
   }
 
-  // AJAX Submissions
+  // Submit Order via AJAX
   async function submitRoomOrder(e) {
     e.preventDefault();
     const form = e.target;
     const formData = new FormData(form);
+    const submitBtn = document.getElementById('btn-submit-order');
+    submitBtn.disabled = true;
 
     try {
-      const response = await fetch("{{ route('banquet.room-orders.store') }}", {
+      const response = await fetch(orderStoreUrl, {
         method: "POST",
         headers: {
-          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+          'X-CSRF-TOKEN': csrfToken,
           'Accept': 'application/json'
         },
         body: formData
@@ -1038,8 +954,8 @@
         } else {
           alert(res.message);
         }
-        closeBnqModal('modal-new-room-order');
-        setTimeout(() => location.reload(), 800);
+        closeSrvModal('modal-new-room-order');
+        setTimeout(() => location.reload(), 700);
       } else {
         const msg = res.message || (res.errors ? Object.values(res.errors).flat().join('<br>') : 'Error placing room order.');
         if (typeof PmsAlert !== 'undefined') {
@@ -1050,55 +966,20 @@
       }
     } catch (err) {
       console.error(err);
-      alert('Network error.');
+      alert('Network or server error.');
+    } finally {
+      submitBtn.disabled = false;
     }
   }
 
-  async function submitBanquetBooking(e) {
-    e.preventDefault();
-    const form = e.target;
-    const formData = new FormData(form);
-
-    try {
-      const response = await fetch("{{ route('banquet.bookings.store') }}", {
-        method: "POST",
-        headers: {
-          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-          'Accept': 'application/json'
-        },
-        body: formData
-      });
-
-      const res = await response.json();
-      if (response.ok && res.success) {
-        if (typeof PmsAlert !== 'undefined') {
-          PmsAlert.toast(res.message, 'success');
-        } else {
-          alert(res.message);
-        }
-        closeBnqModal('modal-new-banquet');
-        setTimeout(() => location.reload(), 800);
-      } else {
-        const msg = res.message || (res.errors ? Object.values(res.errors).flat().join('<br>') : 'Error creating event booking.');
-        if (typeof PmsAlert !== 'undefined') {
-          PmsAlert.toast(msg, 'error');
-        } else {
-          alert(msg);
-        }
-      }
-    } catch (err) {
-      console.error(err);
-      alert('Network error.');
-    }
-  }
-
+  // Quick Order Status Update
   async function updateOrderStatusAjax(orderId, newStatus) {
     try {
-      const response = await fetch(`/banquet/room-orders/${orderId}/status`, {
+      const response = await fetch(`{{ url('front-office/services/orders') }}/${orderId}/status`, {
         method: "POST",
         headers: {
           'Content-Type': 'application/json',
-          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+          'X-CSRF-TOKEN': csrfToken,
           'Accept': 'application/json'
         },
         body: JSON.stringify({ order_status: newStatus })
@@ -1121,9 +1002,10 @@
     }
   }
 
+  // View Order Details Dossier
   async function viewOrderDossier(id) {
     try {
-      const res = await fetch(`/banquet/room-orders/${id}`);
+      const res = await fetch(`{{ url('front-office/services/orders') }}/${id}`);
       const data = await res.json();
       if (data.success && data.order) {
         const o = data.order;
@@ -1145,59 +1027,25 @@
             <div><strong>Room #:</strong> ${o.room_number}</div>
             <div><strong>Billing:</strong> ${o.payment_status}</div>
             <div><strong>Status:</strong> ${o.order_status}</div>
+            <div><strong>Served By:</strong> ${o.served_by || 'Room Service'}</div>
+            <div><strong>Est. Delivery:</strong> ${o.delivery_time || '-'}</div>
             <div style="grid-column: 1 / -1;"><strong>Special Instructions:</strong> ${o.special_instructions || 'None'}</div>
           </div>
           <div style="font-weight: 800; font-size: 12px; margin-bottom: 8px; color: #0f172a;">Order Items</div>
           <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 14px; margin-bottom: 12px;">
             ${itemsHtml}
             <div style="display: flex; justify-content: space-between; padding-top: 8px; font-weight: 800; font-size: 13px; color: #0f172a;">
-              <div>Total (inc. taxes):</div>
+              <div>Total (inc. 5% tax):</div>
               <div style="font-family: var(--font-mono, monospace); color: #059669;">₹ ${parseFloat(o.total_amount).toFixed(2)}</div>
             </div>
           </div>
         `;
 
-        openBnqModal('modal-order-dossier');
+        openSrvModal('modal-order-dossier');
       }
     } catch (err) {
       console.error(err);
       alert('Unable to load order dossier.');
-    }
-  }
-
-  async function viewFunctionSheet(id) {
-    try {
-      const res = await fetch(`/banquet/bookings/${id}/function-sheet`);
-      const data = await res.json();
-      if (data.success && data.booking) {
-        const b = data.booking;
-        document.getElementById('dossier-order-title').innerHTML = `<i class="fa-solid fa-file-lines"></i> Function Sheet - ${b.event_name}`;
-
-        document.getElementById('dossier-order-content').innerHTML = `
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: #f8fafc; padding: 12px; border-radius: 8px; margin-bottom: 14px; font-size: 12px;">
-            <div><strong>Venue:</strong> ${b.hall ? b.hall.name : 'Grand Hall'}</div>
-            <div><strong>Client:</strong> ${b.client_name} (${b.phone || '-'})</div>
-            <div><strong>Event Date:</strong> ${b.event_date}</div>
-            <div><strong>Time Slot:</strong> ${b.time_slot}</div>
-            <div><strong>Pax Capacity:</strong> ${b.guaranteed_pax} Guests</div>
-            <div><strong>Status:</strong> ${b.status}</div>
-          </div>
-          <div style="font-weight: 800; font-size: 12px; margin-bottom: 8px; color: #0f172a;">Event Setup &amp; AV Notes</div>
-          <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 14px; font-size: 12px; line-height: 1.5; color: #334155; margin-bottom: 12px;">
-            ${b.function_sheet_notes || 'Standard banquet cluster setup with audio-visual system and stage lighting.'}
-          </div>
-          <div style="display: flex; justify-content: space-between; background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 10px 14px; font-size: 12px; font-weight: 700;">
-            <div>Total Amount: <strong>₹ ${parseFloat(b.total_amount).toFixed(2)}</strong></div>
-            <div style="color: #059669;">Advance Paid: <strong>₹ ${parseFloat(b.advance_paid).toFixed(2)}</strong></div>
-            <div style="color: #d97706;">Balance Due: <strong>₹ ${parseFloat(b.balance_due).toFixed(2)}</strong></div>
-          </div>
-        `;
-
-        openBnqModal('modal-order-dossier');
-      }
-    } catch (err) {
-      console.error(err);
-      alert('Unable to load function sheet.');
     }
   }
 </script>

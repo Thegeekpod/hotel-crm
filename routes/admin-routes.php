@@ -19,6 +19,7 @@ use App\Http\Controllers\Admin\Utilities\OperationalStatusController;
 use App\Http\Controllers\Admin\RoomManagementController;
 use App\Http\Controllers\Admin\RoomMaintainController;
 use App\Http\Controllers\Admin\NightAuditController as AdminNightAuditController;
+use App\Http\Controllers\Admin\HotelServiceController;
 
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('/', function () {
@@ -119,4 +120,16 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::resource('operational', OperationalStatusController::class)->except(['create', 'edit', 'show']);
         });
     });
+
+    // Hotel Services Directory (CRUD & Status)
+    Route::prefix('services')->name('services.')->group(function () {
+        Route::get('/', [HotelServiceController::class, 'index'])->name('index');
+        Route::post('/', [HotelServiceController::class, 'store'])->name('store');
+        Route::post('/bulk-delete', [HotelServiceController::class, 'bulkDestroy'])->name('bulk-destroy');
+        Route::get('/{id}', [HotelServiceController::class, 'show'])->name('show');
+        Route::put('/{id}', [HotelServiceController::class, 'update'])->name('update');
+        Route::delete('/{id}', [HotelServiceController::class, 'destroy'])->name('destroy');
+        Route::post('/{id}/toggle-status', [HotelServiceController::class, 'toggleStatus'])->name('toggle-status');
+    });
 });
+

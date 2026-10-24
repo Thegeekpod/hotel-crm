@@ -157,6 +157,14 @@ class Room extends Model
             ->latestOfMany();
     }
 
+    public function activeBooking(): HasOne
+    {
+        return $this->hasOne(Booking::class, 'room_id')
+            ->whereIn('status', ['Confirmed', 'Arrived', 'Checked In', 'Stay Over', 'Settlement Done'])
+            ->latestOfMany();
+    }
+
+
     public function guests(): \Illuminate\Database\Eloquent\Relations\HasManyThrough
     {
         return $this->hasManyThrough(Guest::class, Booking::class, 'room_id', 'id', 'id', 'guest_id');

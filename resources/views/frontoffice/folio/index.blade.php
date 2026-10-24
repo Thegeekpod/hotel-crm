@@ -677,11 +677,22 @@
     border-bottom: 1px solid rgba(255,255,255,0.15);
   }
   #folio-details-modal .modal-content-area {
-    padding: 20px 24px;
+    padding: 20px 24px 30px 24px;
     background: #f8fafc;
-    overflow-y: auto;
-    max-height: calc(92vh - 130px);
+    overflow-y: auto !important;
+    max-height: calc(90vh - 130px) !important;
     -webkit-overflow-scrolling: touch;
+    box-sizing: border-box;
+  }
+  #folio-details-modal .modal-content-area::-webkit-scrollbar {
+    width: 6px;
+  }
+  #folio-details-modal .modal-content-area::-webkit-scrollbar-track {
+    background: #f1f5f9;
+  }
+  #folio-details-modal .modal-content-area::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
   }
   #folio-details-modal .modal-bot {
     flex-shrink: 0;
@@ -709,17 +720,20 @@
     }
   }
 
-  /* Media Print Rules */
+  /* Media Print Rules - Folio Invoice */
   @media print {
-    body > *:not(#print-area):not(#folio-print-area) {
+    body.folio-printing > *:not(#folio-print-overlay) {
       display: none !important;
     }
-    #print-area, #folio-print-area {
+    body.folio-printing #folio-print-overlay {
       display: block !important;
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      width: 100% !important;
+      height: auto !important;
+      z-index: 99999 !important;
+      background: #fff !important;
     }
   }
 </style>
@@ -1390,6 +1404,12 @@
             <span class="dossier-label">Total Amount Paid</span>
             <span class="dossier-val mono" id="fmdl-totalpaid-row" style="color: #059669; font-weight: 800;">₹ 0.00</span>
           </div>
+          <div class="dossier-field-row" id="fmdl-services-field-row" style="display: none;">
+            <span class="dossier-label" style="display: flex; align-items: center; gap: 5px; color: #d97706; font-weight: 700;">
+              <i class="fa-solid fa-utensils"></i> In-Room Dining &amp; Services Total
+            </span>
+            <span class="dossier-val mono" id="fmdl-services-row" style="color: #d97706; font-weight: 800;">₹ 0.00</span>
+          </div>
           <div class="dossier-field-row">
             <span class="dossier-label">Discount</span>
             <span class="dossier-val mono" id="fmdl-discount-row" style="color: #059669;">-</span>
@@ -1398,9 +1418,9 @@
             <span class="dossier-label">GST / Tax</span>
             <span class="dossier-val mono" id="fmdl-tax-row" style="color: #6366f1;">-</span>
           </div>
-          <div class="dossier-field-row">
-            <span class="dossier-label">Net Payable Amount</span>
-            <span class="dossier-val mono" id="fmdl-payable-amount" style="font-size: 13px; font-weight: 900; color: #0f172a;">-</span>
+          <div class="dossier-field-row" style="background: #f8fafc; padding: 6px 8px; border-radius: 6px; margin: 4px 0;">
+            <span class="dossier-label" style="font-weight: 800; color: #0f172a;">Grand Total Net Payable</span>
+            <span class="dossier-val mono" id="fmdl-payable-amount" style="font-size: 14px; font-weight: 900; color: #4338ca;">-</span>
           </div>
           <div class="dossier-field-row">
             <span class="dossier-label">Payment Mode</span>
@@ -1409,6 +1429,17 @@
           <div class="dossier-field-row">
             <span class="dossier-label">Payment Remarks / Reference</span>
             <span class="dossier-val" id="fmdl-remarks-row" style="color: #64748b;">-</span>
+          </div>
+        </div>
+
+        <!-- Room Service & Extra Services Invoices Box -->
+        <div style="margin-top: 14px; display: none;" id="fmdl-room-services-box">
+          <div style="font-size: 11px; font-weight: 800; color: #d97706; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center;">
+            <span><i class="fa-solid fa-bell-concierge"></i> In-Room Dining &amp; Service Bills (<span id="fmdl-services-count">0</span> Orders)</span>
+            <span style="font-size: 10px; color: #64748b; text-transform: none; font-weight: 600;">Charged to Guest Folio</span>
+          </div>
+          <div id="fmdl-room-services-list" style="font-size: 11px;">
+            <!-- Populated via JS -->
           </div>
         </div>
 
@@ -1936,10 +1967,14 @@
   }
 
   function renderBillingsLedger(folio) {
+    const totalServiceCost = Number(folio.total_room_service_charges || 0);
+    const grossTotal = Number(folio.total_amount || 0) + totalServiceCost;
+    const netPayableTotal = Number(folio.payable_amount || 0) + totalServiceCost;
+
     const billRateEl = document.getElementById('fmdl-bill-rate');
     if (billRateEl) billRateEl.textContent = formatINR(folio.room_rate);
 
-    document.getElementById('fmdl-gross-amount').textContent = formatINR(folio.total_amount);
+    document.getElementById('fmdl-gross-amount').textContent = formatINR(grossTotal);
     document.getElementById('fmdl-totalpaid-amount').textContent = formatINR(folio.total_paid);
 
     const balanceBox = document.getElementById('fmdl-balance-box');
@@ -1967,10 +2002,70 @@
     document.getElementById('fmdl-tax-row').textContent = folio.gst_amount > 0 ? `${formatINR(folio.gst_amount)} (${folio.gst_percentage}% ${folio.gst_type})` : 'Zero Tax / Exempt';
     
     const payableEl = document.getElementById('fmdl-payable-amount');
-    if (payableEl) payableEl.textContent = formatINR(folio.payable_amount);
+    if (payableEl) {
+      if (totalServiceCost > 0) {
+        payableEl.textContent = `${formatINR(netPayableTotal)} (Room: ${formatINR(folio.payable_amount)} + Services: ${formatINR(totalServiceCost)})`;
+      } else {
+        payableEl.textContent = formatINR(netPayableTotal);
+      }
+    }
 
     document.getElementById('fmdl-paymode-row').textContent = folio.payment_mode || 'Cash / Direct';
     document.getElementById('fmdl-remarks-row').textContent = folio.payment_remarks || 'None';
+
+    // In-Room Dining & Additional Services row
+    const servicesRow = document.getElementById('fmdl-services-field-row');
+    const servicesVal = document.getElementById('fmdl-services-row');
+    const servicesBox = document.getElementById('fmdl-room-services-box');
+    const servicesList = document.getElementById('fmdl-room-services-list');
+    const servicesCount = document.getElementById('fmdl-services-count');
+
+    if (totalServiceCost > 0) {
+      if (servicesRow) servicesRow.style.display = 'flex';
+      if (servicesVal) servicesVal.textContent = `+ ${formatINR(totalServiceCost)}`;
+    } else {
+      if (servicesRow) servicesRow.style.display = 'none';
+    }
+
+    // Render itemized In-Room Dining orders list
+    if (folio.room_service_orders && folio.room_service_orders.length > 0) {
+      if (servicesBox) servicesBox.style.display = 'block';
+      if (servicesCount) servicesCount.textContent = folio.room_service_orders.length;
+
+      let ordHtml = `
+        <table style="width: 100%; border-collapse: collapse; background: #ffffff; border: 1px solid #fed7aa; border-radius: 8px; overflow: hidden; margin-bottom: 4px;">
+          <thead>
+            <tr style="background: #fff7ed; border-bottom: 1px solid #fed7aa; text-align: left;">
+              <th style="padding: 6px 10px; font-size: 10px; color: #9a3412;">Order #</th>
+              <th style="padding: 6px 10px; font-size: 10px; color: #9a3412;">Date &amp; Time</th>
+              <th style="padding: 6px 10px; font-size: 10px; color: #9a3412;">Ordered Items</th>
+              <th style="padding: 6px 10px; font-size: 10px; color: #9a3412; text-align: center;">Status</th>
+              <th style="padding: 6px 10px; font-size: 10px; color: #9a3412; text-align: right;">Bill Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+
+      folio.room_service_orders.forEach(ro => {
+        let itemsDetail = (ro.items || []).map(i => `${i.quantity}x ${escapeHtml(i.item_name)}`).join(', ');
+        ordHtml += `
+          <tr style="border-bottom: 1px solid #ffedd5;">
+            <td style="padding: 6px 10px; font-family: var(--font-mono, monospace); font-weight: 700; color: #c2410c;">${escapeHtml(ro.order_number)}</td>
+            <td style="padding: 6px 10px; color: #475569;">${escapeHtml(ro.date)}</td>
+            <td style="padding: 6px 10px; color: #1e293b; font-size: 10.5px;">${itemsDetail || 'Room Dining Service'}</td>
+            <td style="padding: 6px 10px; text-align: center;">
+              <span style="display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 700; background: #ffedd5; color: #9a3412;">${escapeHtml(ro.order_status)}</span>
+            </td>
+            <td style="padding: 6px 10px; text-align: right; font-family: var(--font-mono, monospace); font-weight: 800; color: #ea580c;">${formatINR(ro.total_amount)}</td>
+          </tr>
+        `;
+      });
+      ordHtml += '</tbody></table>';
+      if (servicesList) servicesList.innerHTML = ordHtml;
+    } else {
+      if (servicesBox) servicesBox.style.display = 'none';
+      if (servicesList) servicesList.innerHTML = '';
+    }
 
     // Settlement History List
     const historyBox = document.getElementById('fmdl-settle-history-box');
@@ -2391,113 +2486,251 @@
     const f = activeFolioData;
     const pg = f.primary_guest || {};
 
+    // Build room rows
     let roomRowsHtml = '';
     (f.rooms || []).forEach(r => {
       const occupantNames = (r.occupants || []).map(o => o.name).join(', ');
+      const nights = Number(f.total_nights || 1);
+      const roomTotal = Number(r.rate || 0) * nights;
       roomRowsHtml += `
         <tr>
           <td style="padding: 8px; border: 1px solid #e2e8f0; font-weight: bold;">${escapeHtml(r.room_number)} (Floor ${escapeHtml(r.floor)})</td>
-          <td style="padding: 8px; border: 1px solid #e2e8f0;">${escapeHtml(r.category)} • ${escapeHtml(r.bedding)}</td>
+          <td style="padding: 8px; border: 1px solid #e2e8f0;">${escapeHtml(r.category)} &bull; ${escapeHtml(r.bedding)}</td>
           <td style="padding: 8px; border: 1px solid #e2e8f0;">${escapeHtml(occupantNames || 'Primary Guest')}</td>
-          <td style="padding: 8px; border: 1px solid #e2e8f0; text-align: right; font-family: monospace;">${formatINR(r.rate)}</td>
+          <td style="padding: 8px; border: 1px solid #e2e8f0; text-align: right; font-family: monospace;">${formatINR(r.rate)} &times; ${nights} night(s)</td>
+          <td style="padding: 8px; border: 1px solid #e2e8f0; text-align: right; font-family: monospace; font-weight:bold;">${formatINR(roomTotal)}</td>
         </tr>
       `;
     });
 
-    const printArea = document.getElementById('print-area') || document.getElementById('folio-print-area');
-    if (printArea) {
-      printArea.innerHTML = `
-        <div style="font-family: Arial, sans-serif; padding: 24px; color: #1e293b; max-width: 800px; margin: auto;">
-          <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #4f46e5; padding-bottom: 14px; margin-bottom: 20px;">
-            <div>
-              <h1 style="margin: 0; font-size: 24px; color: #1e1b4b; text-transform: uppercase;">Hotel Sagar Sonnet</h1>
-              <div style="font-size: 12px; color: #64748b; margin-top: 4px;">Luxury Stays &amp; Hospitality Services • Live PMS Dossier</div>
-            </div>
-            <div style="text-align: right;">
-              <div style="font-size: 18px; font-weight: bold; color: #4f46e5;">TAX INVOICE / SETTLEMENT</div>
-              <div style="font-size: 12px; font-family: monospace; color: #334155; margin-top: 4px;">Settlement #: ${escapeHtml(f.folio_number)}</div>
-              <div style="font-size: 12px; font-family: monospace; color: #64748b;">Booking #: ${escapeHtml(f.reserve_id)}</div>
-            </div>
-          </div>
-
-          <div style="display: flex; justify-content: space-between; margin-bottom: 20px; font-size: 12px; line-height: 1.6;">
-            <div style="flex: 1;">
-              <strong style="color: #4f46e5; font-size: 13px;">GUEST DETAILS:</strong><br>
-              Name: <strong>${escapeHtml(pg.name)}</strong><br>
-              Phone: ${escapeHtml(pg.mobile)}<br>
-              Email: ${escapeHtml(pg.email)}<br>
-              Address: ${escapeHtml(pg.address || 'N/A')}<br>
-              ID Proof: ${escapeHtml(pg.id_card_type)} - ${escapeHtml(pg.id_card_number)}
-            </div>
-            <div style="flex: 1; text-align: right;">
-              <strong style="color: #4f46e5; font-size: 13px;">STAY INFORMATION:</strong><br>
-              Check-In: <strong>${escapeHtml(f.checkin_date_fmt)} (${escapeHtml(f.checkin_time_fmt)})</strong><br>
-              Check-Out: <strong>${escapeHtml(f.checkout_date_fmt)} (${escapeHtml(f.checkout_time_fmt)})</strong><br>
-              Duration: <strong>${escapeHtml(f.total_nights)} Night(s)</strong><br>
-              Meal Plan: <strong>${escapeHtml(f.plan_name)}</strong><br>
-              Total Occupants: <strong>${escapeHtml(f.total_guests_count)} Person(s)</strong>
-            </div>
-          </div>
-
-          <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 12px;">
-            <thead>
-              <tr style="background: #f1f5f9; text-align: left;">
-                <th style="padding: 8px; border: 1px solid #cbd5e1;">Room / Floor</th>
-                <th style="padding: 8px; border: 1px solid #cbd5e1;">Category &amp; Bedding</th>
-                <th style="padding: 8px; border: 1px solid #cbd5e1;">Occupants</th>
-                <th style="padding: 8px; border: 1px solid #cbd5e1; text-align: right;">Tariff / Night</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${roomRowsHtml}
-            </tbody>
-          </table>
-
-          <div style="display: flex; justify-content: flex-end; margin-bottom: 24px;">
-            <div style="width: 320px; font-size: 12px;">
-              <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #e2e8f0;">
-                <span>Gross Room Charges:</span>
-                <span style="font-family: monospace;">${formatINR(f.total_amount)}</span>
-              </div>
-              <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #e2e8f0; color: #059669;">
-                <span>Discount (${escapeHtml(f.discount_percentage)}%):</span>
-                <span style="font-family: monospace;">- ${formatINR(f.discount_amount)}</span>
-              </div>
-              <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #e2e8f0; color: #6366f1;">
-                <span>Tax (${escapeHtml(f.gst_percentage)}% GST):</span>
-                <span style="font-family: monospace;">+ ${formatINR(f.gst_amount)}</span>
-              </div>
-              <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #cbd5e1; font-weight: bold;">
-                <span>Net Payable:</span>
-                <span style="font-family: monospace;">${formatINR(f.payable_amount)}</span>
-              </div>
-              <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #e2e8f0; color: #059669;">
-                <span>Advance Paid:</span>
-                <span style="font-family: monospace;">${formatINR(f.advance_amount)}</span>
-              </div>
-              <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #e2e8f0; color: #4f46e5;">
-                <span>Settlements Paid:</span>
-                <span style="font-family: monospace;">${formatINR(f.settlement_paid)}</span>
-              </div>
-              <div style="display: flex; justify-content: space-between; padding: 4px 0; font-size: 13px; font-weight: 800; color: #059669;">
-                <span>Total Paid:</span>
-                <span style="font-family: monospace;">${formatINR(f.total_paid)}</span>
-              </div>
-              <div style="display: flex; justify-content: space-between; padding: 6px 0; font-size: 14px; font-weight: 900; color: ${f.balance > 0 ? '#e11d48' : '#059669'};">
-                <span>Balance Due:</span>
-                <span style="font-family: monospace;">${formatINR(f.balance)}</span>
-              </div>
-            </div>
-          </div>
-
-          <div style="border-top: 1px dashed #cbd5e1; padding-top: 14px; display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: #64748b;">
-            <div>Status: <strong style="text-transform: uppercase;">${escapeHtml(f.status)}</strong></div>
-            <div>Authorized Front Desk Signature: ______________________</div>
-          </div>
+    // Build service order rows
+    let serviceRowsHtml = '';
+    let serviceTableHtml = '';
+    if (f.room_service_orders && f.room_service_orders.length > 0) {
+      f.room_service_orders.forEach(ro => {
+        const itemsList = (ro.items || []).map(i => `${i.quantity}x ${escapeHtml(i.item_name)}`).join(', ');
+        serviceRowsHtml += `
+          <tr>
+            <td style="padding: 6px 8px; border: 1px solid #fed7aa; font-family: monospace; font-weight: bold; color: #c2410c;">${escapeHtml(ro.order_number)}</td>
+            <td style="padding: 6px 8px; border: 1px solid #fed7aa; color: #475569;">${escapeHtml(ro.date)}</td>
+            <td style="padding: 6px 8px; border: 1px solid #fed7aa; color: #1e293b;">${itemsList}</td>
+            <td style="padding: 6px 8px; border: 1px solid #fed7aa; text-align: right; font-family: monospace; font-weight: bold;">${formatINR(ro.total_amount)}</td>
+          </tr>
+        `;
+      });
+      serviceTableHtml = `
+        <div style="font-weight: bold; font-size: 13px; color: #d97706; margin: 16px 0 6px; text-transform: uppercase; border-left: 4px solid #f59e0b; padding-left: 8px;">
+          In-Room Dining &amp; Hospitality Services
         </div>
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 16px; font-size: 11px;">
+          <thead>
+            <tr style="background: #fff7ed; text-align: left;">
+              <th style="padding: 6px 8px; border: 1px solid #fed7aa; color: #9a3412;">Order #</th>
+              <th style="padding: 6px 8px; border: 1px solid #fed7aa; color: #9a3412;">Date &amp; Time</th>
+              <th style="padding: 6px 8px; border: 1px solid #fed7aa; color: #9a3412;">Items &amp; Service</th>
+              <th style="padding: 6px 8px; border: 1px solid #fed7aa; color: #9a3412; text-align: right;">Amount</th>
+            </tr>
+          </thead>
+          <tbody>${serviceRowsHtml}</tbody>
+        </table>
       `;
-      window.print();
     }
+
+    // Build billing summary rows
+    const grossRoom    = Number(f.total_amount || 0);
+    const serviceChrg  = Number(f.total_room_service_charges || 0);
+    const discAmt      = Number(f.discount_amount || 0);
+    const discPct      = Number(f.discount_percentage || 0);
+    const gstAmt       = Number(f.gst_amount || 0);
+    const gstPct       = Number(f.gst_percentage || 0);
+    const netPayable   = Number(f.payable_amount || 0) + serviceChrg;
+    const advancePaid  = Number(f.advance_amount || 0);
+    const settlePaid   = Number(f.settlement_paid || 0);
+    const totalPaid    = Number(f.total_paid || 0);
+    const balance      = Number(f.balance || 0);
+
+    const serviceChrgRow = serviceChrg > 0 ? `
+      <tr style="color: #d97706;">
+        <td style="padding: 6px 10px; border-bottom: 1px solid #fed7aa;">In-Room Dining &amp; Services</td>
+        <td style="padding: 6px 10px; border-bottom: 1px solid #fed7aa; text-align: right; font-family: monospace;">+ ${formatINR(serviceChrg)}</td>
+      </tr>` : '';
+
+    const discRow = discAmt > 0 ? `
+      <tr style="color: #059669;">
+        <td style="padding: 6px 10px; border-bottom: 1px solid #d1fae5;">Discount (${discPct}%)</td>
+        <td style="padding: 6px 10px; border-bottom: 1px solid #d1fae5; text-align: right; font-family: monospace;">- ${formatINR(discAmt)}</td>
+      </tr>` : '';
+
+    // Build full invoice HTML for new print window
+    const invoiceHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Invoice - ${escapeHtml(f.folio_number)} | Hotel Sagar Sonnet</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Arial, sans-serif; color: #1e293b; background: #fff; padding: 24px; }
+    .inv-wrap { max-width: 820px; margin: 0 auto; }
+    .inv-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px solid #4f46e5; padding-bottom: 14px; margin-bottom: 18px; }
+    .hotel-name { font-size: 22px; font-weight: 900; color: #1e1b4b; text-transform: uppercase; letter-spacing: 1px; }
+    .hotel-sub { font-size: 11px; color: #64748b; margin-top: 3px; }
+    .inv-title { font-size: 16px; font-weight: 800; color: #4f46e5; text-align: right; }
+    .inv-ref { font-size: 11px; font-family: monospace; color: #475569; text-align: right; margin-top: 4px; }
+    .info-grid { display: flex; justify-content: space-between; margin-bottom: 18px; font-size: 11.5px; line-height: 1.7; }
+    .info-block { flex: 1; }
+    .info-block.right { text-align: right; }
+    .info-label { font-weight: 700; color: #4f46e5; font-size: 12px; display: block; margin-bottom: 4px; text-transform: uppercase; letter-spacing: .5px; }
+    table { width: 100%; border-collapse: collapse; font-size: 11.5px; margin-bottom: 14px; }
+    thead tr { background: #f1f5f9; }
+    th { padding: 8px 10px; border: 1px solid #cbd5e1; text-align: left; font-size: 11px; color: #475569; text-transform: uppercase; }
+    td { padding: 7px 10px; border: 1px solid #e2e8f0; }
+    .bill-table td:last-child { text-align: right; font-family: monospace; }
+    .summary-wrap { display: flex; justify-content: flex-end; margin: 10px 0 20px; }
+    .summary-box { width: 340px; font-size: 12px; border: 1px solid #e2e8f0; border-radius: 6px; overflow: hidden; }
+    .summary-box table { margin: 0; font-size: 12px; }
+    .summary-box table td { border-color: #e2e8f0; padding: 7px 12px; }
+    .s-head td { background: #f8fafc; font-weight: 700; font-size: 11px; color: #475569; text-transform: uppercase; }
+    .s-total td { background: #f1f5f9; font-weight: 800; font-size: 13px; color: #1e293b; }
+    .s-paid td { color: #059669; }
+    .s-bal td { font-weight: 900; font-size: 14px; background: ${balance > 0 ? '#fff1f2' : '#f0fdf4'}; color: ${balance > 0 ? '#e11d48' : '#059669'}; }
+    .section-label { font-weight: 700; font-size: 12px; color: #7c3aed; text-transform: uppercase; letter-spacing: .5px; border-left: 4px solid #7c3aed; padding-left: 8px; margin: 12px 0 6px; }
+    .footer { border-top: 1px dashed #cbd5e1; padding-top: 14px; display: flex; justify-content: space-between; align-items: center; font-size: 10.5px; color: #64748b; margin-top: 8px; }
+    .status-chip { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 10px; font-weight: 700; text-transform: uppercase; background: #e0e7ff; color: #3730a3; }
+    @media print {
+      body { padding: 10px; }
+      .no-print { display: none !important; }
+    }
+  </style>
+</head>
+<body>
+<div class="inv-wrap">
+
+
+
+  <!-- Header -->
+  <div class="inv-header">
+    <div>
+      <div class="hotel-name">Hotel Sagar Sonnet</div>
+      <div class="hotel-sub">Luxury Stays &amp; Hospitality Services &bull; Front Office PMS</div>
+    </div>
+    <div>
+      <div class="inv-title">TAX INVOICE / SETTLEMENT</div>
+      <div class="inv-ref">Settlement #: <strong>${escapeHtml(f.folio_number)}</strong></div>
+      <div class="inv-ref">Booking Ref: <strong>${escapeHtml(f.reserve_id || ('RES-' + f.id))}</strong></div>
+      <div class="inv-ref">Status: <span class="status-chip">${escapeHtml(f.status)}</span></div>
+    </div>
+  </div>
+
+  <!-- Guest & Stay Info -->
+  <div class="info-grid">
+    <div class="info-block">
+      <span class="info-label">Guest Details</span>
+      <strong>${escapeHtml(pg.name || 'N/A')}</strong><br>
+      Phone: ${escapeHtml(pg.mobile || 'N/A')}<br>
+      Email: ${escapeHtml(pg.email || 'N/A')}<br>
+      Address: ${escapeHtml(pg.address || 'N/A')}<br>
+      ID Proof: ${escapeHtml(pg.id_card_type || 'N/A')} &ndash; ${escapeHtml(pg.id_card_number || 'N/A')}
+    </div>
+    <div class="info-block right">
+      <span class="info-label">Stay Information</span>
+      Check-In: <strong>${escapeHtml(f.checkin_date_fmt || '')} ${escapeHtml(f.checkin_time_fmt || '')}</strong><br>
+      Check-Out: <strong>${escapeHtml(f.checkout_date_fmt || '')} ${escapeHtml(f.checkout_time_fmt || '')}</strong><br>
+      Duration: <strong>${escapeHtml(String(f.total_nights || 1))} Night(s)</strong><br>
+      Meal Plan: <strong>${escapeHtml(f.plan_name || 'EP')}</strong><br>
+      Guests: <strong>${escapeHtml(String(f.total_guests_count || 1))} Person(s)</strong><br>
+      Mode: <strong>${escapeHtml(f.reservation_mode || 'Front Desk')}</strong>
+    </div>
+  </div>
+
+  <!-- Room Charges Table -->
+  <div class="section-label">Room Charges</div>
+  <table>
+    <thead>
+      <tr>
+        <th>Room / Floor</th>
+        <th>Category &amp; Bedding</th>
+        <th>Occupants</th>
+        <th style="text-align:right;">Tariff &times; Nights</th>
+        <th style="text-align:right;">Room Total</th>
+      </tr>
+    </thead>
+    <tbody class="bill-table">${roomRowsHtml}</tbody>
+  </table>
+
+  <!-- Service Orders -->
+  ${serviceTableHtml}
+
+  <!-- Bill Summary -->
+  <div class="summary-wrap">
+    <div class="summary-box">
+      <table>
+        <tr class="s-head"><td colspan="2">Bill Summary</td></tr>
+        <tr>
+          <td>Gross Room Charges</td>
+          <td style="text-align:right; font-family:monospace;">${formatINR(grossRoom)}</td>
+        </tr>
+        ${serviceChrgRow}
+        ${discRow}
+        <tr style="color: #6366f1;">
+          <td style="padding: 6px 10px; border-bottom: 1px solid #e0e7ff;">Tax (GST ${gstPct}%)</td>
+          <td style="padding: 6px 10px; border-bottom: 1px solid #e0e7ff; text-align: right; font-family: monospace;">+ ${formatINR(gstAmt)}</td>
+        </tr>
+        <tr class="s-total">
+          <td style="padding: 7px 10px; border-bottom: 2px solid #cbd5e1;">Net Payable</td>
+          <td style="padding: 7px 10px; border-bottom: 2px solid #cbd5e1; text-align: right; font-family: monospace;">${formatINR(netPayable)}</td>
+        </tr>
+        <tr class="s-paid">
+          <td style="padding: 6px 10px; border-bottom: 1px solid #d1fae5;">Advance Paid</td>
+          <td style="padding: 6px 10px; border-bottom: 1px solid #d1fae5; text-align: right; font-family: monospace;">- ${formatINR(advancePaid)}</td>
+        </tr>
+        <tr class="s-paid">
+          <td style="padding: 6px 10px; border-bottom: 1px solid #d1fae5;">Settlements Paid</td>
+          <td style="padding: 6px 10px; border-bottom: 1px solid #d1fae5; text-align: right; font-family: monospace;">- ${formatINR(settlePaid)}</td>
+        </tr>
+        <tr class="s-paid">
+          <td style="padding: 6px 10px; border-bottom: 2px solid #6ee7b7; font-weight:700;">Total Paid</td>
+          <td style="padding: 6px 10px; border-bottom: 2px solid #6ee7b7; text-align: right; font-family: monospace; font-weight:700;">${formatINR(totalPaid)}</td>
+        </tr>
+        <tr class="s-bal">
+          <td style="padding: 8px 10px;">Balance Due</td>
+          <td style="padding: 8px 10px; text-align: right; font-family: monospace;">${formatINR(balance)}</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <div>Generated: ${new Date().toLocaleString('en-IN')} &bull; Status: <strong style="text-transform:uppercase;">${escapeHtml(f.status)}</strong></div>
+    <div>Authorized Front Desk Signature: ________________________</div>
+  </div>
+
+</div>
+</body>
+</html>`;
+
+    // Use a hidden iframe to print directly without opening a new window
+    const existingFrame = document.getElementById('folio-print-frame');
+    if (existingFrame) existingFrame.remove();
+
+    const iframe = document.createElement('iframe');
+    iframe.id = 'folio-print-frame';
+    iframe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;border:none;opacity:0;';
+    document.body.appendChild(iframe);
+
+    iframe.contentDocument.open();
+    iframe.contentDocument.write(invoiceHtml);
+    iframe.contentDocument.close();
+
+    iframe.onload = function() {
+      iframe.contentWindow.focus();
+      iframe.contentWindow.print();
+      // Remove the iframe after printing dialog closes
+      setTimeout(function() {
+        if (iframe && iframe.parentNode) iframe.parentNode.removeChild(iframe);
+      }, 2000);
+    };
   }
 
   // Explicit window bindings

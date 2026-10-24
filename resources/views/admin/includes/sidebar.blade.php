@@ -148,10 +148,10 @@
     <span>Accounts & Finance</span>
   </div>
 
-  <div class="admin-nav-flat" onclick="PmsAlert.toast('Banquet & Services master module queued for client review.', 'info')">
+  <a href="{{ route('banquet.index') }}" class="admin-nav-flat {{ request()->routeIs('banquet.*') ? 'active' : '' }}" style="text-decoration: none; color: inherit;">
     <i class="fa-solid fa-champagne-glasses" style="color: #fbbf24;"></i>
     <span>Banquet & Services</span>
-  </div>
+  </a>
 
   <div class="admin-nav-flat" onclick="PmsAlert.toast('System & Roles master module queued for client review.', 'info')">
     <i class="fa-solid fa-shield-halved" style="color: #64748b;"></i>

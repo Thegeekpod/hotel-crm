@@ -14,3 +14,6 @@ require __DIR__.'/settings.php';
 require __DIR__.'/admin-routes.php';
 require __DIR__.'/frontoffice-routes.php';
 require __DIR__.'/roommanage-routes.php';
+require __DIR__.'/banquet-routes.php';
+
+

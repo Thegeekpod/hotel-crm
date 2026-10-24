@@ -35,7 +35,10 @@
     <i class="fa-solid fa-file-invoice-dollar tab-ico" style="color: #a78bfa;"></i> Accounts
   </a>
   <a href="{{ route('banquet.index') }}" class="pms-tab-link {{ request()->routeIs('banquet.*') ? 'active' : '' }}">
-    <i class="fa-solid fa-champagne-glasses tab-ico" style="color: #fbbf24;"></i> Banquet & Services
+    <i class="fa-solid fa-champagne-glasses tab-ico" style="color: #fbbf24;"></i> Extra Services
+  </a>
+  <a href="{{ route('banquet.index') }}" class="pms-tab-link {{ request()->routeIs('banquet.*') ? 'active' : '' }}">
+    <i class="fa-solid fa-champagne-glasses tab-ico" style="color: #fbbf24;"></i> Banquet
   </a>
   <a href="{{ route('admin.dashboard') }}" class="pms-tab-link {{ request()->routeIs('admin.utilities.*') || request()->routeIs('admin.roommanagement.*') || request()->routeIs('admin.roommaintain.*') || request()->routeIs('admin.nightaudit.*') || request()->routeIs('admin.dashboard') ? 'active' : '' }}">
     <i class="fa-solid fa-user-gear tab-ico" style="color: #94a3b8;"></i> Administrator

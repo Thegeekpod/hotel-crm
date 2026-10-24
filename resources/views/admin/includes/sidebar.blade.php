@@ -138,6 +138,12 @@
     </ul>
   </div>
 
+  <!-- Main Item: Extra Services -->
+  <a href="{{ route('admin.nightaudit.index') }}" class="admin-nav-flat {{ request()->routeIs('admin.nightaudit.*') ? 'active' : '' }}" style="text-decoration: none; margin-bottom: 8px;">
+    <i class="fa-solid fa-moon" style="color: #8b5cf6; font-size: 13px;"></i>
+    <span>Extra Services</span>
+  </a>
+
   <div class="admin-nav-flat" onclick="PmsAlert.toast('Stores & Inventory master module queued for client review.', 'info')">
     <i class="fa-solid fa-boxes-stacked" style="color: #22d3ee;"></i>
     <span>Stores & Inventory</span>

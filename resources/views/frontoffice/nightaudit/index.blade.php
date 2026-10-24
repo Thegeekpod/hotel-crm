@@ -369,13 +369,13 @@
   @media print {
     @page {
       size: A4 portrait;
-      margin: 12mm 10mm;
+      margin: 10mm 8mm;
     }
     html, body {
       background: #ffffff !important;
       color: #0f172a !important;
-      font-size: 11px !important;
-      line-height: 1.4 !important;
+      font-size: 10px !important;
+      line-height: 1.3 !important;
       -webkit-print-color-adjust: exact !important;
       print-color-adjust: exact !important;
     }
@@ -399,16 +399,19 @@
     .print-table {
       width: 100% !important;
       border-collapse: collapse !important;
+      table-layout: auto !important;
     }
     .print-table th, .print-table td {
       border: 1px solid #cbd5e1 !important;
-      padding: 6px 8px !important;
+      padding: 4px 5px !important;
+      font-size: 8px !important;
     }
     .print-table th {
       background: #f1f5f9 !important;
       font-weight: 800 !important;
       text-transform: uppercase !important;
-      font-size: 10px !important;
+      font-size: 8.5px !important;
+      letter-spacing: 0.2px !important;
     }
   }
 </style>
@@ -1129,159 +1132,73 @@
 </div>
 @endif
 
-<!-- PRINT REPORT CONTENT (COMPREHENSIVE EXECUTIVE DOSSIER) -->
+<!-- PRINT REPORT CONTENT (FRONT OFFICE NIGHT AUDIT REPORT) -->
 <div id="printable-night-audit-report" style="display: none;">
-  <div style="max-width: 820px; margin: 0 auto; font-family: 'Segoe UI', Arial, sans-serif; padding: 10px 0; color: #0f172a;">
+  <div style="width: 100%; margin: 0 auto; font-family: 'Segoe UI', Arial, sans-serif; padding: 0; color: #0f172a; box-sizing: border-box;">
     
     <!-- Header with Hotel Identity -->
-    <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #4338ca; padding-bottom: 12px; margin-bottom: 16px;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #4338ca; padding-bottom: 12px; margin-bottom: 14px;">
       <div>
         <h1 style="margin: 0; font-size: 22px; font-weight: 800; color: #1e1b4b; text-transform: uppercase; letter-spacing: 0.5px;">Hotel Sagar Sonnet</h1>
-        <div style="font-size: 11px; color: #475569; margin-top: 3px;">Luxury Hospitality &amp; Premium Suites • Live PMS Front Desk</div>
-        <div style="font-size: 10px; color: #64748b; margin-top: 2px;">Phone: +91 98765 43210 • Email: info@hotelsagarsonnet.com</div>
+        <div style="font-size: 11px; color: #475569; margin-top: 3px;">Luxury Hospitality &amp; Premium Suites &bull; Front Office Night Audit</div>
+        <div style="font-size: 10px; color: #64748b; margin-top: 2px;">Station Road &bull; Front Desk Management System</div>
       </div>
       <div style="text-align: right;">
-        <div style="font-size: 16px; font-weight: 800; color: #4338ca; text-transform: uppercase; letter-spacing: 0.5px;">DAILY NIGHT AUDIT REPORT</div>
+        <div style="font-size: 15px; font-weight: 800; color: #4338ca; text-transform: uppercase; letter-spacing: 0.5px;">FRONT OFFICE NIGHT AUDIT REPORT</div>
         <div style="font-size: 11px; font-family: monospace; font-weight: 700; color: #0f172a; margin-top: 3px;">
-          Date: {{ \Carbon\Carbon::parse($selectedDate)->format('d F Y') }} ({{ \Carbon\Carbon::parse($selectedDate)->format('l') }})
+          Audit Date: {{ \Carbon\Carbon::parse($selectedDate)->format('d F Y') }} ({{ \Carbon\Carbon::parse($selectedDate)->format('l') }})
         </div>
         <div style="font-size: 10px; color: #64748b; margin-top: 2px;">
-          Generated: {{ now()->format('d M Y, h:i A') }} • Status: <strong>{{ $existingAudit ? 'AUDIT CLOSED' : 'LIVE / PENDING' }}</strong>
+          Auditor: <strong>{{ $existingAudit?->auditor_name ?? auth()->user()?->name ?? 'Front Office Night Auditor' }}</strong> &bull; Status: <strong style="color: #059669;">{{ $existingAudit ? 'AUDIT COMPLETED' : 'LIVE AUDIT' }}</strong>
         </div>
       </div>
     </div>
 
-    <!-- Daily Operational Activity Summary Strip -->
-    <div class="print-avoid-break" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 12px;">
-      <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; padding: 6px 8px; text-align: center;">
-        <div style="font-size: 8.5px; font-weight: 800; color: #475569; text-transform: uppercase;">Today Payments</div>
-        <div style="font-size: 15px; font-weight: 900; color: #059669; font-family: monospace; margin-top: 1px;">{{ count($paymentsList) }}</div>
-        <div style="font-size: 8px; color: #64748b;">₹ {{ number_format($totalPayments, 2) }}</div>
-      </div>
-      <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; padding: 6px 8px; text-align: center;">
-        <div style="font-size: 8.5px; font-weight: 800; color: #475569; text-transform: uppercase;">Occupied Rooms</div>
-        <div style="font-size: 15px; font-weight: 900; color: #2563eb; font-family: monospace; margin-top: 1px;">{{ $occupiedRoomsCount }}</div>
-        <div style="font-size: 8px; color: #64748b;">{{ $occupancyRate }}% Occupancy</div>
-      </div>
-      <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; padding: 6px 8px; text-align: center;">
-        <div style="font-size: 8.5px; font-weight: 800; color: #475569; text-transform: uppercase;">Housekeeping</div>
-        <div style="font-size: 15px; font-weight: 900; color: #16a34a; font-family: monospace; margin-top: 1px;">{{ count($todayHousekeepingHistories) }}</div>
-        <div style="font-size: 8px; color: #64748b;">Activity Logged</div>
-      </div>
-      <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; padding: 8px; text-align: center;">
-        <div style="font-size: 8.5px; font-weight: 800; color: #475569; text-transform: uppercase;">Operational</div>
-        <div style="font-size: 15px; font-weight: 900; color: #d97706; font-family: monospace; margin-top: 1px;">{{ count($todayOperationalHistories) }}</div>
-        <div style="font-size: 8px; color: #64748b;">Room Status Logs</div>
-      </div>
-    </div>
-
-    <!-- 4 Key Financial Summary Cards -->
+    <!-- 4 Front Office KPI Summary Cards (Exactly matching Front Office screen) -->
     <div class="print-avoid-break" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 16px;">
-      <div style="border: 1px solid #cbd5e1; border-top: 3px solid #6366f1; border-radius: 6px; padding: 8px 10px; background: #faf5ff;">
-        <div style="font-size: 9px; font-weight: 800; color: #6b21a8; text-transform: uppercase;">Total Bill Amount</div>
-        <div style="font-size: 14px; font-weight: 900; color: #581c87; font-family: monospace; margin-top: 2px;">₹ {{ number_format($totalBookingsBill, 2) }}</div>
-        <div style="font-size: 9px; color: #7e22ce; margin-top: 2px;">{{ count($todayAllBookings) }} Active Booking(s)</div>
+      <div style="border: 1px solid #cbd5e1; border-left: 4px solid #10b981; border-radius: 6px; padding: 8px 10px; background: #ffffff;">
+        <div style="font-size: 9px; font-weight: 800; color: #475569; text-transform: uppercase;">TOTAL AMOUNT</div>
+        <div style="font-size: 15px; font-weight: 900; color: #059669; font-family: monospace; margin-top: 2px;">₹ {{ number_format($totalPayments, 2) }}</div>
+        <div style="font-size: 8.5px; color: #64748b; margin-top: 2px;">Total Collections: ₹ {{ number_format($totalPayments, 2) }}</div>
       </div>
-      <div style="border: 1px solid #cbd5e1; border-top: 3px solid #10b981; border-radius: 6px; padding: 8px 10px; background: #f0fdf4;">
-        <div style="font-size: 9px; font-weight: 800; color: #166534; text-transform: uppercase;">Total Collections</div>
-        <div style="font-size: 14px; font-weight: 900; color: #14532d; font-family: monospace; margin-top: 2px;">₹ {{ number_format($totalPayments, 2) }}</div>
-        <div style="font-size: 9px; color: #15803d; margin-top: 2px;">Cleared / Realized</div>
+      <div style="border: 1px solid #cbd5e1; border-left: 4px solid #4f46e5; border-radius: 6px; padding: 8px 10px; background: #ffffff;">
+        <div style="font-size: 9px; font-weight: 800; color: #475569; text-transform: uppercase;">ROOM OCCUPANCY</div>
+        <div style="font-size: 15px; font-weight: 900; color: #4338ca; font-family: monospace; margin-top: 2px;">{{ number_format($occupancyRate, 1) }}%</div>
+        <div style="font-size: 8.5px; color: #64748b; margin-top: 2px;">Occupied: {{ $occupiedRoomsCount }} &bull; Vacant: {{ $vacantRoomsCount }} &bull; Total: {{ $totalRoomsCount }}</div>
       </div>
-      <div style="border: 1px solid #cbd5e1; border-top: 3px solid #e11d48; border-radius: 6px; padding: 8px 10px; background: #fff1f2;">
-        <div style="font-size: 9px; font-weight: 800; color: #9f1239; text-transform: uppercase;">Unsettled Balance</div>
-        <div style="font-size: 14px; font-weight: 900; color: {{ $totalUnsettledAmount > 0.01 ? '#be123c' : '#15803d' }}; font-family: monospace; margin-top: 2px;">₹ {{ number_format($totalUnsettledAmount, 2) }}</div>
-        <div style="font-size: 9px; color: #be123c; margin-top: 2px;">{{ $unsettledBookingsCount }} Pending Settle(s)</div>
+      <div style="border: 1px solid #cbd5e1; border-left: 4px solid #e11d48; border-radius: 6px; padding: 8px 10px; background: #ffffff;">
+        <div style="font-size: 9px; font-weight: 800; color: #475569; text-transform: uppercase;">UNSETTLED BALANCE</div>
+        <div style="font-size: 15px; font-weight: 900; color: {{ $totalUnsettledAmount > 0.01 ? '#be123c' : '#15803d' }}; font-family: monospace; margin-top: 2px;">₹ {{ number_format($totalUnsettledAmount, 2) }}</div>
+        <div style="font-size: 8.5px; color: {{ $totalUnsettledAmount > 0.01 ? '#be123c' : '#64748b' }}; margin-top: 2px;">{{ $unsettledBookingsCount }} unsettled booking(s) pending</div>
       </div>
-      <div style="border: 1px solid #cbd5e1; border-top: 3px solid #f59e0b; border-radius: 6px; padding: 8px 10px; background: #fffbeb;">
-        <div style="font-size: 9px; font-weight: 800; color: #92400e; text-transform: uppercase;">Room Occupancy</div>
-        <div style="font-size: 14px; font-weight: 900; color: #78350f; font-family: monospace; margin-top: 2px;">{{ number_format($occupancyRate, 1) }}%</div>
-        <div style="font-size: 9px; color: #b45309; margin-top: 2px;">{{ $occupiedRoomsCount }} / {{ $totalRoomsCount }} Rooms Sold</div>
+      <div style="border: 1px solid #cbd5e1; border-left: 4px solid #7c3aed; border-radius: 6px; padding: 8px 10px; background: #ffffff;">
+        <div style="font-size: 9px; font-weight: 800; color: #475569; text-transform: uppercase;">SETTLED BALANCE</div>
+        <div style="font-size: 15px; font-weight: 900; color: #7c3aed; font-family: monospace; margin-top: 2px;">₹ {{ number_format(max(0, $totalBookingsBill - $totalUnsettledAmount), 2) }}</div>
+        <div style="font-size: 8.5px; color: #64748b; margin-top: 2px;">{{ $settledBookingsCount }} settled booking(s) cleared</div>
       </div>
     </div>
 
-    <!-- Payment Modes & Operational Overview Strip -->
-    <div class="print-avoid-break" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
-      <!-- Payment Collection Breakdown -->
-      <table class="print-table" style="font-size: 10px;">
-        <thead>
-          <tr>
-            <th colspan="2" style="text-align: left; background: #f8fafc; font-size: 10px;">Collection Modes Breakdown</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Cash Collection</td>
-            <td style="text-align: right; font-family: monospace; font-weight: 700;">₹ {{ number_format($cashCollection, 2) }}</td>
-          </tr>
-          <tr>
-            <td>UPI / Online (GPay/PhonePe)</td>
-            <td style="text-align: right; font-family: monospace; font-weight: 700;">₹ {{ number_format($upiCollection, 2) }}</td>
-          </tr>
-          <tr>
-            <td>Credit / Debit Card (POS)</td>
-            <td style="text-align: right; font-family: monospace; font-weight: 700;">₹ {{ number_format($cardCollection, 2) }}</td>
-          </tr>
-          <tr>
-            <td>Bank Transfer / NEFT</td>
-            <td style="text-align: right; font-family: monospace; font-weight: 700;">₹ {{ number_format($bankCollection, 2) }}</td>
-          </tr>
-          <tr style="font-weight: 800; background: #f8fafc;">
-            <td>Total Net Collections Reconciled</td>
-            <td style="text-align: right; font-family: monospace; color: #16a34a;">₹ {{ number_format($totalPayments, 2) }}</td>
-          </tr>
-        </tbody>
-      </table>
-
-      <!-- Room & Movements Breakdown -->
-      <table class="print-table" style="font-size: 10px;">
-        <thead>
-          <tr>
-            <th colspan="2" style="text-align: left; background: #f8fafc; font-size: 10px;">Guest Movements &amp; Room Statistics</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Total Hotel Rooms / Occupied / Vacant</td>
-            <td style="text-align: right; font-family: monospace; font-weight: 700;">{{ $totalRoomsCount }} / {{ $occupiedRoomsCount }} / {{ $vacantRoomsCount }}</td>
-          </tr>
-          <tr>
-            <td>Scheduled Arrivals / Checked In</td>
-            <td style="text-align: right; font-family: monospace; font-weight: 700;">{{ $arrivalsCount }} / {{ $checkedInArrivalsCount }}</td>
-          </tr>
-          <tr>
-            <td>Scheduled Departures / Checked Out</td>
-            <td style="text-align: right; font-family: monospace; font-weight: 700;">{{ $departuresCount }} / {{ $completedCheckoutsCount }}</td>
-          </tr>
-          <tr>
-            <td>Average Daily Rate (ADR) / RevPAR</td>
-            <td style="text-align: right; font-family: monospace; font-weight: 700;">₹ {{ number_format($adr, 2) }} / ₹ {{ number_format($revpar, 2) }}</td>
-          </tr>
-          <tr style="font-weight: 800; background: #f8fafc;">
-            <td>Meal Plans Active (EP / CP / MAP / AP)</td>
-            <td style="text-align: right; font-family: monospace;">{{ $mealPlanCounts['EP'] ?? 0 }} / {{ $mealPlanCounts['CP'] ?? 0 }} / {{ $mealPlanCounts['MAP'] ?? 0 }} / {{ $mealPlanCounts['AP'] ?? 0 }}</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- Section: Today Guest Settlements & Collections Detail Table -->
+    <!-- Section 1: Today Payments (Guest Billings & Settlements) -->
     <div style="margin-bottom: 16px;">
-      <div style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: #1e1b4b; border-bottom: 1px solid #cbd5e1; padding-bottom: 4px; margin-bottom: 6px; display: flex; justify-content: space-between;">
-        <span>Guest Billings, Settlements &amp; Outstanding Balances ({{ count($todayAllBookings) }} Bookings)</span>
-        <span style="font-size: 10px; color: #64748b; text-transform: none;">All amounts in INR (₹)</span>
+      <div style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: #1e1b4b; border-bottom: 1px solid #cbd5e1; padding-bottom: 4px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center;">
+        <span>Today Payments ({{ count($todayAllBookings) }})</span>
+        <span style="font-size: 9.5px; color: #64748b; text-transform: none;">Reconciled Guest Accounts (₹ INR)</span>
       </div>
-      <table class="print-table" style="font-size: 9.5px;">
+      <table class="print-table" style="font-size: 8px; width: 100%; border-collapse: collapse; table-layout: fixed;">
         <thead>
           <tr>
             <th style="width: 25px; text-align: center;">SL</th>
-            <th>Guest Name</th>
-            <th style="text-align: center;">Room</th>
-            <th>Settle #</th>
-            <th>Dates</th>
-            <th style="text-align: right;">Total Bill</th>
-            <th style="text-align: right;">Paid Amt</th>
-            <th style="text-align: right;">Remaining</th>
-            <th style="text-align: center;">Status</th>
+            <th style="width: 42px; text-align: center;">ROOM</th>
+            <th style="width: 110px;">GUEST NAME</th>
+            <th style="width: 78px;">PHONE</th>
+            <th style="width: 75px;">SETTLE #</th>
+            <th style="width: 62px;">CHECK-IN</th>
+            <th style="width: 62px;">CHECK-OUT</th>
+            <th style="width: 58px; text-align: center;">STAY</th>
+            <th style="width: 70px; text-align: right;">TOTAL BILL</th>
+            <th style="width: 68px; text-align: right;">PAID</th>
+            <th style="width: 70px; text-align: right;">REMAINING</th>
+            <th style="width: 72px; text-align: center;">STATUS</th>
           </tr>
         </thead>
         <tbody>
@@ -1300,180 +1217,106 @@
               $guestName = ($b->guest?->title?->name ? $b->guest->title->name . ' ' : '') . ($b->guest?->guest_name ?? 'Guest');
               $roomPart = $b->room?->room_number ? preg_replace('/^r[-_\s]?/i', '', trim($b->room->room_number)) : '100';
               $settleDisplay = $b->settle_number ?: ($b->folio_number ?: ($master->settle_number ?: ($master->folio_number ?: ($b->primary_booking_id ?: ('SET-' . $roomPart . '-' . $b->id)))));
+              $mobileNo = $b->guest?->mobile ?: ($b->guest?->phone ?: '-');
+              $stayStatus = $b->status ?? 'Active';
             @endphp
             <tr>
               <td style="text-align: center; font-family: monospace;">{{ $idx + 1 }}</td>
-              <td style="font-weight: 700;">{{ $guestName }}</td>
-              <td style="text-align: center; font-weight: 700; font-family: monospace;">{{ $roomDisplay }}</td>
-              <td style="font-family: monospace; font-weight: 700; color: #4338ca;">{{ $settleDisplay }}</td>
-              <td style="font-size: 9px; color: #475569;">
-                {{ $b->reserve_date ? \Carbon\Carbon::parse($b->reserve_date)->format('d M') : '-' }} - 
-                {{ $b->checkout_date ? \Carbon\Carbon::parse($b->checkout_date)->format('d M') : '-' }}
-              </td>
-              <td style="text-align: right; font-family: monospace; font-weight: 700;">₹ {{ number_format($bill, 2) }}</td>
-              <td style="text-align: right; font-family: monospace; color: #15803d; font-weight: 700;">₹ {{ number_format($paid, 2) }}</td>
-              <td style="text-align: right; font-family: monospace; font-weight: 800; color: {{ $remaining > 0.01 ? '#b91c1c' : '#15803d' }};">
-                ₹ {{ number_format($remaining, 2) }}
-              </td>
-              <td style="text-align: center; font-size: 8.5px; font-weight: 800; text-transform: uppercase;">
+              <td style="text-align: center; font-weight: 700; font-family: monospace; color: #4338ca;">{{ $roomDisplay }}</td>
+              <td style="font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ $guestName }}</td>
+              <td style="font-family: monospace; font-size: 8px; color: #475569;">{{ $mobileNo }}</td>
+              <td style="font-family: monospace; font-weight: 700; font-size: 8px; color: #4338ca; word-break: break-all;">{{ $settleDisplay }}</td>
+              <td style="font-size: 8px; color: #475569; white-space: nowrap;">{{ $b->reserve_date ? \Carbon\Carbon::parse($b->reserve_date)->format('d M Y') : '-' }}</td>
+              <td style="font-size: 8px; color: #475569; white-space: nowrap;">{{ $b->checkout_date ? \Carbon\Carbon::parse($b->checkout_date)->format('d M Y') : '-' }}</td>
+              <td style="text-align: center; font-size: 8px;">{{ $stayStatus }}</td>
+              <td style="text-align: right; font-family: monospace; font-weight: 700; white-space: nowrap;">₹ {{ number_format($bill, 2) }}</td>
+              <td style="text-align: right; font-family: monospace; color: #15803d; font-weight: 700; white-space: nowrap;">₹ {{ number_format($paid, 2) }}</td>
+              <td style="text-align: right; font-family: monospace; font-weight: 800; color: {{ $remaining > 0.01 ? '#b91c1c' : '#15803d' }}; white-space: nowrap;">₹ {{ number_format($remaining, 2) }}</td>
+              <td style="text-align: center; font-size: 8px; font-weight: 800; color: {{ $isSettled ? '#15803d' : '#b91c1c' }};">
                 {{ $isSettled ? 'SETTLED' : 'UNSETTLED' }}
               </td>
             </tr>
           @empty
             <tr>
-              <td colspan="9" style="text-align: center; padding: 14px; color: #94a3b8;">No bookings recorded for this date.</td>
+              <td colspan="12" style="text-align: center; padding: 14px; color: #94a3b8;">No payment records recorded for this date.</td>
             </tr>
           @endforelse
         </tbody>
         @if(count($todayAllBookings) > 0)
           <tfoot>
             <tr style="background: #f8fafc; font-weight: 800;">
-              <td colspan="5" style="text-align: right; text-transform: uppercase; font-size: 10px;">Audit Grand Totals:</td>
-              <td style="text-align: right; font-family: monospace; font-size: 10px;">₹ {{ number_format($totalBookingsBill, 2) }}</td>
-              <td style="text-align: right; font-family: monospace; font-size: 10px; color: #15803d;">₹ {{ number_format($totalPayments, 2) }}</td>
-              <td style="text-align: right; font-family: monospace; font-size: 10px; color: {{ $totalUnsettledAmount > 0.01 ? '#b91c1c' : '#15803d' }};">₹ {{ number_format($totalUnsettledAmount, 2) }}</td>
-              <td style="text-align: center; font-size: 9px;">{{ $settledBookingsCount }}S / {{ $unsettledBookingsCount }}U</td>
+              <td colspan="8" style="text-align: right; text-transform: uppercase; font-size: 9px; color: #64748b;">TOTAL BILL / COLLECTIONS / OUTSTANDING:</td>
+              <td style="text-align: right; font-family: monospace; font-size: 9.5px;">₹ {{ number_format($totalBookingsBill, 2) }}</td>
+              <td style="text-align: right; font-family: monospace; font-size: 9.5px; color: #15803d;">₹ {{ number_format($totalPayments, 2) }}</td>
+              <td style="text-align: right; font-family: monospace; font-size: 9.5px; color: {{ $totalUnsettledAmount > 0.01 ? '#b91c1c' : '#15803d' }};">₹ {{ number_format($totalUnsettledAmount, 2) }}</td>
+              <td style="text-align: center; font-size: 9px; color: {{ $unsettledBookingsCount > 0 ? '#b91c1c' : '#15803d' }};">{{ $unsettledBookingsCount }} Unsettled</td>
             </tr>
           </tfoot>
         @endif
       </table>
     </div>
 
-    <!-- Section: Occupied Rooms Detail Table (if any) -->
-    @if($occupiedRoomsCount > 0)
-      <div class="print-avoid-break" style="margin-bottom: 16px;">
-        <div style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: #1e1b4b; border-bottom: 1px solid #cbd5e1; padding-bottom: 4px; margin-bottom: 6px;">
-          Occupied Rooms Sold Summary ({{ $occupiedRoomsCount }} Rooms)
-        </div>
-        <table class="print-table" style="font-size: 9.5px;">
-          <thead>
-            <tr>
-              <th style="width: 25px; text-align: center;">SL</th>
-              <th>Room</th>
-              <th>Category</th>
-              <th>Floor</th>
-              <th>Primary Guest</th>
-              <th>Settle #</th>
-              <th style="text-align: center;">Housekeeping</th>
-              <th style="text-align: right;">Rate / Day</th>
-            </tr>
-          </thead>
-          <tbody>
+    <!-- Section 2: Occupied Rooms (Summary & Tariffs) -->
+    <div class="print-avoid-break" style="margin-bottom: 16px;">
+      <div style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: #1e1b4b; border-bottom: 1px solid #cbd5e1; padding-bottom: 4px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center;">
+        <span>Occupied Rooms ({{ $occupiedRoomsCount }})</span>
+        <span style="font-size: 9.5px; color: #64748b; text-transform: none;">In-House Room Occupancy &amp; Rates</span>
+      </div>
+      <table class="print-table" style="font-size: 8px; width: 100%; border-collapse: collapse; table-layout: fixed;">
+        <thead>
+          <tr>
+            <th style="width: 25px; text-align: center;">SL</th>
+            <th style="width: 42px; text-align: center;">ROOM</th>
+            <th style="width: 90px;">CATEGORY</th>
+            <th style="width: 58px;">FLOOR</th>
+            <th style="width: 125px;">GUEST NAME</th>
+            <th style="width: 75px;">SETTLE #</th>
+            <th style="width: 62px;">CHECK-IN</th>
+            <th style="width: 62px;">CHECK-OUT</th>
+            <th style="width: 58px; text-align: center;">STAY</th>
+            <th style="width: 90px; text-align: center;">HOUSEKEEPING</th>
+            <th style="width: 85px; text-align: right;">DAY TARIFF</th>
+          </tr>
+        </thead>
+        <tbody>
+          @php
+            $printOccupiedList = isset($occupiedRooms) ? $occupiedRooms : $allRooms->filter(function($rm) use ($activeBookingsByRoom, $activeMaintenanceRooms) {
+              return $activeBookingsByRoom->has($rm->id) && !in_array($rm->id, $activeMaintenanceRooms ?? []);
+            });
+          @endphp
+          @forelse($printOccupiedList as $pIdx => $rm)
             @php
-              $printOccupiedList = isset($occupiedRooms) ? $occupiedRooms : $allRooms->filter(function($rm) use ($activeBookingsByRoom, $activeMaintenanceRooms) {
-                return $activeBookingsByRoom->has($rm->id) && !in_array($rm->id, $activeMaintenanceRooms ?? []);
-              });
+              $cleanNum = 'R' . preg_replace('/^r[-_\s]?/i', '', trim($rm->room_number));
+              $activeBooking = $activeBookingsByRoom->get($rm->id);
+              $latestHk = $rm->housekeepingHistories ? $rm->housekeepingHistories->sortByDesc('id')->first() : null;
+              $hkName = $latestHk?->housekeepingStatus?->name ?? 'Clean';
+              $n = $activeBooking ? max(1, (int)$activeBooking->total_nights) : 1;
+              $dayRate = $activeBooking ? (float)($activeBooking->room_rate ?: ($activeBooking->total_amount / $n)) : 0.00;
+              $rmPart = preg_replace('/^r[-_\s]?/i', '', trim($rm->room_number)) ?: '100';
+              $activeSettleDisplay = $activeBooking ? ($activeBooking->settle_number ?: ($activeBooking->folio_number ?: ($activeBooking->primary_booking_id ?: ('SET-' . $rmPart . '-' . $activeBooking->id)))) : '-';
+              $occGuest = $activeBooking ? (($activeBooking->guest?->title?->name ? $activeBooking->guest->title->name . ' ' : '') . ($activeBooking->guest?->guest_name ?? 'Guest')) : '-';
             @endphp
-            @foreach($printOccupiedList as $pIdx => $rm)
-              @php
-                $cleanNum = 'R' . preg_replace('/^r[-_\s]?/i', '', trim($rm->room_number));
-                $activeBooking = $activeBookingsByRoom->get($rm->id);
-                $latestHk = $rm->housekeepingHistories ? $rm->housekeepingHistories->sortByDesc('id')->first() : null;
-                $hkName = $latestHk?->housekeepingStatus?->name ?? 'Clean';
-                $n = $activeBooking ? max(1, (int)$activeBooking->total_nights) : 1;
-                $dayRate = $activeBooking ? (float)($activeBooking->room_rate ?: ($activeBooking->total_amount / $n)) : 0.00;
-                $rmPart = preg_replace('/^r[-_\s]?/i', '', trim($rm->room_number)) ?: '100';
-                $activeSettleDisplay = $activeBooking ? ($activeBooking->settle_number ?: ($activeBooking->folio_number ?: ($activeBooking->primary_booking_id ?: ('SET-' . $rmPart . '-' . $activeBooking->id)))) : '-';
-              @endphp
-              <tr>
-                <td style="text-align: center; font-family: monospace;">{{ $pIdx + 1 }}</td>
-                <td style="font-weight: 700; font-family: monospace;">{{ $cleanNum }}</td>
-                <td>{{ $rm->categoryRelation?->name ?? 'Standard' }}</td>
-                <td>Floor {{ $rm->floorRelation?->floor ?? '1' }}</td>
-                <td>{{ $activeBooking ? (($activeBooking->guest?->title?->name ? $activeBooking->guest->title->name . ' ' : '') . ($activeBooking->guest?->guest_name ?? 'Guest')) : '-' }}</td>
-                <td style="font-family: monospace; font-weight: 700; color: #4338ca;">{{ $activeSettleDisplay }}</td>
-                <td style="text-align: center;">{{ $hkName }}</td>
-                <td style="text-align: right; font-family: monospace; font-weight: 700;">₹ {{ number_format($dayRate, 2) }}</td>
-              </tr>
-            @endforeach
-          </tbody>
-        </table>
-      </div>
-    @endif
-
-    <!-- Section: Housekeeping History Logs (Print) -->
-    @if(count($todayHousekeepingHistories) > 0)
-      <div class="print-avoid-break" style="margin-bottom: 16px;">
-        <div style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: #1e1b4b; border-bottom: 1px solid #cbd5e1; padding-bottom: 4px; margin-bottom: 6px; display: flex; justify-content: space-between;">
-          <span>Housekeeping Activity &amp; Status Logs ({{ count($todayHousekeepingHistories) }} Records)</span>
-          <span style="font-size: 10px; color: #64748b; text-transform: none;">Audited date activity</span>
-        </div>
-        <table class="print-table" style="font-size: 9px;">
-          <thead>
             <tr>
-              <th style="width: 25px; text-align: center;">SL</th>
-              <th>Time</th>
-              <th>Room</th>
-              <th>Category</th>
-              <th>Floor</th>
-              <th style="text-align: center;">Housekeeping State</th>
-              <th style="text-align: center;">Status</th>
-              <th>Start Time</th>
-              <th>Completion Time</th>
+              <td style="text-align: center; font-family: monospace;">{{ $pIdx + 1 }}</td>
+              <td style="text-align: center; font-weight: 700; font-family: monospace; color: #4338ca;">{{ $cleanNum }}</td>
+              <td style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ $rm->categoryRelation?->name ?? 'Standard' }}</td>
+              <td>Floor {{ $rm->floorRelation?->floor ?? '1' }}</td>
+              <td style="font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ $occGuest }}</td>
+              <td style="font-family: monospace; font-weight: 700; font-size: 8px; color: #4338ca; word-break: break-all;">{{ $activeSettleDisplay }}</td>
+              <td style="font-size: 8px; color: #475569; white-space: nowrap;">{{ $activeBooking?->reserve_date ? \Carbon\Carbon::parse($activeBooking->reserve_date)->format('d M Y') : '-' }}</td>
+              <td style="font-size: 8px; color: #475569; white-space: nowrap;">{{ $activeBooking?->checkout_date ? \Carbon\Carbon::parse($activeBooking->checkout_date)->format('d M Y') : '-' }}</td>
+              <td style="text-align: center; font-size: 8px;">{{ $activeBooking?->status ?? 'Active' }}</td>
+              <td style="text-align: center; font-weight: 700; font-size: 8px;">{{ $hkName }}</td>
+              <td style="text-align: right; font-family: monospace; font-weight: 700; white-space: nowrap;">₹ {{ number_format($dayRate, 2) }}</td>
             </tr>
-          </thead>
-          <tbody>
-            @foreach($todayHousekeepingHistories as $hkIdx => $hk)
-              @php
-                $rmNum = $hk->room?->room_number ? ('R' . preg_replace('/^r[-_\s]?/i', '', trim($hk->room->room_number))) : ('Room #' . $hk->room_id);
-                $stateName = $hk->housekeepingStatus?->name ?? 'Clean';
-              @endphp
-              <tr>
-                <td style="text-align: center; font-family: monospace;">{{ $hkIdx + 1 }}</td>
-                <td style="font-family: monospace;">{{ $hk->created_at ? $hk->created_at->format('h:i A') : '-' }}</td>
-                <td style="font-weight: 700; font-family: monospace;">{{ $rmNum }}</td>
-                <td>{{ $hk->room?->categoryRelation?->name ?? 'Standard' }}</td>
-                <td>Floor {{ $hk->room?->floorRelation?->floor ?? '1' }}</td>
-                <td style="text-align: center; font-weight: 700;">{{ $stateName }}</td>
-                <td style="text-align: center; text-transform: uppercase;">{{ $hk->status ?? 'Complete' }}</td>
-                <td style="font-family: monospace;">{{ $hk->start_time ? \Carbon\Carbon::parse($hk->start_time)->format('h:i A') : '-' }}</td>
-                <td style="font-family: monospace;">{{ $hk->completion_time ? \Carbon\Carbon::parse($hk->completion_time)->format('h:i A') : '-' }}</td>
-              </tr>
-            @endforeach
-          </tbody>
-        </table>
-      </div>
-    @endif
-
-    <!-- Section: Operational History Logs (Print) -->
-    @if(count($todayOperationalHistories) > 0)
-      <div class="print-avoid-break" style="margin-bottom: 16px;">
-        <div style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: #1e1b4b; border-bottom: 1px solid #cbd5e1; padding-bottom: 4px; margin-bottom: 6px; display: flex; justify-content: space-between;">
-          <span>Operational Room Status Logs ({{ count($todayOperationalHistories) }} Records)</span>
-          <span style="font-size: 10px; color: #64748b; text-transform: none;">Service &amp; Maintenance Tracking</span>
-        </div>
-        <table class="print-table" style="font-size: 9px;">
-          <thead>
+          @empty
             <tr>
-              <th style="width: 25px; text-align: center;">SL</th>
-              <th>Time</th>
-              <th>Room</th>
-              <th>Category</th>
-              <th>Floor</th>
-              <th style="text-align: center;">Operational Status</th>
-              <th style="text-align: center;">Model State</th>
+              <td colspan="11" style="text-align: center; padding: 14px; color: #94a3b8;">No occupied rooms recorded on this date.</td>
             </tr>
-          </thead>
-          <tbody>
-            @foreach($todayOperationalHistories as $opIdx => $op)
-              @php
-                $rmNum = $op->room?->room_number ? ('R' . preg_replace('/^r[-_\s]?/i', '', trim($op->room->room_number))) : ('Room #' . $op->room_id);
-                $opStatusName = $op->operationalStatus?->name ?? 'Active';
-              @endphp
-              <tr>
-                <td style="text-align: center; font-family: monospace;">{{ $opIdx + 1 }}</td>
-                <td style="font-family: monospace;">{{ $op->created_at ? $op->created_at->format('h:i A') : '-' }}</td>
-                <td style="font-weight: 700; font-family: monospace;">{{ $rmNum }}</td>
-                <td>{{ $op->room?->categoryRelation?->name ?? 'Standard' }}</td>
-                <td>Floor {{ $op->room?->floorRelation?->floor ?? '1' }}</td>
-                <td style="text-align: center; font-weight: 700;">{{ $opStatusName }}</td>
-                <td style="text-align: center; text-transform: uppercase;">{{ $op->room?->status ?? 'Active' }}</td>
-              </tr>
-            @endforeach
-          </tbody>
-        </table>
-      </div>
-    @endif
+          @endforelse
+        </tbody>
+      </table>
+    </div>
 
     <!-- Auditor Remarks & Sign-off Footer -->
     <div class="print-avoid-break" style="margin-top: 24px; padding-top: 10px; border-top: 1px solid #cbd5e1;">
@@ -1503,6 +1346,7 @@
 
   </div>
 </div>
+
 </div>
 </main>
 @endsection

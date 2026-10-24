@@ -333,9 +333,15 @@
     border: 1px solid rgba(239, 68, 68, 0.25);
   }
   .status-badge.settlement-done, .status-badge.settled, .status-badge.settlement_done {
-    background: #ede9fe;
-    color: #5b21b6;
-    border: 1px solid #ddd6fe;
+    background: #ecfdf5;
+    color: #047857;
+    border: 1px solid #a7f3d0;
+    font-weight: 800;
+  }
+  .status-badge.unsettled {
+    background: #fff1f2;
+    color: #be123c;
+    border: 1px solid #fecdd3;
     font-weight: 800;
   }
 
@@ -813,20 +819,15 @@
                    title="Filter by Check-in Date To">
           </div>
 
-          <!-- Status Filter Dropdown -->
+          <!-- Status Filter Dropdown (Settled / Unsettled) -->
           <div style="display: inline-flex; align-items: center; gap: 6px;">
             <label for="folio-status-filter" style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">
               <i class="fa-solid fa-filter" style="color: #6366f1;"></i> Status:
             </label>
             <select name="status" id="folio-status-filter" class="pms-filter-select" onchange="this.form.submit()">
               <option value="all" {{ request('status') === 'all' || !request()->filled('status') ? 'selected' : '' }}>All Statuses</option>
-              <option value="Confirmed" {{ request('status') === 'Confirmed' ? 'selected' : '' }}>Confirmed</option>
-              <option value="Arrived" {{ request('status') === 'Arrived' ? 'selected' : '' }}>Arrived</option>
-              <option value="Checked In" {{ request('status') === 'Checked In' ? 'selected' : '' }}>Checked In</option>
-              <option value="Stay Over" {{ request('status') === 'Stay Over' ? 'selected' : '' }}>Stay Over</option>
-              <option value="Settlement Done" {{ request('status') === 'Settlement Done' ? 'selected' : '' }}>Settlement Done</option>
-              <option value="Checked Out" {{ request('status') === 'Checked Out' ? 'selected' : '' }}>Checked Out</option>
-              <option value="Cancelled" {{ request('status') === 'Cancelled' ? 'selected' : '' }}>Cancelled</option>
+              <option value="Settled" {{ in_array(strtolower(request('status') ?? ''), ['settled', 'sattled']) ? 'selected' : '' }}>Settled (Payments Clear)</option>
+              <option value="Unsettled" {{ in_array(strtolower(request('status') ?? ''), ['unsettled', 'unsattled']) ? 'selected' : '' }}>Unsettled (Payment Due)</option>
             </select>
           </div>
 
@@ -902,17 +903,6 @@
             @forelse($folios as $index => $item)
               @php
                 $sl = ($folios->currentPage() - 1) * $folios->perPage() + $loop->iteration;
-                $statusNormalized = strtolower($item->status ?? 'confirmed');
-                $statusClass = match($statusNormalized) {
-                  'settlement done', 'settled' => 'settled',
-                  'confirmed' => 'confirmed',
-                  'arrived' => 'arrived',
-                  'checked in', 'checked-in', 'checkedin' => 'checkedin',
-                  'stay over', 'stayover' => 'stayover',
-                  'checked out', 'checked-out', 'checkedout' => 'checkedout',
-                  'cancelled' => 'cancelled',
-                  default => 'confirmed'
-                };
 
                 // Additional guests count for dynamic "+N persons"
                 $extraCount = $item->additionalBookings?->count() ?? 0;
@@ -929,6 +919,9 @@
                 $settleAmount = (float)($item->settlements?->sum('paid_amount') ?: $item->payments?->where('payment_type', 'Settlement')->sum('amount'));
                 $totalPaid = round($advAmount + $settleAmount, 2);
                 $balanceVal = (float)($item->balance ?? 0);
+
+                // Status in table: Only Settled (payments all clear) & Unsettled (payment not cleared)
+                $isSettled = ($balanceVal <= 0.01) || in_array(strtolower($item->status ?? ''), ['settlement done', 'settled']);
 
                 // Checkin / Checkout date & time
                 $cInDate = $item->checkin_date ?: $item->reserve_date;
@@ -1075,16 +1068,19 @@
                   @endif
                 </td>
 
-                <!-- 9. Status -->
+                <!-- 9. Status: Only Settled (payments all clear) & Unsettled (not settled) -->
                 <td style="text-align: center; white-space: nowrap;">
-                  <span class="status-badge {{ $statusClass }}">
-                    @if(in_array($item->status, ['Settlement Done', 'Checked Out']))
-                      <i class="fa-solid fa-lock" style="font-size: 8px;"></i>
-                    @else
-                      <i class="fa-solid fa-circle" style="font-size: 6px;"></i>
-                    @endif
-                    <span>{{ $item->status ?? 'Confirmed' }}</span>
-                  </span>
+                  @if($isSettled)
+                    <span class="status-badge settled" title="Settled: All payments cleared (Balance ₹0.00)">
+                      <i class="fa-solid fa-circle-check" style="font-size: 8px;"></i>
+                      <span>Settled</span>
+                    </span>
+                  @else
+                    <span class="status-badge unsettled" title="Unsettled: Pending balance ₹{{ number_format($balanceVal, 2) }}">
+                      <i class="fa-solid fa-clock" style="font-size: 8px;"></i>
+                      <span>Unsettled</span>
+                    </span>
+                  @endif
                 </td>
 
                 <!-- 10. Action: View Details Modal -->
@@ -1165,7 +1161,9 @@
     <span>•</span>
     <span><i class="fa-solid fa-triangle-exclamation" style="color: {{ ($stats['total_outstanding'] ?? 0) > 0 ? '#e11d48' : '#059669' }};"></i> Remaining Due: <strong>₹ {{ number_format($stats['total_outstanding'] ?? 0, 2) }}</strong></span>
     <span>•</span>
-    <span><i class="fa-solid fa-lock" style="color: #64748b;"></i> Finalized / Settled: <strong>{{ $stats['settled_count'] ?? 0 }}</strong></span>
+    <span><i class="fa-solid fa-circle-check" style="color: #059669;"></i> Settled: <strong>{{ $stats['settled_count'] ?? 0 }}</strong></span>
+    <span>•</span>
+    <span><i class="fa-solid fa-clock" style="color: #e11d48;"></i> Unsettled: <strong>{{ $stats['pending_settle_count'] ?? 0 }}</strong></span>
   </div>
 </footer>
 

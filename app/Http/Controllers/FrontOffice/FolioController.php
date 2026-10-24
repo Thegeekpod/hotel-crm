@@ -82,9 +82,22 @@ class FolioController extends Controller
             });
         }
 
-        // Status Filter
+        // Status Filter (Settled / Unsettled / Legacy statuses)
         if ($request->filled('status') && $request->status !== 'all') {
-            $query->where('status', $request->status);
+            $statusVal = strtolower(trim($request->status));
+            if (in_array($statusVal, ['settled', 'sattled'])) {
+                $query->where(function ($q) {
+                    $q->where('balance', '<=', 0.01)
+                      ->orWhere('status', 'Settlement Done');
+                });
+            } elseif (in_array($statusVal, ['unsettled', 'unsattled'])) {
+                $query->where(function ($q) {
+                    $q->where('balance', '>', 0.01)
+                      ->where('status', '!=', 'Settlement Done');
+                });
+            } else {
+                $query->where('status', $request->status);
+            }
         }
 
         // Registration Type Filter
@@ -149,8 +162,10 @@ class FolioController extends Controller
             : 0.0;
         $totalPaid = round($totalAdvance + $totalSettled, 2);
         $totalOutstanding = (float)$filteredBookings->sum('balance');
-        $settledCount = $filteredBookings->whereIn('status', ['Settlement Done', 'Checked Out'])->count();
-        $pendingSettleCount = $filteredBookings->whereNotIn('status', ['Settlement Done', 'Checked Out'])->where('balance', '>', 0.01)->count();
+        $settledCount = $filteredBookings->filter(function ($b) {
+            return (float)$b->balance <= 0.01 || in_array(strtolower($b->status ?? ''), ['settlement done', 'settled']);
+        })->count();
+        $pendingSettleCount = $filteredBookings->count() - $settledCount;
         $checkedOutCount = $filteredBookings->where('status', 'Checked Out')->count();
 
         // Baseline all-time reference

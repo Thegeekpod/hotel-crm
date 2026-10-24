@@ -633,6 +633,81 @@
     font-family: var(--font-mono, monospace);
     white-space: nowrap;
   }
+  /* Quick Checkout Button */
+  .btn-action-checkout {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 10px;
+    height: 30px;
+    border-radius: 8px;
+    border: 1px solid #fca5a5;
+    background: #fef2f2;
+    color: #dc2626;
+    font-size: 11px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+  }
+  .btn-action-checkout:hover {
+    background: #dc2626;
+    color: #ffffff;
+    border-color: #dc2626;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(220, 38, 38, 0.25);
+  }
+  .btn-action-checkout.checked-out {
+    background: #f1f5f9 !important;
+    color: #94a3b8 !important;
+    border-color: #cbd5e1 !important;
+    cursor: not-allowed !important;
+    box-shadow: none !important;
+    transform: none !important;
+  }
+
+  /* Early Checkout Button */
+  .btn-action-early-co {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 10px;
+    height: 30px;
+    border-radius: 8px;
+    border: 1px solid #fed7aa;
+    background: #fff7ed;
+    color: #ea580c;
+    font-size: 11px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+  }
+  .btn-action-early-co:hover {
+    background: #ea580c;
+    color: #ffffff;
+    border-color: #ea580c;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(234, 88, 12, 0.25);
+  }
+
+  #early-checkout-rooms-modal.modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 100080 !important;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(15, 23, 42, 0.55) !important;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    box-sizing: border-box;
+  }
+  #early-checkout-rooms-modal.open {
+    display: flex !important;
+  }
+
   #early-checkout-confirm-modal.modal-backdrop {
     position: fixed;
     inset: 0;
@@ -931,7 +1006,7 @@
               <th style="min-width: 135px; white-space: nowrap;">Check-in</th>
               <th style="min-width: 135px; white-space: nowrap;">Check-out</th>
               <th style="min-width: 100px; text-align: center; white-space: nowrap;">Status</th>
-              <th style="width: 70px; text-align: center; white-space: nowrap;">Action</th>
+              <th style="min-width: 175px; text-align: center; white-space: nowrap;">Actions</th>
             </tr>
           </thead>
           <tbody id="folio-table-tbody">
@@ -1149,15 +1224,51 @@
                   </span>
                 </td>
 
-                <!-- 10. Action: View Details Modal -->
+                <!-- 10. Actions: Quick Check-Out & Early Check-Out (View Button Commented) -->
                 <td style="text-align: center; white-space: nowrap;">
-                  <button type="button" 
-                          class="btn-action-view" 
-                          data-booking-id="{{ $item->id }}"
-                          onclick="openFolioModalById({{ $item->id }})" 
-                          title="View Full Settlement Dossier (Rooms, Occupants, Billings, Settle &amp; Checkout)">
-                    <i class="fa-solid fa-eye" style="pointer-events: none;"></i>
-                  </button>
+                  <div style="display: inline-flex; align-items: center; gap: 6px; justify-content: center;">
+
+                    <!-- Quick Checkout Button -->
+                    @if(in_array(strtolower($item->status ?? ''), ['checked out', 'checkedout']))
+                      <button type="button" 
+                              class="btn-action-checkout checked-out" 
+                              disabled 
+                              title="Reservation is already Checked Out">
+                        <i class="fa-solid fa-circle-check"></i>
+                        <span>Checked Out</span>
+                      </button>
+                    @else
+                      <button type="button" 
+                              class="btn-action-checkout" 
+                              onclick="handleRowCheckout({{ $item->id }}, {{ $isSettled ? 'true' : 'false' }}, {{ $balanceVal }}, '{{ addslashes($primaryGuestName) }}', '{{ $item->reserve_id ?: ('RES-' . $item->id) }}', '{{ $item->status }}')" 
+                              title="Check out booking (verifies settlement first)">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                        <span>Checkout</span>
+                      </button>
+                    @endif
+
+                    <!-- Early Checkout Button (Opens Room & Floor wise Occupants Modal) -->
+                    @if(!in_array(strtolower($item->status ?? ''), ['checked out', 'checkedout']))
+                      <button type="button" 
+                              class="btn-action-early-co" 
+                              onclick="openEarlyCheckoutRoomsModalById({{ $item->id }})" 
+                              title="Early Check-Out for Individual Guests (Room &amp; Floor Wise)">
+                        <i class="fa-solid fa-person-walking-arrow-right"></i>
+                        <span>Early CO</span>
+                      </button>
+                    @endif
+
+                    <!-- Commented View Button as requested
+                    <button type="button" 
+                            class="btn-action-view" 
+                            data-booking-id="{{ $item->id }}"
+                            onclick="openFolioModalById({{ $item->id }})" 
+                            title="View Full Settlement Dossier (Rooms, Occupants, Billings, Settle &amp; Checkout)">
+                      <i class="fa-solid fa-eye" style="pointer-events: none;"></i>
+                    </button>
+                    -->
+
+                  </div>
                 </td>
 
               </tr>
@@ -1598,6 +1709,65 @@
           Close
         </button>
       </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ========================================================================= -->
+<!-- MODAL: EARLY CHECK-OUT (ROOM & FLOOR WISE OCCUPANTS)                     -->
+<!-- ========================================================================= -->
+<div class="modal-backdrop" id="early-checkout-rooms-modal">
+  <div class="modal-window large" style="width: 820px; max-width: 95vw; max-height: 90vh; display: flex; flex-direction: column; border-radius: 16px; overflow: hidden; box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.4); border: none; box-sizing: border-box; background: #ffffff;">
+    
+    <!-- Modal Top Header -->
+    <div style="background: linear-gradient(135deg, #f97316 0%, #ea580c 100%); padding: 14px 22px; display: flex; justify-content: space-between; align-items: center; color: #ffffff; flex-shrink: 0;">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <div style="width: 38px; height: 38px; border-radius: 10px; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 17px; color: #ffffff;">
+          <i class="fa-solid fa-person-walking-arrow-right"></i>
+        </div>
+        <div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <h3 style="margin: 0; font-size: 16px; font-weight: 800; color: #ffffff;">Early Check-Out Manager</h3>
+            <span id="ecrm-status-badge" class="badge-settle-pill settled" style="font-size: 10px;">Settled</span>
+          </div>
+          <div style="font-size: 11px; opacity: 0.95; color: #ffedd5; margin-top: 2px;">
+            Reservation <strong id="ecrm-reserve-id" style="font-family: var(--font-mono, monospace); color: #ffffff;">-</strong> 
+            • Primary Guest: <strong id="ecrm-primary-guest" style="color: #ffffff;">-</strong>
+          </div>
+        </div>
+      </div>
+      <button type="button" onclick="closeEarlyCheckoutRoomsModal()" style="background: rgba(255,255,255,0.2); border: none; color: #ffffff; width: 30px; height: 30px; border-radius: 50%; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s;" title="Close Modal">&times;</button>
+    </div>
+
+    <!-- Modal Body: Scrollable -->
+    <div style="padding: 18px 22px; overflow-y: auto; flex: 1; background: #f8fafc;">
+      
+      <!-- Notice Bar -->
+      <div id="ecrm-settle-notice" style="margin-bottom: 14px; padding: 10px 14px; border-radius: 10px; font-size: 12px; display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+      </div>
+
+      <!-- Rooms and Occupants Grid -->
+      <div>
+        <div style="font-size: 12px; font-weight: 800; color: #475569; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+          <i class="fa-solid fa-door-closed" style="color: #ea580c;"></i> Allocated Room(s), Floor &amp; Occupants
+        </div>
+        
+        <div id="ecrm-rooms-card-grid" class="rooms-alloc-grid">
+          <!-- Dynamically populated via JS -->
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Modal Footer -->
+    <div style="padding: 12px 22px; background: #ffffff; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;">
+      <div style="font-size: 11px; color: #64748b;">
+        <i class="fa-solid fa-circle-info" style="color: #6366f1;"></i> Individual occupants checked out early will schedule their respective room for housekeeping when vacated.
+      </div>
+      <button type="button" onclick="closeEarlyCheckoutRoomsModal()" style="padding: 7px 18px; border-radius: 8px; border: 1px solid #cbd5e1; background: #ffffff; color: #475569; font-size: 12px; font-weight: 700; cursor: pointer;">
+        Close
+      </button>
     </div>
 
   </div>
@@ -2381,11 +2551,13 @@
           confirmButtonColor: '#10b981',
           confirmButtonText: 'OK'
         }).then(() => {
-          if (activeFolioData && activeFolioData.id) {
-            openFolioModalById(activeFolioData.id, true);
-          }
           if (data.is_all_checked_out) {
             window.location.reload();
+          } else if (activeFolioData && activeFolioData.id) {
+            openEarlyCheckoutRoomsModalById(activeFolioData.id);
+            if (document.getElementById('folio-details-modal')?.classList.contains('open')) {
+              openFolioModalById(activeFolioData.id, true);
+            }
           }
         });
       } else {
@@ -2412,6 +2584,296 @@
     });
   }
 
+  /**
+   * Action: Quick Check-Out Button
+   * Checks if reservation is settled:
+   * - If settled: confirms & automatically executes check out with success alert
+   * - If not settled: informs user that dues are pending
+   */
+  function handleRowCheckout(bookingId, isSettled, balanceVal, primaryGuestName, reserveId, status) {
+    if (status === 'Checked Out') {
+      Swal.fire({
+        icon: 'info',
+        title: 'Already Checked Out',
+        text: 'This reservation is already checked out.',
+        confirmButtonColor: '#4f46e5'
+      });
+      return;
+    }
+
+    if (!isSettled && balanceVal > 0.01) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Not Settled Yet',
+        html: `Cannot check out reservation <strong>#${escapeHtml(reserveId)}</strong>.<br><br>Outstanding balance of <strong style="color: #e11d48; font-size: 15px;">₹ ${Number(balanceVal).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</strong> is not settled yet.<br><br><span style="font-size: 12px; color: #64748b;">Please complete all bill settlements before checking out.</span>`,
+        confirmButtonColor: '#4f46e5',
+        confirmButtonText: 'OK'
+      });
+      return;
+    }
+
+    // Guest is settled!
+    Swal.fire({
+      title: 'Confirm Check-Out',
+      html: `Guest payments are settled.<br><br>Proceed to check out Booking <strong>#${escapeHtml(reserveId)}</strong> for <strong>${escapeHtml(primaryGuestName)}</strong>?<br><br><span style="font-size: 12px; color: #64748b;">All assigned room(s) will be automatically scheduled for Housekeeping.</span>`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#10b981',
+      cancelButtonColor: '#64748b',
+      confirmButtonText: '<i class="fa-solid fa-right-from-bracket"></i> Yes, Check Out Now',
+      cancelButtonText: 'Cancel'
+    }).then(result => {
+      if (!result.isConfirmed) return;
+
+      Swal.fire({
+        title: 'Processing Check-Out...',
+        text: 'Scheduling room housekeeping & finalizing departure.',
+        allowOutsideClick: false,
+        didOpen: () => { Swal.showLoading(); }
+      });
+
+      fetch(`{{ url('front-office/checkout') }}/${bookingId}/checkout`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': '{{ csrf_token() }}',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({
+          remarks: 'Direct checkout from Checkout Counter'
+        })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          Swal.fire({
+            icon: 'success',
+            title: 'Checked Out Successfully!',
+            text: data.message || 'Reservation successfully checked out! Room(s) scheduled for housekeeping.',
+            confirmButtonColor: '#10b981',
+            confirmButtonText: 'OK'
+          }).then(() => {
+            window.location.reload();
+          });
+        } else {
+          Swal.fire({
+            icon: 'warning',
+            title: 'Checkout Notice',
+            text: data.error || data.message || 'Checkout failed.',
+            confirmButtonColor: '#4f46e5'
+          });
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        Swal.fire({
+          icon: 'error',
+          title: 'System Error',
+          text: 'Network error while processing checkout. Please try again.',
+          confirmButtonColor: '#4f46e5'
+        });
+      });
+    });
+  }
+
+  /**
+   * Action: Early Check-Out Button
+   * Opens room and floor wise occupants modal
+   */
+  function openEarlyCheckoutRoomsModalById(bookingId) {
+    Swal.fire({
+      title: 'Loading Guest Details...',
+      text: 'Fetching room & occupant details.',
+      allowOutsideClick: false,
+      didOpen: () => { Swal.showLoading(); }
+    });
+
+    fetch(`{{ url('front-office/checkout') }}/${bookingId}/details`)
+      .then(res => res.json())
+      .then(data => {
+        Swal.close();
+        if (!data.success || !data.folio) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Not Found',
+            text: 'Could not load reservation details.',
+            confirmButtonColor: '#4f46e5'
+          });
+          return;
+        }
+
+        activeFolioData = data.folio;
+        populateEarlyCheckoutRoomsModal(data.folio);
+      })
+      .catch(err => {
+        Swal.close();
+        console.error(err);
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'Failed to fetch reservation dossier.',
+          confirmButtonColor: '#4f46e5'
+        });
+      });
+  }
+
+  function populateEarlyCheckoutRoomsModal(folio) {
+    document.getElementById('ecrm-reserve-id').textContent = folio.reserve_id || ('RES-' + folio.id);
+    document.getElementById('ecrm-primary-guest').textContent = folio.primary_guest?.name || 'Guest';
+
+    const isSettled = (Number(folio.balance) <= 0.01) || (folio.status || '').toLowerCase() === 'settlement done';
+    const statusBadge = document.getElementById('ecrm-status-badge');
+    const noticeEl = document.getElementById('ecrm-settle-notice');
+
+    if (isSettled) {
+      statusBadge.className = 'badge-settle-pill settled';
+      statusBadge.innerHTML = '<i class="fa-solid fa-circle-check"></i> Settled (Clear)';
+      noticeEl.style.background = '#ecfdf5';
+      noticeEl.style.border = '1px solid #a7f3d0';
+      noticeEl.style.color = '#047857';
+      noticeEl.innerHTML = '<div><i class="fa-solid fa-check-circle"></i> <strong>Payments Cleared:</strong> All dues are settled. You can early check-out individual occupants below.</div>';
+    } else {
+      statusBadge.className = 'badge-settle-pill unsettled';
+      statusBadge.innerHTML = `<i class="fa-solid fa-clock"></i> Unsettled (₹ ${Number(folio.balance).toFixed(2)} Due)`;
+      noticeEl.style.background = '#fff1f2';
+      noticeEl.style.border = '1px solid #fecdd3';
+      noticeEl.style.color = '#be123c';
+      noticeEl.innerHTML = `<div><i class="fa-solid fa-triangle-exclamation"></i> <strong>Payment Due:</strong> Outstanding balance of <strong>₹ ${Number(folio.balance).toFixed(2)}</strong> is not settled yet. Complete settlement before early check-out.</div>`;
+    }
+
+    const grid = document.getElementById('ecrm-rooms-card-grid');
+    const rooms = folio.rooms || [];
+    if (rooms.length === 0) {
+      grid.innerHTML = '<div style="color: #94a3b8; font-size: 12px; font-style: italic; padding: 10px;">No allocated rooms found for this booking.</div>';
+    } else {
+      let totalOccupants = 0;
+      rooms.forEach(r => totalOccupants += (r.occupants ? r.occupants.length : 0));
+      const hasMultiple = totalOccupants > 1;
+
+      let html = '';
+      rooms.forEach(r => {
+        const isVacated = r.is_vacated === true;
+        const roomStatusBadge = isVacated
+          ? `<span style="background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;"><i class="fa-solid fa-broom"></i> Vacated (Housekeeping Dirty)</span>`
+          : `<span style="background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;"><i class="fa-solid fa-bed"></i> Reserved / Occupied</span>`;
+
+        html += `
+          <div class="room-alloc-card" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+            <div class="room-alloc-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px; margin-bottom: 10px;">
+              <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <span class="room-tag">
+                  <i class="fa-solid fa-door-open"></i> ${escapeHtml(r.room_number)}
+                </span>
+                <span style="font-size: 12px; font-weight: 800; color: #0f172a;">Floor ${escapeHtml(r.floor)}</span>
+                <span style="color: #cbd5e1;">•</span>
+                <span style="font-size: 11px; color: #64748b; font-weight: 600;">${escapeHtml(r.category)}</span>
+                <span style="color: #cbd5e1;">•</span>
+                <span style="font-size: 11px; color: #64748b;">${escapeHtml(r.bedding)}</span>
+                ${roomStatusBadge}
+              </div>
+              <div style="font-size: 11px; font-family: var(--font-mono, monospace); font-weight: 800; color: #4338ca;">
+                ${formatINR(r.rate)} / night
+              </div>
+            </div>
+            <div>
+              <div style="font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 6px;">
+                Registered Occupants in this Room:
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 6px;">
+        `;
+
+        if (r.occupants && r.occupants.length > 0) {
+          r.occupants.forEach(occ => {
+            const isCheckedOut = occ.is_checked_out || (occ.status === 'Checked Out');
+            let actionMarkup = '';
+
+            if (isCheckedOut) {
+              const dtParts = [];
+              if (occ.checkout_date) dtParts.push(occ.checkout_date);
+              if (occ.checkout_time) dtParts.push(occ.checkout_time);
+              const dtText = dtParts.join(' ');
+              actionMarkup = `
+                <span class="badge-checked-out-occupant" title="This occupant is checked out">
+                  <i class="fa-solid fa-circle-check" style="color: #10b981;"></i> Checked Out ${dtText ? '(' + escapeHtml(dtText) + ')' : ''}
+                </span>
+              `;
+            } else if (!isSettled) {
+              actionMarkup = `
+                <button type="button" 
+                        class="btn-early-checkout" 
+                        style="background: #f1f5f9; color: #64748b; border-color: #cbd5e1; cursor: not-allowed;"
+                        onclick="Swal.fire({icon: 'warning', title: 'Not Settled Yet', html: 'Cannot early check out this occupant. Reservation balance of <strong>₹ ${Number(folio.balance).toFixed(2)}</strong> is not settled yet.<br><br>Please settle all dues first.', confirmButtonColor: '#4f46e5'})" 
+                        title="Dues not settled yet">
+                  <i class="fa-solid fa-lock"></i> Settle Dues First
+                </button>
+              `;
+            } else if (hasMultiple) {
+              actionMarkup = `
+                <button type="button" 
+                        class="btn-early-checkout" 
+                        onclick="openEarlyCheckoutConfirmModal(${occ.booking_id}, '${escapeHtml(occ.name).replace(/'/g, "\\'")}', '${escapeHtml(r.room_number).replace(/'/g, "\\'")}')" 
+                        title="Early Check-out this specific occupant from Room ${escapeHtml(r.room_number)}">
+                  <i class="fa-solid fa-person-walking-arrow-right"></i> Early Checkout
+                </button>
+              `;
+            } else {
+              actionMarkup = `
+                <button type="button" 
+                        class="btn-early-checkout" 
+                        style="background: #fef2f2; color: #dc2626; border-color: #fca5a5;"
+                        onclick="closeEarlyCheckoutRoomsModal(); handleRowCheckout(${folio.id}, true, 0, '${escapeHtml(occ.name).replace(/'/g, "\\'")}', '${escapeHtml(folio.reserve_id).replace(/'/g, "\\'")}', '${escapeHtml(folio.status).replace(/'/g, "\\'")}')" 
+                        title="Check out this single-occupant reservation">
+                  <i class="fa-solid fa-right-from-bracket"></i> Check Out
+                </button>
+              `;
+            }
+
+            html += `
+              <div class="occupant-badge-row ${isCheckedOut ? 'checked-out' : ''}">
+                <div style="display: flex; align-items: center; gap: 6px;">
+                  <i class="fa-solid ${occ.is_primary ? 'fa-star' : 'fa-user'}" style="color: ${isCheckedOut ? '#94a3b8' : (occ.is_primary ? '#f59e0b' : '#6366f1')};"></i>
+                  <strong style="color: ${isCheckedOut ? '#64748b' : '#1e293b'}; ${isCheckedOut ? 'text-decoration: line-through;' : ''}">${escapeHtml(occ.name)}</strong>
+                  ${occ.is_primary ? '<span style="background: #fef3c7; color: #b45309; font-size: 9px; font-weight: 800; padding: 1px 5px; border-radius: 4px;">Primary</span>' : ''}
+                </div>
+                <div style="display: flex; align-items: center; gap: 10px; color: #64748b; font-family: var(--font-mono, monospace);">
+                  <span><i class="fa-solid fa-phone" style="font-size: 9px;"></i> ${escapeHtml(occ.mobile || 'N/A')}</span>
+                  <span>•</span>
+                  <span>${escapeHtml(occ.id_card_type || 'ID')}: ${escapeHtml(occ.id_card_number || 'N/A')}</span>
+                  ${actionMarkup}
+                </div>
+              </div>
+            `;
+          });
+        } else {
+          html += '<div style="font-size: 11px; color: #94a3b8;">No occupants assigned yet.</div>';
+        }
+
+        html += `
+              </div>
+            </div>
+          </div>
+        `;
+      });
+      grid.innerHTML = html;
+    }
+
+    const modal = document.getElementById('early-checkout-rooms-modal');
+    if (modal) {
+      modal.classList.add('open');
+      modal.style.setProperty('display', 'flex', 'important');
+      document.body.style.overflow = 'hidden';
+    }
+  }
+
+  function closeEarlyCheckoutRoomsModal() {
+    const modal = document.getElementById('early-checkout-rooms-modal');
+    if (modal) {
+      modal.classList.remove('open');
+      modal.style.setProperty('display', 'none', 'important');
+    }
+    document.body.style.overflow = '';
+  }
+
   // Close on backdrop click & ESC key + Event Delegation for View Action Buttons
   document.addEventListener('DOMContentLoaded', function() {
     const modalBackdrop = document.getElementById('folio-details-modal');
@@ -2419,6 +2881,15 @@
       modalBackdrop.addEventListener('click', function(e) {
         if (e.target === this) {
           closeFolioModal();
+        }
+      });
+    }
+
+    const ecrmModalBackdrop = document.getElementById('early-checkout-rooms-modal');
+    if (ecrmModalBackdrop) {
+      ecrmModalBackdrop.addEventListener('click', function(e) {
+        if (e.target === this) {
+          closeEarlyCheckoutRoomsModal();
         }
       });
     }
@@ -2435,13 +2906,14 @@
     document.addEventListener('keydown', function(e) {
       if (e.key === 'Escape') {
         closeEarlyCheckoutConfirmModal();
+        closeEarlyCheckoutRoomsModal();
         closeFolioModal();
       }
     });
 
-    // Delegated click handler for view buttons & booking numbers
+    // Delegated click handler for booking numbers
     document.addEventListener('click', function(e) {
-      const trigger = e.target.closest('.btn-action-view, [data-booking-id], .folio-id-text, .folio-number-sub');
+      const trigger = e.target.closest('.folio-id-text, .folio-number-sub');
       if (trigger) {
         const bookingId = trigger.getAttribute('data-booking-id');
         if (bookingId) {

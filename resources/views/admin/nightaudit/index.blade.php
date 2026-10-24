@@ -1047,10 +1047,10 @@
 
 <!-- AUDIT DOSSIER MODAL -->
 <div class="modal-backdrop" id="audit-dossier-modal" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(5px); z-index: 99999; align-items: center; justify-content: center;">
-  <div style="background: #ffffff; width: 1320px; max-width: 96vw; max-height: 92vh; border-radius: 16px; overflow: hidden; box-shadow: 0 25px 60px rgba(0, 0, 0, 0.25); border: 1px solid #e2e8f0; display: flex; flex-direction: column;">
+  <div style="background: #ffffff; width: 1320px; max-width: 96vw; height: 90vh; max-height: 92vh; border-radius: 16px; overflow: hidden; box-shadow: 0 25px 60px rgba(0, 0, 0, 0.25); border: 1px solid #e2e8f0; display: flex; flex-direction: column;">
     
     <!-- Modal Top Header -->
-    <div style="background: #4f46e5; color: #ffffff; padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;">
+    <div style="background: #4f46e5; color: #ffffff; padding: 14px 22px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;">
       <div style="display: flex; align-items: center; gap: 10px;">
         <i class="fa-solid fa-moon" style="font-size: 16px;"></i>
         <div>
@@ -1062,7 +1062,7 @@
     </div>
 
     <!-- Modal Body -->
-    <div id="md-content" style="padding: 0; overflow: hidden; background: #f8fafc; flex: 1; display: flex; flex-direction: column;">
+    <div id="md-content" style="padding: 0; overflow: hidden; background: #f8fafc; flex: 1 1 0%; min-height: 0; display: flex; flex-direction: column;">
       <div style="text-align: center; padding: 40px; color: #64748b;">
         <i class="fa-solid fa-spinner fa-spin" style="font-size: 24px; color: #6366f1;"></i>
         <div style="margin-top: 10px; font-weight: 700;">Loading...</div>

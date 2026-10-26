@@ -2561,52 +2561,9 @@
         <td style="padding: 6px 10px; border-bottom: 1px solid #d1fae5; text-align: right; font-family: monospace;">- ${formatINR(discAmt)}</td>
       </tr>` : '';
 
-    // Build full invoice HTML for new print window
-    const invoiceHtml = `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Invoice - ${escapeHtml(f.folio_number)} | Hotel Sagar Sonnet</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: Arial, sans-serif; color: #1e293b; background: #fff; padding: 24px; }
-    .inv-wrap { max-width: 820px; margin: 0 auto; }
-    .inv-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px solid #4f46e5; padding-bottom: 14px; margin-bottom: 18px; }
-    .hotel-name { font-size: 22px; font-weight: 900; color: #1e1b4b; text-transform: uppercase; letter-spacing: 1px; }
-    .hotel-sub { font-size: 11px; color: #64748b; margin-top: 3px; }
-    .inv-title { font-size: 16px; font-weight: 800; color: #4f46e5; text-align: right; }
-    .inv-ref { font-size: 11px; font-family: monospace; color: #475569; text-align: right; margin-top: 4px; }
-    .info-grid { display: flex; justify-content: space-between; margin-bottom: 18px; font-size: 11.5px; line-height: 1.7; }
-    .info-block { flex: 1; }
-    .info-block.right { text-align: right; }
-    .info-label { font-weight: 700; color: #4f46e5; font-size: 12px; display: block; margin-bottom: 4px; text-transform: uppercase; letter-spacing: .5px; }
-    table { width: 100%; border-collapse: collapse; font-size: 11.5px; margin-bottom: 14px; }
-    thead tr { background: #f1f5f9; }
-    th { padding: 8px 10px; border: 1px solid #cbd5e1; text-align: left; font-size: 11px; color: #475569; text-transform: uppercase; }
-    td { padding: 7px 10px; border: 1px solid #e2e8f0; }
-    .bill-table td:last-child { text-align: right; font-family: monospace; }
-    .summary-wrap { display: flex; justify-content: flex-end; margin: 10px 0 20px; }
-    .summary-box { width: 340px; font-size: 12px; border: 1px solid #e2e8f0; border-radius: 6px; overflow: hidden; }
-    .summary-box table { margin: 0; font-size: 12px; }
-    .summary-box table td { border-color: #e2e8f0; padding: 7px 12px; }
-    .s-head td { background: #f8fafc; font-weight: 700; font-size: 11px; color: #475569; text-transform: uppercase; }
-    .s-total td { background: #f1f5f9; font-weight: 800; font-size: 13px; color: #1e293b; }
-    .s-paid td { color: #059669; }
-    .s-bal td { font-weight: 900; font-size: 14px; background: ${balance > 0 ? '#fff1f2' : '#f0fdf4'}; color: ${balance > 0 ? '#e11d48' : '#059669'}; }
-    .section-label { font-weight: 700; font-size: 12px; color: #7c3aed; text-transform: uppercase; letter-spacing: .5px; border-left: 4px solid #7c3aed; padding-left: 8px; margin: 12px 0 6px; }
-    .footer { border-top: 1px dashed #cbd5e1; padding-top: 14px; display: flex; justify-content: space-between; align-items: center; font-size: 10.5px; color: #64748b; margin-top: 8px; }
-    .status-chip { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 10px; font-weight: 700; text-transform: uppercase; background: #e0e7ff; color: #3730a3; }
-    @media print {
-      body { padding: 10px; }
-      .no-print { display: none !important; }
-    }
-  </style>
-</head>
-<body>
+    // Build full invoice body HTML for print iframe
+    const invoiceBodyContent = `
 <div class="inv-wrap">
-
-
 
   <!-- Header -->
   <div class="inv-header">
@@ -2706,31 +2663,69 @@
     <div>Authorized Front Desk Signature: ________________________</div>
   </div>
 
-</div>
-</body>
-</html>`;
+</div>`;
+
+    const printStyles = `
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body { font-family: Arial, sans-serif; color: #1e293b; background: #fff; padding: 24px; }
+      .inv-wrap { max-width: 820px; margin: 0 auto; }
+      .inv-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px solid #4f46e5; padding-bottom: 14px; margin-bottom: 18px; }
+      .hotel-name { font-size: 22px; font-weight: 900; color: #1e1b4b; text-transform: uppercase; letter-spacing: 1px; }
+      .hotel-sub { font-size: 11px; color: #64748b; margin-top: 3px; }
+      .inv-title { font-size: 16px; font-weight: 800; color: #4f46e5; text-align: right; }
+      .inv-ref { font-size: 11px; font-family: monospace; color: #475569; text-align: right; margin-top: 4px; }
+      .info-grid { display: flex; justify-content: space-between; margin-bottom: 18px; font-size: 11.5px; line-height: 1.7; }
+      .info-block { flex: 1; }
+      .info-block.right { text-align: right; }
+      .info-label { font-weight: 700; color: #4f46e5; font-size: 12px; display: block; margin-bottom: 4px; text-transform: uppercase; letter-spacing: .5px; }
+      table { width: 100%; border-collapse: collapse; font-size: 11.5px; margin-bottom: 14px; }
+      thead tr { background: #f1f5f9; }
+      th { padding: 8px 10px; border: 1px solid #cbd5e1; text-align: left; font-size: 11px; color: #475569; text-transform: uppercase; }
+      td { padding: 7px 10px; border: 1px solid #e2e8f0; }
+      .bill-table td:last-child { text-align: right; font-family: monospace; }
+      .summary-wrap { display: flex; justify-content: flex-end; margin: 10px 0 20px; }
+      .summary-box { width: 340px; font-size: 12px; border: 1px solid #e2e8f0; border-radius: 6px; overflow: hidden; }
+      .summary-box table { margin: 0; font-size: 12px; }
+      .summary-box table td { border-color: #e2e8f0; padding: 7px 12px; }
+      .s-head td { background: #f8fafc; font-weight: 700; font-size: 11px; color: #475569; text-transform: uppercase; }
+      .s-total td { background: #f1f5f9; font-weight: 800; font-size: 13px; color: #1e293b; }
+      .s-paid td { color: #059669; }
+      .s-bal td { font-weight: 900; font-size: 14px; background: ${balance > 0 ? '#fff1f2' : '#f0fdf4'}; color: ${balance > 0 ? '#e11d48' : '#059669'}; }
+      .section-label { font-weight: 700; font-size: 12px; color: #7c3aed; text-transform: uppercase; letter-spacing: .5px; border-left: 4px solid #7c3aed; padding-left: 8px; margin: 12px 0 6px; }
+      .footer { border-top: 1px dashed #cbd5e1; padding-top: 14px; display: flex; justify-content: space-between; align-items: center; font-size: 10.5px; color: #64748b; margin-top: 8px; }
+      .status-chip { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 10px; font-weight: 700; text-transform: uppercase; background: #e0e7ff; color: #3730a3; }
+      @media print {
+        body { padding: 10px; }
+        .no-print { display: none !important; }
+      }
+    `;
 
     // Use a hidden iframe to print directly without opening a new window
-    const existingFrame = document.getElementById('folio-print-frame');
-    if (existingFrame) existingFrame.remove();
+    let iframe = document.getElementById('folio-print-frame');
+    if (iframe) iframe.remove();
 
-    const iframe = document.createElement('iframe');
+    iframe = document.createElement('iframe');
     iframe.id = 'folio-print-frame';
     iframe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;border:none;opacity:0;';
     document.body.appendChild(iframe);
 
-    iframe.contentDocument.open();
-    iframe.contentDocument.write(invoiceHtml);
-    iframe.contentDocument.close();
+    const doc = iframe.contentWindow.document;
+    doc.open();
+    // Split tag strings to avoid regex/server HTML interceptor matches
+    doc.write('<!DOCTYPE html><html><' + 'head><title>Invoice - ' + escapeHtml(f.folio_number) + '</title><style>' + printStyles + '</style></' + 'head><' + 'body>' + invoiceBodyContent + '</' + 'body></html>');
+    doc.close();
 
-    iframe.onload = function() {
-      iframe.contentWindow.focus();
-      iframe.contentWindow.print();
-      // Remove the iframe after printing dialog closes
+    setTimeout(function() {
+      try {
+        iframe.contentWindow.focus();
+        iframe.contentWindow.print();
+      } catch (err) {
+        console.error('Print iframe error:', err);
+      }
       setTimeout(function() {
         if (iframe && iframe.parentNode) iframe.parentNode.removeChild(iframe);
-      }, 2000);
-    };
+      }, 2500);
+    }, 150);
   }
 
   // Explicit window bindings

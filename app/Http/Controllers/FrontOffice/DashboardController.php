@@ -81,7 +81,7 @@ class DashboardController extends Controller
               });
         })
         ->whereIn('status', ['Confirmed', 'Arrived', 'Stay Over', 'Checked In', 'Settlement Done'])
-        ->with(['guest.title', 'guest.nationality', 'guest.idCardType', 'registrationType', 'company', 'plan'])
+        ->with(['guest.title', 'guest.nationality', 'guest.idCardType', 'registrationType', 'company', 'plan', 'roomServiceOrders.items'])
         ->orderByRaw("CASE WHEN status = 'Checked In' THEN 1 WHEN status = 'Stay Over' THEN 2 WHEN status = 'Arrived' THEN 3 WHEN status = 'Confirmed' THEN 4 ELSE 5 END")
         ->orderBy('id', 'desc')
         ->get()
@@ -125,7 +125,7 @@ class DashboardController extends Controller
                     $linkedGuests = Booking::where('reserve_id', $resId)
                         ->where('room_id', $r->id)
                         ->whereIn('status', ['Confirmed', 'Arrived', 'Stay Over', 'Checked In', 'Settlement Done'])
-                        ->with(['guest.title', 'guest.nationality', 'guest.idCardType', 'registrationType', 'company', 'plan'])
+                        ->with(['guest.title', 'guest.nationality', 'guest.idCardType', 'registrationType', 'company', 'plan', 'roomServiceOrders.items'])
                         ->get();
                     if ($linkedGuests->isNotEmpty()) {
                         $activeGuests = $linkedGuests;
@@ -145,6 +145,57 @@ class DashboardController extends Controller
 
                     $checkinDisplay = $resDateStr ? ($resDateStr . ($resTimeStr ? ' • ' . $resTimeStr : '')) : null;
                     $checkoutDisplay = $outDateStr ? ($outDateStr . ($outTimeStr ? ' • ' . $outTimeStr : '')) : null;
+
+                    // Query room service & extra services orders for this booking/room
+                    $resBookingIds = collect([$gModel->id]);
+                    if ($gModel->reserve_id) {
+                        $otherResIds = Booking::where('reserve_id', $gModel->reserve_id)->pluck('id');
+                        $resBookingIds = $resBookingIds->concat($otherResIds)->unique();
+                    }
+
+                    $roomServiceOrders = \App\Models\RoomServiceOrder::with('items')
+                        ->where(function ($q) use ($resBookingIds, $r, $gModel) {
+                            $q->whereIn('booking_id', $resBookingIds);
+                            if ($r && $r->id) {
+                                $q->orWhere(function ($sq) use ($r, $gModel) {
+                                    $sq->where('room_id', $r->id);
+                                    if ($gModel->reserve_date) {
+                                        $sq->whereDate('created_at', '>=', $gModel->reserve_date);
+                                    }
+                                    if ($gModel->checkout_date) {
+                                        $sq->whereDate('created_at', '<=', $gModel->checkout_date);
+                                    }
+                                });
+                            }
+                        })
+                        ->where('payment_status', 'Charged to Room Folio')
+                        ->where('order_status', '!=', 'Cancelled')
+                        ->latest()
+                        ->get();
+
+                    $extraServiceCharges = (float) $roomServiceOrders->sum('total_amount');
+                    $serviceOrdersList = $roomServiceOrders->map(function ($ro) {
+                        return [
+                            'id' => $ro->id,
+                            'order_number' => $ro->order_number,
+                            'room_number' => $ro->room_number,
+                            'guest_name' => $ro->guest_name,
+                            'date' => $ro->created_at ? $ro->created_at->format('d M Y, h:i A') : 'N/A',
+                            'subtotal' => (float)$ro->subtotal,
+                            'tax_amount' => (float)$ro->tax_amount,
+                            'total_amount' => (float)$ro->total_amount,
+                            'payment_status' => $ro->payment_status,
+                            'order_status' => $ro->order_status,
+                            'items' => $ro->items->map(function ($it) {
+                                return [
+                                    'item_name' => $it->item_name,
+                                    'unit_price' => (float)$it->unit_price,
+                                    'quantity' => (int)$it->quantity,
+                                    'line_total' => (float)$it->line_total,
+                                ];
+                            })->all(),
+                        ];
+                    })->values()->all();
 
                     $guestsList[] = [
                         'id' => $gModel->id,
@@ -186,6 +237,8 @@ class DashboardController extends Controller
                         'checkin_display' => $checkinDisplay,
                         'checkout_display' => $checkoutDisplay,
                         'total_nights' => $gModel->total_nights,
+                        'extra_service_charges' => $extraServiceCharges,
+                        'room_service_orders' => $serviceOrdersList,
                     ];
                 }
 
@@ -262,6 +315,8 @@ class DashboardController extends Controller
                     'max_pax' => (int)($r->beddingConfigRelation?->max_total ?? 3),
                     'amenity_ids' => is_array($r->amenities) ? array_map('strval', $r->amenities) : [],
                     'amenities' => $roomAmenitiesNames,
+                    'extra_service_charges' => $guest ? ($guest['extra_service_charges'] ?? 0) : 0,
+                    'room_service_orders' => $guest ? ($guest['room_service_orders'] ?? []) : [],
                 ];
             }
         }

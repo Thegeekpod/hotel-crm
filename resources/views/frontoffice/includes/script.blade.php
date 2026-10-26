@@ -476,7 +476,14 @@
     if (isOccupied && guestsList.length > 0) {
       const primaryGuest = guestsList[0];
       const reservationId = primaryGuest.reserve_id || ('RES-2026-00' + roomNo);
-      const totalBalance = primaryGuest.balance !== undefined ? Number(primaryGuest.balance) : 0;
+      const extraServicesTotal = Number(primaryGuest.extra_service_charges || roomData.extra_service_charges || 0);
+      const serviceOrders = Array.isArray(primaryGuest.room_service_orders) && primaryGuest.room_service_orders.length > 0
+        ? primaryGuest.room_service_orders
+        : (Array.isArray(roomData.room_service_orders) ? roomData.room_service_orders : []);
+
+      const baseBalance = primaryGuest.balance !== undefined ? Number(primaryGuest.balance) : 0;
+      // Add extra services to Balance Due (Payment Remaining)
+      const totalBalance = baseBalance + extraServicesTotal;
       const advancePaid = primaryGuest.advance !== undefined ? Number(primaryGuest.advance) : 0;
       const overallState = primaryGuest.state || 'Confirmed';
 
@@ -487,6 +494,11 @@
         <span style="background: #fff7ed; color: #c2410c; border: 1px solid #fed7aa; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; gap: 4px;" title="Meal Plan">
           <i class="fa-solid fa-utensils" style="color: #ea580c; font-size: 10px;"></i> ${escapeHtml(mealPlanDisplay)}
         </span>
+        ${extraServicesTotal > 0 ? `
+        <span style="background: #fffbeb; color: #b45309; border: 1px solid #fde68a; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; gap: 4px;" title="Extra Services Total">
+          <i class="fa-solid fa-bell-concierge" style="color: #d97706; font-size: 10px;"></i> Services: +₹${extraServicesTotal.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+        </span>
+        ` : ''}
       `;
 
       const grossAmt = Number(primaryGuest.total_amount || 0);
@@ -495,9 +507,49 @@
       const gstType = primaryGuest.gst_type || 'exclusive';
       const gstPct = Number(primaryGuest.gst_percentage || 0);
       const gstAmt = Number(primaryGuest.gst_amount || 0);
-      const payableAmt = Number(primaryGuest.payable_amount || (grossAmt > 0 ? (grossAmt - discAmt + (gstType === 'inclusive' ? 0 : gstAmt)) : totalBalance + advancePaid));
+      const basePayable = Number(primaryGuest.payable_amount || (grossAmt > 0 ? (grossAmt - discAmt + (gstType === 'inclusive' ? 0 : gstAmt)) : baseBalance + advancePaid));
+      const payableAmt = basePayable + extraServicesTotal;
 
       window.currentModalRoomGuest = primaryGuest;
+
+      let servicesOrdersHtml = '';
+      if (serviceOrders.length > 0) {
+        const orderRows = serviceOrders.map(ro => {
+          const itemsSummary = (ro.items || []).map(it => `${it.quantity}x ${escapeHtml(it.item_name)}`).join(', ') || 'Room Service & Amenity Items';
+          return `
+            <div style="background: #ffffff; border: 1px solid #fed7aa; border-radius: 8px; padding: 8px 12px; display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: 11px;">
+              <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0;">
+                <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                  <strong style="color: #c2410c; font-family: var(--font-mono, monospace); font-size: 12px;">#${escapeHtml(ro.order_number)}</strong>
+                  <span style="font-size: 9px; padding: 1px 6px; border-radius: 4px; font-weight: 700; background: #ffedd5; color: #9a3412;">${escapeHtml(ro.order_status || 'Received')}</span>
+                  <span style="font-size: 10px; color: #64748b;">${escapeHtml(ro.date)}</span>
+                </div>
+                <div style="color: #334155; font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${itemsSummary}</div>
+              </div>
+              <div style="text-align: right; flex-shrink: 0;">
+                <div style="font-family: var(--font-mono, monospace); font-weight: 900; font-size: 13px; color: #ea580c;">₹ ${Number(ro.total_amount || 0).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                <span style="font-size: 9px; color: #059669; font-weight: 700;"><i class="fa-solid fa-file-invoice"></i> Charged to Room</span>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        servicesOrdersHtml = `
+          <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; padding: 10px 14px; margin-bottom: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border-bottom: 1px dashed #fcd34d; padding-bottom: 6px;">
+              <span style="font-size: 11px; font-weight: 800; color: #b45309; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px;">
+                <i class="fa-solid fa-bell-concierge"></i> In-Room Dining &amp; Extra Services (${serviceOrders.length} Order${serviceOrders.length > 1 ? 's' : ''})
+              </span>
+              <strong style="font-family: var(--font-mono, monospace); color: #b45309; font-size: 13px; font-weight: 900;">
+                Total: ₹ ${extraServicesTotal.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+              </strong>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 6px;">
+              ${orderRows}
+            </div>
+          </div>
+        `;
+      }
 
       const topReservationSummaryBar = `
         <div style="background: linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%); border: 1px solid #c7d2fe; border-radius: 10px; padding: 12px 14px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(99,102,241,0.06);">
@@ -519,6 +571,7 @@
               <div style="text-align: right; border-left: 1px solid #cbd5e1; padding-left: 10px;">
                 <div style="font-size: 9px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Balance Due</div>
                 <div style="font-family: var(--font-mono, monospace); font-size: 15px; font-weight: 900; color: ${totalBalance > 0 ? '#e11d48' : '#059669'}; line-height: 1.1;">₹ ${totalBalance.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                ${extraServicesTotal > 0 ? `<div style="font-size: 9px; font-weight: 700; color: #ea580c; margin-top: 1px;">(Extra Services: +₹${extraServicesTotal.toLocaleString('en-IN', {minimumFractionDigits: 2})})</div>` : ''}
               </div>
             </div>
           </div>
@@ -537,6 +590,12 @@
               <span style="font-size: 9px; font-weight: 700; color: #6366f1; text-transform: uppercase; display: block;">GST (${gstPct}%)</span>
               <span style="font-weight: 800; color: #6366f1; font-family: monospace;">${gstAmt > 0 ? `${gstType === 'inclusive' ? 'Incl. ' : '+ '}₹ ${gstAmt.toLocaleString('en-IN', {minimumFractionDigits: 2})}` : '₹ 0.00'}</span>
             </div>
+            ${extraServicesTotal > 0 ? `
+            <div style="background: #fffbeb; padding: 5px 8px; border-radius: 6px; border: 1px solid #fde68a;">
+              <span style="font-size: 9px; font-weight: 800; color: #b45309; text-transform: uppercase; display: block;"><i class="fa-solid fa-bell-concierge"></i> Extra Services</span>
+              <span style="font-weight: 900; color: #b45309; font-family: monospace;">+ ₹ ${extraServicesTotal.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+            </div>
+            ` : ''}
             <div style="background: #fff7ed; padding: 5px 8px; border-radius: 6px; border: 1px solid #fed7aa;">
               <span style="font-size: 9px; font-weight: 800; color: #c2410c; text-transform: uppercase; display: block;"><i class="fa-solid fa-utensils"></i> Meal Plan</span>
               <span style="font-weight: 800; color: #9a3412; font-family: inherit; font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;" title="${escapeHtml(mealPlanDisplay)}">${escapeHtml(mealPlanDisplay)}</span>
@@ -565,6 +624,8 @@
             </div>
             
             ${topReservationSummaryBar}
+
+            ${servicesOrdersHtml}
 
             <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 14px;">
               <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px;">
@@ -628,6 +689,8 @@
 
             <!-- Prominent Top Reservation & Financials Bar -->
             ${topReservationSummaryBar}
+
+            ${servicesOrdersHtml}
 
             <!-- List of All Guests One by One -->
             <div style="display: flex; flex-direction: column; gap: 8px;">
@@ -714,7 +777,7 @@
     if (isOccupied && guestObj) {
       footerEl.innerHTML = `
         <button type="button" class="btn-ui-success" onclick="checkInFromRoomModal('${roomNo}')"><i class="fa-solid fa-key"></i> New Check-In</button>
-        <button type="button" class="btn-ui-primary" onclick="if(typeof PmsAlert !== 'undefined') PmsAlert.toast('POS charge panel opened for Room ${roomNo}', 'info'); else alert('POS charge panel opened for Room ${roomNo}');"><i class="fa-solid fa-utensils"></i> Add POS Charge</button>
+        <button type="button" class="btn-ui-primary" onclick="window.location.href='/front-office/services?room_id=' + encodeURIComponent(roomData.id || '') + '&room_number=' + encodeURIComponent(roomNo);"><i class="fa-solid fa-utensils"></i> Add POS Charge</button>
         <button type="button" class="btn-ui-secondary" onclick="closeModal('room-modal')">Close</button>
       `;
     } else {

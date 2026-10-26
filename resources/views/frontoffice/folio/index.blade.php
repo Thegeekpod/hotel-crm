@@ -928,13 +928,24 @@
                   return $b->room;
                 })->filter()->unique('id');
 
-                // Extra Services charged to room
-                $extraServicesTotal = (float)($item->roomServiceOrders?->where('payment_status', 'Charged to Room Folio')->where('order_status', '!=', 'Cancelled')->sum('total_amount') ?? 0);
+                // Extra Services charged to room (gathered chronologically date-wise)
+                $allResServiceOrders = collect();
+                if ($item->roomServiceOrders) {
+                    $allResServiceOrders = $allResServiceOrders->concat(
+                        $item->roomServiceOrders->where('payment_status', 'Charged to Room Folio')->where('order_status', '!=', 'Cancelled')
+                    );
+                }
                 if ($item->additionalBookings) {
                     foreach ($item->additionalBookings as $ab) {
-                        $extraServicesTotal += (float)($ab->roomServiceOrders?->where('payment_status', 'Charged to Room Folio')->where('order_status', '!=', 'Cancelled')->sum('total_amount') ?? 0);
+                        if ($ab->roomServiceOrders) {
+                            $allResServiceOrders = $allResServiceOrders->concat(
+                                $ab->roomServiceOrders->where('payment_status', 'Charged to Room Folio')->where('order_status', '!=', 'Cancelled')
+                            );
+                        }
                     }
                 }
+                $allResServiceOrders = $allResServiceOrders->sortBy('created_at')->values();
+                $extraServicesTotal = (float)$allResServiceOrders->sum('total_amount');
 
                 // Financials
                 $advAmount = (float)$item->advance_amount;
@@ -1057,9 +1068,18 @@
                         <i class="fa-solid fa-triangle-exclamation" style="font-size: 8px;"></i> Due
                       </span>
                       @if($extraServicesTotal > 0)
-                        <div style="font-size: 9px; color: #d97706; font-weight: 700; margin-top: 3px;">
-                          <i class="fa-solid fa-utensils" style="font-size: 8px;"></i> +₹{{ number_format($extraServicesTotal, 2) }} Services
+                        <div style="font-size: 9.5px; color: #d97706; font-weight: 700; margin-top: 3px;" title="{{ $allResServiceOrders->map(fn($o) => ($o->created_at ? $o->created_at->format('d M, h:i A') : 'N/A') . ' - ₹' . number_format($o->total_amount, 2) . ' (' . ($o->items ? $o->items->map(fn($it)=>$it->quantity.'x '.$it->item_name)->implode(', ') : 'Order') . ')')->implode(' | ') }}">
+                          <i class="fa-solid fa-bell-concierge" style="font-size: 8.5px;"></i> +₹{{ number_format($extraServicesTotal, 2) }} ({{ $allResServiceOrders->count() }} {{ $allResServiceOrders->count() === 1 ? 'order' : 'orders' }})
                         </div>
+                        @if($allResServiceOrders->count() > 1)
+                          <div style="display: flex; flex-direction: column; gap: 2px; margin-top: 3px; align-items: flex-end;">
+                            @foreach($allResServiceOrders as $ord)
+                              <span style="font-size: 8.5px; font-weight: 700; color: #9a3412; background: #fff7ed; border: 1px solid #ffedd5; padding: 1px 5px; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px;" title="{{ $ord->created_at ? $ord->created_at->format('d M Y, h:i A') : '-' }}">
+                                <i class="fa-regular fa-clock" style="font-size: 7.5px; opacity: 0.7;"></i> {{ $ord->created_at ? $ord->created_at->format('d M') : '-' }}: ₹{{ number_format($ord->total_amount, 2) }}
+                              </span>
+                            @endforeach
+                          </div>
+                        @endif
                       @endif
                     @else
                       <span style="color: #059669; background: #ecfdf5; padding: 1px 7px; border-radius: 4px; font-size: 9px; font-weight: 800;">
@@ -1476,6 +1496,9 @@
               Pay Full Due (<span id="fmdl-btn-payfull-val">₹ 0.00</span>)
             </button>
           </div>
+
+          <!-- Dynamic Settlement Price Breakdown (Room + Extra Services Date-wise) -->
+          <div id="fmdl-settle-breakdown-box" style="margin-bottom: 12px;"></div>
 
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-bottom: 10px;">
             <div>
@@ -2051,6 +2074,7 @@
         <table style="width: 100%; border-collapse: collapse; background: #ffffff; border: 1px solid #fed7aa; border-radius: 8px; overflow: hidden; margin-bottom: 4px;">
           <thead>
             <tr style="background: #fff7ed; border-bottom: 1px solid #fed7aa; text-align: left;">
+              <th style="padding: 6px 8px; font-size: 10px; color: #9a3412; width: 35px; text-align: center;">SL</th>
               <th style="padding: 6px 10px; font-size: 10px; color: #9a3412;">Order #</th>
               <th style="padding: 6px 10px; font-size: 10px; color: #9a3412;">Date &amp; Time</th>
               <th style="padding: 6px 10px; font-size: 10px; color: #9a3412;">Ordered Items</th>
@@ -2061,21 +2085,37 @@
           <tbody>
       `;
 
-      folio.room_service_orders.forEach(ro => {
-        let itemsDetail = (ro.items || []).map(i => `${i.quantity}x ${escapeHtml(i.item_name)}`).join(', ');
+      folio.room_service_orders.forEach((ro, oIdx) => {
+        let itemsDetail = (ro.items || []).map(i => `${i.quantity}x ${escapeHtml(i.item_name)} (${formatINR(i.unit_price)})`).join(', ');
         ordHtml += `
           <tr style="border-bottom: 1px solid #ffedd5;">
+            <td style="padding: 6px 8px; text-align: center; font-weight: 800; font-family: var(--font-mono, monospace); color: #9a3412; font-size: 10px;">${oIdx + 1}</td>
             <td style="padding: 6px 10px; font-family: var(--font-mono, monospace); font-weight: 700; color: #c2410c;">${escapeHtml(ro.order_number)}</td>
-            <td style="padding: 6px 10px; color: #475569;">${escapeHtml(ro.date)}</td>
-            <td style="padding: 6px 10px; color: #1e293b; font-size: 10.5px;">${itemsDetail || 'Room Dining Service'}</td>
+            <td style="padding: 6px 10px; color: #475569; white-space: nowrap;">
+              <i class="fa-regular fa-calendar-days" style="font-size: 9px; color: #d97706;"></i> ${escapeHtml(ro.date)}
+            </td>
+            <td style="padding: 6px 10px; color: #1e293b; font-size: 10.5px;">${itemsDetail || escapeHtml(ro.items_summary) || 'Room Dining Service'}</td>
             <td style="padding: 6px 10px; text-align: center;">
               <span style="display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 700; background: #ffedd5; color: #9a3412;">${escapeHtml(ro.order_status)}</span>
             </td>
-            <td style="padding: 6px 10px; text-align: right; font-family: var(--font-mono, monospace); font-weight: 800; color: #ea580c;">${formatINR(ro.total_amount)}</td>
+            <td style="padding: 6px 10px; text-align: right; font-family: var(--font-mono, monospace); font-weight: 800; color: #ea580c; white-space: nowrap;">+ ${formatINR(ro.total_amount)}</td>
           </tr>
         `;
       });
-      ordHtml += '</tbody></table>';
+      ordHtml += `
+          </tbody>
+          <tfoot>
+            <tr style="background: #fff7ed; font-weight: 800; border-top: 1.5px solid #fed7aa;">
+              <td colspan="5" style="padding: 6px 10px; text-align: right; font-size: 10px; color: #9a3412; text-transform: uppercase;">
+                Total In-Room Dining &amp; Extra Services (${folio.room_service_orders.length} Orders):
+              </td>
+              <td style="padding: 6px 10px; text-align: right; font-family: var(--font-mono, monospace); color: #c2410c; font-size: 11px; white-space: nowrap;">
+                + ${formatINR(totalServiceCost)}
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+      `;
       if (servicesList) servicesList.innerHTML = ordHtml;
     } else {
       if (servicesBox) servicesBox.style.display = 'none';
@@ -2149,6 +2189,73 @@
     }
   }
 
+  function renderSettlementBreakdown(folio) {
+    const box = document.getElementById('fmdl-settle-breakdown-box');
+    if (!box) return;
+
+    const roomDue = Math.max(0, Number(folio.room_balance !== undefined ? folio.room_balance : ((folio.room_payable_amount || folio.payable_amount || 0) - Number(folio.total_paid || 0))));
+    const serviceCost = Number(folio.total_room_service_charges || 0);
+    const totalDue = Number(folio.balance || 0);
+    const orders = folio.room_service_orders || [];
+
+    let html = `
+      <div style="background: #f0fdf4; border: 1.5px solid #a7f3d0; border-radius: 8px; padding: 10px 14px; font-size: 11.5px;">
+        <div style="font-weight: 800; font-size: 11.5px; color: #065f46; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; display: flex; justify-content: space-between; align-items: center;">
+          <span><i class="fa-solid fa-file-invoice-dollar"></i> Settlement Balance Breakdown</span>
+          <span style="font-size: 11px; font-weight: 800; color: #047857;">Total Due: ${formatINR(totalDue)}</span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 4px;">
+          <div style="display: flex; justify-content: space-between; padding: 3px 0; border-bottom: 1px dashed #bbf7d0; color: #1e293b;">
+            <span><i class="fa-solid fa-bed" style="color: #6366f1; width: 14px;"></i> Room Charges Outstanding Balance:</span>
+            <span style="font-family: var(--font-mono, monospace); font-weight: 700;">${formatINR(roomDue)}</span>
+          </div>
+    `;
+
+    if (orders.length > 0) {
+      html += `
+        <div style="margin-top: 4px;">
+          <div style="font-weight: 800; color: #d97706; font-size: 11px; margin-bottom: 4px;">
+            <i class="fa-solid fa-bell-concierge" style="width: 14px;"></i> In-Room Dining &amp; Extra Services (${orders.length} order${orders.length > 1 ? 's' : ''}):
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 4px; padding-left: 8px;">
+      `;
+      orders.forEach((ord, i) => {
+        let itemsTxt = (ord.items || []).map(it => `${it.quantity}x ${escapeHtml(it.item_name)}`).join(', ');
+        html += `
+          <div style="display: flex; justify-content: space-between; align-items: center; background: #fffbeb; border: 1px solid #fef3c7; border-radius: 6px; padding: 4px 8px; font-size: 11px;">
+            <div>
+              <span style="font-weight: 800; color: #b45309; font-family: var(--font-mono, monospace);">${escapeHtml(ord.order_number)}</span>
+              <span style="color: #64748b; font-size: 10px; margin-left: 4px;"><i class="fa-regular fa-calendar-days" style="font-size: 8px;"></i> ${escapeHtml(ord.date)}</span>
+              <div style="font-size: 10px; color: #475569;">${itemsTxt || escapeHtml(ord.items_summary) || 'Extra Service'}</div>
+            </div>
+            <div style="font-family: var(--font-mono, monospace); font-weight: 800; color: #b45309; white-space: nowrap;">
+              + ${formatINR(ord.total_amount)}
+            </div>
+          </div>
+        `;
+      });
+      html += `
+          </div>
+          <div style="display: flex; justify-content: space-between; padding: 4px 0 2px; font-weight: 700; color: #b45309; font-size: 11px;">
+            <span>Total Extra Services:</span>
+            <span style="font-family: var(--font-mono, monospace);">+ ${formatINR(serviceCost)}</span>
+          </div>
+        </div>
+      `;
+    }
+
+    html += `
+        <div style="display: flex; justify-content: space-between; padding: 6px 0 0; border-top: 1.5px solid #a7f3d0; margin-top: 4px; font-weight: 900; font-size: 12.5px; color: #065f46;">
+          <span><i class="fa-solid fa-cash-register" style="width: 14px;"></i> Net Outstanding Due to Settle:</span>
+          <span style="font-family: var(--font-mono, monospace); color: ${totalDue > 0.01 ? '#b91c1c' : '#059669'};">${formatINR(totalDue)}</span>
+        </div>
+      </div>
+    </div>
+    `;
+
+    box.innerHTML = html;
+  }
+
   function toggleFolioSettlementPanel() {
     const panel = document.getElementById('fmdl-settlement-interactive-panel');
     if (panel.style.display === 'none' || panel.style.display === '') {
@@ -2156,6 +2263,7 @@
       if (activeFolioData) {
         document.getElementById('fmdl-input-settle-amount').value = Number(activeFolioData.balance || 0).toFixed(2);
         document.getElementById('fmdl-btn-payfull-val').textContent = formatINR(activeFolioData.balance);
+        renderSettlementBreakdown(activeFolioData);
       }
       panel.scrollIntoView({ behavior: 'smooth' });
     } else {

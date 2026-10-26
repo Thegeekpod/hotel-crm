@@ -327,15 +327,28 @@ class NightAuditController extends Controller
                 ->whereIn('booking_id', $allResBookingIds)
                 ->where('payment_status', 'Charged to Room Folio')
                 ->where('order_status', '!=', 'Cancelled')
+                ->orderBy('created_at', 'asc')
+                ->orderBy('id', 'asc')
                 ->get();
 
             $extraServicesCharge = (float)$extraOrders->sum('total_amount');
             $extraOrdersCount = $extraOrders->count();
+            $extraOrdersDetailed = [];
             $extraItemsList = [];
             foreach ($extraOrders as $eo) {
+                $orderItems = [];
                 foreach ($eo->items as $it) {
+                    $orderItems[] = "{$it->quantity}x {$it->item_name}";
                     $extraItemsList[] = "{$it->quantity}x {$it->item_name}";
                 }
+                $extraOrdersDetailed[] = [
+                    'id' => $eo->id,
+                    'order_number' => $eo->order_number,
+                    'total_amount' => (float)$eo->total_amount,
+                    'date_time' => $eo->created_at ? $eo->created_at->format('d M Y, h:i A') : 'N/A',
+                    'date_short' => $eo->created_at ? $eo->created_at->format('d M') : 'N/A',
+                    'items_summary' => implode(', ', $orderItems),
+                ];
             }
 
             $grandTotal = round($roomCharges + $extraServicesCharge, 2);
@@ -380,6 +393,7 @@ class NightAuditController extends Controller
                 'room_charges' => $roomCharges,
                 'extra_service_charges' => $extraServicesCharge,
                 'extra_orders_count' => $extraOrdersCount,
+                'extra_orders_detailed' => $extraOrdersDetailed,
                 'extra_items_list' => $extraItemsList,
                 'grand_total_bill' => $grandTotal,
                 'total_bill' => $grandTotal,

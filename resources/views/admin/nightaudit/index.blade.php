@@ -1402,6 +1402,16 @@
                               <div style="font-size: 9.5px; font-weight: 700; color: #d97706; margin-top: 1px;">
                                 <i class="fa-solid fa-bell-concierge"></i> ${extraCount} order(s)
                               </div>
+                              ${Array.isArray(g.extra_orders_detailed) && g.extra_orders_detailed.length > 0 ? `
+                                <div style="display: flex; flex-direction: column; gap: 2px; margin-top: 4px; align-items: flex-end;">
+                                  ${g.extra_orders_detailed.map(eo => `
+                                    <div style="font-size: 9px; color: #9a3412; background: #fff7ed; border: 1px solid #ffedd5; border-radius: 4px; padding: 1px 5px; display: inline-flex; align-items: center; gap: 4px;" title="${escapeHtml(eo.order_number)}: ${escapeHtml(eo.items_summary || '')}">
+                                      <span style="opacity: 0.8; font-size: 8px;"><i class="fa-regular fa-clock" style="font-size: 7.5px;"></i> ${escapeHtml(eo.date_short)}:</span>
+                                      <span style="font-weight: 700;">₹ ${fmt(eo.total_amount)}</span>
+                                    </div>
+                                  `).join('')}
+                                </div>
+                              ` : ''}
                             ` : `
                               <span style="color: #94a3b8; font-size: 11px;">₹ 0.00</span>
                             `}
@@ -1413,7 +1423,12 @@
                             ₹ ${fmt(g.paid_amount)}
                           </td>
                           <td style="text-align: right; font-family: var(--font-mono, monospace); color: ${Number(g.remaining_amount || 0) > 0.01 ? '#b91c1c' : '#059669'}; font-weight: 800; white-space: nowrap;">
-                            ₹ ${fmt(g.remaining_amount)}
+                            <div>₹ ${fmt(g.remaining_amount)}</div>
+                            ${extraServicesVal > 0 && Number(g.remaining_amount || 0) > 0.01 ? `
+                              <div style="font-size: 9px; font-weight: 700; color: #b45309; margin-top: 2px;">
+                                (incl. +₹${fmt(extraServicesVal)} serv.)
+                              </div>
+                            ` : ''}
                           </td>
                           <td style="text-align: center; white-space: nowrap;">
                             ${g.is_settled ? `

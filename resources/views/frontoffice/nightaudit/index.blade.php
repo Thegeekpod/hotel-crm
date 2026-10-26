@@ -651,32 +651,47 @@
                   ₹ {{ number_format($b['room_charges'], 2) }}
                 </td>
                 <!-- Extra Services -->
-                <td style="text-align: right; font-family: var(--font-mono, monospace); font-size: 12px;">
+                <td style="text-align: right; font-family: var(--font-mono, monospace); font-size: 12px; white-space: nowrap;">
                   @if($b['extra_service_charges'] > 0)
                     <div style="font-weight: 800; color: #d97706;">
                       + ₹ {{ number_format($b['extra_service_charges'], 2) }}
                     </div>
-                    <div style="font-size: 9px; color: #b45309; font-weight: 700; margin-top: 2px;" title="{{ implode(', ', $b['extra_items_list']) }}">
-                      <i class="fa-solid fa-utensils" style="font-size: 8px;"></i> {{ $b['extra_orders_count'] }} order(s)
+                    <div style="font-size: 9.5px; color: #b45309; font-weight: 700; margin-top: 2px;" title="{{ implode(', ', $b['extra_items_list']) }}">
+                      <i class="fa-solid fa-bell-concierge" style="font-size: 8px;"></i> {{ $b['extra_orders_count'] }} order(s)
                     </div>
+                    @if(!empty($b['extra_orders_detailed']) && count($b['extra_orders_detailed']) > 0)
+                      <div style="display: flex; flex-direction: column; gap: 2px; margin-top: 4px; align-items: flex-end;">
+                        @foreach($b['extra_orders_detailed'] as $eOrd)
+                          <div style="font-size: 9px; color: #9a3412; background: #fff7ed; border: 1px solid #ffedd5; border-radius: 4px; padding: 1px 5px; display: inline-flex; align-items: center; gap: 4px;" title="{{ $eOrd['order_number'] }}: {{ $eOrd['items_summary'] }}">
+                            <span style="opacity: 0.8; font-size: 8px;"><i class="fa-regular fa-clock" style="font-size: 7.5px;"></i> {{ $eOrd['date_short'] }}:</span>
+                            <span style="font-weight: 700;">₹{{ number_format($eOrd['total_amount'], 2) }}</span>
+                          </div>
+                        @endforeach
+                      </div>
+                    @endif
                   @else
                     <span style="color: #94a3b8; font-size: 11px;">₹ 0.00</span>
                   @endif
                 </td>
                 <!-- Total Bill -->
-                <td style="text-align: right; font-weight: 800; font-family: var(--font-mono, monospace); font-size: 12px; color: #0f172a;">
+                <td style="text-align: right; font-weight: 800; font-family: var(--font-mono, monospace); font-size: 12px; color: #0f172a; white-space: nowrap;">
                   ₹ {{ number_format($b['grand_total_bill'], 2) }}
                 </td>
                 <!-- Paid -->
-                <td style="text-align: right; font-weight: 800; font-family: var(--font-mono, monospace); font-size: 12px; color: #059669;">
+                <td style="text-align: right; font-weight: 800; font-family: var(--font-mono, monospace); font-size: 12px; color: #059669; white-space: nowrap;">
                   ₹ {{ number_format($b['total_paid'] ?? $b['paid_amount'] ?? 0, 2) }}
                 </td>
                 <!-- Remaining -->
                 @php
                   $remBal = $b['remaining_balance'] ?? $b['remaining_amount'] ?? 0;
                 @endphp
-                <td style="text-align: right; font-weight: 800; font-family: var(--font-mono, monospace); font-size: 12px; color: {{ $remBal > 0.01 ? '#e11d48' : '#64748b' }};">
-                  ₹ {{ number_format($remBal, 2) }}
+                <td style="text-align: right; font-weight: 800; font-family: var(--font-mono, monospace); font-size: 12px; color: {{ $remBal > 0.01 ? '#e11d48' : '#64748b' }}; white-space: nowrap;">
+                  <div>₹ {{ number_format($remBal, 2) }}</div>
+                  @if($b['extra_service_charges'] > 0 && $remBal > 0.01)
+                    <div style="font-size: 9px; font-weight: 700; color: #b45309; margin-top: 2px;">
+                      (incl. +₹{{ number_format($b['extra_service_charges'], 2) }} serv.)
+                    </div>
+                  @endif
                 </td>
                 <!-- Settlement Status -->
                 <td style="text-align: center;">

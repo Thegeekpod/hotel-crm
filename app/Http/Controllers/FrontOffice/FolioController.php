@@ -649,16 +649,19 @@ class FolioController extends Controller
         $allBookingIds = $allBookings->pluck('id')->filter()->toArray();
         $roomServiceOrders = \App\Models\RoomServiceOrder::with('items')
             ->whereIn('booking_id', $allBookingIds)
-            ->latest()
+            ->orderBy('created_at', 'asc')
+            ->orderBy('id', 'asc')
             ->get();
 
         $serviceOrdersList = $roomServiceOrders->map(function ($ro) {
+            $itemsSummary = $ro->items->map(fn($it) => "{$it->quantity}x {$it->item_name}")->implode(', ');
             return [
                 'id' => $ro->id,
                 'order_number' => $ro->order_number,
                 'room_number' => $ro->room_number,
                 'guest_name' => $ro->guest_name,
                 'date' => $ro->created_at ? $ro->created_at->format('d M Y, h:i A') : 'N/A',
+                'date_short' => $ro->created_at ? $ro->created_at->format('d M Y') : 'N/A',
                 'subtotal' => (float)$ro->subtotal,
                 'tax_amount' => (float)$ro->tax_amount,
                 'total_amount' => (float)$ro->total_amount,
@@ -666,6 +669,7 @@ class FolioController extends Controller
                 'order_status' => $ro->order_status,
                 'served_by' => $ro->served_by,
                 'special_instructions' => $ro->special_instructions,
+                'items_summary' => $itemsSummary,
                 'items' => $ro->items->map(function ($it) {
                     return [
                         'item_name' => $it->item_name,

@@ -51,6 +51,7 @@ class FolioController extends Controller
             'additionalBookings.room.categoryRelation',
             'additionalBookings.room.beddingConfigRelation',
             'roomServiceOrders.items',
+            'additionalBookings.roomServiceOrders.items',
         ])
         ->whereNull('primary_booking_id')
         ->orderBy('id', 'desc');
@@ -156,19 +157,31 @@ class FolioController extends Controller
             $folios = $query->paginate($perPage)->withQueryString();
         }
 
-        // Filter-Aware Dynamic KPI Stats (Must reflect active filters)
+        // Filter-Aware Dynamic KPI Stats (Must reflect active filters including Room Service Orders)
         $kpiQuery = (clone $query);
         $kpiQuery->getQuery()->orders = null; // Drop ordering for faster aggregate calculation
         $filteredBookings = $kpiQuery->select(['id', 'advance_amount', 'payable_amount', 'balance', 'status'])->get();
         $filteredIds = $filteredBookings->pluck('id')->filter()->all();
 
-        $totalReceivable = (float)$filteredBookings->sum('payable_amount');
+        // Include any additional bookings under these primary folios for extra services
+        $allAssociatedIds = !empty($filteredIds)
+            ? Booking::whereIn('primary_booking_id', $filteredIds)->pluck('id')->concat($filteredIds)->unique()->all()
+            : [];
+
+        $totalExtraServices = !empty($allAssociatedIds)
+            ? (float)\App\Models\RoomServiceOrder::whereIn('booking_id', $allAssociatedIds)
+                ->where('payment_status', 'Charged to Room Folio')
+                ->where('order_status', '!=', 'Cancelled')
+                ->sum('total_amount')
+            : 0.0;
+
+        $totalReceivable = round((float)$filteredBookings->sum('payable_amount') + $totalExtraServices, 2);
         $totalAdvance = (float)$filteredBookings->sum('advance_amount');
         $totalSettled = !empty($filteredIds) 
             ? (float)Settlement::whereIn('booking_id', $filteredIds)->sum('paid_amount') 
             : 0.0;
         $totalPaid = round($totalAdvance + $totalSettled, 2);
-        $totalOutstanding = (float)$filteredBookings->sum('balance');
+        $totalOutstanding = round((float)$filteredBookings->sum('balance') + $totalExtraServices, 2);
         $settledCount = $filteredBookings->filter(function ($b) {
             return (float)$b->balance <= 0.01 || in_array(strtolower($b->status ?? ''), ['settlement done', 'settled']);
         })->count();
@@ -275,8 +288,15 @@ class FolioController extends Controller
             'transaction_id' => 'nullable|string|max:100',
         ]);
 
-        $settleAmount = (float)$request->input('amount');
-        $currentBalance = (float)$booking->balance;
+        $allBookings = collect([$booking])->concat($booking->additionalBookings ?? []);
+        $allBookingIds = $allBookings->pluck('id')->filter()->toArray();
+
+        $totalExtra = (float)\App\Models\RoomServiceOrder::whereIn('booking_id', $allBookingIds)
+            ->where('payment_status', 'Charged to Room Folio')
+            ->where('order_status', '!=', 'Cancelled')
+            ->sum('total_amount');
+
+        $currentBalance = round((float)$booking->balance + $totalExtra, 2);
 
         if ($currentBalance <= 0) {
             return response()->json(['success' => false, 'error' => 'This booking balance has already been fully settled.'], 400);
@@ -309,7 +329,7 @@ class FolioController extends Controller
 
             // 2b. If balance is fully settled, mark associated room service orders as settled
             if ($newBalance <= 0) {
-                \App\Models\RoomServiceOrder::where('booking_id', $booking->id)
+                \App\Models\RoomServiceOrder::whereIn('booking_id', $allBookingIds)
                     ->where('payment_status', 'Charged to Room Folio')
                     ->update(['payment_status' => 'Settled in Folio']);
             }
@@ -343,10 +363,10 @@ class FolioController extends Controller
                 'booking_id' => $booking->id,
                 'payment_mode_id' => $paymentModeId,
                 'total_room_charges' => $booking->total_amount,
-                'total_extra_charges' => 0.00,
+                'total_extra_charges' => $totalExtra,
                 'discount_amount' => $booking->discount_amount,
                 'tax_amount' => $booking->gst_amount,
-                'payable_amount' => $booking->payable_amount,
+                'payable_amount' => round((float)$booking->payable_amount + $totalExtra, 2),
                 'advance_adjusted' => (float)$booking->advance_amount,
                 'paid_amount' => $settleAmount,
                 'balance_amount' => $newBalance,
@@ -662,6 +682,10 @@ class FolioController extends Controller
             ->where('order_status', '!=', 'Cancelled')
             ->sum('total_amount');
 
+        $effectiveBalance = round($balance + $totalRoomServiceCharges, 2);
+        $effectivePayable = round((float)$booking->payable_amount + $totalRoomServiceCharges, 2);
+        $effectiveGross = round((float)$booking->total_amount + $totalRoomServiceCharges, 2);
+
         // Group rooms and their occupants
         $roomsMap = [];
         foreach ($allBookings as $b) {
@@ -781,16 +805,21 @@ class FolioController extends Controller
             'plan_code' => $booking->plan?->plan_code ?: '',
             'plan_price' => (float)($booking->plan?->price ?? 0),
             'total_amount' => (float)$booking->total_amount,
+            'room_total_amount' => (float)$booking->total_amount,
+            'effective_gross' => $effectiveGross,
             'discount_percentage' => (float)$booking->discount_percentage,
             'discount_amount' => (float)$booking->discount_amount,
             'gst_type' => $booking->gst_type ?: 'exclusive',
             'gst_percentage' => (float)$booking->gst_percentage,
             'gst_amount' => (float)$booking->gst_amount,
             'payable_amount' => (float)$booking->payable_amount,
+            'room_payable_amount' => (float)$booking->payable_amount,
+            'effective_payable' => $effectivePayable,
             'advance_amount' => $advAmount,
             'settlement_paid' => $settleAmount,
             'total_paid' => $totalPaid,
-            'balance' => $balance,
+            'balance' => $effectiveBalance,
+            'room_balance' => $balance,
             'payment_mode' => $booking->payments?->first()?->paymentMode?->name ?? 'Cash / Direct',
             'payment_remarks' => $booking->remarks ?: ($booking->payments?->first()?->payment_remarks ?? 'None'),
             'checkin_date_fmt' => $checkinDateFmt,

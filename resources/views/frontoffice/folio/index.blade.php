@@ -928,11 +928,19 @@
                   return $b->room;
                 })->filter()->unique('id');
 
+                // Extra Services charged to room
+                $extraServicesTotal = (float)($item->roomServiceOrders?->where('payment_status', 'Charged to Room Folio')->where('order_status', '!=', 'Cancelled')->sum('total_amount') ?? 0);
+                if ($item->additionalBookings) {
+                    foreach ($item->additionalBookings as $ab) {
+                        $extraServicesTotal += (float)($ab->roomServiceOrders?->where('payment_status', 'Charged to Room Folio')->where('order_status', '!=', 'Cancelled')->sum('total_amount') ?? 0);
+                    }
+                }
+
                 // Financials
                 $advAmount = (float)$item->advance_amount;
                 $settleAmount = (float)($item->settlements?->sum('paid_amount') ?: $item->payments?->where('payment_type', 'Settlement')->sum('amount'));
                 $totalPaid = round($advAmount + $settleAmount, 2);
-                $balanceVal = (float)($item->balance ?? 0);
+                $balanceVal = round((float)($item->balance ?? 0) + $extraServicesTotal, 2);
 
                 // Status in table: Only Settled (payments all clear) & Unsettled (payment not cleared)
                 $isSettled = ($balanceVal <= 0.01) || in_array(strtolower($item->status ?? ''), ['settlement done', 'settled']);
@@ -1048,6 +1056,11 @@
                       <span style="color: #e11d48; background: #ffe4e6; padding: 1px 7px; border-radius: 4px; font-size: 9px; font-weight: 800;">
                         <i class="fa-solid fa-triangle-exclamation" style="font-size: 8px;"></i> Due
                       </span>
+                      @if($extraServicesTotal > 0)
+                        <div style="font-size: 9px; color: #d97706; font-weight: 700; margin-top: 3px;">
+                          <i class="fa-solid fa-utensils" style="font-size: 8px;"></i> +₹{{ number_format($extraServicesTotal, 2) }} Services
+                        </div>
+                      @endif
                     @else
                       <span style="color: #059669; background: #ecfdf5; padding: 1px 7px; border-radius: 4px; font-size: 9px; font-weight: 800;">
                         <i class="fa-solid fa-check" style="font-size: 8px;"></i> Cleared
@@ -1968,8 +1981,10 @@
 
   function renderBillingsLedger(folio) {
     const totalServiceCost = Number(folio.total_room_service_charges || 0);
-    const grossTotal = Number(folio.total_amount || 0) + totalServiceCost;
-    const netPayableTotal = Number(folio.payable_amount || 0) + totalServiceCost;
+    const roomGross = Number(folio.room_total_amount !== undefined ? folio.room_total_amount : (folio.total_amount || 0));
+    const roomPayable = Number(folio.room_payable_amount !== undefined ? folio.room_payable_amount : (folio.payable_amount || 0));
+    const grossTotal = roomGross + totalServiceCost;
+    const netPayableTotal = roomPayable + totalServiceCost;
 
     const billRateEl = document.getElementById('fmdl-bill-rate');
     if (billRateEl) billRateEl.textContent = formatINR(folio.room_rate);
@@ -1991,7 +2006,7 @@
     }
 
     // Breakdown details
-    document.getElementById('fmdl-calc-row').textContent = `${formatINR(folio.room_rate)} × ${folio.total_nights} Nights = ${formatINR(folio.total_amount)}`;
+    document.getElementById('fmdl-calc-row').textContent = `${formatINR(folio.room_rate)} × ${folio.total_nights} Nights = ${formatINR(roomGross)}`;
     document.getElementById('fmdl-advance-row').textContent = formatINR(folio.advance_amount);
     document.getElementById('fmdl-settlement-row').textContent = formatINR(folio.settlement_paid);
     
@@ -2004,7 +2019,7 @@
     const payableEl = document.getElementById('fmdl-payable-amount');
     if (payableEl) {
       if (totalServiceCost > 0) {
-        payableEl.textContent = `${formatINR(netPayableTotal)} (Room: ${formatINR(folio.payable_amount)} + Services: ${formatINR(totalServiceCost)})`;
+        payableEl.textContent = `${formatINR(netPayableTotal)} (Room: ${formatINR(roomPayable)} + Services: ${formatINR(totalServiceCost)})`;
       } else {
         payableEl.textContent = formatINR(netPayableTotal);
       }
@@ -2537,13 +2552,14 @@
     }
 
     // Build billing summary rows
-    const grossRoom    = Number(f.total_amount || 0);
+    const grossRoom    = Number(f.room_total_amount !== undefined ? f.room_total_amount : (f.total_amount || 0));
     const serviceChrg  = Number(f.total_room_service_charges || 0);
     const discAmt      = Number(f.discount_amount || 0);
     const discPct      = Number(f.discount_percentage || 0);
     const gstAmt       = Number(f.gst_amount || 0);
     const gstPct       = Number(f.gst_percentage || 0);
-    const netPayable   = Number(f.payable_amount || 0) + serviceChrg;
+    const roomPayable  = Number(f.room_payable_amount !== undefined ? f.room_payable_amount : (f.payable_amount || 0));
+    const netPayable   = roomPayable + serviceChrg;
     const advancePaid  = Number(f.advance_amount || 0);
     const settlePaid   = Number(f.settlement_paid || 0);
     const totalPaid    = Number(f.total_paid || 0);

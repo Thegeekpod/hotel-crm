@@ -1133,7 +1133,9 @@
         const guestsList = snapshot.guests_list || [];
         const unsettled = snapshot.unsettled_summary || {};
 
-        let totalBill = 0;
+        let totalRoomBill = 0;
+        let totalExtraServices = 0;
+        let totalGrandBill = 0;
         let totalPaid = 0;
         let totalDue = 0;
         let settledCount = 0;
@@ -1141,10 +1143,14 @@
 
         if (guestsList && guestsList.length > 0) {
           guestsList.forEach(g => {
-            const b = Number(g.total_bill || 0);
+            const r = Number(g.room_charges !== undefined ? g.room_charges : ((g.total_bill || 0) - Number(g.extra_service_charges || 0)));
+            const e = Number(g.extra_service_charges || 0);
+            const b = Number(g.grand_total_bill !== undefined ? g.grand_total_bill : (g.total_bill || 0));
             const p = Number(g.paid_amount || 0);
             const d = Number(g.remaining_amount || 0);
-            totalBill += b;
+            totalRoomBill += r;
+            totalExtraServices += e;
+            totalGrandBill += b;
             totalPaid += p;
             totalDue += d;
             if (d <= 0.01) {
@@ -1154,9 +1160,11 @@
             }
           });
         } else {
-          totalBill = Number(a.total_revenue || a.room_revenue || 0);
+          totalGrandBill = Number(a.total_revenue || a.room_revenue || 0);
+          totalRoomBill = Number(a.room_revenue || totalGrandBill);
+          totalExtraServices = Math.max(0, totalGrandBill - totalRoomBill);
           totalPaid = Number(a.total_payments || 0);
-          totalDue = Math.max(0, totalBill - totalPaid);
+          totalDue = Math.max(0, totalGrandBill - totalPaid);
         }
 
         content.innerHTML = `
@@ -1166,7 +1174,7 @@
               <i class="fa-solid fa-chart-pie"></i> Summary &amp; Reconciliations
             </button>
             <button type="button" class="dossier-tab-btn" onclick="switchDossierTab('md-tab-payments', this)">
-              <i class="fa-solid fa-receipt"></i> Today Payments (${guestsList.length})
+              <i class="fa-solid fa-receipt"></i> Today Bookings / Payments (${guestsList.length})
             </button>
             <button type="button" class="dossier-tab-btn" onclick="switchDossierTab('md-tab-rooms', this)">
               <i class="fa-solid fa-bed"></i> Occupied Rooms (${occupiedRooms.length})
@@ -1302,20 +1310,21 @@
 
             </div>
 
-            <!-- TAB 2: TODAY PAYMENTS (Guest Billings & Settlements) -->
+            <!-- TAB 2: TODAY PAYMENTS (Booking Billings & Extra Services) -->
             <div id="md-tab-payments" class="dossier-tab-pane">
               <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; overflow-x: auto;">
                 <table class="dossier-table">
                   <thead>
                     <tr>
                       <th style="width: 45px; text-align: center;">SL</th>
-                      <th>ROOM</th>
-                      <th>GUEST NAME</th>
-                      <th>PHONE</th>
-                      <th>SETTLE #</th>
-                      <th>CHECK-IN</th>
-                      <th>CHECK-OUT</th>
-                      <th style="text-align: center;">STAY STATUS</th>
+                      <th>BOOKING NUMBER</th>
+                      <th>ROOM(S) &amp; FLOOR</th>
+                      <th>PRIMARY GUEST &amp; OCCUPANTS</th>
+                      <th>SETTLE / FOLIO #</th>
+                      <th>STAY DATES</th>
+                      <th style="text-align: center;">STATUS</th>
+                      <th style="text-align: right;">ROOM BILL</th>
+                      <th style="text-align: right;">EXTRA SERVICES</th>
                       <th style="text-align: right;">TOTAL BILL</th>
                       <th style="text-align: right;">PAID</th>
                       <th style="text-align: right;">REMAINING</th>
@@ -1323,57 +1332,130 @@
                     </tr>
                   </thead>
                   <tbody>
-                    ${guestsList.length > 0 ? guestsList.map((g, idx) => `
-                      <tr>
-                        <td style="text-align: center; font-weight: 800; color: #64748b; font-family: var(--font-mono, monospace);">${idx + 1}</td>
-                        <td><span style="font-weight: 800; color: #4338ca; background: #e0e7ff; padding: 2px 7px; border-radius: 6px; font-family: var(--font-mono, monospace); font-size: 11px;">${escapeHtml(g.room_number || '-')}</span></td>
-                        <td style="font-weight: 700; color: #0f172a;">${escapeHtml(g.guest_name || 'Guest')}</td>
-                        <td style="font-family: var(--font-mono, monospace); font-size: 11px; color: #475569;">${escapeHtml(g.mobile_no || '-')}</td>
-                        <td style="font-family: var(--font-mono, monospace); font-size: 11px; font-weight: 700; color: #4338ca;">${escapeHtml(g.settle_number || g.folio_number || '-')}</td>
-                        <td style="font-size: 11px; color: #475569;">${escapeHtml(g.checkin_date || '-')}</td>
-                        <td style="font-size: 11px; color: #475569;">${escapeHtml(g.checkout_date || '-')}</td>
-                        <td style="text-align: center;">
-                          <span style="font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 12px; background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1;">
-                            ${escapeHtml(g.status || 'Active')}
-                          </span>
-                        </td>
-                        <td style="text-align: right; font-family: var(--font-mono, monospace); font-weight: 700; color: #1e293b;">₹ ${fmt(g.total_bill)}</td>
-                        <td style="text-align: right; font-family: var(--font-mono, monospace); color: #059669; font-weight: 700;">₹ ${fmt(g.paid_amount)}</td>
-                        <td style="text-align: right; font-family: var(--font-mono, monospace); color: ${Number(g.remaining_amount || 0) > 0.01 ? '#b91c1c' : '#059669'}; font-weight: 700;">₹ ${fmt(g.remaining_amount)}</td>
-                        <td style="text-align: center;">
-                          ${g.is_settled ? `
-                            <span style="font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 6px; background: #dcfce7; color: #15803d; border: 1px solid #86efac;">
-                              <i class="fa-solid fa-circle-check"></i> Settled
+                    ${guestsList.length > 0 ? guestsList.map((g, idx) => {
+                      const roomsList = Array.isArray(g.rooms) && g.rooms.length > 0 ? g.rooms : [{ room_number: g.room_number || 'Room', floor: '1' }];
+                      const extraServicesVal = Number(g.extra_service_charges || 0);
+                      const extraCount = Number(g.extra_orders_count || 0);
+                      const occupants = Array.isArray(g.occupants_names) ? g.occupants_names : [];
+                      const totalOccupants = Number(g.total_occupants || occupants.length || 1);
+                      const pName = g.primary_guest_name || g.guest_name || 'Guest';
+                      const pPhone = g.primary_mobile || g.mobile_no || '-';
+
+                      return `
+                        <tr>
+                          <td style="text-align: center; font-weight: 800; color: #64748b; font-family: var(--font-mono, monospace);">${idx + 1}</td>
+                          <td>
+                            <div style="font-weight: 800; color: #4338ca; font-family: var(--font-mono, monospace); font-size: 11.5px; white-space: nowrap;">
+                              ${escapeHtml(g.booking_number || ('RES-' + g.booking_id))}
+                            </div>
+                            <div style="font-size: 10px; color: #64748b; margin-top: 2px;">
+                              ${roomsList.length} Room(s)
+                            </div>
+                          </td>
+                          <td>
+                            <div style="display: flex; flex-wrap: wrap; gap: 4px;">
+                              ${roomsList.map(rm => `
+                                <span style="display: inline-flex; align-items: center; gap: 4px; font-weight: 800; color: #4338ca; background: #e0e7ff; padding: 2px 7px; border-radius: 6px; font-family: var(--font-mono, monospace); font-size: 11px; white-space: nowrap;">
+                                  <i class="fa-solid fa-door-open" style="font-size: 9px;"></i> ${escapeHtml(rm.room_number)}
+                                  <span style="font-size: 9px; opacity: 0.8; font-weight: 600;">(Fl ${escapeHtml(rm.floor)})</span>
+                                </span>
+                              `).join('')}
+                            </div>
+                          </td>
+                          <td>
+                            <div style="font-weight: 700; color: #0f172a; font-size: 12px;">
+                              ${escapeHtml(pName)}
+                              ${totalOccupants > 1 ? `
+                                <span style="font-size: 10px; font-weight: 800; background: #e2e8f0; color: #334155; padding: 1px 6px; border-radius: 10px; margin-left: 4px; white-space: nowrap;">
+                                  +${totalOccupants - 1} occupant(s)
+                                </span>
+                              ` : ''}
+                            </div>
+                            <div style="font-size: 11px; color: #64748b; margin-top: 2px; font-family: var(--font-mono, monospace);">
+                              <i class="fa-solid fa-phone" style="font-size: 9px; opacity: 0.6;"></i> ${escapeHtml(pPhone)}
+                            </div>
+                          </td>
+                          <td>
+                            <span style="font-family: var(--font-mono, monospace); font-size: 11px; font-weight: 700; color: #0f766e; background: #ccfbf1; padding: 2px 7px; border-radius: 6px; white-space: nowrap;">
+                              ${escapeHtml(g.settle_number || g.folio_number || '-')}
                             </span>
-                          ` : `
-                            <span style="font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 6px; background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5;">
-                              <i class="fa-solid fa-clock"></i> Unsettled
+                          </td>
+                          <td>
+                            <div style="font-size: 11px; color: #334155; white-space: nowrap;">
+                              <i class="fa-solid fa-arrow-right-to-bracket" style="font-size: 9px; color: #059669;"></i> ${escapeHtml(g.checkin_date || '-')}
+                            </div>
+                            <div style="font-size: 11px; color: #64748b; margin-top: 2px; white-space: nowrap;">
+                              <i class="fa-solid fa-arrow-right-from-bracket" style="font-size: 9px; color: #e11d48;"></i> ${escapeHtml(g.checkout_date || '-')}
+                            </div>
+                          </td>
+                          <td style="text-align: center;">
+                            <span style="font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 12px; background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; white-space: nowrap;">
+                              ${escapeHtml(g.stay_status || g.status || 'Active')}
                             </span>
-                          `}
-                        </td>
-                      </tr>
-                    `).join('') : `
+                          </td>
+                          <td style="text-align: right; font-family: var(--font-mono, monospace); font-weight: 700; color: #1e293b; white-space: nowrap;">
+                            ₹ ${fmt(g.room_charges !== undefined ? g.room_charges : (Number(g.total_bill || 0) - extraServicesVal))}
+                          </td>
+                          <td style="text-align: right; font-family: var(--font-mono, monospace); white-space: nowrap;">
+                            ${extraServicesVal > 0 ? `
+                              <div style="font-weight: 800; color: #b45309;">+₹ ${fmt(extraServicesVal)}</div>
+                              <div style="font-size: 9.5px; font-weight: 700; color: #d97706; margin-top: 1px;">
+                                <i class="fa-solid fa-bell-concierge"></i> ${extraCount} order(s)
+                              </div>
+                            ` : `
+                              <span style="color: #94a3b8; font-size: 11px;">₹ 0.00</span>
+                            `}
+                          </td>
+                          <td style="text-align: right; font-family: var(--font-mono, monospace); font-weight: 800; color: #0f172a; white-space: nowrap;">
+                            ₹ ${fmt(g.grand_total_bill !== undefined ? g.grand_total_bill : g.total_bill)}
+                          </td>
+                          <td style="text-align: right; font-family: var(--font-mono, monospace); color: #059669; font-weight: 700; white-space: nowrap;">
+                            ₹ ${fmt(g.paid_amount)}
+                          </td>
+                          <td style="text-align: right; font-family: var(--font-mono, monospace); color: ${Number(g.remaining_amount || 0) > 0.01 ? '#b91c1c' : '#059669'}; font-weight: 800; white-space: nowrap;">
+                            ₹ ${fmt(g.remaining_amount)}
+                          </td>
+                          <td style="text-align: center; white-space: nowrap;">
+                            ${g.is_settled ? `
+                              <span style="font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 6px; background: #dcfce7; color: #15803d; border: 1px solid #86efac; display: inline-flex; align-items: center; gap: 4px;">
+                                <i class="fa-solid fa-circle-check"></i> Settled
+                              </span>
+                            ` : `
+                              <span style="font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 6px; background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; display: inline-flex; align-items: center; gap: 4px;">
+                                <i class="fa-solid fa-clock"></i> Unsettled
+                              </span>
+                            `}
+                          </td>
+                        </tr>
+                      `;
+                    }).join('') : `
                       <tr>
-                        <td colspan="12" style="text-align: center; padding: 32px; color: #94a3b8;">No guest payment records recorded for this audit date.</td>
+                        <td colspan="13" style="text-align: center; padding: 32px; color: #94a3b8;">No booking payment records recorded for this audit date.</td>
                       </tr>
                     `}
                   </tbody>
                   ${guestsList.length > 0 ? `
                     <tfoot>
-                      <tr style="background: #f8fafc; font-weight: 800;">
-                        <td colspan="8" style="text-align: right; font-size: 11px; color: #64748b; text-transform: uppercase; padding: 10px 12px;">
-                          TOTAL BILL / COLLECTIONS / OUTSTANDING:
+                      <tr style="background: #f8fafc; font-weight: 800; border-top: 2px solid #cbd5e1;">
+                        <td colspan="7" style="text-align: right; font-size: 11px; color: #64748b; text-transform: uppercase; padding: 10px 12px;">
+                          TOTALS (ROOMS / EXTRA SERVICES / GRAND BILL / PAID / REMAINING):
                         </td>
-                        <td style="text-align: right; font-size: 12px; font-family: var(--font-mono, monospace); color: #1e293b; padding: 10px 12px;">
-                          ₹ ${fmt(totalBill)}
+                        <td style="text-align: right; font-size: 11.5px; font-family: var(--font-mono, monospace); color: #1e293b; padding: 10px 12px; white-space: nowrap;">
+                          ₹ ${fmt(totalRoomBill)}
                         </td>
-                        <td style="text-align: right; font-size: 12px; font-family: var(--font-mono, monospace); color: #059669; padding: 10px 12px;">
+                        <td style="text-align: right; font-size: 11.5px; font-family: var(--font-mono, monospace); color: #b45309; padding: 10px 12px; white-space: nowrap;">
+                          ₹ ${fmt(totalExtraServices)}
+                        </td>
+                        <td style="text-align: right; font-size: 12px; font-family: var(--font-mono, monospace); color: #0f172a; padding: 10px 12px; white-space: nowrap;">
+                          ₹ ${fmt(totalGrandBill)}
+                        </td>
+                        <td style="text-align: right; font-size: 12px; font-family: var(--font-mono, monospace); color: #059669; padding: 10px 12px; white-space: nowrap;">
                           ₹ ${fmt(totalPaid)}
                         </td>
-                        <td style="text-align: right; font-size: 12px; font-family: var(--font-mono, monospace); color: ${totalDue > 0.01 ? '#b91c1c' : '#64748b'}; padding: 10px 12px;">
+                        <td style="text-align: right; font-size: 12px; font-family: var(--font-mono, monospace); color: ${totalDue > 0.01 ? '#b91c1c' : '#64748b'}; padding: 10px 12px; white-space: nowrap;">
                           ₹ ${fmt(totalDue)}
                         </td>
-                        <td style="text-align: center; font-size: 11px; color: ${unsettledCount > 0 ? '#b91c1c' : '#15803d'}; padding: 10px 12px;">
+                        <td style="text-align: center; font-size: 11px; color: ${unsettledCount > 0 ? '#b91c1c' : '#15803d'}; padding: 10px 12px; white-space: nowrap;">
                           ${unsettledCount} Unsettled
                         </td>
                       </tr>

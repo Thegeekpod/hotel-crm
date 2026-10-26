@@ -573,99 +573,119 @@
       </button>
     </div>
 
-    <!-- TAB 1: TODAY PAYMENTS (Guest Billings & Settlements) -->
+    <!-- TAB 1: TODAY PAYMENTS (Booking Ledgers & Settlements Grouped by Booking Number) -->
     <div id="tab-payments" class="audit-tab-pane active">
       <div class="pms-table-box" style="border-radius: 12px; background: #ffffff; border: 1px solid #e2e8f0; overflow-x: auto;">
         <table class="pms-table" style="width: 100%;">
           <thead>
             <tr>
               <th style="width: 45px; text-align: center;">SL</th>
-              <th>ROOM</th>
-              <th>GUEST NAME</th>
-              <th>PHONE</th>
-              <th>SETTLE #</th>
-              <th>CHECK-IN</th>
-              <th>CHECK-OUT</th>
-              <th style="text-align: center;">STAY STATUS</th>
-              <th style="text-align: right;">TOTAL BILL</th>
-              <th style="text-align: right;">PAID</th>
-              <th style="text-align: right;">REMAINING</th>
-              <th style="text-align: center;">SETTLEMENT</th>
+              <th style="min-width: 140px;">BOOKING NUMBER</th>
+              <th style="min-width: 140px;">ROOM(S) &amp; FLOOR</th>
+              <th style="min-width: 170px;">PRIMARY GUEST &amp; OCCUPANTS</th>
+              <th style="min-width: 125px;">SETTLE / FOLIO #</th>
+              <th style="min-width: 130px;">STAY DATES</th>
+              <th style="text-align: center; min-width: 95px;">STATUS</th>
+              <th style="text-align: right; min-width: 100px;">ROOM BILL</th>
+              <th style="text-align: right; min-width: 110px;">EXTRA SERVICES</th>
+              <th style="text-align: right; min-width: 110px;">TOTAL BILL</th>
+              <th style="text-align: right; min-width: 100px;">PAID</th>
+              <th style="text-align: right; min-width: 110px;">REMAINING</th>
+              <th style="text-align: center; min-width: 105px;">SETTLEMENT</th>
             </tr>
           </thead>
           <tbody id="guests-tbody">
-            @forelse($todayAllBookings as $idx => $b)
-              @php
-                $cleanNum = $b->room?->room_number ? ('R' . preg_replace('/^r[-_\s]?/i', '', trim($b->room->room_number))) : 'Unassigned';
-                $isAdditional = !empty($b->primary_booking_id);
-                $master = ($isAdditional && $b->primaryBooking) ? $b->primaryBooking : $b;
-
-                $totalBill = (float)($master->payable_amount > 0 ? $master->payable_amount : ($master->total_amount > 0 ? $master->total_amount : 0));
-                $totalPaid = (float)($master->payments ? $master->payments->sum('amount') : 0);
-                if ($totalPaid <= 0 && (float)$master->advance_amount > 0) {
-                    $totalPaid = (float)$master->advance_amount;
-                }
-                $remaining = max(0, round($totalBill - $totalPaid, 2));
-
-                // Settled ONLY if remaining <= 0.01
-                $isSettled = ($remaining <= 0.01);
-
-                $roomPart = $b->room?->room_number ? preg_replace('/^r[-_\s]?/i', '', trim($b->room->room_number)) : '100';
-                $settleNo = $b->settle_number ?: ($b->folio_number ?: ($master->settle_number ?: ($master->folio_number ?: ($b->primary_booking_id ?: ('SET-' . $roomPart . '-' . $b->id)))));
-              @endphp
+            @forelse($bookingLedgers as $idx => $b)
               <tr class="guest-row">
                 <td style="text-align: center; font-weight: 800; color: #64748b; font-size: 11px; font-family: var(--font-mono, monospace);">
                   {{ $idx + 1 }}
                 </td>
+                <!-- Booking Number -->
                 <td>
-                  <span style="font-weight: 800; color: #4338ca; background: #e0e7ff; padding: 2px 7px; border-radius: 6px; font-family: var(--font-mono, monospace); font-size: 11px;">
-                    {{ $cleanNum }}
-                  </span>
+                  <div style="font-weight: 800; color: #4338ca; font-family: var(--font-mono, monospace); font-size: 12px; display: inline-flex; align-items: center; gap: 5px;">
+                    <i class="fa-solid fa-receipt" style="font-size: 11px; color: #6366f1;"></i>
+                    <span>{{ $b['booking_number'] }}</span>
+                  </div>
                 </td>
-                <td style="font-weight: 700; color: #0f172a;">
-                  {{ ($b->guest?->title?->name ? $b->guest->title->name . ' ' : '') . ($b->guest?->guest_name ?? 'Guest') }}
-                  @if($isAdditional)
-                    <span style="font-size: 10px; color: #64748b; font-weight: 600;">(Addl. Room)</span>
-                  @endif
+                <!-- Room(s) & Floor -->
+                <td>
+                  <div style="display: flex; flex-wrap: wrap; gap: 4px;">
+                    @foreach($b['rooms'] as $rm)
+                      <span style="font-weight: 800; color: #4338ca; background: #e0e7ff; padding: 2px 7px; border-radius: 6px; font-family: var(--font-mono, monospace); font-size: 11px; display: inline-flex; align-items: center; gap: 3px;" title="{{ $rm['category'] }}">
+                        <i class="fa-solid fa-door-open" style="font-size: 9px;"></i> {{ $rm['room_number'] }} <span style="font-size: 9px; opacity: 0.75;">(Fl {{ $rm['floor'] }})</span>
+                      </span>
+                    @endforeach
+                  </div>
                 </td>
-                <td style="font-family: var(--font-mono, monospace); font-size: 11px; color: #475569;">
-                  {{ $b->guest?->mobile ?: ($b->guest?->mobile_no ?: '-') }}
+                <!-- Primary Guest & Occupants -->
+                <td>
+                  <div style="font-weight: 700; color: #0f172a; font-size: 12px;">
+                    {{ $b['primary_guest_name'] }}
+                  </div>
+                  <div style="font-size: 10px; color: #64748b; margin-top: 2px; display: flex; align-items: center; gap: 6px;">
+                    <span style="font-family: var(--font-mono, monospace);"><i class="fa-solid fa-phone" style="font-size: 8px; color: #10b981;"></i> {{ $b['primary_mobile'] }}</span>
+                    @if($b['total_occupants'] > 1)
+                      <span style="background: #f1f5f9; color: #475569; padding: 1px 5px; border-radius: 4px; font-weight: 800; font-size: 9px;" title="{{ implode(', ', $b['occupants_names']) }}">
+                        +{{ $b['total_occupants'] - 1 }} guest(s)
+                      </span>
+                    @endif
+                  </div>
                 </td>
+                <!-- Settle / Folio # -->
                 <td style="font-family: var(--font-mono, monospace); font-size: 11px; color: #4338ca; font-weight: 700;">
-                  {{ $settleNo }}
+                  {{ $b['settle_number'] }}
                 </td>
-                <td style="font-size: 11px; color: #475569;">
-                  {{ $b->reserve_date ? \Carbon\Carbon::parse($b->reserve_date)->format('d M Y') : '-' }}
-                </td>
-                <td style="font-size: 11px; color: #475569;">
-                  {{ $b->checkout_date ? \Carbon\Carbon::parse($b->checkout_date)->format('d M Y') : '-' }}
+                <!-- Stay Dates -->
+                <td style="font-size: 11px; color: #475569; white-space: nowrap;">
+                  <div><i class="fa-regular fa-calendar-check" style="font-size: 9px; color: #6366f1;"></i> {{ $b['checkin_date'] }}</div>
+                  <div style="font-size: 10px; color: #94a3b8; margin-top: 1px;"><i class="fa-regular fa-calendar-xmark" style="font-size: 9px; color: #e11d48;"></i> {{ $b['checkout_date'] }}</div>
                 </td>
                 <!-- Stay Status -->
                 <td style="text-align: center;">
                   <span style="font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 12px; background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1;">
-                    {{ $b->status }}
+                    {{ $b['stay_status'] }}
                   </span>
                 </td>
+                <!-- Room Bill -->
+                <td style="text-align: right; font-weight: 700; font-family: var(--font-mono, monospace); font-size: 12px; color: #334155;">
+                  ₹ {{ number_format($b['room_charges'], 2) }}
+                </td>
+                <!-- Extra Services -->
+                <td style="text-align: right; font-family: var(--font-mono, monospace); font-size: 12px;">
+                  @if($b['extra_service_charges'] > 0)
+                    <div style="font-weight: 800; color: #d97706;">
+                      + ₹ {{ number_format($b['extra_service_charges'], 2) }}
+                    </div>
+                    <div style="font-size: 9px; color: #b45309; font-weight: 700; margin-top: 2px;" title="{{ implode(', ', $b['extra_items_list']) }}">
+                      <i class="fa-solid fa-utensils" style="font-size: 8px;"></i> {{ $b['extra_orders_count'] }} order(s)
+                    </div>
+                  @else
+                    <span style="color: #94a3b8; font-size: 11px;">₹ 0.00</span>
+                  @endif
+                </td>
                 <!-- Total Bill -->
-                <td style="text-align: right; font-weight: 800; font-family: var(--font-mono, monospace); font-size: 12px; color: #1e293b;">
-                  ₹ {{ number_format($totalBill, 2) }}
+                <td style="text-align: right; font-weight: 800; font-family: var(--font-mono, monospace); font-size: 12px; color: #0f172a;">
+                  ₹ {{ number_format($b['grand_total_bill'], 2) }}
                 </td>
                 <!-- Paid -->
                 <td style="text-align: right; font-weight: 800; font-family: var(--font-mono, monospace); font-size: 12px; color: #059669;">
-                  ₹ {{ number_format($totalPaid, 2) }}
+                  ₹ {{ number_format($b['total_paid'] ?? $b['paid_amount'] ?? 0, 2) }}
                 </td>
                 <!-- Remaining -->
-                <td style="text-align: right; font-weight: 800; font-family: var(--font-mono, monospace); font-size: 12px; color: {{ $remaining > 0.01 ? '#e11d48' : '#64748b' }};">
-                  ₹ {{ number_format($remaining, 2) }}
+                @php
+                  $remBal = $b['remaining_balance'] ?? $b['remaining_amount'] ?? 0;
+                @endphp
+                <td style="text-align: right; font-weight: 800; font-family: var(--font-mono, monospace); font-size: 12px; color: {{ $remBal > 0.01 ? '#e11d48' : '#64748b' }};">
+                  ₹ {{ number_format($remBal, 2) }}
                 </td>
                 <!-- Settlement Status -->
                 <td style="text-align: center;">
-                  @if($isSettled)
+                  @if(!empty($b['is_settled']))
                     <span class="status-pill settled" title="Payment cleared in full">
                       <i class="fa-solid fa-circle-check"></i> Settled
                     </span>
                   @else
-                    <span class="status-pill unsettled" title="Remaining balance of ₹ {{ number_format($remaining, 2) }}">
+                    <span class="status-pill unsettled" title="Remaining balance of ₹ {{ number_format($remBal, 2) }}">
                       <i class="fa-solid fa-clock"></i> Unsettled
                     </span>
                   @endif
@@ -673,26 +693,32 @@
               </tr>
             @empty
               <tr>
-                <td colspan="12" style="text-align: center; padding: 24px; color: #94a3b8; font-size: 12px;">
-                  No guest payments or bookings recorded for this date.
+                <td colspan="13" style="text-align: center; padding: 24px; color: #94a3b8; font-size: 12px;">
+                  No bookings or payments recorded for this date.
                 </td>
               </tr>
             @endforelse
           </tbody>
-          @if(count($todayAllBookings) > 0)
+          @if(count($bookingLedgers) > 0)
             <tfoot>
               <tr style="background: #f8fafc; font-weight: 800;">
-                <td colspan="8" style="text-align: right; font-size: 11px; color: #64748b; text-transform: uppercase; padding: 10px 12px;">
-                  TOTAL BILL / COLLECTIONS / OUTSTANDING:
+                <td colspan="7" style="text-align: right; font-size: 11px; color: #64748b; text-transform: uppercase; padding: 10px 12px;">
+                  TOTAL ({{ count($bookingLedgers) }} BOOKINGS):
                 </td>
-                <td style="text-align: right; font-size: 12px; font-family: var(--font-mono, monospace); color: #1e293b; padding: 10px 12px;">
-                  ₹ {{ number_format($totalBookingsBill, 2) }}
+                <td style="text-align: right; font-size: 12px; font-family: var(--font-mono, monospace); color: #334155; padding: 10px 12px;">
+                  ₹ {{ number_format($totalRoomChargesAll, 2) }}
+                </td>
+                <td style="text-align: right; font-size: 12px; font-family: var(--font-mono, monospace); color: #d97706; padding: 10px 12px;">
+                  + ₹ {{ number_format($totalExtraChargesAll, 2) }}
+                </td>
+                <td style="text-align: right; font-size: 12px; font-family: var(--font-mono, monospace); color: #0f172a; padding: 10px 12px;">
+                  ₹ {{ number_format($totalGrandBillAll, 2) }}
                 </td>
                 <td style="text-align: right; font-size: 12px; font-family: var(--font-mono, monospace); color: #059669; padding: 10px 12px;">
-                  ₹ {{ number_format($totalPayments, 2) }}
+                  ₹ {{ number_format($totalPaidAll, 2) }}
                 </td>
-                <td style="text-align: right; font-size: 12px; font-family: var(--font-mono, monospace); color: {{ $totalUnsettledAmount > 0.01 ? '#e11d48' : '#64748b' }}; padding: 10px 12px;">
-                  ₹ {{ number_format($totalUnsettledAmount, 2) }}
+                <td style="text-align: right; font-size: 12px; font-family: var(--font-mono, monospace); color: {{ $totalRemainingAll > 0.01 ? '#e11d48' : '#64748b' }}; padding: 10px 12px;">
+                  ₹ {{ number_format($totalRemainingAll, 2) }}
                 </td>
                 <td style="text-align: center; font-size: 11px; color: {{ $unsettledBookingsCount > 0 ? '#b91c1c' : '#15803d' }}; padding: 10px 12px;">
                   {{ $unsettledBookingsCount }} Unsettled
@@ -1178,78 +1204,87 @@
       </div>
     </div>
 
-    <!-- Section 1: Today Payments (Guest Billings & Settlements) -->
+    <!-- Section 1: Today Payments (Booking Billings & Extra Services) -->
     <div style="margin-bottom: 16px;">
       <div style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: #1e1b4b; border-bottom: 1px solid #cbd5e1; padding-bottom: 4px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center;">
-        <span>Today Payments ({{ count($todayAllBookings) }})</span>
-        <span style="font-size: 9.5px; color: #64748b; text-transform: none;">Reconciled Guest Accounts (₹ INR)</span>
+        <span>Today Bookings &amp; Payments ({{ count($bookingLedgers) }})</span>
+        <span style="font-size: 9.5px; color: #64748b; text-transform: none;">Reconciled Booking Accounts (₹ INR)</span>
       </div>
       <table class="print-table" style="font-size: 8px; width: 100%; border-collapse: collapse; table-layout: fixed;">
         <thead>
           <tr>
-            <th style="width: 25px; text-align: center;">SL</th>
-            <th style="width: 42px; text-align: center;">ROOM</th>
-            <th style="width: 110px;">GUEST NAME</th>
-            <th style="width: 78px;">PHONE</th>
-            <th style="width: 75px;">SETTLE #</th>
-            <th style="width: 62px;">CHECK-IN</th>
-            <th style="width: 62px;">CHECK-OUT</th>
-            <th style="width: 58px; text-align: center;">STAY</th>
-            <th style="width: 70px; text-align: right;">TOTAL BILL</th>
-            <th style="width: 68px; text-align: right;">PAID</th>
-            <th style="width: 70px; text-align: right;">REMAINING</th>
-            <th style="width: 72px; text-align: center;">STATUS</th>
+            <th style="width: 22px; text-align: center;">SL</th>
+            <th style="width: 70px;">BOOKING #</th>
+            <th style="width: 65px;">ROOM(S)</th>
+            <th style="width: 105px;">PRIMARY GUEST</th>
+            <th style="width: 65px;">SETTLE #</th>
+            <th style="width: 55px;">CHECK-IN</th>
+            <th style="width: 55px;">CHECK-OUT</th>
+            <th style="width: 48px; text-align: center;">STATUS</th>
+            <th style="width: 58px; text-align: right;">ROOM BILL</th>
+            <th style="width: 58px; text-align: right;">EXTRA SERV.</th>
+            <th style="width: 60px; text-align: right;">TOTAL BILL</th>
+            <th style="width: 55px; text-align: right;">PAID</th>
+            <th style="width: 58px; text-align: right;">REMAINING</th>
+            <th style="width: 55px; text-align: center;">SETTLE</th>
           </tr>
         </thead>
         <tbody>
-          @forelse($todayAllBookings as $idx => $b)
+          @forelse($bookingLedgers as $idx => $b)
             @php
-              $isAdditional = !empty($b->primary_booking_id);
-              $master = ($isAdditional && $b->primaryBooking) ? $b->primaryBooking : $b;
-              $bill = (float)($master->payable_amount > 0 ? $master->payable_amount : $master->total_amount);
-              $paid = (float)($master->payments ? $master->payments->sum('amount') : 0);
-              if ($paid <= 0 && (float)$master->advance_amount > 0) {
-                $paid = (float)$master->advance_amount;
+              $rem = (float)($b['remaining_balance'] ?? $b['remaining_amount'] ?? 0);
+              $pd = (float)($b['total_paid'] ?? $b['paid_amount'] ?? 0);
+              $isSet = !empty($b['is_settled']) || ($rem <= 0.01);
+              $roomsStr = collect($b['rooms'] ?? [])->map(fn($r) => $r['room_number'] . ' (Fl ' . $r['floor'] . ')')->implode(', ');
+              if (empty($roomsStr)) {
+                $roomsStr = $b['room_number'] ?? '-';
               }
-              $remaining = max(0, round($bill - $paid, 2));
-              $isSettled = ($remaining <= 0.01);
-              $roomDisplay = $b->room?->room_number ? ('R' . preg_replace('/^r[-_\s]?/i', '', trim($b->room->room_number))) : '-';
-              $guestName = ($b->guest?->title?->name ? $b->guest->title->name . ' ' : '') . ($b->guest?->guest_name ?? 'Guest');
-              $roomPart = $b->room?->room_number ? preg_replace('/^r[-_\s]?/i', '', trim($b->room->room_number)) : '100';
-              $settleDisplay = $b->settle_number ?: ($b->folio_number ?: ($master->settle_number ?: ($master->folio_number ?: ($b->primary_booking_id ?: ('SET-' . $roomPart . '-' . $b->id)))));
-              $mobileNo = $b->guest?->mobile ?: ($b->guest?->phone ?: '-');
-              $stayStatus = $b->status ?? 'Active';
             @endphp
             <tr>
               <td style="text-align: center; font-family: monospace;">{{ $idx + 1 }}</td>
-              <td style="text-align: center; font-weight: 700; font-family: monospace; color: #4338ca;">{{ $roomDisplay }}</td>
-              <td style="font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ $guestName }}</td>
-              <td style="font-family: monospace; font-size: 8px; color: #475569;">{{ $mobileNo }}</td>
-              <td style="font-family: monospace; font-weight: 700; font-size: 8px; color: #4338ca; word-break: break-all;">{{ $settleDisplay }}</td>
-              <td style="font-size: 8px; color: #475569; white-space: nowrap;">{{ $b->reserve_date ? \Carbon\Carbon::parse($b->reserve_date)->format('d M Y') : '-' }}</td>
-              <td style="font-size: 8px; color: #475569; white-space: nowrap;">{{ $b->checkout_date ? \Carbon\Carbon::parse($b->checkout_date)->format('d M Y') : '-' }}</td>
-              <td style="text-align: center; font-size: 8px;">{{ $stayStatus }}</td>
-              <td style="text-align: right; font-family: monospace; font-weight: 700; white-space: nowrap;">₹ {{ number_format($bill, 2) }}</td>
-              <td style="text-align: right; font-family: monospace; color: #15803d; font-weight: 700; white-space: nowrap;">₹ {{ number_format($paid, 2) }}</td>
-              <td style="text-align: right; font-family: monospace; font-weight: 800; color: {{ $remaining > 0.01 ? '#b91c1c' : '#15803d' }}; white-space: nowrap;">₹ {{ number_format($remaining, 2) }}</td>
-              <td style="text-align: center; font-size: 8px; font-weight: 800; color: {{ $isSettled ? '#15803d' : '#b91c1c' }};">
-                {{ $isSettled ? 'SETTLED' : 'UNSETTLED' }}
+              <td style="font-family: monospace; font-weight: 700; color: #4338ca; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ $b['booking_number'] ?? ('RES-' . ($b['booking_id'] ?? $b['id'])) }}</td>
+              <td style="font-family: monospace; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ $roomsStr }}</td>
+              <td style="font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                {{ $b['primary_guest_name'] ?? $b['guest_name'] ?? 'Guest' }}
+                @if(($b['total_occupants'] ?? 1) > 1)
+                  <span style="font-size: 7.5px; opacity: 0.8; font-weight: 600;">(+{{ ($b['total_occupants'] ?? 1) - 1 }})</span>
+                @endif
+              </td>
+              <td style="font-family: monospace; font-weight: 700; font-size: 8px; color: #0f766e; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ $b['settle_number'] ?? $b['folio_number'] ?? '-' }}</td>
+              <td style="font-size: 8px; color: #475569; white-space: nowrap;">{{ $b['checkin_date'] ?? '-' }}</td>
+              <td style="font-size: 8px; color: #475569; white-space: nowrap;">{{ $b['checkout_date'] ?? '-' }}</td>
+              <td style="text-align: center; font-size: 7.5px; white-space: nowrap;">{{ $b['stay_status'] ?? $b['status'] ?? 'Active' }}</td>
+              <td style="text-align: right; font-family: monospace; font-weight: 700; white-space: nowrap;">₹ {{ number_format($b['room_charges'] ?? 0, 2) }}</td>
+              <td style="text-align: right; font-family: monospace; font-weight: 700; color: {{ ($b['extra_service_charges'] ?? 0) > 0 ? '#b45309' : '#94a3b8' }}; white-space: nowrap;">
+                @if(($b['extra_service_charges'] ?? 0) > 0)
+                  +₹ {{ number_format($b['extra_service_charges'], 2) }}
+                @else
+                  ₹ 0.00
+                @endif
+              </td>
+              <td style="text-align: right; font-family: monospace; font-weight: 800; white-space: nowrap;">₹ {{ number_format($b['grand_total_bill'] ?? $b['total_bill'] ?? 0, 2) }}</td>
+              <td style="text-align: right; font-family: monospace; color: #15803d; font-weight: 700; white-space: nowrap;">₹ {{ number_format($pd, 2) }}</td>
+              <td style="text-align: right; font-family: monospace; font-weight: 800; color: {{ $rem > 0.01 ? '#b91c1c' : '#15803d' }}; white-space: nowrap;">₹ {{ number_format($rem, 2) }}</td>
+              <td style="text-align: center; font-size: 7.5px; font-weight: 800; color: {{ $isSet ? '#15803d' : '#b91c1c' }}; white-space: nowrap;">
+                {{ $isSet ? 'SETTLED' : 'UNSETTLED' }}
               </td>
             </tr>
           @empty
             <tr>
-              <td colspan="12" style="text-align: center; padding: 14px; color: #94a3b8;">No payment records recorded for this date.</td>
+              <td colspan="14" style="text-align: center; padding: 14px; color: #94a3b8;">No booking records recorded for this date.</td>
             </tr>
           @endforelse
         </tbody>
-        @if(count($todayAllBookings) > 0)
+        @if(count($bookingLedgers) > 0)
           <tfoot>
             <tr style="background: #f8fafc; font-weight: 800;">
-              <td colspan="8" style="text-align: right; text-transform: uppercase; font-size: 9px; color: #64748b;">TOTAL BILL / COLLECTIONS / OUTSTANDING:</td>
-              <td style="text-align: right; font-family: monospace; font-size: 9.5px;">₹ {{ number_format($totalBookingsBill, 2) }}</td>
-              <td style="text-align: right; font-family: monospace; font-size: 9.5px; color: #15803d;">₹ {{ number_format($totalPayments, 2) }}</td>
-              <td style="text-align: right; font-family: monospace; font-size: 9.5px; color: {{ $totalUnsettledAmount > 0.01 ? '#b91c1c' : '#15803d' }};">₹ {{ number_format($totalUnsettledAmount, 2) }}</td>
-              <td style="text-align: center; font-size: 9px; color: {{ $unsettledBookingsCount > 0 ? '#b91c1c' : '#15803d' }};">{{ $unsettledBookingsCount }} Unsettled</td>
+              <td colspan="8" style="text-align: right; text-transform: uppercase; font-size: 8px; color: #64748b;">TOTALS (ROOMS / EXTRA SERV / GRAND / PAID / REM):</td>
+              <td style="text-align: right; font-family: monospace; font-size: 8.5px;">₹ {{ number_format($totalRoomChargesAll, 2) }}</td>
+              <td style="text-align: right; font-family: monospace; font-size: 8.5px; color: #b45309;">+₹ {{ number_format($totalExtraChargesAll, 2) }}</td>
+              <td style="text-align: right; font-family: monospace; font-size: 9px; font-weight: 800;">₹ {{ number_format($totalGrandBillAll, 2) }}</td>
+              <td style="text-align: right; font-family: monospace; font-size: 8.5px; color: #15803d;">₹ {{ number_format($totalPaidAll, 2) }}</td>
+              <td style="text-align: right; font-family: monospace; font-size: 8.5px; color: {{ $totalRemainingAll > 0.01 ? '#b91c1c' : '#15803d' }};">₹ {{ number_format($totalRemainingAll, 2) }}</td>
+              <td style="text-align: center; font-size: 8px; color: {{ $unsettledBookingsCount > 0 ? '#b91c1c' : '#15803d' }};">{{ $unsettledBookingsCount }} Due</td>
             </tr>
           </tfoot>
         @endif

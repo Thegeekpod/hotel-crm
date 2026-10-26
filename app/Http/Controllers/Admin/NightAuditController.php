@@ -220,14 +220,25 @@ class NightAuditController extends Controller
             ];
         })->values()->all();
 
-        // 5. Today All Guests List
+        // 5. Today Booking Ledgers (Grouped by Booking Number with Rooms & Extra Services)
         $todayGuestsQuery = Booking::with([
             'guest.title',
             'room.categoryRelation',
             'room.floorRelation',
             'plan',
-            'payments',
-            'primaryBooking.payments'
+            'payments.paymentMode',
+            'settlements.paymentMode',
+            'additionalBookings.guest.title',
+            'additionalBookings.room.categoryRelation',
+            'additionalBookings.room.floorRelation',
+            'additionalBookings.payments.paymentMode',
+            'primaryBooking.guest.title',
+            'primaryBooking.room.categoryRelation',
+            'primaryBooking.room.floorRelation',
+            'primaryBooking.payments.paymentMode',
+            'primaryBooking.additionalBookings.guest.title',
+            'primaryBooking.additionalBookings.room.categoryRelation',
+            'primaryBooking.additionalBookings.room.floorRelation',
         ])
         ->where(function($q) use ($auditDate) {
             $q->where(function($sub) use ($auditDate) {
@@ -242,50 +253,141 @@ class NightAuditController extends Controller
         ->orderBy('id', 'desc')
         ->get();
 
+        $reservationGroups = [];
+        foreach ($todayGuestsQuery as $b) {
+            $isAddl = !empty($b->primary_booking_id);
+            $master = ($isAddl && $b->primaryBooking) ? $b->primaryBooking : $b;
+            $masterId = $master->id;
+
+            if (!isset($reservationGroups[$masterId])) {
+                $reservationGroups[$masterId] = [
+                    'master' => $master,
+                    'bookings' => collect(),
+                ];
+            }
+            $reservationGroups[$masterId]['bookings']->push($b);
+        }
+
+        $guestsList = [];
         $totalUnsettledAmount = 0;
         $unsettledBookingsCount = 0;
         $settledBookingsCount = 0;
 
-        $guestsList = $todayGuestsQuery->map(function($b) use (&$totalUnsettledAmount, &$unsettledBookingsCount, &$settledBookingsCount) {
-            $isAdditional = !empty($b->primary_booking_id);
-            $master = ($isAdditional && $b->primaryBooking) ? $b->primaryBooking : $b;
+        foreach ($reservationGroups as $mId => $group) {
+            $master = $group['master'];
+            $allResBookings = collect([$master])
+                ->concat($master->additionalBookings ?? collect())
+                ->concat($group['bookings'])
+                ->unique('id');
+            $allResBookingIds = $allResBookings->pluck('id')->filter()->all();
 
-            $bill = (float)($master->payable_amount > 0 ? $master->payable_amount : $master->total_amount);
-            $paid = (float)($master->payments ? $master->payments->sum('amount') : 0);
-            if ($paid <= 0 && (float)$master->advance_amount > 0) {
-                $paid = (float)$master->advance_amount;
+            $roomsMap = [];
+            foreach ($allResBookings as $resB) {
+                if ($resB->room) {
+                    $rNum = 'R' . preg_replace('/^r[-_\s]?/i', '', trim($resB->room->room_number));
+                    $fl = $resB->room->floorRelation?->floor ?? ($resB->room->floor ?? '1');
+                    $cat = $resB->room->categoryRelation?->name ?? ($resB->room->category ?? 'Standard');
+                    $roomsMap[$resB->room->id] = [
+                        'room_number' => $rNum,
+                        'floor' => (string)$fl,
+                        'category' => $cat,
+                        'label' => "{$rNum} (Floor {$fl})",
+                    ];
+                }
             }
-            $rem = max(0, round($bill - $paid, 2));
+            if (empty($roomsMap)) {
+                $roomsMap[] = [
+                    'room_number' => 'Unassigned',
+                    'floor' => '1',
+                    'category' => 'Standard',
+                    'label' => 'Unassigned',
+                ];
+            }
 
-            if (!$isAdditional) {
-                if ($rem > 0.01) {
-                    $totalUnsettledAmount += $rem;
-                    $unsettledBookingsCount++;
-                } else {
-                    $settledBookingsCount++;
+            $pGuest = $master->guest;
+            $pName = ($pGuest?->title?->name ? $pGuest->title->name . ' ' : '') . ($pGuest?->guest_name ?? 'Guest');
+            $pPhone = $pGuest?->mobile ?: ($pGuest?->mobile_no ?: '-');
+
+            $occupantNames = $allResBookings->map(function($rb) {
+                $g = $rb->guest;
+                return ($g?->title?->name ? $g->title->name . ' ' : '') . ($g?->guest_name ?? 'Guest');
+            })->filter()->unique()->values()->all();
+
+            $totalOccupants = count($occupantNames);
+
+            $roomPart = $master->room?->room_number ? preg_replace('/^r[-_\s]?/i', '', trim($master->room->room_number)) : '100';
+            $settleNo = $master->settle_number ?: ($master->folio_number ?: ('SET-' . $roomPart . '-' . $master->id));
+            $bookingNo = $master->reserve_id ?: ('RES-' . $master->id);
+            $checkinFmt = $master->reserve_date ? Carbon::parse($master->reserve_date)->format('d M Y') : '-';
+            $checkoutFmt = $master->checkout_date ? Carbon::parse($master->checkout_date)->format('d M Y') : '-';
+
+            $roomCharges = (float)($master->payable_amount > 0 ? $master->payable_amount : $master->total_amount);
+
+            $extraOrders = \App\Models\RoomServiceOrder::with('items')
+                ->whereIn('booking_id', $allResBookingIds)
+                ->where('payment_status', 'Charged to Room Folio')
+                ->where('order_status', '!=', 'Cancelled')
+                ->get();
+
+            $extraServicesCharge = (float)$extraOrders->sum('total_amount');
+            $extraOrdersCount = $extraOrders->count();
+            $extraItemsList = [];
+            foreach ($extraOrders as $eo) {
+                foreach ($eo->items as $it) {
+                    $extraItemsList[] = "{$it->quantity}x {$it->item_name}";
                 }
             }
 
-            $roomPart = $b->room?->room_number ? preg_replace('/^r[-_\s]?/i', '', trim($b->room->room_number)) : '100';
-            $settleNo = $b->settle_number ?: ($b->folio_number ?: ($master->settle_number ?: ($master->folio_number ?: ($b->primary_booking_id ?: ('SET-' . $roomPart . '-' . $b->id)))));
+            $grandTotal = round($roomCharges + $extraServicesCharge, 2);
 
-            return [
-                'id' => $b->id,
+            $paid = (float)\App\Models\Payment::whereIn('booking_id', $allResBookingIds)->sum('amount');
+            if ($paid <= 0 && (float)$master->advance_amount > 0) {
+                $paid = (float)$master->advance_amount;
+            }
+
+            $rem = max(0, round($grandTotal - $paid, 2));
+            $isSettled = ($rem <= 0.01);
+
+            if ($rem > 0.01) {
+                $totalUnsettledAmount += $rem;
+                $unsettledBookingsCount++;
+            } else {
+                $settledBookingsCount++;
+            }
+
+            $checkedOutCount = $allResBookings->where('status', 'Checked Out')->count();
+            $stayStatus = ($checkedOutCount >= $allResBookings->count()) ? 'Checked Out' : ($master->status ?: 'Confirmed');
+
+            $guestsList[] = [
+                'id' => $master->id,
+                'booking_id' => $master->id,
+                'booking_number' => $bookingNo,
                 'settle_number' => $settleNo,
                 'folio_number' => $settleNo,
-                'guest_name' => ($b->guest?->title?->name ? $b->guest->title->name . ' ' : '') . ($b->guest?->guest_name ?? 'Guest'),
-                'mobile_no' => $b->guest?->mobile ?: ($b->guest?->mobile_no ?: '-'),
-                'room_number' => $b->room?->room_number ? ('R' . preg_replace('/^r[-_\s]?/i', '', trim($b->room->room_number))) : '-',
-                'category' => $b->room?->categoryRelation?->name ?? 'Standard',
-                'checkin_date' => $b->reserve_date ? Carbon::parse($b->reserve_date)->format('d M Y') : '-',
-                'checkout_date' => $b->checkout_date ? Carbon::parse($b->checkout_date)->format('d M Y') : '-',
-                'total_bill' => $bill,
+                'primary_guest_name' => $pName,
+                'guest_name' => $pName,
+                'mobile_no' => $pPhone,
+                'primary_mobile' => $pPhone,
+                'rooms' => array_values($roomsMap),
+                'room_number' => implode(', ', array_column($roomsMap, 'room_number')),
+                'category' => $master->room?->categoryRelation?->name ?? 'Standard',
+                'occupants_names' => $occupantNames,
+                'total_occupants' => $totalOccupants,
+                'checkin_date' => $checkinFmt,
+                'checkout_date' => $checkoutFmt,
+                'stay_status' => $stayStatus,
+                'status' => $stayStatus,
+                'room_charges' => $roomCharges,
+                'extra_service_charges' => $extraServicesCharge,
+                'extra_orders_count' => $extraOrdersCount,
+                'extra_items_list' => $extraItemsList,
+                'grand_total_bill' => $grandTotal,
+                'total_bill' => $grandTotal,
                 'paid_amount' => $paid,
                 'remaining_amount' => $rem,
-                'is_settled' => ($rem <= 0.01),
-                'status' => $b->status,
+                'is_settled' => $isSettled,
             ];
-        })->values()->all();
+        }
 
         return [
             'payments_list' => $paymentsListItems,

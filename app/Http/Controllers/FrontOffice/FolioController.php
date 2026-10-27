@@ -12,6 +12,7 @@ use App\Models\Settlement;
 use App\Models\Checkout;
 use App\Models\RoomHousekeepingHistory;
 use App\Models\HousekeepingState;
+use App\Models\RoomTransfer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
@@ -629,6 +630,336 @@ class FolioController extends Controller
     }
 
     /**
+     * Get Room Swipe Details & Available Clean/Vacant Destination Rooms
+     */
+    public function getSwipeInfo(Request $request)
+    {
+        $bookingId = $request->query('booking_id');
+        $fromRoomId = $request->query('from_room_id');
+
+        $booking = Booking::with([
+            'guest',
+            'room.categoryRelation',
+            'room.floorRelation',
+            'room.beddingConfigRelation',
+            'primaryBooking.additionalBookings.guest',
+            'primaryBooking.additionalBookings.room',
+            'additionalBookings.guest',
+            'additionalBookings.room',
+        ])->find($bookingId);
+
+        if (!$booking) {
+            return response()->json(['success' => false, 'message' => 'Booking not found.'], 404);
+        }
+
+        $masterBooking = $booking->primary_booking_id ? $booking->primaryBooking : $booking;
+        $allBookings = collect([$masterBooking])->concat($masterBooking->additionalBookings ?? collect());
+
+        $fromRoom = $fromRoomId ? Room::with(['categoryRelation', 'floorRelation', 'beddingConfigRelation'])->find($fromRoomId) : $booking->room;
+        if (!$fromRoom && $booking->room) {
+            $fromRoom = $booking->room;
+        }
+
+        // Occupants currently active in from_room under this reservation
+        $occupantsInRoom = $allBookings->filter(function ($b) use ($fromRoom) {
+            return $fromRoom && (int)$b->room_id === (int)$fromRoom->id && !in_array($b->status, ['Checked Out', 'Cancelled']);
+        })->map(function ($b) {
+            return [
+                'booking_id' => $b->id,
+                'guest_id' => $b->guest_id,
+                'guest_name' => $b->guest?->guest_name ?? 'Guest',
+                'mobile' => $b->guest?->mobile ?? 'N/A',
+                'is_primary' => ($b->primary_booking_id === null),
+                'room_rate' => (float)$b->room_rate,
+                'status' => $b->status,
+            ];
+        })->values();
+
+        $checkinDate = $masterBooking->checkin_date ?: $masterBooking->reserve_date;
+        $checkoutDate = $masterBooking->checkout_date;
+        
+        $dCheckin = $checkinDate ? Carbon::parse($checkinDate)->startOfDay() : now()->startOfDay();
+        $dCheckout = $checkoutDate ? Carbon::parse($checkoutDate)->startOfDay() : $dCheckin->copy()->addDay();
+        $totalNights = max(1, (int)$dCheckin->diffInDays($dCheckout, false));
+
+        $rawTransferDate = $request->query('transfer_date');
+        $dTransfer = $rawTransferDate ? Carbon::parse($rawTransferDate)->startOfDay() : now()->startOfDay();
+
+        // If reservation is in future, default shift date to checkin date
+        if ($dTransfer->lt($dCheckin)) {
+            $dTransfer = $dCheckin->copy();
+        }
+        $transferDate = $dTransfer->toDateString();
+
+        $pastNights = max(0, min($totalNights, (int)$dCheckin->diffInDays($dTransfer, false)));
+        $remainingNights = ($dTransfer->lte($dCheckout))
+            ? max(1, $totalNights - $pastNights)
+            : max(1, (int)$dTransfer->diffInDays($dCheckout, false));
+
+        // Fetch conflicting rooms between transferDate and checkoutDate from OTHER reservations
+        $conflictingRoomIds = Booking::where(function ($q) use ($transferDate, $checkoutDate) {
+                $q->whereDate('reserve_date', '<', $checkoutDate)
+                  ->where(function ($sub) use ($transferDate) {
+                      $sub->whereDate('checkout_date', '>', $transferDate)
+                          ->orWhereNull('checkout_date');
+                  });
+            })
+            ->where('reserve_id', '!=', $masterBooking->reserve_id)
+            ->whereIn('status', ['Confirmed', 'Checked In', 'Arrived', 'Stay Over', 'Settlement Done'])
+            ->whereNotNull('room_id')
+            ->pluck('room_id')
+            ->filter()
+            ->unique()
+            ->all();
+
+        if ($fromRoom) {
+            $conflictingRoomIds[] = $fromRoom->id;
+        }
+
+        $availableRooms = Room::with(['categoryRelation', 'floorRelation', 'beddingConfigRelation'])
+            ->whereNotIn('id', $conflictingRoomIds)
+            ->orderByRaw('CAST(room_number AS UNSIGNED) ASC, room_number ASC')
+            ->get()
+            ->map(function ($r) {
+                return [
+                    'id' => $r->id,
+                    'room_number' => $r->room_number,
+                    'floor' => $r->floorRelation?->floor ?? ($r->floor ?? '1'),
+                    'category' => $r->categoryRelation?->name ?? 'Standard',
+                    'bedding' => $r->beddingConfigRelation?->name ?? 'Standard',
+                    'rate' => (float)$r->rate,
+                    'pax' => $r->pax_capacity,
+                ];
+            });
+
+        return response()->json([
+            'success' => true,
+            'master_booking_id' => $masterBooking->id,
+            'reserve_id' => $masterBooking->reserve_id,
+            'from_room' => $fromRoom ? [
+                'id' => $fromRoom->id,
+                'room_number' => $fromRoom->room_number,
+                'category' => $fromRoom->categoryRelation?->name ?? 'Standard',
+                'floor' => $fromRoom->floorRelation?->floor ?? '1',
+                'rate' => (float)($fromRoom->rate ?? $booking->room_rate),
+            ] : null,
+            'occupants' => $occupantsInRoom,
+            'checkin_date' => $checkinDate ? Carbon::parse($checkinDate)->format('Y-m-d') : null,
+            'checkout_date' => $checkoutDate ? Carbon::parse($checkoutDate)->format('Y-m-d') : null,
+            'transfer_date' => $transferDate,
+            'past_nights' => $pastNights,
+            'remaining_nights' => $remainingNights,
+            'available_rooms' => $availableRooms,
+        ]);
+    }
+
+    /**
+     * Process Room Swipe / Shift with Tariff Recalculation & Housekeeping Status Transition
+     */
+    public function processRoomSwipe(Request $request)
+    {
+        $request->validate([
+            'master_booking_id' => 'required|exists:bookings,id',
+            'from_room_id' => 'required|exists:rooms,id',
+            'to_room_id' => 'required|exists:rooms,id|different:from_room_id',
+            'transfer_date' => 'required|date',
+            'transferred_booking_ids' => 'required|array|min:1',
+            'transferred_booking_ids.*' => 'exists:bookings,id',
+            'new_room_rate' => 'required|numeric|min:0',
+            'reason' => 'nullable|string|max:255',
+            'remarks' => 'nullable|string',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            $masterBooking = Booking::lockForUpdate()->find($request->master_booking_id);
+            if (!$masterBooking) {
+                return response()->json(['success' => false, 'message' => 'Master reservation record not found.'], 404);
+            }
+            if ($masterBooking->primary_booking_id) {
+                $masterBooking = Booking::lockForUpdate()->find($masterBooking->primary_booking_id);
+            }
+
+            $fromRoom = Room::find($request->from_room_id);
+            $toRoom = Room::find($request->to_room_id);
+            $transferDate = Carbon::parse($request->transfer_date)->toDateString();
+            $newRate = (float)$request->new_room_rate;
+
+            $checkinDate = $masterBooking->checkin_date ?: $masterBooking->reserve_date;
+            $checkoutDate = $masterBooking->checkout_date ? Carbon::parse($masterBooking->checkout_date)->toDateString() : now()->addDay()->toDateString();
+            
+            $dCheckin = $checkinDate ? Carbon::parse($checkinDate)->startOfDay() : now()->startOfDay();
+            $dCheckout = Carbon::parse($checkoutDate)->startOfDay();
+            $totalNights = max(1, (int)$dCheckin->diffInDays($dCheckout, false));
+
+            $dTransfer = Carbon::parse($request->transfer_date)->startOfDay();
+            if ($dTransfer->lt($dCheckin)) {
+                $dTransfer = $dCheckin->copy();
+            }
+            $transferDate = $dTransfer->toDateString();
+
+            $pastNights = max(0, min($totalNights, (int)$dCheckin->diffInDays($dTransfer, false)));
+            $remainingNights = ($dTransfer->lte($dCheckout))
+                ? max(1, $totalNights - $pastNights)
+                : max(1, (int)$dTransfer->diffInDays($dCheckout, false));
+
+            // Double check no conflict on destination room
+            $conflict = Booking::where('room_id', $toRoom->id)
+                ->where('reserve_id', '!=', $masterBooking->reserve_id)
+                ->whereIn('status', ['Confirmed', 'Checked In', 'Arrived', 'Stay Over', 'Settlement Done'])
+                ->where(function ($q) use ($transferDate, $checkoutDate) {
+                    $q->whereDate('reserve_date', '<', $checkoutDate)
+                      ->where(function ($sub) use ($transferDate) {
+                          $sub->whereDate('checkout_date', '>', $transferDate)
+                              ->orWhereNull('checkout_date');
+                      });
+                })
+                ->exists();
+
+            if ($conflict) {
+                DB::rollBack();
+                return response()->json([
+                    'success' => false,
+                    'message' => "Room #{$toRoom->room_number} is occupied or reserved during this stay duration. Please select an available room.",
+                ], 422);
+            }
+
+            // Target bookings being swiped
+            $transferredBookingIds = $request->transferred_booking_ids;
+            $targetBookings = Booking::whereIn('id', $transferredBookingIds)
+                ->where('room_id', $fromRoom->id)
+                ->get();
+
+            if ($targetBookings->isEmpty()) {
+                DB::rollBack();
+                return response()->json(['success' => false, 'message' => 'No matching bookings found in the source room.'], 422);
+            }
+
+            // Count total active occupants in the source room before the shift
+            $totalInFromRoom = Booking::where('room_id', $fromRoom->id)
+                ->where('reserve_id', $masterBooking->reserve_id)
+                ->whereIn('status', ['Confirmed', 'Arrived', 'Stay Over', 'Checked In', 'Settlement Done'])
+                ->count();
+
+            $isWholeRoom = ($targetBookings->count() >= $totalInFromRoom);
+
+            $oldRate = (float)($fromRoom->rate ?? $targetBookings->first()->room_rate);
+
+            if ($isWholeRoom) {
+                // Room shifted: old room is vacated for remaining nights, new room taken
+                // Difference per night = new_rate - old_rate
+                $rateDiffPerNight = $newRate - $oldRate;
+                $totalTariffAdjustment = round($rateDiffPerNight * $remainingNights, 2);
+            } else {
+                // Partial split: some guests remain in fromRoom, moving guest takes toRoom as an extra room
+                $totalTariffAdjustment = round($newRate * $remainingNights, 2);
+            }
+
+            $guestNames = [];
+            foreach ($targetBookings as $tb) {
+                $tb->room_id = $toRoom->id;
+                $tb->room_rate = $newRate;
+                $tb->save();
+                if ($tb->guest) {
+                    $guestNames[] = $tb->guest->guest_name;
+                }
+            }
+
+            // Recalculate Master Booking Financials
+            $oldMasterGross = (float)$masterBooking->total_amount;
+            $newMasterGross = max(0, round($oldMasterGross + $totalTariffAdjustment, 2));
+            $masterBooking->total_amount = $newMasterGross;
+
+            // Discount recalculation
+            $discountPct = (float)$masterBooking->discount_percentage;
+            $discountAmt = $discountPct > 0 
+                ? round(($newMasterGross * $discountPct) / 100, 2)
+                : min($newMasterGross, (float)$masterBooking->discount_amount);
+            $masterBooking->discount_amount = $discountAmt;
+
+            $netAfterDiscount = max(0, $newMasterGross - $discountAmt);
+
+            // GST recalculation
+            $gstPct = (float)$masterBooking->gst_percentage;
+            $gstType = $masterBooking->gst_type ?? 'exclusive';
+            if ($gstPct > 0) {
+                if ($gstType === 'inclusive') {
+                    $gstAmt = round(($netAfterDiscount - ($netAfterDiscount / (1 + ($gstPct / 100)))), 2);
+                    $newPayable = $netAfterDiscount;
+                } else {
+                    $gstAmt = round((($netAfterDiscount * $gstPct) / 100), 2);
+                    $newPayable = $netAfterDiscount + $gstAmt;
+                }
+            } else {
+                $gstAmt = 0.00;
+                $newPayable = $netAfterDiscount;
+            }
+            $masterBooking->gst_amount = $gstAmt;
+            $masterBooking->payable_amount = round($newPayable, 2);
+
+            // Recalculate Balance = Payable - (Advance + All Settlements)
+            $advance = (float)$masterBooking->advance_amount;
+            $totalSettled = (float)Settlement::where('booking_id', $masterBooking->id)->sum('paid_amount');
+            $masterBooking->balance = max(0, round($newPayable - ($advance + $totalSettled), 2));
+            $masterBooking->save();
+
+            // Record in room_transfers audit table
+            $roomTransfer = RoomTransfer::create([
+                'booking_id' => $targetBookings->first()->id,
+                'primary_booking_id' => $masterBooking->id,
+                'from_room_id' => $fromRoom->id,
+                'to_room_id' => $toRoom->id,
+                'transfer_date' => $transferDate,
+                'transfer_time' => now()->format('H:i:s'),
+                'old_room_rate' => $oldRate,
+                'new_room_rate' => $newRate,
+                'nights_in_old_room' => $pastNights ?: 1,
+                'remaining_nights' => $remainingNights,
+                'tariff_difference' => $totalTariffAdjustment,
+                'transferred_by' => auth()->id(),
+                'transferred_guests' => $guestNames,
+                'reason' => $request->reason ?: 'Room Swipe / Transfer',
+                'remarks' => $request->remarks,
+            ]);
+
+            // Housekeeping transition: If source room now has 0 remaining active occupants, mark Dirty
+            $remainingInFromRoom = Booking::where('room_id', $fromRoom->id)
+                ->whereIn('status', ['Confirmed', 'Arrived', 'Stay Over', 'Checked In', 'Settlement Done'])
+                ->count();
+
+            if ($remainingInFromRoom === 0) {
+                $dirtyState = HousekeepingState::where('name', 'Dirty')->first()
+                    ?: HousekeepingState::where('name', 'like', '%dirty%')->first();
+                if ($dirtyState) {
+                    RoomHousekeepingHistory::create([
+                        'room_id' => $fromRoom->id,
+                        'housekeeping_status_id' => $dirtyState->id,
+                        'start_time' => now(),
+                        'status' => 'pending',
+                    ]);
+                }
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => "Successfully swiped to Room #{$toRoom->room_number}. Updated reservation balance: ₹ " . number_format($masterBooking->balance, 2),
+                'transfer' => $roomTransfer,
+                'updated_balance' => (float)$masterBooking->balance,
+                'updated_payable' => (float)$masterBooking->payable_amount,
+                'tariff_adjustment' => $totalTariffAdjustment,
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to process room swipe: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
      * Helper to assemble a comprehensive, rich Folio data structure
      */
     protected function formatFolioData(Booking $booking): array
@@ -767,6 +1098,32 @@ class FolioController extends Controller
         $checkoutDateFmt = $checkoutDateVal ? Carbon::parse($checkoutDateVal)->format('d M Y') : 'N/A';
         $checkoutTimeFmt = $checkoutTimeVal ? date('h:i A', strtotime($checkoutTimeVal)) : '11:00 AM';
 
+        // Room transfers (Swipes) history
+        $roomTransfersHistory = RoomTransfer::with(['fromRoom', 'toRoom', 'staffUser'])
+            ->where(function ($q) use ($booking, $allBookings) {
+                $q->where('primary_booking_id', $booking->id)
+                  ->orWhereIn('booking_id', $allBookings->pluck('id'));
+            })
+            ->latest('id')
+            ->get()
+            ->map(function ($rt) {
+                return [
+                    'id' => $rt->id,
+                    'from_room' => $rt->fromRoom?->room_number ?? 'N/A',
+                    'to_room' => $rt->toRoom?->room_number ?? 'N/A',
+                    'date' => $rt->transfer_date ? $rt->transfer_date->format('d M Y') : 'N/A',
+                    'time' => $rt->transfer_time ? date('h:i A', strtotime($rt->transfer_time)) : '',
+                    'old_rate' => (float)$rt->old_room_rate,
+                    'new_rate' => (float)$rt->new_room_rate,
+                    'remaining_nights' => (int)$rt->remaining_nights,
+                    'tariff_difference' => (float)$rt->tariff_difference,
+                    'guests' => $rt->transferred_guests ?? [],
+                    'reason' => $rt->reason,
+                    'remarks' => $rt->remarks,
+                    'staff' => $rt->staffUser?->name ?? 'Front Desk',
+                ];
+            })->all();
+
         return [
             'id' => $booking->id,
             'reserve_id' => $booking->reserve_id ?: ('RES-' . $booking->id),
@@ -833,6 +1190,7 @@ class FolioController extends Controller
             'settlements_history' => $settlementsHistory,
             'room_service_orders' => $serviceOrdersList,
             'total_room_service_charges' => $totalRoomServiceCharges,
+            'room_transfers' => $roomTransfersHistory,
         ];
     }
 }

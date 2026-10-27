@@ -609,12 +609,19 @@
                 </td>
                 <!-- Room(s) & Floor -->
                 <td>
-                  <div style="display: flex; flex-wrap: wrap; gap: 4px;">
+                  <div style="display: flex; flex-wrap: wrap; gap: 4px; align-items: center;">
                     @foreach($b['rooms'] as $rm)
                       <span style="font-weight: 800; color: #4338ca; background: #e0e7ff; padding: 2px 7px; border-radius: 6px; font-family: var(--font-mono, monospace); font-size: 11px; display: inline-flex; align-items: center; gap: 3px;" title="{{ $rm['category'] }}">
                         <i class="fa-solid fa-door-open" style="font-size: 9px;"></i> {{ $rm['room_number'] }} <span style="font-size: 9px; opacity: 0.75;">(Fl {{ $rm['floor'] }})</span>
                       </span>
                     @endforeach
+                    @if(!empty($b['transfers']))
+                      @foreach($b['transfers'] as $tf)
+                        <span style="font-size: 9px; font-weight: 800; color: #92400e; background: #fef3c7; border: 1px solid #fde68a; padding: 1px 6px; border-radius: 4px; display: inline-flex; align-items: center; gap: 3px;" title="Room swiped: R{{ $tf['from'] }} to R{{ $tf['to'] }} on {{ $tf['date'] }}">
+                          <i class="fa-solid fa-repeat" style="font-size: 8px;"></i> R{{ $tf['from'] }}&rarr;R{{ $tf['to'] }}
+                        </span>
+                      @endforeach
+                    @endif
                   </div>
                 </td>
                 <!-- Primary Guest & Occupants -->

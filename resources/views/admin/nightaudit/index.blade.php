@@ -1353,13 +1353,18 @@
                             </div>
                           </td>
                           <td>
-                            <div style="display: flex; flex-wrap: wrap; gap: 4px;">
+                            <div style="display: flex; flex-wrap: wrap; gap: 4px; align-items: center;">
                               ${roomsList.map(rm => `
                                 <span style="display: inline-flex; align-items: center; gap: 4px; font-weight: 800; color: #4338ca; background: #e0e7ff; padding: 2px 7px; border-radius: 6px; font-family: var(--font-mono, monospace); font-size: 11px; white-space: nowrap;">
                                   <i class="fa-solid fa-door-open" style="font-size: 9px;"></i> ${escapeHtml(rm.room_number)}
                                   <span style="font-size: 9px; opacity: 0.8; font-weight: 600;">(Fl ${escapeHtml(rm.floor)})</span>
                                 </span>
                               `).join('')}
+                              ${Array.isArray(g.transfers) && g.transfers.length > 0 ? g.transfers.map(tf => `
+                                <span style="font-size: 9px; font-weight: 800; color: #92400e; background: #fef3c7; border: 1px solid #fde68a; padding: 1px 6px; border-radius: 4px; display: inline-flex; align-items: center; gap: 3px;" title="Room swiped: R${escapeHtml(tf.from)} to R${escapeHtml(tf.to)} on ${escapeHtml(tf.date)}">
+                                  <i class="fa-solid fa-repeat" style="font-size: 8px;"></i> R${escapeHtml(tf.from)}&rarr;R${escapeHtml(tf.to)}
+                                </span>
+                              `).join('') : ''}
                             </div>
                           </td>
                           <td>

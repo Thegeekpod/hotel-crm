@@ -626,6 +626,121 @@
     display: flex !important;
   }
 
+  /* Room Swipe / Shift Styles */
+  .btn-room-swipe {
+    background: #eef2ff;
+    color: #4338ca;
+    border: 1px solid #c7d2fe;
+    padding: 3px 9px;
+    border-radius: 6px;
+    font-size: 10px;
+    font-weight: 800;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+  }
+  .btn-room-swipe:hover {
+    background: #4338ca;
+    color: #ffffff;
+    border-color: #4338ca;
+    box-shadow: 0 2px 6px rgba(67, 56, 202, 0.25);
+  }
+  .btn-room-swipe-mini {
+    background: #f1f5f9;
+    color: #475569;
+    border: 1px solid #cbd5e1;
+    padding: 2px 7px;
+    border-radius: 5px;
+    font-size: 9px;
+    font-weight: 800;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+  }
+  .btn-room-swipe-mini:hover {
+    background: #4338ca;
+    color: #ffffff;
+    border-color: #4338ca;
+  }
+  #room-swipe-modal.modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 100100 !important;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(15, 23, 42, 0.55) !important;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    box-sizing: border-box;
+  }
+  #room-swipe-modal.open {
+    display: flex !important;
+  }
+  .room-swipe-card {
+    width: 640px;
+    max-width: 95vw;
+    max-height: 90vh;
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 25px 60px -15px rgba(0,0,0,0.45);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .room-swipe-header {
+    background: linear-gradient(135deg, #4338ca 0%, #312e81 100%);
+    padding: 14px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #ffffff;
+  }
+  .room-swipe-body {
+    padding: 18px 22px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .swipe-preview-box {
+    background: #f8fafc;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    font-size: 11px;
+  }
+  .room-swipe-history-box {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: 10px;
+    padding: 10px 14px;
+    margin-top: 10px;
+    font-size: 11px;
+  }
+  .room-swipe-history-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px 0;
+    border-bottom: 1px dashed #dcfce7;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .room-swipe-history-item:last-child {
+    border-bottom: none;
+  }
+
   /* Settlement Inline Panel */
   .settlement-panel {
     background: #f0fdf4;
@@ -1486,6 +1601,17 @@
           </div>
         </div>
 
+        <!-- Room Swipes & Transfers History Box -->
+        <div style="margin-top: 14px; display: none;" id="fmdl-room-swipes-box">
+          <div style="font-size: 11px; font-weight: 800; color: #4338ca; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center;">
+            <span><i class="fa-solid fa-arrow-right-arrow-left"></i> Room Swipe / Transfer History (<span id="fmdl-swipes-count">0</span> Shifts)</span>
+            <span style="font-size: 10px; color: #64748b; text-transform: none; font-weight: 600;">Prorated Daily Tariffs</span>
+          </div>
+          <div id="fmdl-room-swipes-list" style="font-size: 11px;">
+            <!-- Populated via JS -->
+          </div>
+        </div>
+
         <!-- Interactive Inline Settlement Panel -->
         <div id="fmdl-settlement-interactive-panel" class="settlement-panel" style="display: none;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
@@ -1667,6 +1793,187 @@
       </button>
       <button type="button" id="eccm-btn-confirm" onclick="executeEarlyCheckout()" style="padding: 7px 20px; border-radius: 8px; border: none; background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: #ffffff; font-size: 12px; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25);">
         <i class="fa-solid fa-check"></i> Yes, Early Check Out
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ========================================================================= -->
+<!-- ROOM SWIPE / SHIFT MODAL                                                  -->
+<!-- ========================================================================= -->
+<div class="modal-backdrop" id="room-swipe-modal">
+  <div class="room-swipe-card">
+    <div class="room-swipe-header">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <div style="width: 34px; height: 34px; border-radius: 8px; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 15px; color: #ffffff;">
+          <i class="fa-solid fa-arrow-right-arrow-left"></i>
+        </div>
+        <div>
+          <h4 style="margin: 0; font-size: 15px; font-weight: 800; color: #ffffff;">Room Swipe / Shift Manager</h4>
+          <div style="font-size: 10px; opacity: 0.9; color: #e0e7ff;">Transfer room mid-stay with prorated tariff &amp; housekeeping sync</div>
+        </div>
+      </div>
+      <button type="button" onclick="closeRoomSwipeModal()" style="background: rgba(255,255,255,0.2); border: none; color: #ffffff; width: 28px; height: 28px; border-radius: 50%; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s;">&times;</button>
+    </div>
+
+    <!-- Hidden state inputs -->
+    <input type="hidden" id="rswipe-master-booking-id">
+    <input type="hidden" id="rswipe-from-room-id">
+    <input type="hidden" id="rswipe-old-rate">
+    <input type="hidden" id="rswipe-checkout-date">
+
+    <div class="room-swipe-body">
+      <!-- Loading state -->
+      <div id="rswipe-loading" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 20px; gap: 10px; color: #4338ca;">
+        <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 24px;"></i>
+        <span style="font-size: 12px; font-weight: 600;">Fetching available rooms and stay info...</span>
+      </div>
+
+      <!-- Content wrapper -->
+      <div id="rswipe-content" style="display: none; flex-direction: column; gap: 14px;">
+        
+        <!-- Reservation Dossier & Source Room Info Box -->
+        <div style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 12px 14px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 6px;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span style="font-size: 10px; font-weight: 800; text-transform: uppercase; color: #64748b;">Reservation:</span>
+              <span id="rswipe-reserve-id" style="font-family: var(--font-mono, monospace); font-weight: 800; color: #4338ca; font-size: 12px;">-</span>
+            </div>
+            <div style="font-size: 11px; color: #64748b;">
+              <i class="fa-regular fa-calendar" style="color: #6366f1;"></i> Stay: <strong id="rswipe-stay-dates" style="color: #0f172a;">-</strong>
+            </div>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed #e2e8f0; padding-top: 8px; flex-wrap: wrap; gap: 8px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="room-tag status-cyan" style="font-size: 12px; padding: 4px 10px;">
+                <i class="fa-solid fa-door-open"></i> Current Room: <strong id="rswipe-from-room-num">-</strong>
+              </span>
+              <span id="rswipe-from-room-meta" style="font-size: 11px; color: #475569;">-</span>
+            </div>
+            <div style="font-size: 12px; font-family: var(--font-mono, monospace); font-weight: 800; color: #4338ca;">
+              Current Rate: <span id="rswipe-from-room-rate">₹ 0.00</span> / night
+            </div>
+          </div>
+        </div>
+
+        <!-- Occupants to Transfer Checkbox Box -->
+        <div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <label style="font-size: 11px; font-weight: 800; color: #0f172a; text-transform: uppercase; letter-spacing: 0.3px;">
+              <i class="fa-solid fa-users"></i> Select Occupant(s) to Shift:
+            </label>
+            <label style="font-size: 11px; color: #4338ca; cursor: pointer; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
+              <input type="checkbox" id="rswipe-select-all-occ" onchange="toggleAllSwipeOccupants(this)"> All in Room
+            </label>
+          </div>
+          <div id="rswipe-occupants-list" style="display: flex; flex-direction: column; gap: 6px;">
+            <!-- Populated via JS -->
+          </div>
+          <div id="rswipe-shift-mode-hint" style="font-size: 10.5px; color: #64748b; font-style: italic; margin-top: 4px;">
+            Whole room shift: Old room vacated &amp; scheduled for cleaning.
+          </div>
+        </div>
+
+        <!-- Stay Dates & Transfer Date Input Grid -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div>
+            <label style="display: block; font-size: 11px; font-weight: 700; color: #334155; margin-bottom: 4px;">
+              <i class="fa-regular fa-calendar-check" style="color: #4338ca;"></i> Effective Shift Date:
+            </label>
+            <input type="date" id="rswipe-transfer-date" class="form-input" style="width: 100%; padding: 7px 10px; border-radius: 8px; border: 1.5px solid #cbd5e1; font-size: 12px; font-weight: 700; color: #0f172a;" onchange="calculateSwipePricing()">
+          </div>
+          <div>
+            <label style="display: block; font-size: 11px; font-weight: 700; color: #334155; margin-bottom: 4px;">
+              <i class="fa-solid fa-clock-rotate-left" style="color: #6366f1;"></i> Nights Partition:
+            </label>
+            <div style="background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 8px; padding: 7px 10px; font-size: 11.5px; font-weight: 700; color: #334155; display: flex; justify-content: space-between;">
+              <span>Past: <strong id="rswipe-past-nights">1</strong>n</span>
+              <span style="color: #cbd5e1;">|</span>
+              <span style="color: #4338ca;">Remaining: <strong id="rswipe-rem-nights">1</strong>n</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- New Destination Room Selection -->
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 12px;">
+          <div>
+            <label style="display: block; font-size: 11px; font-weight: 700; color: #334155; margin-bottom: 4px;">
+              <i class="fa-solid fa-door-open" style="color: #10b981;"></i> Select Destination Room:
+            </label>
+            <select id="rswipe-target-room-select" class="form-input" style="width: 100%; padding: 7px 10px; border-radius: 8px; border: 1.5px solid #cbd5e1; font-size: 12px; font-weight: 700; color: #0f172a;" onchange="onSwipeRoomSelected()">
+              <option value="">-- Choose Vacant Room --</option>
+            </select>
+          </div>
+          <div>
+            <label style="display: block; font-size: 11px; font-weight: 700; color: #334155; margin-bottom: 4px;">
+              <i class="fa-solid fa-indian-rupee-sign" style="color: #10b981;"></i> New Daily Rate:
+            </label>
+            <input type="number" id="rswipe-new-rate-input" step="0.01" min="0" class="form-input" style="width: 100%; padding: 7px 10px; border-radius: 8px; border: 1.5px solid #cbd5e1; font-size: 12px; font-weight: 700; font-family: var(--font-mono, monospace); color: #0f172a;" oninput="calculateSwipePricing()">
+          </div>
+        </div>
+
+        <!-- Live Tariff Recalculation & Impact Preview Box -->
+        <div class="swipe-preview-box" id="rswipe-preview-box">
+          <div style="display: flex; justify-content: space-between; align-items: center; font-weight: 800; font-size: 11px; color: #0f172a; border-bottom: 1px dashed #cbd5e1; padding-bottom: 6px;">
+            <span><i class="fa-solid fa-calculator" style="color: #4338ca;"></i> Tariff Impact Breakdown:</span>
+            <span id="rswipe-preview-tag" style="background: #e0e7ff; color: #4338ca; padding: 2px 8px; border-radius: 4px; font-size: 10px;">Shift Calculations</span>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 4px; font-size: 11px;">
+            <div style="display: flex; justify-content: space-between; color: #475569;">
+              <span>Past Stay in Room <span id="rswipe-prev-src-room">302</span>:</span>
+              <strong id="rswipe-prev-past-calc" style="font-family: var(--font-mono, monospace);">-</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; color: #475569;">
+              <span>New Stay in Room <span id="rswipe-prev-dst-room">-</span>:</span>
+              <strong id="rswipe-prev-new-calc" style="font-family: var(--font-mono, monospace);">-</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; border-top: 1px dashed #cbd5e1; padding-top: 4px; font-weight: 800;">
+              <span>Net Tariff Difference (<span id="rswipe-prev-rem-n">1</span> nights):</span>
+              <span id="rswipe-prev-diff" style="font-family: var(--font-mono, monospace); font-size: 12px; color: #4338ca;">₹ 0.00</span>
+            </div>
+          </div>
+          <!-- Housekeeping Notification Alert -->
+          <div id="rswipe-hk-notice" style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 6px; padding: 6px 10px; font-size: 10.5px; color: #b91c1c; display: flex; align-items: center; gap: 6px;">
+            <i class="fa-solid fa-broom"></i>
+            <span>Room <strong id="rswipe-hk-room-name">-</strong> will be automatically marked <strong>Dirty (Pending Cleaning)</strong> in Housekeeping history.</span>
+          </div>
+        </div>
+
+        <!-- Reason & Remarks -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div>
+            <label style="display: block; font-size: 11px; font-weight: 700; color: #334155; margin-bottom: 4px;">
+              Reason for Shift:
+            </label>
+            <select id="rswipe-reason" class="form-input" style="width: 100%; padding: 7px 10px; border-radius: 8px; border: 1.5px solid #cbd5e1; font-size: 12px;">
+              <option value="Guest Upgrade">Guest Upgrade / Preference</option>
+              <option value="Guest Request">Guest Request (View/Location)</option>
+              <option value="AC / Electrical Issue">AC / Electrical Issue</option>
+              <option value="Plumbing Issue">Plumbing / Water Issue</option>
+              <option value="Noise Complaint">Noise / Disturbance Complaint</option>
+              <option value="Operational Shift">Operational Front Desk Shift</option>
+              <option value="Other">Other Reason</option>
+            </select>
+          </div>
+          <div>
+            <label style="display: block; font-size: 11px; font-weight: 700; color: #334155; margin-bottom: 4px;">
+              Staff Remarks (Optional):
+            </label>
+            <input type="text" id="rswipe-remarks" placeholder="Optional notes for transfer dossier..." class="form-input" style="width: 100%; padding: 7px 10px; border-radius: 8px; border: 1.5px solid #cbd5e1; font-size: 12px;">
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Modal Footer Actions -->
+    <div style="background: #f8fafc; border-top: 1px solid #e2e8f0; padding: 12px 20px; display: flex; justify-content: flex-end; gap: 10px; align-items: center;">
+      <button type="button" onclick="closeRoomSwipeModal()" style="padding: 7px 14px; border-radius: 8px; border: 1px solid #cbd5e1; background: #ffffff; color: #475569; font-size: 12px; font-weight: 700; cursor: pointer;">
+        Cancel
+      </button>
+      <button type="button" id="btn-submit-room-swipe" onclick="submitRoomSwipe()" style="padding: 7px 18px; border-radius: 8px; border: none; background: linear-gradient(135deg, #4338ca 0%, #312e81 100%); color: #ffffff; font-size: 12px; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(67, 56, 202, 0.3);">
+        <i class="fa-solid fa-arrow-right-arrow-left"></i> Confirm Room Swipe
       </button>
     </div>
 
@@ -1909,6 +2216,16 @@
         ? `<span style="background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;"><i class="fa-solid fa-broom"></i> Vacated (Housekeeping Dirty)</span>`
         : `<span style="background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;"><i class="fa-solid fa-bed"></i> Reserved / Occupied</span>`;
 
+      const canSwipe = activeFolioData && activeFolioData.status !== 'Checked Out' && activeFolioData.status !== 'Cancelled' && !isVacated && r.room_id;
+      const swipeBtnMarkup = canSwipe ? `
+        <button type="button" 
+                class="btn-room-swipe" 
+                onclick="openRoomSwipeModal(${activeFolioData.id}, ${r.room_id}, '${escapeHtml(r.room_number).replace(/'/g, "\\'")}')" 
+                title="Swipe / Shift Room ${escapeHtml(r.room_number)}">
+          <i class="fa-solid fa-arrow-right-arrow-left"></i> Room Swipe
+        </button>
+      ` : '';
+
       html += `
         <div class="room-alloc-card">
           <div class="room-alloc-header">
@@ -1923,8 +2240,11 @@
               <span style="font-size: 11px; color: #64748b;">${escapeHtml(r.bedding)}</span>
               ${roomStatusBadge}
             </div>
-            <div style="font-size: 11px; font-family: var(--font-mono, monospace); font-weight: 800; color: #4338ca;">
-              ${formatINR(r.rate)} / night
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 11px; font-family: var(--font-mono, monospace); font-weight: 800; color: #4338ca;">
+                ${formatINR(r.rate)} / night
+              </span>
+              ${swipeBtnMarkup}
             </div>
           </div>
           <div>
@@ -1972,6 +2292,15 @@
             `;
           }
 
+          const swipeGuestMarkup = (canSwipe && !isCheckedOut) ? `
+            <button type="button" 
+                    class="btn-room-swipe-mini" 
+                    onclick="openRoomSwipeModal(${activeFolioData.id}, ${r.room_id}, '${escapeHtml(r.room_number).replace(/'/g, "\\'")}', ${occ.booking_id})" 
+                    title="Swipe / Transfer ${escapeHtml(occ.name)} to another room">
+              <i class="fa-solid fa-arrow-right-arrow-left"></i> Shift
+            </button>
+          ` : '';
+
           html += `
             <div class="occupant-badge-row ${isCheckedOut ? 'checked-out' : ''}">
               <div style="display: flex; align-items: center; gap: 6px;">
@@ -1983,6 +2312,7 @@
                 <span><i class="fa-solid fa-phone" style="font-size: 9px;"></i> ${escapeHtml(occ.mobile)}</span>
                 <span>•</span>
                 <span>${escapeHtml(occ.id_card_type)}: ${escapeHtml(occ.id_card_number)}</span>
+                ${swipeGuestMarkup}
                 ${actionMarkup}
               </div>
             </div>
@@ -2156,6 +2486,55 @@
     } else {
       historyBox.style.display = 'none';
       historyList.innerHTML = '';
+    }
+
+    // Room Transfers (Swipe) History List
+    const swipesBox = document.getElementById('fmdl-room-swipes-box');
+    const swipesList = document.getElementById('fmdl-room-swipes-list');
+    const swipesCount = document.getElementById('fmdl-swipes-count');
+    if (folio.room_transfers && folio.room_transfers.length > 0) {
+      if (swipesBox) swipesBox.style.display = 'block';
+      if (swipesCount) swipesCount.textContent = folio.room_transfers.length;
+      let sHtml = `
+        <table style="width: 100%; border-collapse: collapse; background: #ffffff; border: 1px solid #c7d2fe; border-radius: 8px; overflow: hidden; margin-bottom: 4px;">
+          <thead>
+            <tr style="background: #eef2ff; border-bottom: 1px solid #c7d2fe; text-align: left;">
+              <th style="padding: 6px 10px; font-size: 10px; color: #4338ca;">Date &amp; Time</th>
+              <th style="padding: 6px 10px; font-size: 10px; color: #4338ca;">From Room</th>
+              <th style="padding: 6px 10px; font-size: 10px; color: #4338ca;">To Room</th>
+              <th style="padding: 6px 10px; font-size: 10px; color: #4338ca;">Guests Transferred</th>
+              <th style="padding: 6px 10px; font-size: 10px; color: #4338ca; text-align: right;">Daily Rates</th>
+              <th style="padding: 6px 10px; font-size: 10px; color: #4338ca; text-align: right;">Tariff Adjustment</th>
+              <th style="padding: 6px 10px; font-size: 10px; color: #4338ca;">Reason / Staff</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+      folio.room_transfers.forEach(st => {
+        const diffPrefix = st.tariff_difference >= 0 ? '+' : '';
+        const diffColor = st.tariff_difference > 0 ? '#4338ca' : (st.tariff_difference < 0 ? '#059669' : '#64748b');
+        const gList = Array.isArray(st.guests) ? st.guests.join(', ') : (st.guests || 'Occupants');
+        sHtml += `
+          <tr style="border-bottom: 1px solid #e0e7ff;">
+            <td style="padding: 6px 10px; color: #334155; white-space: nowrap;"><i class="fa-regular fa-calendar-days" style="font-size: 9px; color: #6366f1;"></i> ${escapeHtml(st.date)} ${escapeHtml(st.time)}</td>
+            <td style="padding: 6px 10px; font-weight: 700; color: #e11d48;"><i class="fa-solid fa-door-closed"></i> ${escapeHtml(st.from_room)}</td>
+            <td style="padding: 6px 10px; font-weight: 700; color: #059669;"><i class="fa-solid fa-door-open"></i> ${escapeHtml(st.to_room)}</td>
+            <td style="padding: 6px 10px; color: #0f172a; font-size: 10.5px;">${escapeHtml(gList)}</td>
+            <td style="padding: 6px 10px; text-align: right; font-family: var(--font-mono, monospace); font-size: 10px; color: #475569; white-space: nowrap;">
+              ${formatINR(st.old_rate)} &rarr; ${formatINR(st.new_rate)}
+            </td>
+            <td style="padding: 6px 10px; text-align: right; font-family: var(--font-mono, monospace); font-weight: 800; color: ${diffColor}; white-space: nowrap;">
+              ${diffPrefix}${formatINR(st.tariff_difference)} (${st.remaining_nights}n)
+            </td>
+            <td style="padding: 6px 10px; color: #64748b; font-size: 10px;">${escapeHtml(st.reason || 'Shift')} <span style="color: #94a3b8;">(${escapeHtml(st.staff)})</span></td>
+          </tr>
+        `;
+      });
+      sHtml += '</tbody></table>';
+      if (swipesList) swipesList.innerHTML = sHtml;
+    } else {
+      if (swipesBox) swipesBox.style.display = 'none';
+      if (swipesList) swipesList.innerHTML = '';
     }
   }
 
@@ -2584,8 +2963,18 @@
       });
     }
 
+    const swipeModalBackdrop = document.getElementById('room-swipe-modal');
+    if (swipeModalBackdrop) {
+      swipeModalBackdrop.addEventListener('click', function(e) {
+        if (e.target === this) {
+          closeRoomSwipeModal();
+        }
+      });
+    }
+
     document.addEventListener('keydown', function(e) {
       if (e.key === 'Escape') {
+        closeRoomSwipeModal();
         closeEarlyCheckoutConfirmModal();
         closeFolioModal();
       }
@@ -2852,6 +3241,314 @@
     }, 150);
   }
 
+  /* ========================================================================= */
+  /* ROOM SWIPE / TRANSFER FUNCTIONALITY                                       */
+  /* ========================================================================= */
+  let currentSwipeData = null;
+
+  function openRoomSwipeModal(bookingId, fromRoomId, fromRoomNumber, specificBookingId = null) {
+    const modalEl = document.getElementById('room-swipe-modal');
+    if (!modalEl) return;
+
+    modalEl.classList.add('open');
+    modalEl.style.setProperty('display', 'flex', 'important');
+
+    const loadingEl = document.getElementById('rswipe-loading');
+    const contentEl = document.getElementById('rswipe-content');
+    if (loadingEl) loadingEl.style.display = 'flex';
+    if (contentEl) contentEl.style.display = 'none';
+
+    document.getElementById('rswipe-target-room-select').innerHTML = '<option value="">-- Choose Vacant Room --</option>';
+    document.getElementById('rswipe-occupants-list').innerHTML = '';
+
+    fetch(`{{ url('front-office/room-swipe/available-rooms') }}?booking_id=${bookingId}&from_room_id=${fromRoomId}`, {
+      headers: { 'Accept': 'application/json' }
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (!data.success) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Room Swipe Unavailable',
+          text: data.message || 'Could not load room shift information.',
+          confirmButtonColor: '#4338ca'
+        });
+        closeRoomSwipeModal();
+        return;
+      }
+
+      currentSwipeData = data;
+
+      document.getElementById('rswipe-master-booking-id').value = data.master_booking_id;
+      document.getElementById('rswipe-from-room-id').value = data.from_room ? data.from_room.id : fromRoomId;
+      document.getElementById('rswipe-old-rate').value = data.from_room ? data.from_room.rate : 0;
+      document.getElementById('rswipe-checkout-date').value = data.checkout_date || '';
+
+      document.getElementById('rswipe-reserve-id').textContent = data.reserve_id;
+      document.getElementById('rswipe-stay-dates').textContent = `${data.checkin_date || 'N/A'} → ${data.checkout_date || 'N/A'}`;
+      document.getElementById('rswipe-from-room-num').textContent = data.from_room ? ('R' + data.from_room.room_number) : (fromRoomNumber || 'N/A');
+      document.getElementById('rswipe-from-room-meta').textContent = data.from_room ? `Floor ${data.from_room.floor} • ${data.from_room.category}` : '';
+      document.getElementById('rswipe-from-room-rate').textContent = formatINR(data.from_room ? data.from_room.rate : 0);
+      document.getElementById('rswipe-prev-src-room').textContent = data.from_room ? data.from_room.room_number : fromRoomNumber;
+      document.getElementById('rswipe-hk-room-name').textContent = data.from_room ? data.from_room.room_number : fromRoomNumber;
+
+      const transferDateInput = document.getElementById('rswipe-transfer-date');
+      transferDateInput.value = data.transfer_date;
+      if (data.checkin_date) transferDateInput.min = data.checkin_date;
+      if (data.checkout_date) transferDateInput.max = data.checkout_date;
+
+      document.getElementById('rswipe-past-nights').textContent = data.past_nights;
+      document.getElementById('rswipe-rem-nights').textContent = data.remaining_nights;
+      document.getElementById('rswipe-prev-rem-n').textContent = data.remaining_nights;
+
+      const occList = document.getElementById('rswipe-occupants-list');
+      let occHtml = '';
+      (data.occupants || []).forEach(occ => {
+        const isSelected = (!specificBookingId || Number(occ.booking_id) === Number(specificBookingId));
+        occHtml += `
+          <label style="display: flex; align-items: center; justify-content: space-between; padding: 7px 12px; background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: all 0.15s ease;" class="swipe-occ-item">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <input type="checkbox" name="rswipe_occupants[]" value="${occ.booking_id}" class="rswipe-occ-chk" ${isSelected ? 'checked' : ''} onchange="calculateSwipePricing()" style="width: 15px; height: 15px; accent-color: #4338ca;">
+              <span style="font-weight: 700; color: #0f172a; font-size: 12px;">${escapeHtml(occ.guest_name)}</span>
+              ${occ.is_primary ? '<span style="background: #fef3c7; color: #b45309; font-size: 9px; font-weight: 800; padding: 1px 5px; border-radius: 4px;">Primary</span>' : ''}
+            </div>
+            <div style="font-size: 11px; color: #64748b; font-family: var(--font-mono, monospace);">
+              <i class="fa-solid fa-phone" style="font-size: 9px; color: #10b981;"></i> ${escapeHtml(occ.mobile)}
+            </div>
+          </label>
+        `;
+      });
+      occList.innerHTML = occHtml || '<div style="font-size: 11px; color: #94a3b8; padding: 6px;">No occupants found in this room.</div>';
+
+      const selectAllChk = document.getElementById('rswipe-select-all-occ');
+      if (selectAllChk) selectAllChk.checked = !specificBookingId;
+
+      const roomSelect = document.getElementById('rswipe-target-room-select');
+      roomSelect.innerHTML = '<option value="">-- Choose Vacant Room --</option>';
+      (data.available_rooms || []).forEach(rm => {
+        const opt = document.createElement('option');
+        opt.value = rm.id;
+        opt.dataset.rate = rm.rate;
+        opt.dataset.number = rm.room_number;
+        opt.dataset.category = rm.category;
+        opt.dataset.floor = rm.floor;
+        opt.textContent = `Room ${rm.room_number} (Floor ${rm.floor} • ${rm.category} • ₹ ${Number(rm.rate).toLocaleString('en-IN')}/night)`;
+        roomSelect.appendChild(opt);
+      });
+
+      if (loadingEl) loadingEl.style.display = 'none';
+      if (contentEl) contentEl.style.display = 'flex';
+
+      calculateSwipePricing();
+    })
+    .catch(err => {
+      console.error(err);
+      Swal.fire({
+        icon: 'error',
+        title: 'Connection Error',
+        text: 'Failed to communicate with hotel server.',
+        confirmButtonColor: '#4338ca'
+      });
+      closeRoomSwipeModal();
+    });
+  }
+
+  function closeRoomSwipeModal() {
+    const modalEl = document.getElementById('room-swipe-modal');
+    if (modalEl) {
+      modalEl.classList.remove('open');
+      modalEl.style.setProperty('display', 'none', 'important');
+    }
+    currentSwipeData = null;
+  }
+
+  function toggleAllSwipeOccupants(masterCheckbox) {
+    const chks = document.querySelectorAll('.rswipe-occ-chk');
+    chks.forEach(c => c.checked = masterCheckbox.checked);
+    calculateSwipePricing();
+  }
+
+  function onSwipeRoomSelected() {
+    const select = document.getElementById('rswipe-target-room-select');
+    const selectedOpt = select.options[select.selectedIndex];
+    if (selectedOpt && selectedOpt.dataset.rate) {
+      document.getElementById('rswipe-new-rate-input').value = selectedOpt.dataset.rate;
+    }
+    calculateSwipePricing();
+  }
+
+  function calculateSwipePricing() {
+    if (!currentSwipeData) return;
+
+    const select = document.getElementById('rswipe-target-room-select');
+    const selectedOpt = select.options[select.selectedIndex];
+    const dstRoomNum = (selectedOpt && selectedOpt.dataset.number) ? selectedOpt.dataset.number : '-';
+    document.getElementById('rswipe-prev-dst-room').textContent = dstRoomNum;
+
+    const transferDateStr = document.getElementById('rswipe-transfer-date').value;
+    const checkoutDateStr = document.getElementById('rswipe-checkout-date').value;
+    const checkinDateStr = currentSwipeData.checkin_date;
+
+    let remNights = 1;
+    let pastNights = 0;
+    if (transferDateStr && checkoutDateStr) {
+      const dTransfer = new Date(transferDateStr);
+      const dCheckout = new Date(checkoutDateStr);
+      const diffTime = dCheckout - dTransfer;
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      remNights = Math.max(1, diffDays);
+    }
+    if (transferDateStr && checkinDateStr) {
+      const dTransfer = new Date(transferDateStr);
+      const dCheckin = new Date(checkinDateStr);
+      const diffTime = dTransfer - dCheckin;
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      pastNights = Math.max(0, diffDays);
+    }
+
+    document.getElementById('rswipe-past-nights').textContent = pastNights;
+    document.getElementById('rswipe-rem-nights').textContent = remNights;
+    document.getElementById('rswipe-prev-rem-n').textContent = remNights;
+
+    const oldRate = Number(document.getElementById('rswipe-old-rate').value || 0);
+    const newRate = Number(document.getElementById('rswipe-new-rate-input').value || 0);
+
+    const allChks = document.querySelectorAll('.rswipe-occ-chk');
+    const checkedChks = document.querySelectorAll('.rswipe-occ-chk:checked');
+    const isWholeRoom = (checkedChks.length >= allChks.length);
+
+    const hintEl = document.getElementById('rswipe-shift-mode-hint');
+    const hkNotice = document.getElementById('rswipe-hk-notice');
+    if (isWholeRoom) {
+      if (hintEl) hintEl.textContent = 'Whole Room Shift: Old room will be completely vacated & scheduled for Housekeeping cleaning.';
+      if (hkNotice) hkNotice.style.display = 'flex';
+    } else {
+      if (hintEl) hintEl.textContent = 'Partial Split Shift: Remaining occupant(s) will stay in old room. New room is added to booking.';
+      if (hkNotice) hkNotice.style.display = 'none';
+    }
+
+    const pastStayTotal = pastNights * oldRate;
+    document.getElementById('rswipe-prev-past-calc').textContent = `${pastNights} night(s) × ${formatINR(oldRate)} = ${formatINR(pastStayTotal)}`;
+
+    const newStayTotal = remNights * newRate;
+    document.getElementById('rswipe-prev-new-calc').textContent = (dstRoomNum !== '-') ? `${remNights} night(s) × ${formatINR(newRate)} = ${formatINR(newStayTotal)}` : 'Select a destination room';
+
+    let diffTotal = 0;
+    if (isWholeRoom) {
+      const rateDiff = newRate - oldRate;
+      diffTotal = rateDiff * remNights;
+    } else {
+      diffTotal = newStayTotal;
+    }
+
+    const diffEl = document.getElementById('rswipe-prev-diff');
+    const diffPrefix = diffTotal >= 0 ? '+' : '';
+    diffEl.textContent = `${diffPrefix}${formatINR(diffTotal)}`;
+    diffEl.style.color = diffTotal > 0 ? '#4338ca' : (diffTotal < 0 ? '#059669' : '#0f172a');
+  }
+
+  function submitRoomSwipe() {
+    const masterBookingId = document.getElementById('rswipe-master-booking-id').value;
+    const fromRoomId = document.getElementById('rswipe-from-room-id').value;
+    const toRoomSelect = document.getElementById('rswipe-target-room-select');
+    const toRoomId = toRoomSelect.value;
+    const transferDate = document.getElementById('rswipe-transfer-date').value;
+    const newRate = document.getElementById('rswipe-new-rate-input').value;
+    const reason = document.getElementById('rswipe-reason').value;
+    const remarks = document.getElementById('rswipe-remarks').value;
+
+    const checkedChks = document.querySelectorAll('.rswipe-occ-chk:checked');
+    const transferredBookingIds = Array.from(checkedChks).map(c => c.value);
+
+    if (!toRoomId) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Destination Room Required',
+        text: 'Please select a clean/vacant destination room from the dropdown.',
+        confirmButtonColor: '#4338ca'
+      });
+      return;
+    }
+
+    if (transferredBookingIds.length === 0) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Select Occupant(s)',
+        text: 'Please check at least one occupant to shift to the new room.',
+        confirmButtonColor: '#4338ca'
+      });
+      return;
+    }
+
+    const btn = document.getElementById('btn-submit-room-swipe');
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing Room Swipe...';
+    }
+
+    fetch(`{{ url('front-office/room-swipe') }}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({
+        master_booking_id: masterBookingId,
+        from_room_id: fromRoomId,
+        to_room_id: toRoomId,
+        transfer_date: transferDate,
+        transferred_booking_ids: transferredBookingIds,
+        new_room_rate: newRate,
+        reason: reason,
+        remarks: remarks
+      })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-arrow-right-arrow-left"></i> Confirm Room Swipe';
+      }
+
+      if (data.success) {
+        closeRoomSwipeModal();
+        Swal.fire({
+          icon: 'success',
+          title: 'Room Swipe Complete!',
+          text: data.message || 'Room successfully transferred and billing updated.',
+          confirmButtonColor: '#10b981',
+          confirmButtonText: 'OK'
+        }).then(() => {
+          if (activeFolioData && activeFolioData.id) {
+            openFolioModalById(activeFolioData.id, true);
+          }
+          window.location.reload();
+        });
+      } else {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Room Swipe Notice',
+          text: data.message || 'Room shift could not be completed.',
+          confirmButtonColor: '#4338ca'
+        });
+      }
+    })
+    .catch(err => {
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-arrow-right-arrow-left"></i> Confirm Room Swipe';
+      }
+      console.error(err);
+      Swal.fire({
+        icon: 'error',
+        title: 'System Error',
+        text: 'Network error while executing room swipe. Please try again.',
+        confirmButtonColor: '#4338ca'
+      });
+    });
+  }
+
   // Explicit window bindings
   window.openFolioModalById = openFolioModalById;
   window.populateAndOpenFolioModal = populateAndOpenFolioModal;
@@ -2859,6 +3556,12 @@
   window.openEarlyCheckoutConfirmModal = openEarlyCheckoutConfirmModal;
   window.closeEarlyCheckoutConfirmModal = closeEarlyCheckoutConfirmModal;
   window.executeEarlyCheckout = executeEarlyCheckout;
+  window.openRoomSwipeModal = openRoomSwipeModal;
+  window.closeRoomSwipeModal = closeRoomSwipeModal;
+  window.toggleAllSwipeOccupants = toggleAllSwipeOccupants;
+  window.onSwipeRoomSelected = onSwipeRoomSelected;
+  window.calculateSwipePricing = calculateSwipePricing;
+  window.submitRoomSwipe = submitRoomSwipe;
   window.executeFolioSettlement = executeFolioSettlement;
   window.executeFolioCheckout = executeFolioCheckout;
   window.toggleFolioSettlementPanel = toggleFolioSettlementPanel;

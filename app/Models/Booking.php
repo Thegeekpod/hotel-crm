@@ -280,5 +280,15 @@ class Booking extends Model
     {
         return $this->hasMany(RoomServiceOrder::class, 'booking_id')->latest();
     }
+
+    public function roomTransfers(): HasMany
+    {
+        return $this->hasMany(RoomTransfer::class, 'booking_id')->latest();
+    }
+
+    public function allReservationTransfers(): HasMany
+    {
+        return $this->hasMany(RoomTransfer::class, 'primary_booking_id')->latest();
+    }
 }
 

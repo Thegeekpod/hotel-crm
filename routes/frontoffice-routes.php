@@ -35,6 +35,8 @@ Route::prefix('front-office')->name('frontoffice.')->group(function () {
     Route::post('/folio/{id}/settle', [FolioController::class, 'settle'])->name('folio.settle');
     Route::post('/folio/{id}/checkout', [FolioController::class, 'checkout'])->name('folio.checkout');
     Route::post('/folio/early-checkout-guest/{bookingId}', [FolioController::class, 'earlyCheckoutGuest'])->name('folio.early-checkout-guest');
+    Route::get('/room-swipe/available-rooms', [FolioController::class, 'getSwipeInfo'])->name('room-swipe.available-rooms');
+    Route::post('/room-swipe', [FolioController::class, 'processRoomSwipe'])->name('room-swipe.process');
 
     // Checkout Management
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');

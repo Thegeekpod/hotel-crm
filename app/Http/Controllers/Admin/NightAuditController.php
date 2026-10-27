@@ -371,6 +371,25 @@ class NightAuditController extends Controller
             $checkedOutCount = $allResBookings->where('status', 'Checked Out')->count();
             $stayStatus = ($checkedOutCount >= $allResBookings->count()) ? 'Checked Out' : ($master->status ?: 'Confirmed');
 
+            $transfers = \App\Models\RoomTransfer::with(['fromRoom', 'toRoom'])
+                ->where(function ($q) use ($master, $allResBookingIds) {
+                    $q->where('primary_booking_id', $master->id)
+                      ->orWhereIn('booking_id', $allResBookingIds);
+                })
+                ->get();
+
+            $transfersList = [];
+            foreach ($transfers as $t) {
+                $fromR = $t->fromRoom?->room_number ?? 'Room';
+                $toR = $t->toRoom?->room_number ?? 'Room';
+                $transfersList[] = [
+                    'from' => $fromR,
+                    'to' => $toR,
+                    'date' => $t->transfer_date ? $t->transfer_date->format('d M') : '',
+                    'diff' => (float)$t->tariff_difference,
+                ];
+            }
+
             $guestsList[] = [
                 'id' => $master->id,
                 'booking_id' => $master->id,
@@ -388,6 +407,7 @@ class NightAuditController extends Controller
                 'total_occupants' => $totalOccupants,
                 'checkin_date' => $checkinFmt,
                 'checkout_date' => $checkoutFmt,
+                'transfers' => $transfersList,
                 'stay_status' => $stayStatus,
                 'status' => $stayStatus,
                 'room_charges' => $roomCharges,

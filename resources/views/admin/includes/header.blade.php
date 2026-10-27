@@ -22,13 +22,13 @@
     <i class="fa-solid fa-desktop tab-ico" style="color: #6366f1;"></i> Front Office
   </a>
 
-  <a href="#" class="pms-tab-link" onclick="if(typeof PmsAlert !== 'undefined') PmsAlert.toast('POS Sales master module queued for client review.', 'info')">
+  <a href="{{ route('pos.index') }}" class="pms-tab-link {{ request()->routeIs('pos.*') ? 'active' : '' }}">
     <i class="fa-solid fa-utensils tab-ico" style="color: #10b981;"></i> POS Sales
   </a>
   <a href="{{ route('frontoffice.housekeeping') }}" class="pms-tab-link {{ request()->routeIs('frontoffice.housekeeping*') ? 'active' : '' }}">
     <i class="fa-solid fa-broom tab-ico" style="color: #f59e0b;"></i> House Keeping
   </a>
-  <a href="#" class="pms-tab-link" onclick="if(typeof PmsAlert !== 'undefined') PmsAlert.toast('Stores & Inventory module queued for client review.', 'info')">
+  <a href="{{ route('stores.index') }}" class="pms-tab-link {{ request()->routeIs('stores.*') ? 'active' : '' }}">
     <i class="fa-solid fa-boxes-stacked tab-ico" style="color: #22d3ee;"></i> Stores
   </a>
   <a href="#" class="pms-tab-link" onclick="if(typeof PmsAlert !== 'undefined') PmsAlert.toast('Accounts & Finance module queued for client review.', 'info')">

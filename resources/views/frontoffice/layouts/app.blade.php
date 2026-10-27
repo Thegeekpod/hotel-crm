@@ -377,13 +377,13 @@
     <a href="{{ route('frontoffice.dashboard') }}" class="pms-tab-link {{ !request()->routeIs('frontoffice.services*') && !request()->routeIs('frontoffice.housekeeping*') && (request()->routeIs('frontoffice.*') || request()->is('front-office*')) ? 'active' : '' }}">
       <i class="fa-solid fa-desktop tab-ico" style="color: #6366f1;"></i> Front Office
     </a>
-    <a href="#" class="pms-tab-link" onclick="if(typeof PmsAlert !== 'undefined') PmsAlert.toast('POS Sales module queued.', 'info')">
+    <a href="{{ route('pos.index') }}" class="pms-tab-link {{ request()->routeIs('pos.*') ? 'active' : '' }}">
       <i class="fa-solid fa-utensils tab-ico" style="color: #10b981;"></i> POS Sales
     </a>
     <a href="{{ route('frontoffice.housekeeping') }}" class="pms-tab-link {{ request()->routeIs('frontoffice.housekeeping*') ? 'active' : '' }}">
       <i class="fa-solid fa-broom tab-ico" style="color: #f59e0b;"></i> House Keeping
     </a>
-    <a href="#" class="pms-tab-link" onclick="if(typeof PmsAlert !== 'undefined') PmsAlert.toast('Stores module queued.', 'info')">
+    <a href="{{ route('stores.index') }}" class="pms-tab-link {{ request()->routeIs('stores.*') ? 'active' : '' }}">
       <i class="fa-solid fa-boxes-stacked tab-ico" style="color: #22d3ee;"></i> Stores
     </a>
     <a href="#" class="pms-tab-link" onclick="if(typeof PmsAlert !== 'undefined') PmsAlert.toast('Accounts module queued.', 'info')">
@@ -773,7 +773,12 @@
                           <label style="display:block; font-size: 10px; font-weight: 800; margin-bottom: 5px; color: #64748b; text-transform: uppercase; letter-spacing: 0.8px;">Room Category</label>
                           <select name="category_id" class="select-room-category" onchange="onCategoryChange(this)" style="width:100%; height:38px; padding:6px 10px; font-size:12px; border:1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #1e293b; font-weight: 600; box-sizing: border-box;">
                             <option value="">Select Category</option>
-                            @foreach($categories ?? \App\Models\RoomCategory::where('status', 'Active')->get() as $cat)
+                            @php
+                              $layoutRoomCategories = (isset($categories) && $categories instanceof \Illuminate\Support\Collection && ($categories->first() instanceof \App\Models\RoomCategory))
+                                ? $categories 
+                                : \App\Models\RoomCategory::where('status', 'Active')->get();
+                            @endphp
+                            @foreach($layoutRoomCategories as $cat)
                               <option value="{{ $cat->id }}" data-category-name="{{ $cat->name }}">{{ $cat->name }}</option>
                             @endforeach
                           </select>

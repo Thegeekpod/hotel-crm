@@ -1798,3 +1798,36 @@ a {
   font-weight: 700;
   font-size: 12px;
 }
+
+/* ==========================================================================
+   MOBILE RESPONSIVENESS FOR PMS SUB-RIBBON
+   ========================================================================== */
+@media (max-width: 768px) {
+  .pms-sub-ribbon {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 6px 10px;
+    gap: 8px;
+  }
+  .ribbon-left-section {
+    gap: 8px;
+    width: 100%;
+  }
+  .ribbon-action-buttons {
+    flex-wrap: nowrap;
+    gap: 4px;
+    width: 100%;
+  }
+  .ribbon-btn {
+    flex-shrink: 0;
+    min-width: 60px;
+    padding: 4px 8px;
+  }
+  .ribbon-btn .lbl-box {
+    font-size: 9px;
+    white-space: nowrap;
+  }
+  .pms-sub-ribbon > div:last-child {
+    display: none; /* Hide badge on mobile so action buttons have room */
+  }
+}

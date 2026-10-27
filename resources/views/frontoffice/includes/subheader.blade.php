@@ -50,6 +50,62 @@
     In-Room Dining &amp; Extra Services Live
   </div>
 </div>
+@elseif(request()->routeIs('pos.*'))
+<!-- Action Sub-Ribbon (POS Sales & Dining) -->
+<div class="pms-sub-ribbon">
+  <div class="ribbon-left-section">
+    <div class="ribbon-action-buttons">
+      <a href="{{ route('pos.index') }}" class="ribbon-btn active-btn">
+        <span class="ico-box"><i class="fa-solid fa-utensils" style="color: #10b981;"></i></span>
+        <span class="lbl-box">POS Terminal</span>
+      </a>
+      <button type="button" class="ribbon-btn" onclick="openRecentOrdersModal()">
+        <span class="ico-box"><i class="fa-solid fa-clock-rotate-left" style="color: #06b6d4;"></i></span>
+        <span class="lbl-box">KOT History</span>
+      </button>
+      <a href="{{ route('stores.index') }}" class="ribbon-btn">
+        <span class="ico-box"><i class="fa-solid fa-boxes-stacked" style="color: #f59e0b;"></i></span>
+        <span class="lbl-box">Manage Menus &amp; Stock</span>
+      </a>
+    </div>
+  </div>
+  <div style="font-size: 11px; font-weight: 700; color: #10b981; display: flex; align-items: center; gap: 6px;">
+    <span style="width: 6px; height: 6px; background: #10b981; border-radius: 50%; display: inline-block; box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);"></span>
+    Restaurant &amp; In-Room Dining POS Live
+  </div>
+</div>
+@elseif(request()->routeIs('stores.*'))
+<!-- Action Sub-Ribbon (Restaurant Kitchen & F&B Store) -->
+<div class="pms-sub-ribbon">
+  <div class="ribbon-left-section">
+    <div class="ribbon-action-buttons">
+      <a href="{{ route('stores.index') }}" class="ribbon-btn active-btn">
+        <span class="ico-box"><i class="fa-solid fa-kitchen-set" style="color: #10b981;"></i></span>
+        <span class="lbl-box">Store &amp; Menus</span>
+      </a>
+      <button type="button" class="ribbon-btn" onclick="openFoodItemModal()">
+        <span class="ico-box"><i class="fa-solid fa-plus-circle" style="color: #10b981;"></i></span>
+        <span class="lbl-box">+ Add Food Item</span>
+      </button>
+      <button type="button" class="ribbon-btn" onclick="openMenuCategoryModal()">
+        <span class="ico-box"><i class="fa-solid fa-folder-plus" style="color: #06b6d4;"></i></span>
+        <span class="lbl-box">+ New Menu</span>
+      </button>
+      <button type="button" class="ribbon-btn" onclick="openInwardModal()">
+        <span class="ico-box"><i class="fa-solid fa-truck-ramp-box" style="color: #f59e0b;"></i></span>
+        <span class="lbl-box">+ Inward Stock ("Item Duklo")</span>
+      </button>
+      <a href="{{ route('pos.index') }}" class="ribbon-btn">
+        <span class="ico-box"><i class="fa-solid fa-desktop" style="color: #6366f1;"></i></span>
+        <span class="lbl-box">Open POS Terminal</span>
+      </a>
+    </div>
+  </div>
+  <div style="font-size: 11px; font-weight: 700; color: #10b981; display: flex; align-items: center; gap: 6px;">
+    <span style="width: 6px; height: 6px; background: #10b981; border-radius: 50%; display: inline-block; box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);"></span>
+    Kitchen Store &amp; Recipe Yields Live
+  </div>
+</div>
 @else
 <!-- Action Sub-Ribbon (Only Front Office Options) -->
 <div class="pms-sub-ribbon">

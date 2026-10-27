@@ -716,8 +716,16 @@ class FolioController extends Controller
             $conflictingRoomIds[] = $fromRoom->id;
         }
 
+        // Also exclude other rooms already occupied under this same reservation
+        $sameResOccupiedRoomIds = $allBookings->filter(function ($b) {
+            return !in_array($b->status, ['Checked Out', 'Cancelled']) && !empty($b->room_id);
+        })->pluck('room_id')->filter()->all();
+
+        $excludedRoomIds = array_unique(array_merge($conflictingRoomIds, $sameResOccupiedRoomIds));
+
         $availableRooms = Room::with(['categoryRelation', 'floorRelation', 'beddingConfigRelation'])
-            ->whereNotIn('id', $conflictingRoomIds)
+            ->where('status', 'Active')
+            ->whereNotIn('id', $excludedRoomIds)
             ->orderByRaw('CAST(room_number AS UNSIGNED) ASC, room_number ASC')
             ->get()
             ->map(function ($r) {

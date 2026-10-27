@@ -650,6 +650,43 @@
     gap: 8px;
     font-size: 11px;
   }
+  /* Select2 Styling for Room Swipe Modal */
+  #room-swipe-modal .select2-container {
+    width: 100% !important;
+  }
+  #room-swipe-modal .select2-container--default .select2-selection--single {
+    height: 38px !important;
+    padding: 4px 10px !important;
+    border: 1.5px solid #cbd5e1 !important;
+    border-radius: 8px !important;
+    display: flex !important;
+    align-items: center !important;
+    background: #ffffff !important;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04) !important;
+  }
+  #room-swipe-modal .select2-container--default .select2-selection--single:focus,
+  #room-swipe-modal .select2-container--default.select2-container--open .select2-selection--single {
+    border-color: #4338ca !important;
+    box-shadow: 0 0 0 3px rgba(67, 56, 202, 0.15) !important;
+  }
+  #room-swipe-modal .select2-container--default .select2-selection--single .select2-selection__rendered {
+    line-height: normal !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    color: #0f172a !important;
+    padding-left: 2px !important;
+  }
+  #room-swipe-modal .select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 36px !important;
+    right: 8px !important;
+  }
+  .select2-dropdown.rswipe-select2-drop {
+    z-index: 100200 !important;
+    border-radius: 10px !important;
+    box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.25) !important;
+    border: 1.5px solid #cbd5e1 !important;
+    overflow: hidden !important;
+  }
 
   /* Media Print Rules */
   @media print {
@@ -1226,7 +1263,7 @@
             <label style="display: block; font-size: 11px; font-weight: 700; color: #334155; margin-bottom: 4px;">
               <i class="fa-regular fa-calendar-check" style="color: #4338ca;"></i> Effective Shift Date:
             </label>
-            <input type="date" id="rswipe-transfer-date" class="form-input" style="width: 100%; padding: 7px 10px; border-radius: 8px; border: 1.5px solid #cbd5e1; font-size: 12px; font-weight: 700; color: #0f172a;" onchange="calculateSwipePricing()">
+            <input type="date" id="rswipe-transfer-date" class="form-input" style="width: 100%; padding: 7px 10px; border-radius: 8px; border: 1.5px solid #cbd5e1; font-size: 12px; font-weight: 700; color: #0f172a;" onchange="onSwipeTransferDateChange()">
           </div>
           <div>
             <label style="display: block; font-size: 11px; font-weight: 700; color: #334155; margin-bottom: 4px;">
@@ -1241,13 +1278,14 @@
         </div>
 
         <!-- New Destination Room Selection -->
-        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 12px;">
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 12px; align-items: flex-start;">
           <div>
-            <label style="display: block; font-size: 11px; font-weight: 700; color: #334155; margin-bottom: 4px;">
-              <i class="fa-solid fa-door-open" style="color: #10b981;"></i> Select Destination Room:
+            <label style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; font-weight: 700; color: #334155; margin-bottom: 4px;">
+              <span><i class="fa-solid fa-door-open" style="color: #10b981;"></i> Destination Room (Available Only):</span>
+              <span id="rswipe-avail-count-badge" style="font-size: 10px; font-weight: 800; color: #059669; background: #ecfdf5; border: 1px solid #a7f3d0; padding: 1px 7px; border-radius: 10px;">Available Rooms Only</span>
             </label>
-            <select id="rswipe-target-room-select" class="form-input" style="width: 100%; padding: 7px 10px; border-radius: 8px; border: 1.5px solid #cbd5e1; font-size: 12px; font-weight: 700; color: #0f172a;" onchange="onSwipeRoomSelected()">
-              <option value="">-- Choose Vacant Room --</option>
+            <select id="rswipe-target-room-select" class="form-input" style="width: 100%;">
+              <option value="">-- Search & Choose Available Room --</option>
             </select>
           </div>
           <div>
@@ -2285,18 +2323,7 @@
       const selectAllChk = document.getElementById('rswipe-select-all-occ');
       if (selectAllChk) selectAllChk.checked = !specificBookingId;
 
-      const roomSelect = document.getElementById('rswipe-target-room-select');
-      roomSelect.innerHTML = '<option value="">-- Choose Vacant Room --</option>';
-      (data.available_rooms || []).forEach(rm => {
-        const opt = document.createElement('option');
-        opt.value = rm.id;
-        opt.dataset.rate = rm.rate;
-        opt.dataset.number = rm.room_number;
-        opt.dataset.category = rm.category;
-        opt.dataset.floor = rm.floor;
-        opt.textContent = `Room ${rm.room_number} (Floor ${rm.floor} • ${rm.category} • ₹ ${Number(rm.rate).toLocaleString('en-IN')}/night)`;
-        roomSelect.appendChild(opt);
-      });
+      populateSwipeAvailableRooms(data.available_rooms || []);
 
       if (loadingEl) loadingEl.style.display = 'none';
       if (contentEl) contentEl.style.display = 'flex';
@@ -2319,11 +2346,175 @@
     });
   }
 
+  function populateSwipeAvailableRooms(rooms) {
+    const $select = $('#rswipe-target-room-select');
+    if ($select.data('select2')) {
+      $select.select2('destroy');
+    }
+
+    $select.empty();
+    $select.append('<option value="">-- Search & Choose Available Room --</option>');
+
+    const availList = rooms || [];
+    const availBadge = document.getElementById('rswipe-avail-count-badge');
+    if (availBadge) {
+      availBadge.innerHTML = `<i class="fa-solid fa-circle-check" style="color: #10b981;"></i> ${availList.length} Available Rooms`;
+    }
+
+    if (availList.length === 0) {
+      $select.append('<option value="" disabled>No vacant/available rooms found for this stay period</option>');
+    } else {
+      availList.forEach(rm => {
+        const $opt = $('<option></option>')
+          .val(rm.id)
+          .attr('data-rate', rm.rate)
+          .attr('data-number', rm.room_number)
+          .attr('data-category', rm.category)
+          .attr('data-floor', rm.floor)
+          .attr('data-bedding', rm.bedding)
+          .text(`Room ${rm.room_number} (Floor ${rm.floor} • ${rm.category} • ₹ ${Number(rm.rate).toLocaleString('en-IN')}/night)`);
+        $select.append($opt);
+      });
+    }
+
+    $select.select2({
+      dropdownParent: $('#room-swipe-modal'),
+      dropdownCssClass: 'rswipe-select2-drop',
+      placeholder: '-- Search by Room No, Floor, Category or Rate --',
+      allowClear: true,
+      width: '100%',
+      templateResult: formatSwipeRoomOption,
+      templateSelection: formatSwipeRoomSelection,
+      matcher: customSwipeRoomMatcher
+    });
+
+    $select.off('.rswipe').on('select2:select.rswipe select2:clear.rswipe change.rswipe', function() {
+      onSwipeRoomSelected();
+    });
+  }
+
+  function formatSwipeRoomOption(opt) {
+    if (!opt.id) return opt.text;
+    const elem = opt.element;
+    if (!elem) return opt.text;
+
+    const roomNum = elem.dataset.number || '';
+    const floor = elem.dataset.floor || '1';
+    const cat = elem.dataset.category || 'Standard';
+    const rate = Number(elem.dataset.rate || 0);
+    const bedding = elem.dataset.bedding || '';
+
+    const container = document.createElement('div');
+    container.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 4px 2px;';
+    container.innerHTML = `
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span style="font-weight: 800; font-family: monospace; font-size: 12px; color: #4338ca; background: #e0e7ff; padding: 2px 7px; border-radius: 6px;">
+          <i class="fa-solid fa-door-open" style="font-size: 9px;"></i> R${roomNum}
+        </span>
+        <span style="font-weight: 700; color: #1e293b; font-size: 12px;">Floor ${floor} • ${cat}</span>
+        ${bedding ? `<span style="font-size: 10px; color: #64748b; background: #f1f5f9; padding: 1px 5px; border-radius: 4px;">${bedding}</span>` : ''}
+      </div>
+      <div style="display: flex; align-items: center; gap: 6px;">
+        <span style="font-weight: 800; font-family: monospace; color: #047857; font-size: 12px;">₹ ${rate.toLocaleString('en-IN')}/n</span>
+        <span style="background: #ecfdf5; color: #059669; font-size: 9px; font-weight: 800; padding: 1px 6px; border-radius: 10px; border: 1px solid #a7f3d0;">Vacant</span>
+      </div>
+    `;
+    return $(container);
+  }
+
+  function formatSwipeRoomSelection(opt) {
+    if (!opt || !opt.id) return opt ? opt.text : '';
+    const elem = opt.element;
+    if (elem && elem.dataset && elem.dataset.number) {
+      const roomNum = elem.dataset.number;
+      const floor = elem.dataset.floor || '1';
+      const cat = elem.dataset.category || 'Standard';
+      const rate = Number(elem.dataset.rate || 0);
+      return `Room ${roomNum} (Floor ${floor} • ${cat} • ₹ ${rate.toLocaleString('en-IN')}/night)`;
+    }
+    return opt.text;
+  }
+
+  function customSwipeRoomMatcher(params, data) {
+    if ($.trim(params.term) === '') {
+      return data;
+    }
+    if (typeof data.text === 'undefined') {
+      return null;
+    }
+    const term = params.term.toLowerCase().trim();
+    const elem = data.element;
+    if (!elem) {
+      return data.text.toLowerCase().indexOf(term) > -1 ? data : null;
+    }
+    const roomNum = String(elem.dataset.number || '').toLowerCase();
+    const category = String(elem.dataset.category || '').toLowerCase();
+    const floor = String(elem.dataset.floor || '').toLowerCase();
+    const bedding = String(elem.dataset.bedding || '').toLowerCase();
+    const rate = String(elem.dataset.rate || '').toLowerCase();
+    const fullText = (data.text || '').toLowerCase();
+
+    if (
+      roomNum.indexOf(term) > -1 ||
+      category.indexOf(term) > -1 ||
+      floor.indexOf(term) > -1 ||
+      ('floor ' + floor).indexOf(term) > -1 ||
+      ('fl ' + floor).indexOf(term) > -1 ||
+      bedding.indexOf(term) > -1 ||
+      rate.indexOf(term) > -1 ||
+      fullText.indexOf(term) > -1
+    ) {
+      return data;
+    }
+    return null;
+  }
+
+  function onSwipeTransferDateChange() {
+    if (!currentSwipeData) return;
+    const masterBookingId = document.getElementById('rswipe-master-booking-id').value;
+    const fromRoomId = document.getElementById('rswipe-from-room-id').value;
+    const newTransferDate = document.getElementById('rswipe-transfer-date').value;
+
+    if (!newTransferDate) return;
+
+    const availBadge = document.getElementById('rswipe-avail-count-badge');
+    if (availBadge) {
+      availBadge.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Checking availability...';
+    }
+
+    fetch(`{{ route('frontoffice.room-swipe.available') }}?booking_id=${masterBookingId}&from_room_id=${fromRoomId}&transfer_date=${newTransferDate}`, {
+      headers: { 'Accept': 'application/json' }
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        currentSwipeData.transfer_date = data.transfer_date;
+        currentSwipeData.past_nights = data.past_nights;
+        currentSwipeData.remaining_nights = data.remaining_nights;
+        currentSwipeData.available_rooms = data.available_rooms;
+
+        document.getElementById('rswipe-past-nights').textContent = data.past_nights;
+        document.getElementById('rswipe-rem-nights').textContent = data.remaining_nights;
+        document.getElementById('rswipe-prev-rem-n').textContent = data.remaining_nights;
+
+        populateSwipeAvailableRooms(data.available_rooms);
+        calculateSwipePricing();
+      }
+    })
+    .catch(() => {
+      calculateSwipePricing();
+    });
+  }
+
   function closeRoomSwipeModal() {
     const modalEl = document.getElementById('room-swipe-modal');
     if (modalEl) {
       modalEl.classList.remove('open');
       modalEl.style.setProperty('display', 'none', 'important');
+    }
+    const $roomSelect = $('#rswipe-target-room-select');
+    if ($roomSelect.data('select2')) {
+      $roomSelect.select2('close');
     }
     currentSwipeData = null;
   }
@@ -2336,9 +2527,13 @@
 
   function onSwipeRoomSelected() {
     const select = document.getElementById('rswipe-target-room-select');
-    const selectedOpt = select.options[select.selectedIndex];
+    if (!select) return;
+    const val = select.value;
+    const selectedOpt = val ? select.querySelector(`option[value="${val}"]`) : null;
     if (selectedOpt && selectedOpt.dataset.rate) {
       document.getElementById('rswipe-new-rate-input').value = selectedOpt.dataset.rate;
+    } else if (!val) {
+      document.getElementById('rswipe-new-rate-input').value = '';
     }
     calculateSwipePricing();
   }
@@ -2347,7 +2542,8 @@
     if (!currentSwipeData) return;
 
     const select = document.getElementById('rswipe-target-room-select');
-    const selectedOpt = select.options[select.selectedIndex];
+    const val = select ? select.value : '';
+    const selectedOpt = val ? select.querySelector(`option[value="${val}"]`) : null;
     const dstRoomNum = (selectedOpt && selectedOpt.dataset.number) ? selectedOpt.dataset.number : '-';
     document.getElementById('rswipe-prev-dst-room').textContent = dstRoomNum;
 

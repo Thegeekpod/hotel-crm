@@ -289,6 +289,8 @@ class FolioController extends Controller
             'transaction_id' => 'nullable|string|max:100',
         ]);
 
+        $settleAmount = (float)$request->input('amount');
+
         $allBookings = collect([$booking])->concat($booking->additionalBookings ?? []);
         $allBookingIds = $allBookings->pluck('id')->filter()->toArray();
 
@@ -312,28 +314,56 @@ class FolioController extends Controller
             $newBalance = max(0, round($currentBalance - $settleAmount, 2));
 
             // 1. Update primary booking balance & status
-            $booking->balance = $newBalance;
             if ($newBalance <= 0) {
+                $booking->balance = 0.00;
                 $booking->status = 'Settlement Done';
-            }
-            $booking->save();
 
-            // 2. Also update secondary bookings under the same reservation
-            if ($booking->reserve_id && $newBalance <= 0) {
-                Booking::where('reserve_id', $booking->reserve_id)
-                    ->where('id', '!=', $booking->id)
-                    ->update([
-                        'balance' => 0.00,
-                        'status' => 'Settlement Done',
-                    ]);
-            }
+                // 2. Also update secondary bookings under the same reservation
+                if ($booking->reserve_id) {
+                    Booking::where('reserve_id', $booking->reserve_id)
+                        ->where('id', '!=', $booking->id)
+                        ->update([
+                            'balance' => 0.00,
+                            'status' => 'Settlement Done',
+                        ]);
+                }
 
-            // 2b. If balance is fully settled, mark associated room service orders as settled
-            if ($newBalance <= 0) {
+                // 2b. If balance is fully settled, mark associated room service orders as settled
                 \App\Models\RoomServiceOrder::whereIn('booking_id', $allBookingIds)
                     ->where('payment_status', 'Charged to Room Folio')
                     ->update(['payment_status' => 'Settled in Folio']);
+            } else {
+                // Partial settlement: reduce room balance first, then extra services
+                $roomBalance = (float)$booking->balance;
+                $remainingPayment = $settleAmount;
+
+                if ($roomBalance > 0) {
+                    $deductRoom = min($roomBalance, $remainingPayment);
+                    $booking->balance = max(0, round($roomBalance - $deductRoom, 2));
+                    $remainingPayment = round($remainingPayment - $deductRoom, 2);
+                }
+
+                if ($remainingPayment > 0) {
+                    $orders = \App\Models\RoomServiceOrder::whereIn('booking_id', $allBookingIds)
+                        ->where('payment_status', 'Charged to Room Folio')
+                        ->where('order_status', '!=', 'Cancelled')
+                        ->orderBy('id', 'asc')
+                        ->get();
+
+                    foreach ($orders as $ord) {
+                        if ($remainingPayment >= (float)$ord->total_amount) {
+                            $ord->payment_status = 'Settled in Folio';
+                            $ord->save();
+                            $remainingPayment = round($remainingPayment - (float)$ord->total_amount, 2);
+                        }
+                    }
+
+                    if ($remainingPayment > 0) {
+                        $booking->balance = round($booking->balance - $remainingPayment, 2);
+                    }
+                }
             }
+            $booking->save();
 
             // 3. Create Payment Record (payment_type = 'Settlement')
             $paymentModeId = $request->input('payment_mode_id') ?: PaymentMode::where('name', 'Cash')->value('id');

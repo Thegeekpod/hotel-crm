@@ -1201,4 +1201,473 @@ class FolioController extends Controller
             'room_transfers' => $roomTransfersHistory,
         ];
     }
+
+    /**
+     * Fetch stay extension modal initial dossier data
+     */
+    public function getExtendStayInfo(Request $request)
+    {
+        $bookingId = $request->query('booking_id');
+        if (!$bookingId) {
+            return response()->json(['success' => false, 'message' => 'Booking ID is required.'], 400);
+        }
+
+        $booking = Booking::with([
+            'guest',
+            'room.categoryRelation',
+            'room.floorRelation',
+            'room.beddingConfigRelation',
+            'primaryBooking.additionalBookings.guest',
+            'primaryBooking.additionalBookings.room',
+            'additionalBookings.guest',
+            'additionalBookings.room',
+        ])->find($bookingId);
+
+        if (!$booking) {
+            return response()->json(['success' => false, 'message' => 'Booking not found.'], 404);
+        }
+
+        $masterBooking = $booking->primary_booking_id ? $booking->primaryBooking : $booking;
+        $allBookings = collect([$masterBooking])->concat($masterBooking->additionalBookings ?? collect());
+
+        $checkinDate = $masterBooking->checkin_date ?: $masterBooking->reserve_date;
+        $checkoutDate = $masterBooking->checkout_date;
+        $dCheckin = $checkinDate ? Carbon::parse($checkinDate)->startOfDay() : now()->startOfDay();
+        $dCheckout = $checkoutDate ? Carbon::parse($checkoutDate)->startOfDay() : $dCheckin->copy()->addDay();
+        $totalNights = max(1, (int)$dCheckin->diffInDays($dCheckout, false));
+
+        $roomsMap = [];
+        $activeTariffPerNight = 0;
+        foreach ($allBookings as $b) {
+            if (in_array($b->status, ['Checked Out', 'Cancelled']) || !$b->room_id) {
+                continue;
+            }
+            $rm = $b->room;
+            if (!$rm) continue;
+            if (!isset($roomsMap[$rm->id])) {
+                $rRate = (float)($rm->rate > 0 ? $rm->rate : ($b->room_rate > 0 ? $b->room_rate : 4500));
+                $roomsMap[$rm->id] = [
+                    'id' => $rm->id,
+                    'room_number' => (string)$rm->room_number,
+                    'category' => $rm->categoryRelation?->name ?? 'Standard',
+                    'floor' => (string)($rm->floorRelation?->floor ?? '1'),
+                    'rate' => $rRate,
+                    'occupants' => [],
+                ];
+                $activeTariffPerNight += $rRate;
+            }
+            $roomsMap[$rm->id]['occupants'][] = [
+                'name' => $b->guest?->guest_name ?? 'Guest',
+                'status' => $b->status,
+            ];
+        }
+
+        $minNewCheckout = $dCheckout->copy()->addDay()->toDateString();
+        $advance = (float)$masterBooking->advance_amount;
+        $settled = (float)Settlement::where('booking_id', $masterBooking->id)->sum('paid_amount');
+        $totalPaid = round($advance + $settled, 2);
+
+        return response()->json([
+            'success' => true,
+            'master_booking_id' => $masterBooking->id,
+            'booking_id' => $booking->id,
+            'reserve_id' => $masterBooking->reserve_id ?: ('RES-' . $masterBooking->id),
+            'folio_number' => $masterBooking->folio_number ?: '-',
+            'guest_name' => $masterBooking->guest?->guest_name ?? 'Guest',
+            'mobile' => $masterBooking->guest?->mobile ?? 'N/A',
+            'checkin_date' => $dCheckin->toDateString(),
+            'checkin_date_fmt' => $dCheckin->format('d M Y'),
+            'checkout_date' => $dCheckout->toDateString(),
+            'checkout_date_fmt' => $dCheckout->format('d M Y'),
+            'total_nights' => $totalNights,
+            'status' => $masterBooking->status,
+            'is_locked' => in_array($masterBooking->status, ['Settlement Done', 'Checked Out']),
+            'rooms' => array_values($roomsMap),
+            'active_tariff_per_night' => $activeTariffPerNight,
+            'min_checkout_date' => $minNewCheckout,
+            'total_amount' => (float)$masterBooking->total_amount,
+            'payable_amount' => (float)$masterBooking->payable_amount,
+            'advance_amount' => $advance,
+            'settlement_paid' => $settled,
+            'total_paid' => $totalPaid,
+            'balance' => (float)$masterBooking->balance,
+            'discount_percentage' => (float)$masterBooking->discount_percentage,
+            'gst_percentage' => (float)$masterBooking->gst_percentage,
+        ]);
+    }
+
+    /**
+     * Real-time availability & conflict check for extended stay dates
+     */
+    public function checkExtendStayAvailability(Request $request)
+    {
+        $bookingId = $request->query('booking_id');
+        $newCheckoutStr = $request->query('new_checkout_date');
+
+        if (!$bookingId || !$newCheckoutStr) {
+            return response()->json(['success' => false, 'message' => 'Booking ID and New Check-out Date are required.'], 400);
+        }
+
+        $booking = Booking::with([
+            'guest',
+            'room',
+            'primaryBooking.additionalBookings.room',
+            'additionalBookings.room',
+        ])->find($bookingId);
+
+        if (!$booking) {
+            return response()->json(['success' => false, 'message' => 'Booking not found.'], 404);
+        }
+
+        $masterBooking = $booking->primary_booking_id ? $booking->primaryBooking : $booking;
+        $allBookings = collect([$masterBooking])->concat($masterBooking->additionalBookings ?? collect());
+
+        $currentCheckout = $masterBooking->checkout_date ? Carbon::parse($masterBooking->checkout_date)->startOfDay() : null;
+        if (!$currentCheckout) {
+            return response()->json(['success' => false, 'message' => 'Current booking check-out date is missing.'], 400);
+        }
+
+        $newCheckout = Carbon::parse($newCheckoutStr)->startOfDay();
+        if ($newCheckout->lte($currentCheckout)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'New check-out date must be strictly after current check-out date (' . $currentCheckout->format('d M Y') . ').'
+            ], 422);
+        }
+
+        $additionalNights = (int)$currentCheckout->diffInDays($newCheckout, false);
+        $windowStart = $currentCheckout->toDateString();
+        $windowEnd = $newCheckout->toDateString();
+
+        $activeRoomIds = $allBookings->filter(function ($b) {
+            return !in_array($b->status, ['Checked Out', 'Cancelled']) && !empty($b->room_id);
+        })->pluck('room_id')->unique()->all();
+
+        // Check conflicts for existing rooms in reservation
+        $conflicts = Booking::whereIn('room_id', $activeRoomIds)
+            ->where('reserve_id', '!=', $masterBooking->reserve_id)
+            ->whereIn('status', ['Confirmed', 'Checked In', 'Arrived', 'Stay Over', 'Settlement Done'])
+            ->where(function ($q) use ($windowStart, $windowEnd) {
+                $q->whereDate('reserve_date', '<', $windowEnd)
+                  ->where(function ($sub) use ($windowStart) {
+                      $sub->whereDate('checkout_date', '>', $windowStart)
+                          ->orWhereNull('checkout_date');
+                  });
+            })
+            ->with(['room.categoryRelation', 'room.floorRelation', 'guest.title'])
+            ->get();
+
+        if ($conflicts->isNotEmpty()) {
+            $conflictItem = $conflicts->first();
+            $confRoom = $conflictItem->room;
+            $confIn = $conflictItem->reserve_date ? Carbon::parse($conflictItem->reserve_date)->format('d M Y') : $windowStart;
+            $confOut = $conflictItem->checkout_date ? Carbon::parse($conflictItem->checkout_date)->format('d M Y') : $windowEnd;
+            $guestTitle = $conflictItem->guest?->title?->name ? $conflictItem->guest->title->name . ' ' : '';
+            $guestName = $guestTitle . ($conflictItem->guest?->guest_name ?? 'Another Guest');
+
+            $allHotelConflictingRoomIds = Booking::whereNotNull('room_id')
+                ->where('reserve_id', '!=', $masterBooking->reserve_id)
+                ->whereIn('status', ['Confirmed', 'Checked In', 'Arrived', 'Stay Over', 'Settlement Done'])
+                ->where(function ($q) use ($windowStart, $windowEnd) {
+                    $q->whereDate('reserve_date', '<', $windowEnd)
+                      ->where(function ($sub) use ($windowStart) {
+                          $sub->whereDate('checkout_date', '>', $windowStart)
+                              ->orWhereNull('checkout_date');
+                      });
+                })
+                ->pluck('room_id')
+                ->unique()
+                ->toArray();
+
+            $excludedRoomIds = array_unique(array_merge($allHotelConflictingRoomIds, $activeRoomIds));
+
+            $availableRooms = Room::with(['categoryRelation', 'floorRelation', 'beddingConfigRelation'])
+                ->where('status', 'Active')
+                ->whereNotIn('id', $excludedRoomIds)
+                ->orderByRaw('CAST(room_number AS UNSIGNED) ASC, room_number ASC')
+                ->get()
+                ->map(function ($r) {
+                    return [
+                        'id' => $r->id,
+                        'room_number' => (string)$r->room_number,
+                        'category' => $r->categoryRelation?->name ?? 'Standard',
+                        'floor' => (string)($r->floorRelation?->floor ?? '1'),
+                        'rate' => (float)($r->rate > 0 ? $r->rate : 4500),
+                        'bedding' => $r->beddingConfigRelation?->name ?? 'Standard',
+                        'pax' => (int)($r->pax_capacity ?? 2),
+                    ];
+                });
+
+            return response()->json([
+                'success' => true,
+                'available' => false,
+                'additional_nights' => $additionalNights,
+                'new_checkout_date' => $newCheckout->toDateString(),
+                'new_checkout_date_fmt' => $newCheckout->format('d M Y'),
+                'conflict' => [
+                    'room_number' => $confRoom ? $confRoom->room_number : 'Room',
+                    'guest_name' => $guestName,
+                    'reserve_id' => $conflictItem->reserve_id ?: ('RES-' . $conflictItem->id),
+                    'checkin_date' => $confIn,
+                    'checkout_date' => $confOut,
+                    'status' => $conflictItem->status,
+                ],
+                'message' => "Room #{$confRoom->room_number} is already booked from {$confIn} to {$confOut} by {$guestName}.",
+                'available_rooms' => $availableRooms,
+                'available_count' => $availableRooms->count(),
+            ]);
+        }
+
+        // Available! Calculate tariff estimates
+        $activeRooms = Room::whereIn('id', $activeRoomIds)->get();
+        $dailyTariff = $activeRooms->sum(function ($r) {
+            return (float)($r->rate > 0 ? $r->rate : 4500);
+        });
+
+        $additionalTariff = round($dailyTariff * $additionalNights, 2);
+        $currentGross = (float)$masterBooking->total_amount;
+        $estGross = round($currentGross + $additionalTariff, 2);
+
+        $discPct = (float)$masterBooking->discount_percentage;
+        $estDiscount = $discPct > 0 ? round(($estGross * $discPct) / 100, 2) : (float)$masterBooking->discount_amount;
+        $estNet = max(0, $estGross - $estDiscount);
+
+        $gstPct = (float)$masterBooking->gst_percentage;
+        $gstType = $masterBooking->gst_type ?? 'exclusive';
+        if ($gstPct > 0) {
+            if ($gstType === 'inclusive') {
+                $estGst = round($estNet - ($estNet / (1 + ($gstPct / 100))), 2);
+                $estPayable = $estNet;
+            } else {
+                $estGst = round(($estNet * $gstPct) / 100, 2);
+                $estPayable = $estNet + $estGst;
+            }
+        } else {
+            $estGst = 0.00;
+            $estPayable = $estNet;
+        }
+
+        $advance = (float)$masterBooking->advance_amount;
+        $settled = (float)Settlement::where('booking_id', $masterBooking->id)->sum('paid_amount');
+        $estBalance = max(0, round($estPayable - ($advance + $settled), 2));
+
+        $roomsText = $activeRooms->pluck('room_number')->map(fn($n) => "#{$n}")->implode(', ');
+
+        return response()->json([
+            'success' => true,
+            'available' => true,
+            'additional_nights' => $additionalNights,
+            'daily_tariff' => $dailyTariff,
+            'additional_tariff' => $additionalTariff,
+            'new_checkout_date' => $newCheckout->toDateString(),
+            'new_checkout_date_fmt' => $newCheckout->format('d M Y'),
+            'estimated_gross' => $estGross,
+            'estimated_discount' => $estDiscount,
+            'estimated_gst' => $estGst,
+            'estimated_payable' => round($estPayable, 2),
+            'estimated_balance' => $estBalance,
+            'message' => "Room {$roomsText} is completely available for the extended {$additionalNights} night(s) until {$newCheckout->format('d M Y')}."
+        ]);
+    }
+
+    /**
+     * Process stay extension and update master ledger/folio financials
+     */
+    public function processExtendStay(Request $request)
+    {
+        $request->validate([
+            'booking_id' => 'required',
+            'new_checkout_date' => 'required|date',
+            'extension_room_id' => 'nullable|exists:rooms,id',
+            'remarks' => 'nullable|string|max:500',
+        ]);
+
+        $bookingId = $request->input('booking_id');
+        $newCheckoutStr = $request->input('new_checkout_date');
+        $altRoomId = $request->input('extension_room_id');
+
+        DB::beginTransaction();
+        try {
+            $booking = Booking::with(['room', 'primaryBooking', 'additionalBookings.room'])->lockForUpdate()->find($bookingId);
+            if (!$booking) {
+                DB::rollBack();
+                return response()->json(['success' => false, 'message' => 'Booking not found.'], 404);
+            }
+
+            $masterBooking = $booking->primary_booking_id ? $booking->primaryBooking : $booking;
+            if (in_array($masterBooking->status, ['Settlement Done', 'Checked Out'])) {
+                DB::rollBack();
+                return response()->json(['success' => false, 'message' => 'This reservation is already locked or checked out and cannot be extended.'], 403);
+            }
+
+            $allBookings = collect([$masterBooking])->concat($masterBooking->additionalBookings ?? collect());
+
+            $currentCheckout = $masterBooking->checkout_date ? Carbon::parse($masterBooking->checkout_date)->startOfDay() : null;
+            if (!$currentCheckout) {
+                DB::rollBack();
+                return response()->json(['success' => false, 'message' => 'Invalid current checkout date.'], 422);
+            }
+
+            $newCheckout = Carbon::parse($newCheckoutStr)->startOfDay();
+            if ($newCheckout->lte($currentCheckout)) {
+                DB::rollBack();
+                return response()->json(['success' => false, 'message' => 'New check-out date must be after current check-out date.'], 422);
+            }
+
+            $additionalNights = (int)$currentCheckout->diffInDays($newCheckout, false);
+            $windowStart = $currentCheckout->toDateString();
+            $windowEnd = $newCheckout->toDateString();
+
+            $activeBookings = $allBookings->filter(function ($b) {
+                return !in_array($b->status, ['Checked Out', 'Cancelled']) && !empty($b->room_id);
+            });
+
+            $activeRoomIds = $activeBookings->pluck('room_id')->unique()->all();
+            $additionalTariff = 0;
+
+            if ($altRoomId) {
+                $altRoom = Room::lockForUpdate()->find($altRoomId);
+                if (!$altRoom) {
+                    DB::rollBack();
+                    return response()->json(['success' => false, 'message' => 'Selected alternative room not found.'], 404);
+                }
+
+                $altConflict = Booking::where('room_id', $altRoom->id)
+                    ->where('reserve_id', '!=', $masterBooking->reserve_id)
+                    ->whereIn('status', ['Confirmed', 'Checked In', 'Arrived', 'Stay Over', 'Settlement Done'])
+                    ->where(function ($q) use ($windowStart, $windowEnd) {
+                        $q->whereDate('reserve_date', '<', $windowEnd)
+                          ->where(function ($sub) use ($windowStart) {
+                              $sub->whereDate('checkout_date', '>', $windowStart)
+                                  ->orWhereNull('checkout_date');
+                          });
+                    })
+                    ->exists();
+
+                if ($altConflict) {
+                    DB::rollBack();
+                    return response()->json(['success' => false, 'message' => "Room #{$altRoom->room_number} is no longer available for the extended period. Please pick another room."], 422);
+                }
+
+                $altRate = (float)($altRoom->rate > 0 ? $altRoom->rate : 4500);
+                $additionalTariff = round($altRate * $additionalNights, 2);
+
+                $fromRoom = $booking->room ?: Room::find($activeRoomIds[0] ?? null);
+                if ($fromRoom && $fromRoom->id != $altRoom->id) {
+                    RoomTransfer::create([
+                        'booking_id' => $booking->id,
+                        'primary_booking_id' => $masterBooking->id,
+                        'from_room_id' => $fromRoom->id,
+                        'to_room_id' => $altRoom->id,
+                        'transfer_date' => $windowStart,
+                        'reason' => 'Stay extended with alternative room shift',
+                        'notes' => "Stay extended by {$additionalNights} night(s) to {$newCheckout->toDateString()}. Source Room #{$fromRoom->room_number} was booked, shifted to Room #{$altRoom->room_number}.",
+                        'shifted_by' => auth()->id() ?? 1,
+                    ]);
+
+                    $booking->room_id = $altRoom->id;
+                    $booking->room_rate = $altRate;
+                    $booking->save();
+                }
+
+            } else {
+                $hasConflict = Booking::whereIn('room_id', $activeRoomIds)
+                    ->where('reserve_id', '!=', $masterBooking->reserve_id)
+                    ->whereIn('status', ['Confirmed', 'Checked In', 'Arrived', 'Stay Over', 'Settlement Done'])
+                    ->where(function ($q) use ($windowStart, $windowEnd) {
+                        $q->whereDate('reserve_date', '<', $windowEnd)
+                          ->where(function ($sub) use ($windowStart) {
+                              $sub->whereDate('checkout_date', '>', $windowStart)
+                                  ->orWhereNull('checkout_date');
+                          });
+                    })
+                    ->exists();
+
+                if ($hasConflict) {
+                    DB::rollBack();
+                    return response()->json(['success' => false, 'message' => 'Current room has a booking conflict for the extended period. Please select an alternative room.'], 422);
+                }
+
+                $activeRooms = Room::whereIn('id', $activeRoomIds)->get();
+                $dailyTariff = $activeRooms->sum(function ($r) {
+                    return (float)($r->rate > 0 ? $r->rate : 4500);
+                });
+                $additionalTariff = round($dailyTariff * $additionalNights, 2);
+            }
+
+            $dCheckin = $masterBooking->checkin_date ? Carbon::parse($masterBooking->checkin_date)->startOfDay() : Carbon::parse($masterBooking->reserve_date)->startOfDay();
+            $newTotalNights = max(1, (int)$dCheckin->diffInDays($newCheckout, false));
+
+            foreach ($allBookings as $b) {
+                if (in_array($b->status, ['Checked Out', 'Cancelled'])) continue;
+                $b->checkout_date = $newCheckout->toDateString();
+                $b->total_nights = $newTotalNights;
+                if ($b->status === 'Arrived' || $b->status === 'Checked In') {
+                    $b->status = 'Stay Over';
+                }
+                $b->save();
+            }
+
+            $oldGross = (float)$masterBooking->total_amount;
+            $newGross = max(0, round($oldGross + $additionalTariff, 2));
+            $masterBooking->total_amount = $newGross;
+            $masterBooking->checkout_date = $newCheckout->toDateString();
+            $masterBooking->total_nights = $newTotalNights;
+
+            $discPct = (float)$masterBooking->discount_percentage;
+            $discAmt = $discPct > 0 ? round(($newGross * $discPct) / 100, 2) : min($newGross, (float)$masterBooking->discount_amount);
+            $masterBooking->discount_amount = $discAmt;
+
+            $netAfterDisc = max(0, $newGross - $discAmt);
+            $gstPct = (float)$masterBooking->gst_percentage;
+            $gstType = $masterBooking->gst_type ?? 'exclusive';
+            if ($gstPct > 0) {
+                if ($gstType === 'inclusive') {
+                    $gstAmt = round($netAfterDisc - ($netAfterDisc / (1 + ($gstPct / 100))), 2);
+                    $newPayable = $netAfterDisc;
+                } else {
+                    $gstAmt = round(($netAfterDisc * $gstPct) / 100, 2);
+                    $newPayable = $netAfterDisc + $gstAmt;
+                }
+            } else {
+                $gstAmt = 0.00;
+                $newPayable = $netAfterDisc;
+            }
+            $masterBooking->gst_amount = $gstAmt;
+            $masterBooking->payable_amount = round($newPayable, 2);
+
+            $advance = (float)$masterBooking->advance_amount;
+            $totalSettled = (float)Settlement::where('booking_id', $masterBooking->id)->sum('paid_amount');
+            $masterBooking->balance = max(0, round($newPayable - ($advance + $totalSettled), 2));
+
+            if ($request->filled('remarks')) {
+                $prevRemarks = $masterBooking->remarks ? $masterBooking->remarks . ' | ' : '';
+                $masterBooking->remarks = $prevRemarks . 'Extended stay: ' . trim($request->input('remarks'));
+            }
+
+            $masterBooking->save();
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => "Stay successfully extended to {$newCheckout->format('d M Y')} (+{$additionalNights} Night" . ($additionalNights > 1 ? 's' : '') . ")!",
+                'new_checkout_date' => $newCheckout->toDateString(),
+                'new_checkout_date_fmt' => $newCheckout->format('d M Y'),
+                'additional_nights' => $additionalNights,
+                'additional_tariff' => $additionalTariff,
+                'total_amount' => $newGross,
+                'payable_amount' => round($newPayable, 2),
+                'balance' => (float)$masterBooking->balance,
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to process stay extension: ' . $e->getMessage(),
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }

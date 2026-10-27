@@ -38,6 +38,9 @@ Route::prefix('front-office')->name('frontoffice.')->group(function () {
     Route::get('/room-swipe/available-rooms', [FolioController::class, 'getSwipeInfo'])->name('room-swipe.available');
     Route::get('/room-swipe/available', [FolioController::class, 'getSwipeInfo'])->name('room-swipe.available-rooms');
     Route::post('/room-swipe', [FolioController::class, 'processRoomSwipe'])->name('room-swipe.process');
+    Route::get('/extend-stay/info', [FolioController::class, 'getExtendStayInfo'])->name('extend-stay.info');
+    Route::get('/extend-stay/check', [FolioController::class, 'checkExtendStayAvailability'])->name('extend-stay.check');
+    Route::post('/extend-stay/process', [FolioController::class, 'processExtendStay'])->name('extend-stay.process');
 
     // Checkout Management
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');

@@ -240,6 +240,27 @@
     box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3);
   }
 
+  .btn-action-extend {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: 1px solid #ddd6fe;
+    background: #f5f3ff;
+    color: #7c3aed;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .btn-action-extend:hover {
+    background: #7c3aed;
+    color: #ffffff;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(124, 58, 237, 0.3);
+  }
+
   /* Guest Details Modal Uniform Cards */
   .dossier-grid {
     display: grid;
@@ -1083,8 +1104,17 @@
 
         <!-- CARD 2: Stay Schedule & Corporate Account -->
         <div class="dossier-card">
-          <div class="dossier-card-title">
-            <i class="fa-solid fa-calendar-days"></i> Stay &amp; Corporate Details
+          <div class="dossier-card-title" style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <i class="fa-solid fa-calendar-days"></i> Stay &amp; Corporate Details
+            </div>
+            <button type="button" 
+                    id="mdl-btn-extend-stay" 
+                    onclick="if(currentActiveGuest) openExtendStayModal(currentActiveGuest.id)" 
+                    style="border: 1px solid #c7d2fe; background: #e0e7ff; color: #4338ca; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;" 
+                    title="Extend Stay Duration (Live Room Availability Check)">
+              <i class="fa-solid fa-calendar-plus"></i> Extend Stay
+            </button>
           </div>
 
           <div class="dossier-field-row">
@@ -1388,6 +1418,9 @@
   </div>
 </div>
 
+<!-- Shared Extend Stay Modal -->
+@include('frontoffice.includes.extend-stay-modal')
+
 @push('scripts')
 <script>
   // All guests array loaded from database
@@ -1661,14 +1694,24 @@
             </span>
           </td>
 
-          <!-- Actions: Eye View Button only (status change removed from action column) -->
-          <td style="text-align: center;">
-            <button type="button" 
-                    class="btn-action-view" 
-                    onclick="openGuestDetailsModalById(${item.id})" 
-                    title="View Complete Arrival Dossier (Rooms, Occupants, Meal Plan, Schedule)">
-              <i class="fa-solid fa-eye"></i>
-            </button>
+          <!-- Actions: Eye View Button & Extend Stay Button -->
+          <td style="text-align: center; white-space: nowrap;">
+            <div style="display: inline-flex; align-items: center; gap: 6px;">
+              <button type="button" 
+                      class="btn-action-view" 
+                      onclick="openGuestDetailsModalById(${item.id})" 
+                      title="View Complete Arrival Dossier (Rooms, Occupants, Meal Plan, Schedule)">
+                <i class="fa-solid fa-eye"></i>
+              </button>
+              ${!['checked out', 'cancelled', 'settlement done'].includes((item.status || '').toLowerCase()) ? `
+                <button type="button" 
+                        class="btn-action-extend" 
+                        onclick="openExtendStayModal(${item.id})" 
+                        title="Extend Stay Duration (Live Room Availability Check)">
+                  <i class="fa-solid fa-calendar-plus"></i>
+                </button>
+              ` : ''}
+            </div>
           </td>
         </tr>
       `;

@@ -1508,15 +1508,22 @@
     
     const rawPlanName = guest.plan_name || (guest.plan?.plan_name ?? 'None');
     const rawPlanPrice = Number(guest.plan_price || 0);
-    const isNonePlanCrm = !rawPlanName || rawPlanName.trim().toLowerCase() === 'none' || rawPlanName.trim().toLowerCase() === 'room only (ep)' || rawPlanName.trim().toLowerCase() === 'ep' || rawPlanPrice <= 0;
-    const mealPlanVal = (!isNonePlanCrm && rawPlanPrice > 0)
-      ? `${rawPlanName} (+₹${rawPlanPrice.toLocaleString('en-IN')})`
-      : rawPlanName;
+    const rawPlanOrigPrice = Number(guest.plan_original_price !== undefined ? guest.plan_original_price : rawPlanPrice);
+    const isNonePlanCrm = !rawPlanName || rawPlanName.trim().toLowerCase() === 'none' || rawPlanName.trim().toLowerCase() === 'room only (ep)' || rawPlanName.trim().toLowerCase() === 'ep' || (rawPlanPrice <= 0 && rawPlanOrigPrice <= 0);
+    
+    let mealPlanHtml = escapeHtml(rawPlanName);
+    if (!isNonePlanCrm) {
+      if (rawPlanOrigPrice > rawPlanPrice) {
+        mealPlanHtml = `${escapeHtml(rawPlanName)} (+<span style="text-decoration: line-through; opacity: 0.65; margin-right: 3px;">₹${rawPlanOrigPrice.toLocaleString('en-IN')}</span><strong>₹${rawPlanPrice.toLocaleString('en-IN')}</strong>)`;
+      } else if (rawPlanPrice > 0) {
+        mealPlanHtml = `${escapeHtml(rawPlanName)} (+₹${rawPlanPrice.toLocaleString('en-IN')})`;
+      }
+    }
 
     const mealPlanElem = document.getElementById('crm-mdl-meal-plan');
-    if (mealPlanElem) mealPlanElem.textContent = mealPlanVal;
+    if (mealPlanElem) mealPlanElem.innerHTML = mealPlanHtml;
     const cardMealPlanElem = document.getElementById('crm-mdl-card-mealplan');
-    if (cardMealPlanElem) cardMealPlanElem.textContent = mealPlanVal;
+    if (cardMealPlanElem) cardMealPlanElem.innerHTML = mealPlanHtml;
 
     const corpSection = document.getElementById('crm-mdl-corporate-card-section');
     if (guest.company) {
@@ -1727,8 +1734,9 @@
   async function executeCrmCheckout() {
     if (!currentActiveCrmGuest) return;
     const g = currentActiveCrmGuest;
+    const isCompanyGuest = (g.registration_type || '').toLowerCase() === 'company' || !!g.company;
 
-    if (Number(g.balance || 0) > 0.01) {
+    if (Number(g.balance || 0) > 0.01 && !isCompanyGuest) {
       if (typeof Swal !== 'undefined') {
         Swal.fire({
           icon: 'warning',
@@ -1753,10 +1761,14 @@
 
     let isConfirmed = false;
     if (typeof Swal !== 'undefined') {
+      const companyNoticeHtml = (isCompanyGuest && Number(g.balance || 0) > 0.01)
+        ? `<div style="background: #fdf4ff; border: 1px solid #f0abfc; color: #86198f; padding: 6px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; margin-bottom: 10px;"><i class="fa-solid fa-building"></i> Company Account: Outstanding balance of ${formatINR(g.balance)} will be retained on company account without pre-settlement.</div>`
+        : '';
       const result = await Swal.fire({
         title: 'Confirm Guest Check-Out',
         html: `
           <div style="font-size: 13px; color: #334155; line-height: 1.6; text-align: left; padding: 4px 2px;">
+            ${companyNoticeHtml}
             <p style="margin: 0 0 12px 0; font-size: 13px; color: #475569;">Are you sure you want to proceed with checking out this guest?</p>
             <div style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 12px 14px; margin-bottom: 12px;">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">

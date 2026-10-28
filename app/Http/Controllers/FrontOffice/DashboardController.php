@@ -228,8 +228,10 @@ class DashboardController extends Controller
                         'registration_type' => $regName,
                         'company' => $compName,
                         'plan_id' => $gModel->plan_id,
-                        'plan_name' => $gModel->plan?->plan_name ?? '',
-                        'plan_price' => (float)($gModel->plan?->price ?? 0),
+                        'plan_name' => $gModel->plan_name ?: ($gModel->plan?->plan_name ?? ''),
+                        'plan_price' => (float)($gModel->plan_price ?? 0),
+                        'plan_original_price' => (float)($gModel->plan_original_price ?? ($gModel->plan_price ?? 0)),
+                        'plan_discount_amount' => (float)($gModel->plan_discount_amount ?? 0),
                         'reserve_date' => $resDateStr,
                         'reserve_time' => $resTimeStr,
                         'checkout_date' => $outDateStr,
@@ -667,7 +669,10 @@ class DashboardController extends Controller
                         'registration_type' => $regName,
                         'company' => $compName,
                         'plan_id' => $gModel->plan_id,
-                        'plan_name' => $gModel->plan?->plan_name ?? '',
+                        'plan_name' => $gModel->plan_name ?: ($gModel->plan?->plan_name ?? ''),
+                        'plan_price' => (float)($gModel->plan_price ?? 0),
+                        'plan_original_price' => (float)($gModel->plan_original_price ?? ($gModel->plan_price ?? 0)),
+                        'plan_discount_amount' => (float)($gModel->plan_discount_amount ?? 0),
                         'reserve_date' => $resDateStr,
                         'reserve_time' => $resTimeStr,
                         'checkout_date' => $outDateStr,
@@ -1231,7 +1236,28 @@ class DashboardController extends Controller
 
                 $roomRate = (float)($roomObj?->rate ?? 4500);
                 $planModel = $planId ? Plan::find($planId) : null;
-                $planPrice = (float)($planModel?->price ?? 0);
+                $planOriginalPrice = (float)($planModel?->price ?? 0);
+                $planPrice = $planOriginalPrice;
+                $planDiscountAmt = 0.0;
+                $planName = $planModel?->plan_name ?? 'None';
+
+                if ($companyModel && !empty($companyModel->meal_discounts) && is_array($companyModel->meal_discounts)) {
+                    foreach ($companyModel->meal_discounts as $md) {
+                        $mPlanId = $md['meal_plan_id'] ?? $md['plan_id'] ?? null;
+                        if ($mPlanId !== null && (int)$mPlanId === (int)$planId) {
+                            $mType = $md['discount_type'] ?? 'percentage';
+                            $mVal = (float)($md['discount_value'] ?? 0);
+                            if ($mType === 'amount') {
+                                $planDiscountAmt = min($planOriginalPrice, $mVal);
+                                $planPrice = max(0, $planOriginalPrice - $planDiscountAmt);
+                            } else {
+                                $planDiscountAmt = round($planOriginalPrice * ($mVal / 100), 2);
+                                $planPrice = max(0, $planOriginalPrice - $planDiscountAmt);
+                            }
+                            break;
+                        }
+                    }
+                }
                 $singleRoomTotal = ($roomRate + $planPrice) * $totalNights;
 
                 if ($idx === 0) {
@@ -1329,6 +1355,10 @@ class DashboardController extends Controller
                     'new_company_gstin' => $request->input('new_company_gstin'),
                     'new_company_phone' => $request->input('new_company_phone'),
                     'plan_id' => $planId,
+                    'plan_name' => $planName,
+                    'plan_original_price' => $planOriginalPrice,
+                    'plan_price' => $planPrice,
+                    'plan_discount_amount' => $planDiscountAmt,
                     'checkin_date' => $reserveDate,
                     'checkin_time' => $reserveTime,
                     'reserve_date' => $reserveDate,

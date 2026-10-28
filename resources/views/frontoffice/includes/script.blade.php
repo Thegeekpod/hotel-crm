@@ -48,6 +48,8 @@
       try {
         setInitialDateTime();
         initPlanSelect2();
+        if (typeof refreshPlanSelectDisplay === 'function') refreshPlanSelectDisplay();
+        if (typeof calculateReservationBilling === 'function') calculateReservationBilling();
         if (typeof updateReservationStatusUI === 'function') updateReservationStatusUI();
       } catch (e) {
         console.error('Error in setInitialDateTime:', e);
@@ -406,32 +408,60 @@
     // Meal Plan Extraction (Guest-selected plan has definitive precedence when guest is residing)
     let mealPlanName = '';
     let mealPlanPrice = 0;
+    let mealPlanOriginalPrice = 0;
+    let mealPlanDiscount = 0;
 
     if (primaryGuest && primaryGuest.plan_name !== undefined && primaryGuest.plan_name !== null && primaryGuest.plan_name !== '') {
       mealPlanName = primaryGuest.plan_name;
       mealPlanPrice = Number(primaryGuest.plan_price || 0);
+      mealPlanOriginalPrice = Number(primaryGuest.plan_original_price !== undefined ? primaryGuest.plan_original_price : mealPlanPrice);
+      mealPlanDiscount = Number(primaryGuest.plan_discount_amount !== undefined ? primaryGuest.plan_discount_amount : Math.max(0, mealPlanOriginalPrice - mealPlanPrice));
     } else if (primaryGuest) {
       mealPlanName = 'None';
       mealPlanPrice = 0;
+      mealPlanOriginalPrice = 0;
+      mealPlanDiscount = 0;
     } else if (roomData.plan_name) {
       mealPlanName = roomData.plan_name;
       mealPlanPrice = Number(roomData.plan_price || 0);
+      mealPlanOriginalPrice = Number(roomData.plan_original_price !== undefined ? roomData.plan_original_price : mealPlanPrice);
+      mealPlanDiscount = 0;
     } else {
       mealPlanName = 'None';
       mealPlanPrice = 0;
+      mealPlanOriginalPrice = 0;
+      mealPlanDiscount = 0;
     }
 
-    function formatMealPlanDisplay(name, price) {
+    function formatMealPlanDisplay(name, price, origPrice) {
       if (!name) return 'None';
       const clean = String(name).trim();
       const lower = clean.toLowerCase();
-      if (lower === 'none' || lower === 'no meal plan' || lower === 'room only (ep)' || lower === 'ep' || Number(price || 0) <= 0) {
+      const effPrice = Number(price || 0);
+      const original = Number(origPrice !== undefined ? origPrice : effPrice);
+      if (lower === 'none' || lower === 'no meal plan' || lower === 'room only (ep)' || lower === 'ep' || (effPrice <= 0 && original <= 0)) {
         return clean;
       }
-      return `${clean} (+₹${Number(price).toLocaleString('en-IN')})`;
+      return `${clean} (+₹${effPrice.toLocaleString('en-IN')})`;
     }
 
-    const mealPlanDisplay = formatMealPlanDisplay(mealPlanName, mealPlanPrice);
+    function formatMealPlanDisplayHtml(name, price, origPrice) {
+      if (!name) return 'None';
+      const clean = String(name).trim();
+      const lower = clean.toLowerCase();
+      const effPrice = Number(price || 0);
+      const original = Number(origPrice !== undefined ? origPrice : effPrice);
+      if (lower === 'none' || lower === 'no meal plan' || lower === 'room only (ep)' || lower === 'ep' || (effPrice <= 0 && original <= 0)) {
+        return escapeHtml(clean);
+      }
+      if (original > effPrice) {
+        return `${escapeHtml(clean)} (+<span style="text-decoration: line-through; opacity: 0.65; margin-right: 3px; font-weight: 600;">₹${original.toLocaleString('en-IN')}</span><strong style="color: inherit;">₹${effPrice.toLocaleString('en-IN')}</strong>)`;
+      }
+      return `${escapeHtml(clean)} (+₹${effPrice.toLocaleString('en-IN')})`;
+    }
+
+    const mealPlanDisplay = formatMealPlanDisplay(mealPlanName, mealPlanPrice, mealPlanOriginalPrice);
+    const mealPlanDisplayHtml = formatMealPlanDisplayHtml(mealPlanName, mealPlanPrice, mealPlanOriginalPrice);
 
     const checkInDisplay = primaryGuest?.checkin_display || roomData.checkin_display || (primaryGuest?.reserve_date ? `${primaryGuest.reserve_date}${primaryGuest.reserve_time ? ' • ' + primaryGuest.reserve_time : ''}` : '');
     const checkOutDisplay = primaryGuest?.checkout_display || roomData.checkout_display || (primaryGuest?.checkout_date ? `${primaryGuest.checkout_date}${primaryGuest.checkout_time ? ' • ' + primaryGuest.checkout_time : ''}` : '');
@@ -491,8 +521,8 @@
         <span style="background: #eef2ff; color: #4338ca; border: 1px solid #c7d2fe; padding: 2px 8px; border-radius: 6px; font-family: var(--font-mono, monospace); font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; gap: 4px;" title="Reservation ID">
           <i class="fa-solid fa-receipt" style="color: #6366f1;"></i> ${escapeHtml(reservationId)}
         </span>
-        <span style="background: #fff7ed; color: #c2410c; border: 1px solid #fed7aa; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; gap: 4px;" title="Meal Plan">
-          <i class="fa-solid fa-utensils" style="color: #ea580c; font-size: 10px;"></i> ${escapeHtml(mealPlanDisplay)}
+        <span style="background: #fff7ed; color: #c2410c; border: 1px solid #fed7aa; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; gap: 4px;" title="Meal Plan: ${escapeHtml(mealPlanDisplay)}">
+          <i class="fa-solid fa-utensils" style="color: #ea580c; font-size: 10px;"></i> ${mealPlanDisplayHtml}
         </span>
         ${extraServicesTotal > 0 ? `
         <span style="background: #fffbeb; color: #b45309; border: 1px solid #fde68a; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; gap: 4px;" title="Extra Services Total">
@@ -598,7 +628,7 @@
             ` : ''}
             <div style="background: #fff7ed; padding: 5px 8px; border-radius: 6px; border: 1px solid #fed7aa;">
               <span style="font-size: 9px; font-weight: 800; color: #c2410c; text-transform: uppercase; display: block;"><i class="fa-solid fa-utensils"></i> Meal Plan</span>
-              <span style="font-weight: 800; color: #9a3412; font-family: inherit; font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;" title="${escapeHtml(mealPlanDisplay)}">${escapeHtml(mealPlanDisplay)}</span>
+              <span style="font-weight: 800; color: #9a3412; font-family: inherit; font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;" title="${escapeHtml(mealPlanDisplay)}">${mealPlanDisplayHtml}</span>
             </div>
             <div style="background: #ffffff; padding: 5px 8px; border-radius: 6px; border: 1px solid #e2e8f0;">
               <span style="font-size: 9px; font-weight: 800; color: #4338ca; text-transform: uppercase; display: block;">Payable</span>
@@ -638,7 +668,7 @@
                 ${g.email ? `<div><strong style="color: #475569;"><i class="fa-solid fa-envelope" style="color: #6366f1; width: 14px;"></i> Email:</strong> <span style="color: #1e293b; font-weight: 600;">${escapeHtml(g.email)}</span></div>` : ''}
                 ${g.id_card_number ? `<div><strong style="color: #475569;"><i class="fa-solid fa-id-card" style="color: #6366f1; width: 14px;"></i> ${escapeHtml(g.id_card_type || 'ID Card')}:</strong> <span style="font-family: var(--font-mono); font-weight: 700; color: #0f172a;">${escapeHtml(g.id_card_number)}</span></div>` : ''}
                 ${g.city || g.address ? `<div><strong style="color: #475569;"><i class="fa-solid fa-location-dot" style="color: #6366f1; width: 14px;"></i> City / Address:</strong> <span style="color: #1e293b; font-weight: 600;">${escapeHtml(g.city || g.address)}</span></div>` : ''}
-                <div><strong style="color: #475569;"><i class="fa-solid fa-utensils" style="color: #ea580c; width: 14px;"></i> Meal Plan:</strong> <span style="color: #c2410c; font-weight: 800; background: #fff7ed; padding: 1px 7px; border-radius: 4px; border: 1px solid #fed7aa;">${escapeHtml(formatMealPlanDisplay(g.plan_name, g.plan_price))}</span></div>
+                <div><strong style="color: #475569;"><i class="fa-solid fa-utensils" style="color: #ea580c; width: 14px;"></i> Meal Plan:</strong> <span style="color: #c2410c; font-weight: 800; background: #fff7ed; padding: 1px 7px; border-radius: 4px; border: 1px solid #fed7aa;">${formatMealPlanDisplayHtml(g.plan_name, g.plan_price, g.plan_original_price)}</span></div>
                 ${g.has_privilege_card && g.privilege_card_no ? `<div><strong style="color: #475569;"><i class="fa-solid fa-star" style="color: #f59e0b; width: 14px;"></i> Privilege:</strong> <span style="color: #d97706; font-weight: 700;">${escapeHtml(g.privilege_card_no)}</span></div>` : ''}
               </div>
             </div>
@@ -665,7 +695,7 @@
               ${g.email ? `<div><strong style="color: #475569;"><i class="fa-solid fa-envelope" style="color: #6366f1; width: 14px;"></i> Email:</strong> <span style="font-weight: 600; color: #1e293b;">${escapeHtml(g.email)}</span></div>` : ''}
               ${g.id_card_number ? `<div><strong style="color: #475569;"><i class="fa-solid fa-id-card" style="color: #6366f1; width: 14px;"></i> ${escapeHtml(g.id_card_type || 'ID Card')}:</strong> <span style="font-family: var(--font-mono); font-weight: 700; color: #0f172a;">${escapeHtml(g.id_card_number)}</span></div>` : ''}
               ${g.city || g.address ? `<div><strong style="color: #475569;"><i class="fa-solid fa-location-dot" style="color: #6366f1; width: 14px;"></i> City / Address:</strong> <span style="font-weight: 600; color: #1e293b;">${escapeHtml(g.city || g.address)}</span></div>` : ''}
-              <div><strong style="color: #475569;"><i class="fa-solid fa-utensils" style="color: #ea580c; width: 14px;"></i> Meal Plan:</strong> <span style="color: #c2410c; font-weight: 800; background: #fff7ed; padding: 1px 7px; border-radius: 4px; border: 1px solid #fed7aa;">${escapeHtml(formatMealPlanDisplay(g.plan_name, g.plan_price))}</span></div>
+              <div><strong style="color: #475569;"><i class="fa-solid fa-utensils" style="color: #ea580c; width: 14px;"></i> Meal Plan:</strong> <span style="color: #c2410c; font-weight: 800; background: #fff7ed; padding: 1px 7px; border-radius: 4px; border: 1px solid #fed7aa;">${formatMealPlanDisplayHtml(g.plan_name, g.plan_price, g.plan_original_price)}</span></div>
               ${g.has_privilege_card && g.privilege_card_no ? `<div><strong style="color: #475569;"><i class="fa-solid fa-star" style="color: #f59e0b; width: 14px;"></i> Privilege:</strong> <span style="color: #d97706; font-weight: 700;">${escapeHtml(g.privilege_card_no)}</span></div>` : ''}
             </div>
           </div>
@@ -743,7 +773,7 @@
         </div>
         <div style="background: #fff7ed; border: 1px solid #fed7aa; border-radius: 8px; padding: 10px 12px;">
           <div style="font-size: 10px; font-weight: 800; color: #c2410c; text-transform: uppercase; letter-spacing: 0.5px;"><i class="fa-solid fa-utensils" style="color: #ea580c; margin-right: 4px;"></i> Meal Plan</div>
-          <div style="font-size: 12px; font-weight: 800; color: #9a3412; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${escapeHtml(mealPlanDisplay)}">${escapeHtml(mealPlanDisplay)}</div>
+          <div style="font-size: 12px; font-weight: 800; color: #9a3412; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${escapeHtml(mealPlanDisplay)}">${mealPlanDisplayHtml}</div>
         </div>
         <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 12px;">
           <div style="font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;"><i class="fa-solid fa-users" style="color: #10b981; margin-right: 4px;"></i> Pax Capacity</div>
@@ -1601,6 +1631,7 @@
     } else {
       const noticeWrap = document.getElementById('company-discount-applied-text');
       if (noticeWrap) noticeWrap.style.display = 'none';
+      if (typeof refreshPlanSelectDisplay === 'function') refreshPlanSelectDisplay();
       calculateReservationBilling();
     }
 
@@ -1836,6 +1867,9 @@
       if (noticeWrap) noticeWrap.style.display = 'none';
     }
 
+    if (typeof refreshPlanSelectDisplay === 'function') {
+      refreshPlanSelectDisplay();
+    }
     calculateReservationBilling();
   }
 
@@ -2083,8 +2117,13 @@
     const planSel = document.getElementById('plan-id-select');
     const selectedPlanOpt = (planSel && planSel.selectedIndex >= 0) ? planSel.options[planSel.selectedIndex] : null;
     const planIdVal = planSel ? planSel.value : '';
-    const planPrice = (selectedPlanOpt && selectedPlanOpt.dataset.price) ? parseFloat(selectedPlanOpt.dataset.price) : 0;
+    const planBasePrice = (selectedPlanOpt && selectedPlanOpt.dataset.price) ? parseFloat(selectedPlanOpt.dataset.price) : 0;
     const planName = (selectedPlanOpt && planIdVal) ? (selectedPlanOpt.dataset.name || selectedPlanOpt.text.split('(')[0].trim()) : '';
+
+    const pricing = typeof getEffectivePlanPricing === 'function' 
+      ? getEffectivePlanPricing(planIdVal, planBasePrice) 
+      : { hasDiscount: false, originalPrice: planBasePrice, effectivePrice: planBasePrice, discountText: '' };
+    const planPrice = pricing.effectivePrice;
 
     const roomCount = assignedRooms.size > 0 ? assignedRooms.size : 1;
     let totalMealPlan = 0;
@@ -2099,19 +2138,32 @@
     if (planIdVal && planName) {
       totalMealPlan = planPrice * nights * roomCount;
       if (mealCard) mealCard.style.display = 'block';
-      if (mealNameEl) mealNameEl.textContent = planName;
+      if (mealNameEl) {
+        if (pricing.hasDiscount) {
+          mealNameEl.innerHTML = `${escapeHtml(planName)} <span style="font-size: 8px; font-weight: 800; background: #dcfce7; color: #15803d; padding: 1px 5px; border-radius: 4px; border: 1px solid #bbf7d0; text-transform: uppercase;"><i class="fa-solid fa-tag"></i> ${pricing.discountText}</span>`;
+        } else {
+          mealNameEl.textContent = planName;
+        }
+      }
       if (mealRateLabel) {
         const rmStr = roomCount > 1 ? ` (${roomCount} Rooms)` : '';
-        if (planPrice > 0) {
+        if (pricing.hasDiscount) {
+          mealRateLabel.innerHTML = `<span style="text-decoration: line-through; opacity: 0.65; margin-right: 4px;">₹ ${pricing.originalPrice.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span><strong style="color: #059669; font-weight: 800;">₹ ${pricing.effectivePrice.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</strong> x ${nights} ${nights === 1 ? 'Night' : 'Nights'}${rmStr}`;
+        } else if (planPrice > 0) {
           mealRateLabel.textContent = `₹ ${planPrice.toLocaleString('en-IN')} x ${nights} ${nights === 1 ? 'Night' : 'Nights'}${rmStr}`;
         } else {
           mealRateLabel.textContent = `Complimentary / Included`;
         }
       }
       if (mealDisplay) {
-        mealDisplay.textContent = planPrice > 0 
-          ? `+ ₹ ${totalMealPlan.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-          : `₹ 0.00`;
+        if (pricing.hasDiscount) {
+          const origTotal = pricing.originalPrice * nights * roomCount;
+          mealDisplay.innerHTML = `<span style="text-decoration: line-through; font-size: 11px; opacity: 0.6; margin-right: 5px; font-weight: 600;">+ ₹ ${origTotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span><span style="color: #059669; font-weight: 900;">+ ₹ ${totalMealPlan.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>`;
+        } else {
+          mealDisplay.textContent = planPrice > 0 
+            ? `+ ₹ ${totalMealPlan.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+            : `₹ 0.00`;
+        }
       }
       if (mealAmtInp) mealAmtInp.value = totalMealPlan.toFixed(2);
 
@@ -2642,6 +2694,7 @@
       guests: guests,
       payment_mode_id: paymentModeId,
       plan_id: planId,
+      meal_plan_amount: form.querySelector('input[name="meal_plan_amount"]')?.value || 0,
       discount_type: discountType,
       discount_percentage: discountPercentage,
       discount_amount: discountAmount,
@@ -2776,6 +2829,145 @@
       .replace(/'/g, '&#039;');
   }
 
+  function getCompanyMealDiscount(planId) {
+    if (!planId) return null;
+    const checkedRadio = document.querySelector('input[name="res_type"]:checked');
+    const type = (checkedRadio?.dataset?.slug || checkedRadio?.value || '').toLowerCase();
+    if (type !== 'company') return null;
+
+    const compSelect = document.getElementById('company-select');
+    if (!compSelect || compSelect.selectedIndex < 0) return null;
+    const opt = compSelect.options[compSelect.selectedIndex];
+    if (!opt || !opt.value || opt.value === 'new') return null;
+
+    let discounts = [];
+    try {
+      const raw = opt.dataset.mealDiscounts;
+      if (raw) {
+        discounts = typeof raw === 'string' ? JSON.parse(raw) : raw;
+      }
+    } catch (e) {
+      console.error('Error parsing company meal discounts:', e);
+    }
+
+    if (!Array.isArray(discounts)) return null;
+
+    const match = discounts.find(d => {
+      const pid = d.meal_plan_id !== undefined ? d.meal_plan_id : d.plan_id;
+      return String(pid) === String(planId);
+    });
+    if (!match) return null;
+
+    const val = parseFloat(match.discount_value) || 0;
+    if (val <= 0) return null;
+
+    return {
+      discount_type: match.discount_type || 'percentage',
+      discount_value: val
+    };
+  }
+
+  function getEffectivePlanPricing(planId, basePrice) {
+    const originalPrice = parseFloat(basePrice) || 0;
+    const disc = getCompanyMealDiscount(planId);
+    if (!disc || originalPrice <= 0) {
+      return {
+        hasDiscount: false,
+        originalPrice: originalPrice,
+        effectivePrice: originalPrice,
+        discountText: ''
+      };
+    }
+
+    let effPrice = originalPrice;
+    let tag = '';
+    if (disc.discount_type === 'percentage') {
+      const cut = (originalPrice * disc.discount_value) / 100;
+      effPrice = Math.max(0, originalPrice - cut);
+      tag = `${disc.discount_value}% OFF`;
+    } else {
+      effPrice = Math.max(0, originalPrice - disc.discount_value);
+      tag = `₹${disc.discount_value} OFF`;
+    }
+
+    return {
+      hasDiscount: true,
+      originalPrice: originalPrice,
+      effectivePrice: effPrice,
+      discountText: tag,
+      discountType: disc.discount_type,
+      discountValue: disc.discount_value
+    };
+  }
+
+  function formatPlanOption(opt) {
+    if (!opt.id) return opt.text;
+    const elem = opt.element;
+    if (!elem) return opt.text;
+
+    const planName = elem.dataset.name || (opt.text ? opt.text.split('(')[0].trim() : 'Meal Plan');
+    const basePrice = parseFloat(elem.dataset.price) || 0;
+    const pricing = getEffectivePlanPricing(opt.id, basePrice);
+
+    if (basePrice <= 0) {
+      return $(`
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 3px 0; width: 100%;">
+          <span style="font-weight: 700; color: #1e293b;">${escapeHtml(planName)}</span>
+          <span style="font-size: 10px; font-weight: 700; color: #64748b; background: #f1f5f9; padding: 2px 6px; border-radius: 4px;">Complimentary</span>
+        </div>
+      `);
+    }
+
+    if (pricing.hasDiscount) {
+      return $(`
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 3px 0; width: 100%;">
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <span style="font-weight: 700; color: #1e293b;">${escapeHtml(planName)}</span>
+            <span style="font-size: 9px; font-weight: 800; background: #dcfce7; color: #15803d; padding: 1px 6px; border-radius: 4px; border: 1px solid #bbf7d0;">${pricing.discountText}</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 6px; font-family: monospace;">
+            <span style="font-size: 11px; color: #94a3b8; text-decoration: line-through;">₹ ${pricing.originalPrice.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+            <strong style="font-size: 13px; color: #059669; font-weight: 800;">₹ ${pricing.effectivePrice.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</strong>
+          </div>
+        </div>
+      `);
+    }
+
+    return $(`
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 3px 0; width: 100%;">
+        <span style="font-weight: 700; color: #1e293b;">${escapeHtml(planName)}</span>
+        <strong style="font-size: 12px; color: #475569; font-weight: 800; font-family: monospace;">₹ ${pricing.originalPrice.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</strong>
+      </div>
+    `);
+  }
+
+  function formatPlanSelection(opt) {
+    if (!opt || !opt.id) return opt ? (opt.text || '') : '';
+    const elem = opt.element;
+    if (!elem) return opt.text;
+
+    const planName = elem.dataset.name || (opt.text ? opt.text.split('(')[0].trim() : 'Meal Plan');
+    const basePrice = parseFloat(elem.dataset.price) || 0;
+    const pricing = getEffectivePlanPricing(opt.id, basePrice);
+
+    if (basePrice <= 0) {
+      return $('<span>' + escapeHtml(planName) + ' <span style="color:#64748b; font-size:11px;">(Complimentary)</span></span>');
+    }
+
+    if (pricing.hasDiscount) {
+      return $(`
+        <span style="display: inline-flex; align-items: center; gap: 5px; font-weight: 700;">
+          <span>${escapeHtml(planName)}</span>
+          <span style="font-family: monospace; font-size: 11px; color: #94a3b8; text-decoration: line-through; margin-left: 2px;">₹ ${pricing.originalPrice.toFixed(2)}</span>
+          <strong style="font-family: monospace; font-size: 12px; color: #059669; font-weight: 800;">₹ ${pricing.effectivePrice.toFixed(2)}</strong>
+          <span style="font-size: 9px; font-weight: 800; background: #dcfce7; color: #15803d; padding: 1px 5px; border-radius: 3px; border: 1px solid #bbf7d0;">${pricing.discountText}</span>
+        </span>
+      `);
+    }
+
+    return $('<span>' + escapeHtml(planName) + ' <span style="font-family: monospace; font-weight: 800; color: #334155;">(₹ ' + pricing.originalPrice.toFixed(2) + ')</span></span>');
+  }
+
   function initPlanSelect2() {
     if (typeof $ !== 'undefined' && $.fn.select2) {
       const planSelect = $('#plan-id-select');
@@ -2785,7 +2977,10 @@
             dropdownParent: $('#reserve-modal'),
             placeholder: '-- Select Meal Plan --',
             allowClear: true,
-            width: '100%'
+            width: '100%',
+            templateResult: formatPlanOption,
+            templateSelection: formatPlanSelection,
+            escapeMarkup: function(m) { return m; }
           });
         }
         planSelect.off('change.planCalc').on('change.planCalc', function() {
@@ -2795,8 +2990,47 @@
     }
   }
 
+  function refreshPlanSelectDisplay() {
+    // 1. Update native option texts
+    const planSelNative = document.getElementById('plan-id-select');
+    if (planSelNative) {
+      for (let i = 0; i < planSelNative.options.length; i++) {
+        const opt = planSelNative.options[i];
+        if (!opt.value) continue;
+        const basePrice = parseFloat(opt.dataset.price) || 0;
+        const pName = opt.dataset.name || opt.text.split('(')[0].trim();
+        const pricing = getEffectivePlanPricing(opt.value, basePrice);
+        if (pricing.hasDiscount) {
+          opt.text = `${pName} (₹${pricing.effectivePrice.toFixed(2)} - was ₹${pricing.originalPrice.toFixed(2)})`;
+        } else if (basePrice > 0) {
+          opt.text = `${pName} (₹${basePrice.toFixed(2)})`;
+        } else {
+          opt.text = `${pName} (Complimentary)`;
+        }
+      }
+    }
+
+    // 2. Re-render Select2 if active
+    if (typeof $ !== 'undefined' && $.fn.select2) {
+      const planSelect = $('#plan-id-select');
+      if (planSelect.length && planSelect.hasClass('select2-hidden-accessible')) {
+        const currentVal = planSelect.val();
+        planSelect.select2('destroy');
+        initPlanSelect2();
+        if (currentVal) {
+          planSelect.val(currentVal).trigger('change.select2');
+        }
+      }
+    }
+  }
+
   window.addEventListener('DOMContentLoaded', () => {
     setInitialDateTime();
     initPlanSelect2();
+    if (typeof $ !== 'undefined') {
+      $('#company-select').off('change.corpSync').on('change.corpSync', function() {
+        toggleNewCompany(this);
+      });
+    }
   });
 </script>

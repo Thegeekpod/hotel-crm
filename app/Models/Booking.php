@@ -28,6 +28,10 @@ class Booking extends Model
         'new_company_gstin',
         'new_company_phone',
         'plan_id',
+        'plan_name',
+        'plan_original_price',
+        'plan_price',
+        'plan_discount_amount',
         'checkin_date',
         'checkin_time',
         'reserve_date',
@@ -69,6 +73,9 @@ class Booking extends Model
         'reserve_date' => 'date',
         'checkout_date' => 'date',
         'total_nights' => 'integer',
+        'plan_original_price' => 'decimal:2',
+        'plan_price' => 'decimal:2',
+        'plan_discount_amount' => 'decimal:2',
         'room_rate' => 'decimal:2',
         'total_amount' => 'decimal:2',
         'discount_percentage' => 'float',
@@ -91,6 +98,35 @@ class Booking extends Model
     public function getReserveTimeAttribute($value)
     {
         return $value ?: ($this->attributes['checkin_time'] ?? null);
+    }
+
+    public function getPlanNameAttribute($value)
+    {
+        return !empty($value) ? $value : ($this->plan?->plan_name ?? 'None');
+    }
+
+    public function getPlanPriceAttribute($value)
+    {
+        if ($value !== null) {
+            return (float)$value;
+        }
+        return (float)($this->plan?->price ?? 0.00);
+    }
+
+    public function getPlanOriginalPriceAttribute($value)
+    {
+        if ($value !== null) {
+            return (float)$value;
+        }
+        return (float)($this->plan?->price ?? 0.00);
+    }
+
+    public function getPlanDiscountAmountAttribute($value)
+    {
+        if ($value !== null) {
+            return (float)$value;
+        }
+        return 0.00;
     }
 
     /**

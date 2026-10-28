@@ -1238,10 +1238,13 @@
                         <span>Checked Out</span>
                       </button>
                     @else
+                      @php
+                        $isCompanyReg = (strtolower($item->registrationType?->name ?? '') === 'company' || !empty($item->company_id));
+                      @endphp
                       <button type="button" 
                               class="btn-action-checkout" 
-                              onclick="handleRowCheckout({{ $item->id }}, {{ $isSettled ? 'true' : 'false' }}, {{ $balanceVal }}, '{{ addslashes($primaryGuestName) }}', '{{ $item->reserve_id ?: ('RES-' . $item->id) }}', '{{ $item->status }}')" 
-                              title="Check out booking (verifies settlement first)">
+                              onclick="handleRowCheckout({{ $item->id }}, {{ $isSettled ? 'true' : 'false' }}, {{ $balanceVal }}, '{{ addslashes($primaryGuestName) }}', '{{ $item->reserve_id ?: ('RES-' . $item->id) }}', '{{ $item->status }}', {{ $isCompanyReg ? 'true' : 'false' }})" 
+                              title="Check out booking">
                         <i class="fa-solid fa-right-from-bracket"></i>
                         <span>Checkout</span>
                       </button>
@@ -1949,8 +1952,28 @@
       }
       const elGuests = document.getElementById('fmdl-total-guests-count');
       if (elGuests) elGuests.textContent = `${folio.total_guests_count || 1} Person(s) (${(folio.rooms || []).length} Room(s))`;
+
+      const formatCheckoutMealPlanHtml = (name, price, origPrice) => {
+        if (!name) return 'EP';
+        const clean = String(name).trim();
+        const lower = clean.toLowerCase();
+        const effPrice = Number(price || 0);
+        const original = Number(origPrice !== undefined ? origPrice : effPrice);
+        if (lower === 'none' || lower === 'no meal plan' || lower === 'room only (ep)' || lower === 'ep' || (effPrice <= 0 && original <= 0)) {
+          return typeof escapeHtml === 'function' ? escapeHtml(clean) : clean;
+        }
+        const esc = typeof escapeHtml === 'function' ? escapeHtml(clean) : clean;
+        if (original > effPrice) {
+          return `${esc} (+<span style="text-decoration: line-through; opacity: 0.65; margin-right: 3px;">₹${original.toLocaleString('en-IN')}</span><strong>₹${effPrice.toLocaleString('en-IN')}</strong>)`;
+        }
+        if (effPrice > 0) {
+          return `${esc} (+₹${effPrice.toLocaleString('en-IN')})`;
+        }
+        return esc;
+      };
+
       const elPlan = document.getElementById('fmdl-plan-name');
-      if (elPlan) elPlan.textContent = folio.plan_name || 'EP';
+      if (elPlan) elPlan.innerHTML = formatCheckoutMealPlanHtml(folio.plan_name, folio.plan_price, folio.plan_original_price);
       const elNights = document.getElementById('fmdl-nights-sched');
       if (elNights) elNights.textContent = `${folio.total_nights || 1} Night(s) Stay`;
       const elResMode = document.getElementById('fmdl-reservation-mode');
@@ -1999,7 +2022,7 @@
       const elResModeVal = document.getElementById('fmdl-resmode-val');
       if (elResModeVal) elResModeVal.textContent = folio.reservation_mode || 'Front Desk';
       const elMealVal = document.getElementById('fmdl-mealplan-val');
-      if (elMealVal) elMealVal.textContent = folio.plan_name || 'Room Only (EP)';
+      if (elMealVal) elMealVal.innerHTML = formatCheckoutMealPlanHtml(folio.plan_name, folio.plan_price, folio.plan_original_price);
 
       // Corporate Account Block
       const compRow = document.getElementById('fmdl-company-row');
@@ -2384,7 +2407,9 @@
   function executeFolioCheckout() {
     if (!activeFolioData) return;
 
-    if (activeFolioData.balance > 0.01) {
+    const isCompanyFolio = (activeFolioData.registration_type || '').toLowerCase() === 'company' || !!activeFolioData.company;
+
+    if (activeFolioData.balance > 0.01 && !isCompanyFolio) {
       Swal.fire({
         icon: 'warning',
         title: 'Outstanding Balance Due',
@@ -2395,9 +2420,16 @@
       return;
     }
 
+    const companyNote = (isCompanyFolio && activeFolioData.balance > 0.01)
+      ? `<div style="background: #fdf4ff; border: 1px solid #f0abfc; color: #86198f; padding: 6px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; margin-bottom: 10px; text-align: left;"><i class="fa-solid fa-building"></i> Company Billing Account: Outstanding balance of ${formatINR(activeFolioData.balance)} will remain on corporate ledger without pre-settlement.</div>`
+      : '';
+
     Swal.fire({
       title: 'Confirm Room Check-Out',
-      html: `Are you sure you want to Check Out Booking <strong>#${escapeHtml(activeFolioData.reserve_id)}</strong> for <strong>${escapeHtml(activeFolioData.primary_guest?.name || 'Guest')}</strong>?<br><br><span style="font-size: 12px; color: #64748b;">The room status will be automatically scheduled for Housekeeping.</span>`,
+      html: `
+        ${companyNote}
+        Are you sure you want to Check Out Booking <strong>#${escapeHtml(activeFolioData.reserve_id)}</strong> for <strong>${escapeHtml(activeFolioData.primary_guest?.name || 'Guest')}</strong>?<br><br><span style="font-size: 12px; color: #64748b;">The room status will be automatically scheduled for Housekeeping.</span>
+      `,
       icon: 'question',
       showCancelButton: true,
       confirmButtonColor: '#10b981',
@@ -2590,7 +2622,7 @@
    * - If settled: confirms & automatically executes check out with success alert
    * - If not settled: informs user that dues are pending
    */
-  function handleRowCheckout(bookingId, isSettled, balanceVal, primaryGuestName, reserveId, status) {
+  function handleRowCheckout(bookingId, isSettled, balanceVal, primaryGuestName, reserveId, status, isCompany) {
     if (status === 'Checked Out') {
       Swal.fire({
         icon: 'info',
@@ -2601,7 +2633,9 @@
       return;
     }
 
-    if (!isSettled && balanceVal > 0.01) {
+    const canCheckout = isSettled || !!isCompany;
+
+    if (!canCheckout && balanceVal > 0.01) {
       Swal.fire({
         icon: 'warning',
         title: 'Not Settled Yet',
@@ -2612,10 +2646,13 @@
       return;
     }
 
-    // Guest is settled!
+    const companyNote = (isCompany && balanceVal > 0.01)
+      ? `<div style="background: #fdf4ff; border: 1px solid #f0abfc; color: #86198f; padding: 6px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; margin-bottom: 10px; text-align: left;"><i class="fa-solid fa-building"></i> Company Billing: Balance of ₹ ${Number(balanceVal).toFixed(2)} will remain on corporate ledger.</div>`
+      : 'Guest payments are settled.<br><br>';
+
     Swal.fire({
       title: 'Confirm Check-Out',
-      html: `Guest payments are settled.<br><br>Proceed to check out Booking <strong>#${escapeHtml(reserveId)}</strong> for <strong>${escapeHtml(primaryGuestName)}</strong>?<br><br><span style="font-size: 12px; color: #64748b;">All assigned room(s) will be automatically scheduled for Housekeeping.</span>`,
+      html: `${companyNote}Proceed to check out Booking <strong>#${escapeHtml(reserveId)}</strong> for <strong>${escapeHtml(primaryGuestName)}</strong>?<br><br><span style="font-size: 12px; color: #64748b;">All assigned room(s) will be automatically scheduled for Housekeeping.</span>`,
       icon: 'question',
       showCancelButton: true,
       confirmButtonColor: '#10b981',
@@ -2721,7 +2758,9 @@
     document.getElementById('ecrm-reserve-id').textContent = folio.reserve_id || ('RES-' + folio.id);
     document.getElementById('ecrm-primary-guest').textContent = folio.primary_guest?.name || 'Guest';
 
+    const isCompanyFolio = (folio.registration_type || '').toLowerCase() === 'company' || !!folio.company;
     const isSettled = (Number(folio.balance) <= 0.01) || (folio.status || '').toLowerCase() === 'settlement done';
+    const canEarlyCheckout = isSettled || isCompanyFolio;
     const statusBadge = document.getElementById('ecrm-status-badge');
     const noticeEl = document.getElementById('ecrm-settle-notice');
 
@@ -2732,6 +2771,16 @@
       noticeEl.style.border = '1px solid #a7f3d0';
       noticeEl.style.color = '#047857';
       noticeEl.innerHTML = '<div><i class="fa-solid fa-check-circle"></i> <strong>Payments Cleared:</strong> All dues are settled. You can early check-out individual occupants below.</div>';
+    } else if (isCompanyFolio) {
+      statusBadge.className = 'badge-settle-pill settled';
+      statusBadge.style.background = '#fdf4ff';
+      statusBadge.style.borderColor = '#f0abfc';
+      statusBadge.style.color = '#86198f';
+      statusBadge.innerHTML = `<i class="fa-solid fa-building"></i> Company Account (₹ ${Number(folio.balance).toFixed(2)} Billed)`;
+      noticeEl.style.background = '#fdf4ff';
+      noticeEl.style.border = '1px solid #f0abfc';
+      noticeEl.style.color = '#86198f';
+      noticeEl.innerHTML = `<div><i class="fa-solid fa-building"></i> <strong>Company Corporate Account:</strong> Outstanding balance of <strong>₹ ${Number(folio.balance).toFixed(2)}</strong> is retained on corporate ledger. Occupants can early check-out without pre-settlement.</div>`;
     } else {
       statusBadge.className = 'badge-settle-pill unsettled';
       statusBadge.innerHTML = `<i class="fa-solid fa-clock"></i> Unsettled (₹ ${Number(folio.balance).toFixed(2)} Due)`;
@@ -2797,7 +2846,7 @@
                   <i class="fa-solid fa-circle-check" style="color: #10b981;"></i> Checked Out ${dtText ? '(' + escapeHtml(dtText) + ')' : ''}
                 </span>
               `;
-            } else if (!isSettled) {
+            } else if (!canEarlyCheckout) {
               actionMarkup = `
                 <button type="button" 
                         class="btn-early-checkout" 

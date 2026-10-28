@@ -178,7 +178,7 @@ class ArrivalController extends Controller
         $reserveId = $booking->reserve_id;
         $settleNumber = $booking->settle_number ?: $booking->folio_number;
 
-        $allRelatedBookings = Booking::with(['room', 'guest', 'settlements'])
+        $allRelatedBookings = Booking::with(['room', 'guest', 'settlements', 'registrationType'])
             ->where(function ($q) use ($masterBookingId, $reserveId, $settleNumber) {
                 $q->where('id', $masterBookingId)
                   ->orWhere('primary_booking_id', $masterBookingId);
@@ -212,9 +212,13 @@ class ArrivalController extends Controller
             }
         }
 
-        // Prevent checkout if there is still outstanding balance on any related booking
+        // Prevent checkout if there is still outstanding balance on any related booking (Allowed without settlement if registration type is Company)
+        $isCompanyReg = $allRelatedBookings->contains(function ($b) {
+            $regName = strtolower(trim($b->registrationType?->name ?? ''));
+            return $regName === 'company' || !empty($b->company_id);
+        });
         $totalOutstanding = $allRelatedBookings->sum(fn($b) => (float)$b->balance);
-        if ($newStatus === 'Checked Out' && $totalOutstanding > 0.01) {
+        if ($newStatus === 'Checked Out' && $totalOutstanding > 0.01 && !$isCompanyReg) {
             return response()->json([
                 'success' => false,
                 'message' => 'Cannot check out reservation with outstanding balance of ₹ ' . number_format($totalOutstanding, 2) . '. Complete settlement first.',

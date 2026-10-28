@@ -220,9 +220,11 @@ class NightAuditController extends Controller
             $mealPlansList[] = [
                 'room_number' => $b->room?->room_number ? ('R' . preg_replace('/^r[-_\s]?/i', '', trim($b->room->room_number))) : 'Unassigned',
                 'guest_name' => ($b->guest?->title?->name ? $b->guest->title->name . ' ' : '') . ($b->guest?->guest_name ?? 'Guest'),
-                'plan_name' => $planName,
+                'plan_name' => $b->plan_name ?: $planName,
                 'plan_code' => $planCode,
-                'plan_price' => (float)($b->plan?->price ?? 0),
+                'plan_price' => (float)($b->plan_price ?? ($b->plan?->price ?? 0)),
+                'plan_original_price' => (float)($b->plan_original_price ?? ($b->plan?->price ?? 0)),
+                'plan_discount_amount' => (float)($b->plan_discount_amount ?? 0),
                 'pax' => $pax
             ];
         }

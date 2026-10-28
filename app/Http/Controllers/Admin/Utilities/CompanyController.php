@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin\Utilities;
 
 use App\Http\Controllers\Controller;
 use App\Models\Company;
+use App\Models\Plan;
 use Illuminate\Http\Request;
 
 class CompanyController extends Controller
@@ -29,16 +30,18 @@ class CompanyController extends Controller
         }
 
         $items = $query->get();
+        $mealPlans = Plan::where('status', 'Active')->orderBy('id')->get();
 
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
                 'success' => true,
                 'data' => $items,
                 'count' => $items->count(),
+                'meal_plans' => $mealPlans,
             ]);
         }
 
-        return view('admin.utilities.frontoffice.company', compact('items'));
+        return view('admin.utilities.frontoffice.company', compact('items', 'mealPlans'));
     }
 
     public function store(Request $request)
@@ -50,6 +53,10 @@ class CompanyController extends Controller
             'phone' => 'nullable|string|max:30',
             'discount_type' => 'required|string|in:percentage,amount',
             'discount_value' => 'nullable|numeric|min:0',
+            'meal_discounts' => 'nullable|array',
+            'meal_discounts.*.meal_plan_id' => 'required|integer',
+            'meal_discounts.*.discount_type' => 'required|string|in:percentage,amount',
+            'meal_discounts.*.discount_value' => 'required|numeric|min:0',
             'status' => 'required|string|in:Active,Inactive',
         ]);
 
@@ -61,6 +68,31 @@ class CompanyController extends Controller
         }
 
         $validated['discount_value'] = isset($validated['discount_value']) ? (float)$validated['discount_value'] : 0.00;
+
+        // Process meal discounts array
+        $mealDiscounts = [];
+        if (!empty($validated['meal_discounts']) && is_array($validated['meal_discounts'])) {
+            foreach ($validated['meal_discounts'] as $md) {
+                $planId = isset($md['meal_plan_id']) ? (int)$md['meal_plan_id'] : 0;
+                $dType = isset($md['discount_type']) && in_array($md['discount_type'], ['percentage', 'amount']) ? $md['discount_type'] : 'percentage';
+                $dVal = isset($md['discount_value']) ? (float)$md['discount_value'] : 0.00;
+
+                if ($planId > 0) {
+                    if ($dType === 'percentage' && $dVal > 100) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'Meal discount percentage cannot exceed 100%.',
+                        ], 422);
+                    }
+                    $mealDiscounts[] = [
+                        'meal_plan_id' => $planId,
+                        'discount_type' => $dType,
+                        'discount_value' => $dVal,
+                    ];
+                }
+            }
+        }
+        $validated['meal_discounts'] = !empty($mealDiscounts) ? $mealDiscounts : null;
 
         $item = Company::create($validated);
 
@@ -85,6 +117,10 @@ class CompanyController extends Controller
             'phone' => 'nullable|string|max:30',
             'discount_type' => 'required|string|in:percentage,amount',
             'discount_value' => 'nullable|numeric|min:0',
+            'meal_discounts' => 'nullable|array',
+            'meal_discounts.*.meal_plan_id' => 'required|integer',
+            'meal_discounts.*.discount_type' => 'required|string|in:percentage,amount',
+            'meal_discounts.*.discount_value' => 'required|numeric|min:0',
             'status' => 'required|string|in:Active,Inactive',
         ]);
 
@@ -96,6 +132,31 @@ class CompanyController extends Controller
         }
 
         $validated['discount_value'] = isset($validated['discount_value']) ? (float)$validated['discount_value'] : 0.00;
+
+        // Process meal discounts array
+        $mealDiscounts = [];
+        if (!empty($validated['meal_discounts']) && is_array($validated['meal_discounts'])) {
+            foreach ($validated['meal_discounts'] as $md) {
+                $planId = isset($md['meal_plan_id']) ? (int)$md['meal_plan_id'] : 0;
+                $dType = isset($md['discount_type']) && in_array($md['discount_type'], ['percentage', 'amount']) ? $md['discount_type'] : 'percentage';
+                $dVal = isset($md['discount_value']) ? (float)$md['discount_value'] : 0.00;
+
+                if ($planId > 0) {
+                    if ($dType === 'percentage' && $dVal > 100) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'Meal discount percentage cannot exceed 100%.',
+                        ], 422);
+                    }
+                    $mealDiscounts[] = [
+                        'meal_plan_id' => $planId,
+                        'discount_type' => $dType,
+                        'discount_value' => $dVal,
+                    ];
+                }
+            }
+        }
+        $validated['meal_discounts'] = !empty($mealDiscounts) ? $mealDiscounts : null;
 
         $item->update($validated);
 

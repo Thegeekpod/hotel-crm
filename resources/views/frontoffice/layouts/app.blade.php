@@ -618,7 +618,7 @@
                     <select name="company_id" id="company-select" style="width:100%; height:38px; padding:6px 12px; font-size:13px; border:1px solid #10b981; border-radius: 8px; background: #ffffff; color: #1e293b; font-weight: 700; box-sizing: border-box;" onchange="toggleNewCompany(this)">
                       <option value="">-- Select Corporate Account --</option>
                       @foreach($companies ?? \App\Models\Company::where('status', 'Active')->get() as $cmp)
-                        <option value="{{ $cmp->id }}" data-discount-type="{{ $cmp->discount_type ?? 'percentage' }}" data-discount-value="{{ (float)($cmp->discount_value ?? 0) }}">{{ $cmp->name }}</option>
+                        <option value="{{ $cmp->id }}" data-discount-type="{{ $cmp->discount_type ?? 'percentage' }}" data-discount-value="{{ (float)($cmp->discount_value ?? 0) }}" data-meal-discounts="{{ json_encode($cmp->meal_discounts ?? []) }}">{{ $cmp->name }}</option>
                       @endforeach
                       <option value="new" style="color: #4f46e5; font-weight: 900;">+ Register New Company</option>
                     </select>

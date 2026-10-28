@@ -58,6 +58,10 @@ class Guest extends Model
         'payable_amount',
         'advance_amount',
         'balance',
+        'plan_name',
+        'plan_price',
+        'plan_original_price',
+        'plan_discount_amount',
     ];
 
     /**
@@ -181,6 +185,26 @@ class Guest extends Model
     public function getPlanAttribute()
     {
         return $this->latestBooking?->plan;
+    }
+
+    public function getPlanNameAttribute()
+    {
+        return $this->latestBooking?->plan_name ?? ($this->latestBooking?->plan?->plan_name ?? 'None');
+    }
+
+    public function getPlanPriceAttribute()
+    {
+        return (float)($this->latestBooking?->plan_price ?? ($this->latestBooking?->plan?->price ?? 0.00));
+    }
+
+    public function getPlanOriginalPriceAttribute()
+    {
+        return (float)($this->latestBooking?->plan_original_price ?? ($this->latestBooking?->plan?->price ?? 0.00));
+    }
+
+    public function getPlanDiscountAmountAttribute()
+    {
+        return (float)($this->latestBooking?->plan_discount_amount ?? 0.00);
     }
 
     public function getPaymentModeAttribute()

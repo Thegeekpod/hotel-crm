@@ -434,7 +434,7 @@ class FolioController extends Controller
 
     public function checkout(Request $request, $id)
     {
-        $booking = Booking::with(['guest', 'additionalBookings', 'room'])->find($id);
+        $booking = Booking::with(['guest', 'additionalBookings', 'room', 'registrationType'])->find($id);
         if (!$booking) {
             return response()->json(['success' => false, 'error' => 'Booking record not found'], 404);
         }
@@ -443,8 +443,11 @@ class FolioController extends Controller
             return response()->json(['success' => false, 'error' => 'This reservation is already Checked Out and locked.'], 400);
         }
 
+        $regName = strtolower(trim($booking->registrationType?->name ?? ''));
+        $isCompanyReg = ($regName === 'company' || !empty($booking->company_id));
+
         $currentBalance = (float)$booking->balance;
-        if ($currentBalance > 0.01) {
+        if ($currentBalance > 0.01 && !$isCompanyReg) {
             return response()->json([
                 'success' => false,
                 'error' => 'Cannot check out reservation with outstanding balance of ₹ ' . number_format($currentBalance, 2) . '. Complete settlement first.'
@@ -527,7 +530,7 @@ class FolioController extends Controller
      */
     public function earlyCheckoutGuest(Request $request, $bookingId)
     {
-        $occupantBooking = Booking::with(['guest', 'room'])->find($bookingId);
+        $occupantBooking = Booking::with(['guest', 'room', 'registrationType'])->find($bookingId);
         if (!$occupantBooking) {
             return response()->json(['success' => false, 'error' => 'Guest booking record not found.'], 404);
         }
@@ -536,12 +539,15 @@ class FolioController extends Controller
             return response()->json(['success' => false, 'error' => 'This guest is already checked out.'], 400);
         }
 
-        // Validate that reservation settlement is completed before early checkout
+        // Validate that reservation settlement is completed before early checkout (Allowed without settlement if registration type is Company)
         $primaryBooking = $occupantBooking->primary_booking_id
-            ? Booking::find($occupantBooking->primary_booking_id)
+            ? Booking::with('registrationType')->find($occupantBooking->primary_booking_id)
             : $occupantBooking;
 
-        if ($primaryBooking && (float)$primaryBooking->balance > 0.01 && !in_array($primaryBooking->status, ['Settlement Done', 'Checked Out'])) {
+        $regName = strtolower(trim($primaryBooking?->registrationType?->name ?? ($occupantBooking->registrationType?->name ?? '')));
+        $isCompanyReg = ($regName === 'company' || !empty($primaryBooking?->company_id) || !empty($occupantBooking->company_id));
+
+        if ($primaryBooking && (float)$primaryBooking->balance > 0.01 && !in_array($primaryBooking->status, ['Settlement Done', 'Checked Out']) && !$isCompanyReg) {
             return response()->json([
                 'success' => false,
                 'error' => 'Cannot early check out guest until all reservation settlement is completed. Outstanding balance: ₹ ' . number_format($primaryBooking->balance, 2)
@@ -1200,9 +1206,11 @@ class FolioController extends Controller
             'rooms' => array_values($roomsMap),
             'total_nights' => (int)($booking->total_nights ?: 1),
             'room_rate' => (float)$booking->room_rate,
-            'plan_name' => $booking->plan?->plan_name ?: 'Room Only (EP)',
+            'plan_name' => $booking->plan_name ?: ($booking->plan?->plan_name ?: 'Room Only (EP)'),
             'plan_code' => $booking->plan?->plan_code ?: '',
-            'plan_price' => (float)($booking->plan?->price ?? 0),
+            'plan_price' => (float)($booking->plan_price ?? ($booking->plan?->price ?? 0)),
+            'plan_original_price' => (float)($booking->plan_original_price ?? ($booking->plan?->price ?? 0)),
+            'plan_discount_amount' => (float)($booking->plan_discount_amount ?? 0),
             'total_amount' => (float)$booking->total_amount,
             'room_total_amount' => (float)$booking->total_amount,
             'effective_gross' => $effectiveGross,

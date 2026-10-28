@@ -388,6 +388,58 @@
     box-shadow: 0 4px 10px rgba(124, 58, 237, 0.3);
   }
 
+  /* Table Action Swipe Button */
+  .btn-action-swipe {
+    height: 32px;
+    padding: 0 10px;
+    border-radius: 8px;
+    border: 1px solid #c7d2fe;
+    background: #eef2ff;
+    color: #4338ca;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    text-decoration: none;
+  }
+  .btn-action-swipe:hover {
+    background: #4338ca;
+    color: #ffffff;
+    border-color: #4338ca;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(67, 56, 202, 0.25);
+  }
+
+  /* Smooth pulse & glow when redirected to swipe section inside modal */
+  @keyframes swipeSectionGlow {
+    0% {
+      box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.45);
+      border-color: #6366f1;
+    }
+    50% {
+      box-shadow: 0 0 0 8px rgba(79, 70, 229, 0.2);
+      border-color: #4f46e5;
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgba(79, 70, 229, 0);
+    }
+  }
+  .pulse-swipe-highlight {
+    animation: swipeSectionGlow 1.2s ease-in-out 2;
+    border-color: #6366f1 !important;
+  }
+  @keyframes swipeBtnBounce {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.08); box-shadow: 0 4px 12px rgba(67, 56, 202, 0.4); }
+  }
+  .pulse-swipe-btn {
+    animation: swipeBtnBounce 0.8s ease-in-out 2;
+  }
+
   /* Pagination styles */
   .pms-table-pagination {
     display: flex;
@@ -1083,7 +1135,7 @@
               <th style="min-width: 135px; white-space: nowrap;">Check-in</th>
               <th style="min-width: 135px; white-space: nowrap;">Check-out</th>
               <th style="min-width: 100px; text-align: center; white-space: nowrap;">Status</th>
-              <th style="width: 70px; text-align: center; white-space: nowrap;">Action</th>
+              <th style="min-width: 130px; text-align: center; white-space: nowrap;">Action</th>
             </tr>
           </thead>
           <tbody id="folio-table-tbody">
@@ -1303,7 +1355,7 @@
                   @endif
                 </td>
 
-                <!-- 10. Action: View Details Modal & Extend Stay -->
+                <!-- 10. Action: View Details Modal, Swipe & Extend Stay -->
                 <td style="text-align: center; white-space: nowrap;">
                   <div style="display: inline-flex; align-items: center; gap: 6px;">
                     <button type="button" 
@@ -1313,6 +1365,16 @@
                             title="View Full Settlement Dossier (Rooms, Occupants, Billings, Settle &amp; Checkout)">
                       <i class="fa-solid fa-eye" style="pointer-events: none;"></i>
                     </button>
+                    @if(!in_array($item->status, ['Checked Out', 'Cancelled', 'Settlement Done', 'Settled']) && !$isSettled)
+                      <button type="button" 
+                              class="btn-action-swipe" 
+                              data-booking-id="{{ $item->id }}"
+                              onclick="openFolioModalForSwipe({{ $item->id }})" 
+                              title="Swipe / Shift Guest Room">
+                        <i class="fa-solid fa-arrow-right-arrow-left" style="pointer-events: none;"></i>
+                        <span>Swipe</span>
+                      </button>
+                    @endif
                     @if(!in_array($item->status, ['Checked Out', 'Cancelled', 'Settlement Done']))
                       <button type="button" 
                               class="btn-action-extend" 
@@ -1573,7 +1635,7 @@
       </div>
 
       <!-- CARD 3: Allocated Rooms & Registered Occupants Details -->
-      <div class="dossier-card" style="margin-bottom: 16px;">
+      <div class="dossier-card" id="fmdl-card-rooms-occupants" style="margin-bottom: 16px;">
         <div class="dossier-card-title">
           <i class="fa-solid fa-bed"></i> Allocated Rooms &amp; Registered Occupants
         </div>
@@ -2087,14 +2149,14 @@
       .replace(/'/g, '&#039;');
   }
 
-  // Open Folio Modal by Booking ID (forceFresh = true fetches fresh DB data via AJAX)
-  function openFolioModalById(bookingId, forceFresh = false) {
+  // Open Folio Modal by Booking ID (forceFresh = true fetches fresh DB data via AJAX, scrollToSwipe = true scrolls to rooms/occupants swipe section)
+  function openFolioModalById(bookingId, forceFresh = false, scrollToSwipe = false) {
     let folio = (!forceFresh && Array.isArray(window.allFoliosData)) 
       ? window.allFoliosData.find(f => Number(f.id) === Number(bookingId)) 
       : null;
 
     if (folio) {
-      populateAndOpenFolioModal(folio);
+      populateAndOpenFolioModal(folio, scrollToSwipe);
     } else {
       // Fetch fresh via AJAX
       fetch(`{{ url('front-office/folio') }}/${bookingId}/details`, {
@@ -2112,7 +2174,7 @@
           } else {
             window.allFoliosData.push(data.folio);
           }
-          populateAndOpenFolioModal(data.folio);
+          populateAndOpenFolioModal(data.folio, scrollToSwipe);
         } else {
           Swal.fire({
             icon: 'error',
@@ -2134,7 +2196,11 @@
     }
   }
 
-  function populateAndOpenFolioModal(folio) {
+  function openFolioModalForSwipe(bookingId) {
+    openFolioModalById(bookingId, false, true);
+  }
+
+  function populateAndOpenFolioModal(folio, scrollToSwipe = false) {
     if (!folio) return;
     activeFolioData = folio;
 
@@ -2266,10 +2332,42 @@
     }
     document.body.style.overflow = 'hidden';
 
-    // Reset scroll to top
+    // Reset or redirect scroll
     const modalBody = document.getElementById('folio-modal-body');
-    if (modalBody) {
+    if (modalBody && !scrollToSwipe) {
       modalBody.scrollTop = 0;
+    }
+
+    if (scrollToSwipe) {
+      const performScrollToSwipe = () => {
+        const bodyEl = document.getElementById('folio-modal-body');
+        const targetSection = document.getElementById('fmdl-card-rooms-occupants');
+        if (bodyEl && targetSection) {
+          const cardOffset = targetSection.offsetTop;
+          bodyEl.scrollTo({
+            top: Math.max(0, cardOffset - 15),
+            behavior: 'smooth'
+          });
+
+          // Highlight the rooms/occupants card with a pulse effect
+          targetSection.classList.remove('pulse-swipe-highlight');
+          void targetSection.offsetWidth;
+          targetSection.classList.add('pulse-swipe-highlight');
+
+          // Highlight the swipe / shift buttons
+          const swipeBtns = targetSection.querySelectorAll('.btn-room-swipe, .btn-room-swipe-mini');
+          swipeBtns.forEach(btn => btn.classList.add('pulse-swipe-btn'));
+
+          setTimeout(() => {
+            targetSection.classList.remove('pulse-swipe-highlight');
+            swipeBtns.forEach(btn => btn.classList.remove('pulse-swipe-btn'));
+          }, 2500);
+        }
+      };
+
+      // Ensure content is rendered and layout settled
+      setTimeout(performScrollToSwipe, 80);
+      setTimeout(performScrollToSwipe, 260);
     }
   }
 
@@ -2288,7 +2386,8 @@
 
     // Check if reservation has multiple guests and if settlement is complete
     const hasMultiple = totalReservationOccupants > 1;
-    const isSettled = activeFolioData && (Number(activeFolioData.balance) <= 0.01 || (activeFolioData.status || '').toLowerCase() === 'settlement done');
+    const normFolioStatus = (activeFolioData?.status || '').toLowerCase();
+    const isSettled = activeFolioData && (Number(activeFolioData.balance) <= 0.01 || ['settlement done', 'settled'].includes(normFolioStatus));
 
     let html = '';
     rooms.forEach(r => {
@@ -2297,7 +2396,12 @@
         ? `<span style="background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;"><i class="fa-solid fa-broom"></i> Vacated (Housekeeping Dirty)</span>`
         : `<span style="background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;"><i class="fa-solid fa-bed"></i> Reserved / Occupied</span>`;
 
-      const canSwipe = activeFolioData && activeFolioData.status !== 'Checked Out' && activeFolioData.status !== 'Cancelled' && !isVacated && r.room_id;
+      const canSwipe = activeFolioData && 
+        activeFolioData.status !== 'Checked Out' && 
+        activeFolioData.status !== 'Cancelled' && 
+        !isSettled && 
+        !isVacated && 
+        r.room_id;
       const swipeBtnMarkup = canSwipe ? `
         <button type="button" 
                 class="btn-room-swipe" 
@@ -3061,10 +3165,24 @@
       }
     });
 
-    // Delegated click handler for view buttons & booking numbers
+    // Delegated click handler for view buttons, swipe buttons & booking numbers
     document.addEventListener('click', function(e) {
+      const swipeTrigger = e.target.closest('.btn-action-swipe');
+      if (swipeTrigger) {
+        const bookingId = swipeTrigger.getAttribute('data-booking-id');
+        if (bookingId) {
+          e.preventDefault();
+          e.stopPropagation();
+          openFolioModalForSwipe(bookingId);
+        }
+        return;
+      }
+
       const trigger = e.target.closest('.btn-action-view, [data-booking-id], .folio-id-text, .folio-number-sub');
       if (trigger) {
+        if (trigger.closest('.btn-action-extend, .btn-action-swipe, .btn-room-swipe, .btn-room-swipe-mini, .btn-early-checkout')) {
+          return;
+        }
         const bookingId = trigger.getAttribute('data-booking-id');
         if (bookingId) {
           e.preventDefault();
@@ -3790,6 +3908,7 @@
 
   // Explicit window bindings
   window.openFolioModalById = openFolioModalById;
+  window.openFolioModalForSwipe = openFolioModalForSwipe;
   window.populateAndOpenFolioModal = populateAndOpenFolioModal;
   window.closeFolioModal = closeFolioModal;
   window.openEarlyCheckoutConfirmModal = openEarlyCheckoutConfirmModal;

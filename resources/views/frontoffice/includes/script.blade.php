@@ -48,6 +48,8 @@
       try {
         setInitialDateTime();
         initPlanSelect2();
+        if (typeof refreshPlanSelectDisplay === 'function') refreshPlanSelectDisplay();
+        if (typeof calculateReservationBilling === 'function') calculateReservationBilling();
         if (typeof updateReservationStatusUI === 'function') updateReservationStatusUI();
       } catch (e) {
         console.error('Error in setInitialDateTime:', e);
@@ -1601,6 +1603,7 @@
     } else {
       const noticeWrap = document.getElementById('company-discount-applied-text');
       if (noticeWrap) noticeWrap.style.display = 'none';
+      if (typeof refreshPlanSelectDisplay === 'function') refreshPlanSelectDisplay();
       calculateReservationBilling();
     }
 
@@ -1836,6 +1839,9 @@
       if (noticeWrap) noticeWrap.style.display = 'none';
     }
 
+    if (typeof refreshPlanSelectDisplay === 'function') {
+      refreshPlanSelectDisplay();
+    }
     calculateReservationBilling();
   }
 
@@ -2083,8 +2089,13 @@
     const planSel = document.getElementById('plan-id-select');
     const selectedPlanOpt = (planSel && planSel.selectedIndex >= 0) ? planSel.options[planSel.selectedIndex] : null;
     const planIdVal = planSel ? planSel.value : '';
-    const planPrice = (selectedPlanOpt && selectedPlanOpt.dataset.price) ? parseFloat(selectedPlanOpt.dataset.price) : 0;
+    const planBasePrice = (selectedPlanOpt && selectedPlanOpt.dataset.price) ? parseFloat(selectedPlanOpt.dataset.price) : 0;
     const planName = (selectedPlanOpt && planIdVal) ? (selectedPlanOpt.dataset.name || selectedPlanOpt.text.split('(')[0].trim()) : '';
+
+    const pricing = typeof getEffectivePlanPricing === 'function' 
+      ? getEffectivePlanPricing(planIdVal, planBasePrice) 
+      : { hasDiscount: false, originalPrice: planBasePrice, effectivePrice: planBasePrice, discountText: '' };
+    const planPrice = pricing.effectivePrice;
 
     const roomCount = assignedRooms.size > 0 ? assignedRooms.size : 1;
     let totalMealPlan = 0;
@@ -2099,19 +2110,32 @@
     if (planIdVal && planName) {
       totalMealPlan = planPrice * nights * roomCount;
       if (mealCard) mealCard.style.display = 'block';
-      if (mealNameEl) mealNameEl.textContent = planName;
+      if (mealNameEl) {
+        if (pricing.hasDiscount) {
+          mealNameEl.innerHTML = `${escapeHtml(planName)} <span style="font-size: 8px; font-weight: 800; background: #dcfce7; color: #15803d; padding: 1px 5px; border-radius: 4px; border: 1px solid #bbf7d0; text-transform: uppercase;"><i class="fa-solid fa-tag"></i> ${pricing.discountText}</span>`;
+        } else {
+          mealNameEl.textContent = planName;
+        }
+      }
       if (mealRateLabel) {
         const rmStr = roomCount > 1 ? ` (${roomCount} Rooms)` : '';
-        if (planPrice > 0) {
+        if (pricing.hasDiscount) {
+          mealRateLabel.innerHTML = `<span style="text-decoration: line-through; opacity: 0.65; margin-right: 4px;">₹ ${pricing.originalPrice.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span><strong style="color: #059669; font-weight: 800;">₹ ${pricing.effectivePrice.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</strong> x ${nights} ${nights === 1 ? 'Night' : 'Nights'}${rmStr}`;
+        } else if (planPrice > 0) {
           mealRateLabel.textContent = `₹ ${planPrice.toLocaleString('en-IN')} x ${nights} ${nights === 1 ? 'Night' : 'Nights'}${rmStr}`;
         } else {
           mealRateLabel.textContent = `Complimentary / Included`;
         }
       }
       if (mealDisplay) {
-        mealDisplay.textContent = planPrice > 0 
-          ? `+ ₹ ${totalMealPlan.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-          : `₹ 0.00`;
+        if (pricing.hasDiscount) {
+          const origTotal = pricing.originalPrice * nights * roomCount;
+          mealDisplay.innerHTML = `<span style="text-decoration: line-through; font-size: 11px; opacity: 0.6; margin-right: 5px; font-weight: 600;">+ ₹ ${origTotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span><span style="color: #059669; font-weight: 900;">+ ₹ ${totalMealPlan.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>`;
+        } else {
+          mealDisplay.textContent = planPrice > 0 
+            ? `+ ₹ ${totalMealPlan.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+            : `₹ 0.00`;
+        }
       }
       if (mealAmtInp) mealAmtInp.value = totalMealPlan.toFixed(2);
 
@@ -2642,6 +2666,7 @@
       guests: guests,
       payment_mode_id: paymentModeId,
       plan_id: planId,
+      meal_plan_amount: form.querySelector('input[name="meal_plan_amount"]')?.value || 0,
       discount_type: discountType,
       discount_percentage: discountPercentage,
       discount_amount: discountAmount,
@@ -2776,6 +2801,145 @@
       .replace(/'/g, '&#039;');
   }
 
+  function getCompanyMealDiscount(planId) {
+    if (!planId) return null;
+    const checkedRadio = document.querySelector('input[name="res_type"]:checked');
+    const type = (checkedRadio?.dataset?.slug || checkedRadio?.value || '').toLowerCase();
+    if (type !== 'company') return null;
+
+    const compSelect = document.getElementById('company-select');
+    if (!compSelect || compSelect.selectedIndex < 0) return null;
+    const opt = compSelect.options[compSelect.selectedIndex];
+    if (!opt || !opt.value || opt.value === 'new') return null;
+
+    let discounts = [];
+    try {
+      const raw = opt.dataset.mealDiscounts;
+      if (raw) {
+        discounts = typeof raw === 'string' ? JSON.parse(raw) : raw;
+      }
+    } catch (e) {
+      console.error('Error parsing company meal discounts:', e);
+    }
+
+    if (!Array.isArray(discounts)) return null;
+
+    const match = discounts.find(d => {
+      const pid = d.meal_plan_id !== undefined ? d.meal_plan_id : d.plan_id;
+      return String(pid) === String(planId);
+    });
+    if (!match) return null;
+
+    const val = parseFloat(match.discount_value) || 0;
+    if (val <= 0) return null;
+
+    return {
+      discount_type: match.discount_type || 'percentage',
+      discount_value: val
+    };
+  }
+
+  function getEffectivePlanPricing(planId, basePrice) {
+    const originalPrice = parseFloat(basePrice) || 0;
+    const disc = getCompanyMealDiscount(planId);
+    if (!disc || originalPrice <= 0) {
+      return {
+        hasDiscount: false,
+        originalPrice: originalPrice,
+        effectivePrice: originalPrice,
+        discountText: ''
+      };
+    }
+
+    let effPrice = originalPrice;
+    let tag = '';
+    if (disc.discount_type === 'percentage') {
+      const cut = (originalPrice * disc.discount_value) / 100;
+      effPrice = Math.max(0, originalPrice - cut);
+      tag = `${disc.discount_value}% OFF`;
+    } else {
+      effPrice = Math.max(0, originalPrice - disc.discount_value);
+      tag = `₹${disc.discount_value} OFF`;
+    }
+
+    return {
+      hasDiscount: true,
+      originalPrice: originalPrice,
+      effectivePrice: effPrice,
+      discountText: tag,
+      discountType: disc.discount_type,
+      discountValue: disc.discount_value
+    };
+  }
+
+  function formatPlanOption(opt) {
+    if (!opt.id) return opt.text;
+    const elem = opt.element;
+    if (!elem) return opt.text;
+
+    const planName = elem.dataset.name || (opt.text ? opt.text.split('(')[0].trim() : 'Meal Plan');
+    const basePrice = parseFloat(elem.dataset.price) || 0;
+    const pricing = getEffectivePlanPricing(opt.id, basePrice);
+
+    if (basePrice <= 0) {
+      return $(`
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 3px 0; width: 100%;">
+          <span style="font-weight: 700; color: #1e293b;">${escapeHtml(planName)}</span>
+          <span style="font-size: 10px; font-weight: 700; color: #64748b; background: #f1f5f9; padding: 2px 6px; border-radius: 4px;">Complimentary</span>
+        </div>
+      `);
+    }
+
+    if (pricing.hasDiscount) {
+      return $(`
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 3px 0; width: 100%;">
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <span style="font-weight: 700; color: #1e293b;">${escapeHtml(planName)}</span>
+            <span style="font-size: 9px; font-weight: 800; background: #dcfce7; color: #15803d; padding: 1px 6px; border-radius: 4px; border: 1px solid #bbf7d0;">${pricing.discountText}</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 6px; font-family: monospace;">
+            <span style="font-size: 11px; color: #94a3b8; text-decoration: line-through;">₹ ${pricing.originalPrice.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+            <strong style="font-size: 13px; color: #059669; font-weight: 800;">₹ ${pricing.effectivePrice.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</strong>
+          </div>
+        </div>
+      `);
+    }
+
+    return $(`
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 3px 0; width: 100%;">
+        <span style="font-weight: 700; color: #1e293b;">${escapeHtml(planName)}</span>
+        <strong style="font-size: 12px; color: #475569; font-weight: 800; font-family: monospace;">₹ ${pricing.originalPrice.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</strong>
+      </div>
+    `);
+  }
+
+  function formatPlanSelection(opt) {
+    if (!opt || !opt.id) return opt ? (opt.text || '') : '';
+    const elem = opt.element;
+    if (!elem) return opt.text;
+
+    const planName = elem.dataset.name || (opt.text ? opt.text.split('(')[0].trim() : 'Meal Plan');
+    const basePrice = parseFloat(elem.dataset.price) || 0;
+    const pricing = getEffectivePlanPricing(opt.id, basePrice);
+
+    if (basePrice <= 0) {
+      return $('<span>' + escapeHtml(planName) + ' <span style="color:#64748b; font-size:11px;">(Complimentary)</span></span>');
+    }
+
+    if (pricing.hasDiscount) {
+      return $(`
+        <span style="display: inline-flex; align-items: center; gap: 5px; font-weight: 700;">
+          <span>${escapeHtml(planName)}</span>
+          <span style="font-family: monospace; font-size: 11px; color: #94a3b8; text-decoration: line-through; margin-left: 2px;">₹ ${pricing.originalPrice.toFixed(2)}</span>
+          <strong style="font-family: monospace; font-size: 12px; color: #059669; font-weight: 800;">₹ ${pricing.effectivePrice.toFixed(2)}</strong>
+          <span style="font-size: 9px; font-weight: 800; background: #dcfce7; color: #15803d; padding: 1px 5px; border-radius: 3px; border: 1px solid #bbf7d0;">${pricing.discountText}</span>
+        </span>
+      `);
+    }
+
+    return $('<span>' + escapeHtml(planName) + ' <span style="font-family: monospace; font-weight: 800; color: #334155;">(₹ ' + pricing.originalPrice.toFixed(2) + ')</span></span>');
+  }
+
   function initPlanSelect2() {
     if (typeof $ !== 'undefined' && $.fn.select2) {
       const planSelect = $('#plan-id-select');
@@ -2785,7 +2949,10 @@
             dropdownParent: $('#reserve-modal'),
             placeholder: '-- Select Meal Plan --',
             allowClear: true,
-            width: '100%'
+            width: '100%',
+            templateResult: formatPlanOption,
+            templateSelection: formatPlanSelection,
+            escapeMarkup: function(m) { return m; }
           });
         }
         planSelect.off('change.planCalc').on('change.planCalc', function() {
@@ -2795,8 +2962,47 @@
     }
   }
 
+  function refreshPlanSelectDisplay() {
+    // 1. Update native option texts
+    const planSelNative = document.getElementById('plan-id-select');
+    if (planSelNative) {
+      for (let i = 0; i < planSelNative.options.length; i++) {
+        const opt = planSelNative.options[i];
+        if (!opt.value) continue;
+        const basePrice = parseFloat(opt.dataset.price) || 0;
+        const pName = opt.dataset.name || opt.text.split('(')[0].trim();
+        const pricing = getEffectivePlanPricing(opt.value, basePrice);
+        if (pricing.hasDiscount) {
+          opt.text = `${pName} (₹${pricing.effectivePrice.toFixed(2)} - was ₹${pricing.originalPrice.toFixed(2)})`;
+        } else if (basePrice > 0) {
+          opt.text = `${pName} (₹${basePrice.toFixed(2)})`;
+        } else {
+          opt.text = `${pName} (Complimentary)`;
+        }
+      }
+    }
+
+    // 2. Re-render Select2 if active
+    if (typeof $ !== 'undefined' && $.fn.select2) {
+      const planSelect = $('#plan-id-select');
+      if (planSelect.length && planSelect.hasClass('select2-hidden-accessible')) {
+        const currentVal = planSelect.val();
+        planSelect.select2('destroy');
+        initPlanSelect2();
+        if (currentVal) {
+          planSelect.val(currentVal).trigger('change.select2');
+        }
+      }
+    }
+  }
+
   window.addEventListener('DOMContentLoaded', () => {
     setInitialDateTime();
     initPlanSelect2();
+    if (typeof $ !== 'undefined') {
+      $('#company-select').off('change.corpSync').on('change.corpSync', function() {
+        toggleNewCompany(this);
+      });
+    }
   });
 </script>

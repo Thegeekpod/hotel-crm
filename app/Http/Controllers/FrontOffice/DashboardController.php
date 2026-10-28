@@ -1232,6 +1232,21 @@ class DashboardController extends Controller
                 $roomRate = (float)($roomObj?->rate ?? 4500);
                 $planModel = $planId ? Plan::find($planId) : null;
                 $planPrice = (float)($planModel?->price ?? 0);
+                if ($companyModel && !empty($companyModel->meal_discounts) && is_array($companyModel->meal_discounts)) {
+                    foreach ($companyModel->meal_discounts as $md) {
+                        $mPlanId = $md['meal_plan_id'] ?? $md['plan_id'] ?? null;
+                        if ($mPlanId !== null && (int)$mPlanId === (int)$planId) {
+                            $mType = $md['discount_type'] ?? 'percentage';
+                            $mVal = (float)($md['discount_value'] ?? 0);
+                            if ($mType === 'amount') {
+                                $planPrice = max(0, $planPrice - $mVal);
+                            } else {
+                                $planPrice = max(0, $planPrice - ($planPrice * ($mVal / 100)));
+                            }
+                            break;
+                        }
+                    }
+                }
                 $singleRoomTotal = ($roomRate + $planPrice) * $totalNights;
 
                 if ($idx === 0) {

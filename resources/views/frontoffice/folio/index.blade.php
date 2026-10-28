@@ -2408,6 +2408,8 @@
     const hasMultiple = totalReservationOccupants > 1;
     const normFolioStatus = (activeFolioData?.status || '').toLowerCase();
     const isSettled = activeFolioData && (Number(activeFolioData.balance) <= 0.01 || ['settlement done', 'settled'].includes(normFolioStatus));
+    const isCompanyFolio = activeFolioData && ((activeFolioData.registration_type || '').toLowerCase() === 'company' || !!activeFolioData.company);
+    const canEarlyCheckout = isSettled || isCompanyFolio;
 
     let html = '';
     rooms.forEach(r => {
@@ -2475,7 +2477,7 @@
                   <i class="fa-solid fa-circle-check" style="color: #10b981;"></i> Checked Out ${dtText ? '(' + escapeHtml(dtText) + ')' : ''}
                 </span>
               `;
-            } else if (isSettled && activeFolioData && activeFolioData.status !== 'Checked Out' && activeFolioData.status !== 'Cancelled') {
+            } else if (canEarlyCheckout && activeFolioData && activeFolioData.status !== 'Checked Out' && activeFolioData.status !== 'Cancelled') {
               actionMarkup = `
                 <button type="button" 
                         class="btn-early-checkout" 
@@ -2950,7 +2952,9 @@
   function executeFolioCheckout() {
     if (!activeFolioData) return;
 
-    if (activeFolioData.balance > 0.01) {
+    const isCompanyFolio = (activeFolioData.registration_type || '').toLowerCase() === 'company' || !!activeFolioData.company;
+
+    if (activeFolioData.balance > 0.01 && !isCompanyFolio) {
       Swal.fire({
         icon: 'warning',
         title: 'Outstanding Balance Due',
@@ -2961,9 +2965,16 @@
       return;
     }
 
+    const companyNote = (isCompanyFolio && activeFolioData.balance > 0.01)
+      ? `<div style="background: #fdf4ff; border: 1px solid #f0abfc; color: #86198f; padding: 6px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; margin-bottom: 10px; text-align: left;"><i class="fa-solid fa-building"></i> Company Billing Account: Outstanding balance of ${formatINR(activeFolioData.balance)} will remain on corporate ledger without pre-settlement.</div>`
+      : '';
+
     Swal.fire({
       title: 'Confirm Room Check-Out',
-      html: `Are you sure you want to Check Out Booking <strong>#${escapeHtml(activeFolioData.reserve_id)}</strong> for <strong>${escapeHtml(activeFolioData.primary_guest?.name || 'Guest')}</strong>?<br><br><span style="font-size: 12px; color: #64748b;">The room status will be automatically scheduled for Housekeeping.</span>`,
+      html: `
+        ${companyNote}
+        Are you sure you want to Check Out Booking <strong>#${escapeHtml(activeFolioData.reserve_id)}</strong> for <strong>${escapeHtml(activeFolioData.primary_guest?.name || 'Guest')}</strong>?<br><br><span style="font-size: 12px; color: #64748b;">The room status will be automatically scheduled for Housekeeping.</span>
+      `,
       icon: 'question',
       showCancelButton: true,
       confirmButtonColor: '#10b981',

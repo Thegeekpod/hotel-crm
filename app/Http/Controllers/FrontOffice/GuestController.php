@@ -604,8 +604,11 @@ class GuestController extends Controller
             ], 403);
         }
 
-        // Prevent checkout if there is still outstanding balance
-        if ($newStatus === 'Checked Out' && (float)$booking->balance > 0.01) {
+        // Prevent checkout if there is still outstanding balance (Allowed without settlement if registration type is Company)
+        $regName = strtolower(trim($booking->registrationType?->name ?? ''));
+        $isCompanyReg = ($regName === 'company' || !empty($booking->company_id));
+
+        if ($newStatus === 'Checked Out' && (float)$booking->balance > 0.01 && !$isCompanyReg) {
             return response()->json([
                 'success' => false,
                 'message' => 'Cannot check out guest with outstanding balance of ₹ ' . number_format($booking->balance, 2) . '. Complete settlement first.',
@@ -837,7 +840,7 @@ class GuestController extends Controller
 
     public function checkout(Request $request, $id)
     {
-        $guest = Guest::with(['latestBooking.room', 'company'])->find($id);
+        $guest = Guest::with(['latestBooking.room', 'latestBooking.registrationType', 'company'])->find($id);
         if (!$guest) {
             return response()->json(['success' => false, 'error' => 'Guest record not found'], 404);
         }
@@ -852,7 +855,10 @@ class GuestController extends Controller
         }
 
         $currentBalance = (float)$booking->balance;
-        if ($currentBalance > 0.01) {
+        $regName = strtolower(trim($booking->registrationType?->name ?? ($guest->registrationType?->name ?? '')));
+        $isCompanyReg = ($regName === 'company' || !empty($booking->company_id) || !empty($guest->company_id));
+
+        if ($currentBalance > 0.01 && !$isCompanyReg) {
             return response()->json([
                 'success' => false,
                 'error' => 'Cannot check out guest with outstanding balance of ₹ ' . number_format($currentBalance, 2) . '. Complete settlement first.'

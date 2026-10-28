@@ -799,8 +799,11 @@
       'reservation_mode' => $g->reservationMode?->name ?? 'Front Desk',
       'has_privilege_card' => (bool)$g->guest?->has_privilege_card,
       'privilege_card_no' => $g->guest?->privilege_card_no ?: 'N/A',
-      'plan_name' => $g->plan?->plan_name ?: 'Room Only (EP)',
+      'plan_name' => $g->plan_name ?: ($g->plan?->plan_name ?: 'Room Only (EP)'),
       'plan_code' => $g->plan?->plan_code ?: '',
+      'plan_price' => (float)($g->plan_price ?? ($g->plan?->price ?? 0)),
+      'plan_original_price' => (float)($g->plan_original_price ?? ($g->plan?->price ?? 0)),
+      'plan_discount_amount' => (float)($g->plan_discount_amount ?? 0),
       'total_guests_count' => $totalGuestsCount,
       'extra_guests_count' => $extraGuestsCount,
       'rooms' => $roomsList,
@@ -2081,8 +2084,26 @@
     }
 
     const elPlan = document.getElementById('mdl-plan-name');
+    const formatArrivalMealPlanHtml = (name, price, origPrice) => {
+      if (!name) return 'Room Only (EP)';
+      const clean = String(name).trim();
+      const lower = clean.toLowerCase();
+      const effPrice = Number(price || 0);
+      const original = Number(origPrice !== undefined ? origPrice : effPrice);
+      if (lower === 'none' || lower === 'no meal plan' || lower === 'room only (ep)' || lower === 'ep' || (effPrice <= 0 && original <= 0)) {
+        return typeof escapeHtml === 'function' ? escapeHtml(clean) : clean;
+      }
+      const escName = typeof escapeHtml === 'function' ? escapeHtml(clean) : clean;
+      if (original > effPrice) {
+        return `${escName} (+<span style="text-decoration: line-through; opacity: 0.65; margin-right: 3px;">₹${original.toLocaleString('en-IN')}</span><strong>₹${effPrice.toLocaleString('en-IN')}</strong>)`;
+      }
+      if (effPrice > 0) {
+        return `${escName} (+₹${effPrice.toLocaleString('en-IN')})`;
+      }
+      return escName;
+    };
     if (elPlan) {
-      elPlan.textContent = g.plan_name || 'Room Only (EP)';
+      elPlan.innerHTML = formatArrivalMealPlanHtml(g.plan_name, g.plan_price, g.plan_original_price);
     }
 
     const elNights = document.getElementById('mdl-total-nights');
@@ -2118,7 +2139,7 @@
     document.getElementById('mdl-card-checkout').textContent = `${g.checkout_date || 'N/A'} (${g.checkout_time || ''})`;
     document.getElementById('mdl-card-duration').textContent = `${g.total_nights || 1} Night(s) Stay`;
     document.getElementById('mdl-card-resmode').textContent = g.reservation_mode || 'Front Desk';
-    document.getElementById('mdl-card-mealplan').textContent = g.plan_name || 'Room Only (EP)';
+    document.getElementById('mdl-card-mealplan').innerHTML = formatArrivalMealPlanHtml(g.plan_name, g.plan_price, g.plan_original_price);
 
     // Corporate Card
     const corpSection = document.getElementById('mdl-corporate-card-section');

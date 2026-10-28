@@ -153,9 +153,11 @@ class GuestController extends Controller
             $totalPaid = round($advanceAmount + $settlePayments, 2);
             $balVal = (float)($item->balance ?? 0);
             $planObj = $lb?->plan;
-            $planName = $planObj?->plan_name ?: 'Room Only (EP)';
+            $planName = $lb?->plan_name ?: ($planObj?->plan_name ?: 'Room Only (EP)');
             $planCode = $planObj?->plan_code ?: '';
-            $planPrice = (float)($planObj?->price ?? 0);
+            $planPrice = (float)($lb?->plan_price ?? ($planObj?->price ?? 0));
+            $planOriginalPrice = (float)($lb?->plan_original_price ?? ($planObj?->price ?? $planPrice));
+            $planDiscountAmount = (float)($lb?->plan_discount_amount ?? max(0, $planOriginalPrice - $planPrice));
 
             $hasSettled = ($item->settlements && $item->settlements->where('status', 'Settled')->isNotEmpty())
                 || ($lb?->settlements && $lb->settlements->where('status', 'Settled')->isNotEmpty())
@@ -248,6 +250,8 @@ class GuestController extends Controller
                 'plan_name' => $planName,
                 'plan_code' => $planCode,
                 'plan_price' => $planPrice,
+                'plan_original_price' => $planOriginalPrice,
+                'plan_discount_amount' => $planDiscountAmount,
                 'company' => $item->company ? [
                     'name' => $item->company->name,
                     'gstin' => $item->company->gstin,
@@ -398,9 +402,11 @@ class GuestController extends Controller
             'checkout_date' => $guest->checkout_date ? \Carbon\Carbon::parse($guest->checkout_date)->format('d M Y') : 'N/A',
             'checkout_time' => $guest->checkout_time ? date('h:i A', strtotime($guest->checkout_time)) : '11:00 AM',
             'reservation_mode' => $lb?->reservationMode?->name ?? 'Front Desk',
-            'plan_name' => $planObj?->plan_name ?? 'Room Only (EP)',
+            'plan_name' => $lb?->plan_name ?: ($planObj?->plan_name ?? 'Room Only (EP)'),
             'plan_code' => $planObj?->plan_code ?? '',
-            'plan_price' => (float)($planObj?->price ?? 0),
+            'plan_price' => (float)($lb?->plan_price ?? ($planObj?->price ?? 0)),
+            'plan_original_price' => (float)($lb?->plan_original_price ?? ($planObj?->price ?? 0)),
+            'plan_discount_amount' => (float)($lb?->plan_discount_amount ?? 0),
             'company' => $guest->company ? [
                 'name' => $guest->company->name,
                 'gstin' => $guest->company->gstin,

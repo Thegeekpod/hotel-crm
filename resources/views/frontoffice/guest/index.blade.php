@@ -1508,15 +1508,22 @@
     
     const rawPlanName = guest.plan_name || (guest.plan?.plan_name ?? 'None');
     const rawPlanPrice = Number(guest.plan_price || 0);
-    const isNonePlanCrm = !rawPlanName || rawPlanName.trim().toLowerCase() === 'none' || rawPlanName.trim().toLowerCase() === 'room only (ep)' || rawPlanName.trim().toLowerCase() === 'ep' || rawPlanPrice <= 0;
-    const mealPlanVal = (!isNonePlanCrm && rawPlanPrice > 0)
-      ? `${rawPlanName} (+₹${rawPlanPrice.toLocaleString('en-IN')})`
-      : rawPlanName;
+    const rawPlanOrigPrice = Number(guest.plan_original_price !== undefined ? guest.plan_original_price : rawPlanPrice);
+    const isNonePlanCrm = !rawPlanName || rawPlanName.trim().toLowerCase() === 'none' || rawPlanName.trim().toLowerCase() === 'room only (ep)' || rawPlanName.trim().toLowerCase() === 'ep' || (rawPlanPrice <= 0 && rawPlanOrigPrice <= 0);
+    
+    let mealPlanHtml = escapeHtml(rawPlanName);
+    if (!isNonePlanCrm) {
+      if (rawPlanOrigPrice > rawPlanPrice) {
+        mealPlanHtml = `${escapeHtml(rawPlanName)} (+<span style="text-decoration: line-through; opacity: 0.65; margin-right: 3px;">₹${rawPlanOrigPrice.toLocaleString('en-IN')}</span><strong>₹${rawPlanPrice.toLocaleString('en-IN')}</strong>)`;
+      } else if (rawPlanPrice > 0) {
+        mealPlanHtml = `${escapeHtml(rawPlanName)} (+₹${rawPlanPrice.toLocaleString('en-IN')})`;
+      }
+    }
 
     const mealPlanElem = document.getElementById('crm-mdl-meal-plan');
-    if (mealPlanElem) mealPlanElem.textContent = mealPlanVal;
+    if (mealPlanElem) mealPlanElem.innerHTML = mealPlanHtml;
     const cardMealPlanElem = document.getElementById('crm-mdl-card-mealplan');
-    if (cardMealPlanElem) cardMealPlanElem.textContent = mealPlanVal;
+    if (cardMealPlanElem) cardMealPlanElem.innerHTML = mealPlanHtml;
 
     const corpSection = document.getElementById('crm-mdl-corporate-card-section');
     if (guest.company) {

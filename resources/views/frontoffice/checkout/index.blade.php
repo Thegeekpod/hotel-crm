@@ -1949,8 +1949,28 @@
       }
       const elGuests = document.getElementById('fmdl-total-guests-count');
       if (elGuests) elGuests.textContent = `${folio.total_guests_count || 1} Person(s) (${(folio.rooms || []).length} Room(s))`;
+
+      const formatCheckoutMealPlanHtml = (name, price, origPrice) => {
+        if (!name) return 'EP';
+        const clean = String(name).trim();
+        const lower = clean.toLowerCase();
+        const effPrice = Number(price || 0);
+        const original = Number(origPrice !== undefined ? origPrice : effPrice);
+        if (lower === 'none' || lower === 'no meal plan' || lower === 'room only (ep)' || lower === 'ep' || (effPrice <= 0 && original <= 0)) {
+          return typeof escapeHtml === 'function' ? escapeHtml(clean) : clean;
+        }
+        const esc = typeof escapeHtml === 'function' ? escapeHtml(clean) : clean;
+        if (original > effPrice) {
+          return `${esc} (+<span style="text-decoration: line-through; opacity: 0.65; margin-right: 3px;">₹${original.toLocaleString('en-IN')}</span><strong>₹${effPrice.toLocaleString('en-IN')}</strong>)`;
+        }
+        if (effPrice > 0) {
+          return `${esc} (+₹${effPrice.toLocaleString('en-IN')})`;
+        }
+        return esc;
+      };
+
       const elPlan = document.getElementById('fmdl-plan-name');
-      if (elPlan) elPlan.textContent = folio.plan_name || 'EP';
+      if (elPlan) elPlan.innerHTML = formatCheckoutMealPlanHtml(folio.plan_name, folio.plan_price, folio.plan_original_price);
       const elNights = document.getElementById('fmdl-nights-sched');
       if (elNights) elNights.textContent = `${folio.total_nights || 1} Night(s) Stay`;
       const elResMode = document.getElementById('fmdl-reservation-mode');
@@ -1999,7 +2019,7 @@
       const elResModeVal = document.getElementById('fmdl-resmode-val');
       if (elResModeVal) elResModeVal.textContent = folio.reservation_mode || 'Front Desk';
       const elMealVal = document.getElementById('fmdl-mealplan-val');
-      if (elMealVal) elMealVal.textContent = folio.plan_name || 'Room Only (EP)';
+      if (elMealVal) elMealVal.innerHTML = formatCheckoutMealPlanHtml(folio.plan_name, folio.plan_price, folio.plan_original_price);
 
       // Corporate Account Block
       const compRow = document.getElementById('fmdl-company-row');

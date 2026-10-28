@@ -18,11 +18,13 @@ class Company extends Model
         'phone',
         'discount_type',
         'discount_value',
+        'meal_discounts',
         'status',
     ];
 
     protected $casts = [
         'discount_value' => 'float',
+        'meal_discounts' => 'array',
     ];
 
     public function getFormattedDiscountAttribute(): string

@@ -228,6 +228,77 @@
     font-family: inherit;
     resize: vertical;
   }
+  .meal-discount-row {
+    display: grid;
+    grid-template-columns: 2fr 1.3fr 1.1fr 36px;
+    gap: 8px;
+    align-items: center;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 8px 10px;
+    transition: all 0.2s ease;
+  }
+  .meal-discount-row:hover {
+    border-color: #cbd5e1;
+    background: #f1f5f9;
+  }
+  .btn-remove-meal-row {
+    width: 36px;
+    height: 38px;
+    border-radius: 8px;
+    border: 1px solid #fecaca;
+    background: #fef2f2;
+    color: #dc2626;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 14px;
+    box-sizing: border-box;
+  }
+  .btn-remove-meal-row:hover {
+    background: #dc2626;
+    color: #ffffff;
+    border-color: #dc2626;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(220, 38, 38, 0.25);
+  }
+  .meal-val-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  .meal-val-suffix {
+    position: absolute;
+    right: 10px;
+    font-weight: 800;
+    color: var(--text-muted);
+    font-size: 11px;
+    pointer-events: none;
+  }
+  .meal-val-wrap input {
+    padding-right: 24px;
+    height: 38px;
+    font-family: var(--font-mono);
+    font-weight: 700;
+  }
+  #crud-modal .select2-container {
+    width: 100% !important;
+  }
+  #crud-modal .select2-container--default .select2-selection--single {
+    height: 38px !important;
+    padding: 4px 10px !important;
+    border-radius: 8px !important;
+    font-size: 12px !important;
+  }
+  #crud-modal .select2-container--default .select2-selection--single .select2-selection__rendered {
+    line-height: 28px !important;
+  }
+  #crud-modal .select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 36px !important;
+  }
 </style>
 @endpush
 
@@ -296,6 +367,7 @@
                   <th>Phone Number</th>
                   <th>Address</th>
                   <th>Discount</th>
+                  <th>Meal Discounts</th>
                   <th>Status</th>
                   <th style="text-align: right; width: 120px;">Actions</th>
                 </tr>
@@ -344,6 +416,34 @@
                     @endif
                   </td>
                   <td>
+                    @if(!empty($item->meal_discounts) && is_array($item->meal_discounts) && count($item->meal_discounts) > 0)
+                      <div style="display: flex; flex-direction: column; gap: 4px;">
+                        @foreach($item->meal_discounts as $md)
+                          @php
+                            $mPlan = $mealPlans->firstWhere('id', $md['meal_plan_id'] ?? null);
+                            $pName = $mPlan ? $mPlan->plan_name : 'Plan #' . ($md['meal_plan_id'] ?? '');
+                            $mVal = (float)($md['discount_value'] ?? 0);
+                            $mType = $md['discount_type'] ?? 'percentage';
+                          @endphp
+                          <div style="display: inline-flex; align-items: center; gap: 4px; font-size: 11px;">
+                            <span style="font-weight: 700; color: #475569;">{{ $pName }}:</span>
+                            @if($mType === 'amount')
+                              <span class="badge-tag green" style="font-family: var(--font-mono); font-size: 10px; font-weight: 700; padding: 1px 6px;">
+                                ₹ {{ number_format($mVal, 2) }}
+                              </span>
+                            @else
+                              <span class="badge-tag purple" style="font-family: var(--font-mono); font-size: 10px; font-weight: 700; padding: 1px 6px;">
+                                {{ $mVal }}%
+                              </span>
+                            @endif
+                          </div>
+                        @endforeach
+                      </div>
+                    @else
+                      <span style="color: var(--text-muted); font-size: 11px;">-</span>
+                    @endif
+                  </td>
+                  <td>
                     <span class="badge-tag {{ $item->status === 'Active' ? 'green' : 'yellow' }}">
                       <i class="fa-solid fa-circle-check" style="font-size: 6px; margin-right: 4px;"></i>{{ $item->status }}
                     </span>
@@ -357,7 +457,7 @@
                 </tr>
                 @empty
                 <tr>
-                  <td colspan="9" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                  <td colspan="10" style="text-align: center; padding: 40px; color: var(--text-muted);">
                     <i class="fa-solid fa-inbox" style="font-size: 28px; margin-bottom: 10px; display: block;"></i>
                     No companies found. Click "+ Add Company" to create one.
                   </td>
@@ -393,7 +493,7 @@
 </main>
 
 <div class="modal-backdrop" id="crud-modal">
-  <div class="modal-window" style="width: 540px; max-width: 95vw;">
+  <div class="modal-window" style="width: 620px; max-width: 95vw;">
     <div class="modal-top" style="display: flex; justify-content: space-between; align-items: center;">
       <h3 style="margin: 0;"><i class="fa-solid fa-building"></i> <span id="modal-title">Add Company</span></h3>
       <button class="modal-close" onclick="closeModal('crud-modal')">&times;</button>
@@ -453,6 +553,26 @@
             <small style="font-size: 11px; color: var(--text-muted); margin-top: 4px; display: block;">Specify flat solid amount deduction per reservation in INR.</small>
           </div>
         </div>
+
+        <!-- Meal Plan Discounts Configuration (Searchable meal dropdown, discount type, discount value, re-generate add more & remove) -->
+        <div class="admin-form-group" style="background: #ffffff; border: 1px solid var(--border-medium); border-radius: var(--radius-md); padding: 14px; margin-bottom: 14px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
+            <div>
+              <label class="admin-form-label" style="margin-bottom: 2px; display: flex; align-items: center; gap: 6px;">
+                <i class="fa-solid fa-utensils" style="color: #ea580c; font-size: 13px;"></i>
+                <span>Meal Plan Discounts</span>
+              </label>
+              <small style="font-size: 11px; color: var(--text-muted);">Configure specific corporate meal plan discounts.</small>
+            </div>
+            <button type="button" class="btn-ui-secondary" onclick="addMealDiscountRow()" style="font-size: 11px; height: 32px; padding: 0 12px; display: inline-flex; align-items: center; gap: 6px; border-color: #cbd5e1; color: var(--accent-primary); font-weight: 700; cursor: pointer;">
+              <i class="fa-solid fa-plus"></i> Add Meal Discount
+            </button>
+          </div>
+
+          <div id="meal-discounts-container" style="display: flex; flex-direction: column; gap: 10px;">
+            <!-- Dynamic rows will be rendered here -->
+          </div>
+        </div>
         <div class="admin-form-group" style="margin-bottom: 0;">
           <label class="admin-form-label">Status <span style="color: var(--accent-rose);">*</span></label>
           <select id="form-status" class="admin-form-input" required>
@@ -478,6 +598,8 @@
   let currentPage = parseInt(urlParams.get('page') || '1', 10);
   let pageSize = urlParams.get('per_page') || "{{ request('per_page', '10') }}" || '10';
   let tableRecords = @json($items);
+  let availableMealPlans = @json($mealPlans ?? []);
+  let mealRowCounter = 0;
 
   const baseUrl = "{{ url('admin/utilities/front-office/company') }}";
   const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
@@ -505,6 +627,117 @@
     }
   }
 
+  /* Dynamic Meal Discount Rows Management */
+  function addMealDiscountRow(selectedPlanId = '', discountType = 'percentage', discountValue = '') {
+    mealRowCounter++;
+    const rowId = mealRowCounter;
+    const container = document.getElementById('meal-discounts-container');
+
+    const row = document.createElement('div');
+    row.className = 'meal-discount-row';
+    row.id = `meal-row-${rowId}`;
+
+    let planOptions = '<option value="">Select Meal Plan...</option>';
+    (availableMealPlans || []).forEach(mp => {
+      const priceText = Number(mp.price) > 0 ? ` (₹${Number(mp.price).toFixed(2)})` : '';
+      const isSelected = String(mp.id) === String(selectedPlanId) ? 'selected' : '';
+      planOptions += `<option value="${mp.id}" ${isSelected}>${escapeHtml(mp.plan_name)}${priceText}</option>`;
+    });
+
+    const isAmount = discountType === 'amount';
+    const valStr = (discountValue !== '' && discountValue !== null && discountValue !== undefined) ? discountValue : '';
+
+    row.innerHTML = `
+      <div>
+        <select class="admin-form-input meal-plan-select" style="width: 100%;">
+          ${planOptions}
+        </select>
+      </div>
+      <div>
+        <select class="admin-form-input meal-discount-type" onchange="updateMealDiscountRowType(this)" style="height: 38px; font-weight: 600;">
+          <option value="percentage" ${!isAmount ? 'selected' : ''}>Percentage (%)</option>
+          <option value="amount" ${isAmount ? 'selected' : ''}>Solid Amount (₹)</option>
+        </select>
+      </div>
+      <div class="meal-val-wrap">
+        <input type="number" class="admin-form-input meal-discount-val" placeholder="${!isAmount ? 'e.g. 10' : 'e.g. 100'}" value="${valStr}" min="0" ${!isAmount ? 'max="100"' : ''} step="any">
+        <span class="meal-val-suffix">${!isAmount ? '%' : '₹'}</span>
+      </div>
+      <div>
+        <button type="button" class="btn-remove-meal-row" onclick="removeMealDiscountRow('${rowId}')" title="Remove or Clear Meal Discount">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+    `;
+
+    container.appendChild(row);
+
+    // Initialize searchable Select2 on the newly created meal plan dropdown
+    $(`#meal-row-${rowId} .meal-plan-select`).select2({
+      dropdownParent: $('#crud-modal'),
+      placeholder: 'Select Meal Plan...',
+      width: '100%'
+    });
+  }
+
+  function removeMealDiscountRow(rowId) {
+    const container = document.getElementById('meal-discounts-container');
+    const rows = container ? container.querySelectorAll('.meal-discount-row') : [];
+
+    // Keep at least one row: if only 1 row remains, reset its inputs instead of removing it
+    if (rows.length <= 1) {
+      const row = document.getElementById(`meal-row-${rowId}`);
+      if (row) {
+        const selectEl = $(row).find('.meal-plan-select');
+        selectEl.val('').trigger('change');
+        const typeSelect = row.querySelector('.meal-discount-type');
+        if (typeSelect) {
+          typeSelect.value = 'percentage';
+          updateMealDiscountRowType(typeSelect);
+        }
+        const valInput = row.querySelector('.meal-discount-val');
+        if (valInput) valInput.value = '';
+      }
+      return;
+    }
+
+    const row = document.getElementById(`meal-row-${rowId}`);
+    if (!row) return;
+    const selectEl = $(row).find('.meal-plan-select');
+    if (selectEl.data('select2')) {
+      selectEl.select2('destroy');
+    }
+    row.remove();
+  }
+
+  function updateMealDiscountRowType(selectEl) {
+    const row = selectEl.closest('.meal-discount-row');
+    if (!row) return;
+    const isPercent = selectEl.value === 'percentage';
+    const valInput = row.querySelector('.meal-discount-val');
+    const suffix = row.querySelector('.meal-val-suffix');
+    if (suffix) suffix.textContent = isPercent ? '%' : '₹';
+    if (valInput) {
+      valInput.placeholder = isPercent ? 'e.g. 10' : 'e.g. 100';
+      if (isPercent) {
+        valInput.setAttribute('max', '100');
+      } else {
+        valInput.removeAttribute('max');
+      }
+    }
+  }
+
+  function resetMealDiscounts() {
+    const container = document.getElementById('meal-discounts-container');
+    if (!container) return;
+    $(container).find('.meal-plan-select').each(function() {
+      if ($(this).data('select2')) {
+        $(this).select2('destroy');
+      }
+    });
+    container.innerHTML = '';
+  }
+
   function openAddModal() {
     document.getElementById('modal-title').textContent = 'Add Company';
     document.getElementById('item-id').value = '';
@@ -517,6 +750,8 @@
     document.getElementById('form-discount-percentage').value = '';
     document.getElementById('form-discount-amount').value = '';
     handleDiscountTypeChange('percentage');
+    resetMealDiscounts();
+    addMealDiscountRow(); // Keep one at least!
     openModal('crud-modal');
   }
 
@@ -544,6 +779,17 @@
       document.getElementById('form-discount-amount').value = '';
     }
     handleDiscountTypeChange(discType);
+
+    // Populate Meal Discounts (keep at least one row)
+    resetMealDiscounts();
+    if (Array.isArray(item.meal_discounts) && item.meal_discounts.length > 0) {
+      item.meal_discounts.forEach(md => {
+        addMealDiscountRow(md.meal_plan_id, md.discount_type, md.discount_value);
+      });
+    } else {
+      addMealDiscountRow(); // Keep one at least!
+    }
+
     openModal('crud-modal');
   }
 
@@ -579,6 +825,58 @@
       return;
     }
 
+    // Collect Meal Discounts
+    const mealDiscountRows = document.querySelectorAll('.meal-discount-row');
+    const mealDiscounts = [];
+    const seenPlanIds = new Set();
+
+    for (const row of mealDiscountRows) {
+      const planSelect = row.querySelector('.meal-plan-select');
+      const typeSelect = row.querySelector('.meal-discount-type');
+      const valInput = row.querySelector('.meal-discount-val');
+
+      const planId = planSelect ? parseInt(planSelect.value, 10) : 0;
+      const dType = typeSelect ? typeSelect.value : 'percentage';
+      const rawVal = valInput ? valInput.value.trim() : '';
+
+      // Skip row if untouched (no plan chosen and value left blank)
+      if (!planId && rawVal === '') {
+        continue;
+      }
+
+      if (!planId && rawVal !== '') {
+        PmsAlert.error('Validation Error', 'Please select a meal plan for the entered discount value.');
+        return;
+      }
+
+      if (planId && rawVal === '') {
+        PmsAlert.error('Validation Error', 'Please enter a discount value for the selected meal plan.');
+        return;
+      }
+
+      if (seenPlanIds.has(planId)) {
+        PmsAlert.error('Validation Error', 'Duplicate meal plan detected in meal discount rows. Please configure each meal plan once.');
+        return;
+      }
+      seenPlanIds.add(planId);
+
+      const dVal = parseFloat(rawVal);
+      if (isNaN(dVal) || dVal < 0) {
+        PmsAlert.error('Validation Error', 'Please enter a valid discount value for each selected meal plan.');
+        return;
+      }
+      if (dType === 'percentage' && dVal > 100) {
+        PmsAlert.error('Validation Error', 'Meal discount percentage cannot exceed 100%.');
+        return;
+      }
+
+      mealDiscounts.push({
+        meal_plan_id: planId,
+        discount_type: dType,
+        discount_value: dVal
+      });
+    }
+
     const payload = { 
       name, 
       gstin, 
@@ -586,7 +884,8 @@
       address, 
       status, 
       discount_type: discountType, 
-      discount_value: discountValue 
+      discount_value: discountValue,
+      meal_discounts: mealDiscounts
     };
     const url = id ? `${baseUrl}/${id}` : baseUrl;
     const method = id ? 'PUT' : 'POST';
@@ -652,6 +951,9 @@
       const data = await res.json();
       if (data.success) {
         tableRecords = data.data;
+        if (Array.isArray(data.meal_plans)) {
+          availableMealPlans = data.meal_plans;
+        }
         renderTable();
       }
     } catch (err) {
@@ -789,7 +1091,7 @@
 
     const tbody = document.getElementById('table-body');
     if (!pageItems.length) {
-      tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; padding: 40px; color: var(--text-muted);"><i class="fa-solid fa-inbox" style="font-size: 28px; margin-bottom: 10px; display: block;"></i>No matching companies found.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="10" style="text-align: center; padding: 40px; color: var(--text-muted);"><i class="fa-solid fa-inbox" style="font-size: 28px; margin-bottom: 10px; display: block;"></i>No matching companies found.</td></tr>`;
       updateBulkActionUI();
     } else {
       let html = '';
@@ -805,6 +1107,23 @@
             discountHtml = `<span class="badge-tag purple" style="font-family: var(--font-mono); font-size: 11px; font-weight: 700;"><i class="fa-solid fa-percent" style="font-size: 9px;"></i> ${dVal}%</span>`;
           }
         }
+
+        // Meal Discounts HTML
+        let mealDiscountsHtml = '<span style="color: var(--text-muted); font-size: 11px;">-</span>';
+        if (Array.isArray(item.meal_discounts) && item.meal_discounts.length > 0) {
+          mealDiscountsHtml = '<div style="display: flex; flex-direction: column; gap: 4px;">' +
+            item.meal_discounts.map(md => {
+              const mPlan = (availableMealPlans || []).find(p => Number(p.id) === Number(md.meal_plan_id));
+              const pName = mPlan ? escapeHtml(mPlan.plan_name) : `Plan #${md.meal_plan_id}`;
+              const mVal = parseFloat(md.discount_value) || 0;
+              const badge = md.discount_type === 'amount' 
+                ? `<span class="badge-tag green" style="font-family: var(--font-mono); font-size: 10px; font-weight: 700; padding: 1px 6px;">₹ ${mVal.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>`
+                : `<span class="badge-tag purple" style="font-family: var(--font-mono); font-size: 10px; font-weight: 700; padding: 1px 6px;">${mVal}%</span>`;
+              return `<div style="display: inline-flex; align-items: center; gap: 4px; font-size: 11px;"><span style="font-weight: 700; color: #475569;">${pName}:</span> ${badge}</div>`;
+            }).join('') +
+          '</div>';
+        }
+
         html += `
           <tr data-id="${item.id}">
             <td style="text-align: center;">
@@ -828,6 +1147,9 @@
             </td>
             <td>
               ${discountHtml}
+            </td>
+            <td>
+              ${mealDiscountsHtml}
             </td>
             <td>
               <span class="badge-tag ${badgeClass}">
@@ -915,12 +1237,20 @@
       PmsAlert.toast('No records to export', 'info');
       return;
     }
-    let csv = '"ID","Company Name","GSTIN","Phone","Address","Discount Type","Discount Value","Status"\n';
+    let csv = '"ID","Company Name","GSTIN","Phone","Address","Discount Type","Discount Value","Meal Discounts","Status"\n';
     filtered.forEach(r => {
       const cleanAddr = (r.address || '').replace(/"/g, '""');
       const dType = r.discount_type === 'amount' ? 'Solid Amount' : 'Percentage';
       const dVal = r.discount_value !== undefined && r.discount_value !== null ? r.discount_value : 0;
-      csv += `"${r.id}","${r.name}","${r.gstin || ''}","${r.phone || ''}","${cleanAddr}","${dType}","${dVal}","${r.status}"\n`;
+      let mealDiscText = '';
+      if (Array.isArray(r.meal_discounts) && r.meal_discounts.length > 0) {
+        mealDiscText = r.meal_discounts.map(md => {
+          const mPlan = (availableMealPlans || []).find(p => Number(p.id) === Number(md.meal_plan_id));
+          const pName = mPlan ? mPlan.plan_name : `Plan #${md.meal_plan_id}`;
+          return `${pName}: ${md.discount_type === 'amount' ? '₹' + md.discount_value : md.discount_value + '%'}`;
+        }).join('; ');
+      }
+      csv += `"${r.id}","${r.name}","${r.gstin || ''}","${r.phone || ''}","${cleanAddr}","${dType}","${dVal}","${mealDiscText.replace(/"/g, '""')}","${r.status}"\n`;
     });
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);

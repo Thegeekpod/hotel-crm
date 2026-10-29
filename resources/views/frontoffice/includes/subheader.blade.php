@@ -133,21 +133,13 @@
         <span class="w-5 h-5 rounded-md bg-amber-50 text-amber-600 flex items-center justify-center text-xs ico-box"><i class="fa-solid fa-address-card"></i></span>
         <span class="lbl-box">Guest</span>
       </a>
-      <a href="{{ route('frontoffice.folio') }}" class="{{ $btnBase }} {{ request()->routeIs('frontoffice.folio*') ? $btnActive : $btnDefault }}">
-        <span class="w-5 h-5 rounded-md bg-indigo-50 text-indigo-600 flex items-center justify-center text-xs ico-box"><i class="fa-solid fa-file-invoice-dollar"></i></span>
-        <span class="lbl-box">Settlements</span>
-      </a>
-      <a href="{{ route('frontoffice.checkout') }}" class="{{ $btnBase }} {{ request()->routeIs('frontoffice.checkout*') ? $btnActive : $btnDefault }}">
-        <span class="w-5 h-5 rounded-md bg-rose-50 text-rose-600 flex items-center justify-center text-xs ico-box"><i class="fa-solid fa-person-walking-dashed-line-arrow-right"></i></span>
-        <span class="lbl-box">Checkout</span>
-      </a>
       <a href="{{ route('frontoffice.services.index') }}" class="{{ $btnBase }} {{ request()->routeIs('frontoffice.services*') ? $btnActive : $btnDefault }}">
         <span class="w-5 h-5 rounded-md bg-emerald-50 text-emerald-600 flex items-center justify-center text-xs ico-box"><i class="fa-solid fa-bell-concierge"></i></span>
         <span class="lbl-box">Extra Services</span>
       </a>
-      <a href="{{ route('frontoffice.nightaudit') }}" class="{{ $btnBase }} {{ request()->routeIs('frontoffice.nightaudit*') || request()->routeIs('frontoffice.night-audit*') ? $btnActive : $btnDefault }}">
-        <span class="w-5 h-5 rounded-md bg-purple-50 text-purple-600 flex items-center justify-center text-xs ico-box"><i class="fa-solid fa-moon"></i></span>
-        <span class="lbl-box">Night Audit</span>
+      <a href="{{ route('frontoffice.folio') }}" class="{{ $btnBase }} {{ request()->routeIs('frontoffice.folio*') ? $btnActive : $btnDefault }}">
+        <span class="w-5 h-5 rounded-md bg-indigo-50 text-indigo-600 flex items-center justify-center text-xs ico-box"><i class="fa-solid fa-file-invoice-dollar"></i></span>
+        <span class="lbl-box">Settlements</span>
       </a>
       <a href="{{ route('frontoffice.housekeeping') }}" class="{{ $btnBase }} {{ request()->routeIs('frontoffice.housekeeping*') ? $btnActive : $btnDefault }}">
         <span class="w-5 h-5 rounded-md bg-amber-50 text-amber-600 flex items-center justify-center text-xs ico-box"><i class="fa-solid fa-broom"></i></span>
@@ -156,6 +148,10 @@
       <a href="{{ route('banquet.index') }}" class="{{ $btnBase }} {{ request()->routeIs('banquet*') ? $btnActive : $btnDefault }}">
         <span class="w-5 h-5 rounded-md bg-amber-50 text-amber-500 flex items-center justify-center text-xs ico-box"><i class="fa-solid fa-champagne-glasses"></i></span>
         <span class="lbl-box">Banquet</span>
+      </a>
+      <a href="{{ route('frontoffice.checkout') }}" class="{{ $btnBase }} {{ request()->routeIs('frontoffice.checkout*') ? $btnActive : $btnDefault }}">
+        <span class="w-5 h-5 rounded-md bg-rose-50 text-rose-600 flex items-center justify-center text-xs ico-box"><i class="fa-solid fa-person-walking-dashed-line-arrow-right"></i></span>
+        <span class="lbl-box">Checkout</span>
       </a>
     </div>
   </div>

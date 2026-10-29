@@ -65,7 +65,7 @@
       $tabActive = "bg-indigo-50 text-indigo-700 shadow-2xs border border-indigo-200/80 active";
       $tabInactive = "text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 border border-transparent";
     @endphp
-    <a href="{{ route('frontoffice.dashboard') }}" class="{{ $tabBase }} {{ (request()->routeIs('frontoffice.*') || request()->is('front-office*') || request()->routeIs('banquet*')) ? $tabActive : $tabInactive }}">
+    <a href="{{ route('frontoffice.dashboard') }}" class="{{ $tabBase }} {{ (((request()->routeIs('frontoffice.*') && !request()->routeIs('frontoffice.nightaudit*')) || (request()->is('front-office*') && !request()->is('front-office/night-audit*'))) || request()->routeIs('banquet*')) ? $tabActive : $tabInactive }}">
       <i class="fa-solid fa-desktop text-indigo-600 tab-ico"></i> Front Office
     </a>
     <a href="{{ route('pos.index') }}" class="{{ $tabBase }} {{ (request()->routeIs('pos.*') || request()->routeIs('stores.*')) ? $tabActive : $tabInactive }}">
@@ -74,13 +74,16 @@
     <a href="{{ route('accounts.index') }}" class="{{ $tabBase }} {{ request()->routeIs('accounts.*') ? $tabActive : $tabInactive }}">
       <i class="fa-solid fa-file-invoice-dollar text-purple-600 tab-ico"></i> Accounts
     </a>
-    <a href="{{ route('admin.dashboard') }}" class="{{ $tabBase }} {{ request()->routeIs('admin.*') ? $tabActive : $tabInactive }}">
+    <a href="{{ route('frontoffice.nightaudit') }}" class="{{ $tabBase }} {{ (request()->routeIs('frontoffice.nightaudit*') || request()->is('front-office/night-audit*') || request()->routeIs('admin.nightaudit*')) ? $tabActive : $tabInactive }}">
+      <i class="fa-solid fa-moon text-purple-600 tab-ico"></i> Night Audit
+    </a>
+    <a href="{{ route('admin.dashboard') }}" class="{{ $tabBase }} {{ (request()->routeIs('admin.*') && !request()->routeIs('admin.nightaudit*')) ? $tabActive : $tabInactive }}">
       <i class="fa-solid fa-user-gear text-slate-500 tab-ico"></i> Administrator
     </a>
   </nav>
 
   <!-- Subheader Component -->
-  @if(!request()->routeIs('accounts.*') && !request()->is('accounts*'))
+  @if(!request()->routeIs('accounts.*') && !request()->is('accounts*') && !request()->routeIs('frontoffice.nightaudit*') && !request()->is('front-office/night-audit*'))
     @include('frontoffice.includes.subheader')
   @endif
 

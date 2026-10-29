@@ -5,35 +5,36 @@
 @endphp
 
 @if(request()->routeIs('banquet.*'))
-<!-- Action Sub-Ribbon (Banquet Halls & Room Service Orders) -->
+<!-- Action Sub-Ribbon (Banquet Halls & Events) -->
 <div class="bg-slate-50/95 backdrop-blur-xs border-b border-slate-200/80 px-4 sm:px-6 py-2 flex items-center justify-between gap-4 overflow-x-auto scrollbar-none pms-sub-ribbon">
   <div class="flex items-center gap-2 ribbon-left-section">
     <div class="flex items-center gap-2 ribbon-action-buttons">
-      <a href="{{ route('banquet.index') }}" class="{{ $btnBase }} {{ $btnActive }}">
-        <span class="w-5 h-5 rounded-md bg-amber-50 text-amber-600 flex items-center justify-center text-xs ico-box"><i class="fa-solid fa-bell-concierge"></i></span>
-        <span class="lbl-box">Room Service &amp; Banquet</span>
+      <a href="{{ route('frontoffice.dashboard') }}" class="{{ $btnBase }} bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 shadow-2xs">
+        <span class="w-5 h-5 rounded-md bg-slate-100 text-slate-700 flex items-center justify-center text-xs ico-box"><i class="fa-solid fa-arrow-left"></i></span>
+        <span class="lbl-box">Back</span>
       </a>
-      <button type="button" class="{{ $btnBase }} {{ $btnDefault }}" onclick="openNewRoomOrderModal()">
-        <span class="w-5 h-5 rounded-md bg-emerald-50 text-emerald-600 flex items-center justify-center text-xs ico-box"><i class="fa-solid fa-utensils"></i></span>
-        <span class="lbl-box">New Room Order</span>
-      </button>
+      <span class="h-5 w-px bg-slate-200 mx-0.5"></span>
+      <a href="{{ route('banquet.index') }}" class="{{ $btnBase }} {{ $btnActive }}">
+        <span class="w-5 h-5 rounded-md bg-amber-50 text-amber-600 flex items-center justify-center text-xs ico-box"><i class="fa-solid fa-champagne-glasses"></i></span>
+        <span class="lbl-box">Banquet &amp; Events</span>
+      </a>
       <button type="button" class="{{ $btnBase }} {{ $btnDefault }}" onclick="openNewBanquetModal()">
-        <span class="w-5 h-5 rounded-md bg-pink-50 text-pink-600 flex items-center justify-center text-xs ico-box"><i class="fa-solid fa-calendar-plus"></i></span>
+        <span class="w-5 h-5 rounded-md bg-amber-50 text-amber-600 flex items-center justify-center text-xs ico-box"><i class="fa-solid fa-calendar-plus"></i></span>
         <span class="lbl-box">Book Event Hall</span>
       </button>
-      <button type="button" class="{{ $btnBase }} {{ $btnDefault }}" onclick="switchBanquetTab('orders')">
-        <span class="w-5 h-5 rounded-md bg-indigo-50 text-indigo-600 flex items-center justify-center text-xs ico-box"><i class="fa-solid fa-receipt"></i></span>
-        <span class="lbl-box">Active Orders</span>
+      <button type="button" class="{{ $btnBase }} {{ $btnDefault }}" onclick="switchBanquetTab('bookings')">
+        <span class="w-5 h-5 rounded-md bg-indigo-50 text-indigo-600 flex items-center justify-center text-xs ico-box"><i class="fa-solid fa-calendar-days"></i></span>
+        <span class="lbl-box">Event Bookings</span>
       </button>
-      <button type="button" class="{{ $btnBase }} {{ $btnDefault }}" onclick="switchBanquetTab('menu')">
-        <span class="w-5 h-5 rounded-md bg-cyan-50 text-cyan-600 flex items-center justify-center text-xs ico-box"><i class="fa-solid fa-book-open"></i></span>
-        <span class="lbl-box">Room Dining Menu</span>
+      <button type="button" class="{{ $btnBase }} {{ $btnDefault }}" onclick="switchBanquetTab('venues')">
+        <span class="w-5 h-5 rounded-md bg-purple-50 text-purple-600 flex items-center justify-center text-xs ico-box"><i class="fa-solid fa-building-columns"></i></span>
+        <span class="lbl-box">Venues &amp; Facilities</span>
       </button>
     </div>
   </div>
   <div class="hidden sm:inline-flex items-center gap-2 text-xs font-bold text-amber-600 bg-amber-50/80 px-2.5 py-1 rounded-full border border-amber-200/80 shrink-0">
     <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
-    Banquet &amp; In-Room Dining Live
+    Banquet &amp; Event Halls Live
   </div>
 </div>
 @elseif(request()->routeIs('frontoffice.services.*'))
@@ -41,6 +42,11 @@
 <div class="bg-slate-50/95 backdrop-blur-xs border-b border-slate-200/80 px-4 sm:px-6 py-2 flex items-center justify-between gap-4 overflow-x-auto scrollbar-none pms-sub-ribbon">
   <div class="flex items-center gap-2 ribbon-left-section">
     <div class="flex items-center gap-2 ribbon-action-buttons">
+      <a href="{{ route('frontoffice.dashboard') }}" class="{{ $btnBase }} bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 shadow-2xs">
+        <span class="w-5 h-5 rounded-md bg-slate-100 text-slate-700 flex items-center justify-center text-xs ico-box"><i class="fa-solid fa-arrow-left"></i></span>
+        <span class="lbl-box">Back</span>
+      </a>
+      <span class="h-5 w-px bg-slate-200 mx-0.5"></span>
       <a href="{{ route('frontoffice.services.index') }}" class="{{ $btnBase }} {{ $btnActive }}">
         <span class="w-5 h-5 rounded-md bg-emerald-50 text-emerald-600 flex items-center justify-center text-xs ico-box"><i class="fa-solid fa-bell-concierge"></i></span>
         <span class="lbl-box">Active Orders</span>

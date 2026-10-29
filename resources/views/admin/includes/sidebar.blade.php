@@ -62,64 +62,64 @@
           <i class="fa-solid fa-chevron-right text-[10px] text-slate-400 transition-transform duration-200 {{ $isFoActive ? 'rotate-90 text-indigo-600' : '' }}"></i>
         </div>
       </div>
-      <ul class="admin-sub-list flex flex-col gap-0.5 py-1.5 pl-3 pr-2 list-none border-t border-slate-100/80 bg-slate-50/30 {{ $isFoActive ? '' : 'hidden' }}">
+      <ul class="admin-sub-list flex flex-col gap-1.5 mt-2 pt-3 pb-2.5 px-2.5 list-none border-t border-slate-100 bg-slate-50/40 {{ $isFoActive ? '' : 'hidden' }}">
         <li>
-          <a href="{{ route('admin.utilities.frontoffice.registration-type.index') }}" class="flex items-center gap-2 px-2.5 py-1.5 text-xs font-semibold rounded-lg transition-all admin-sub-item {{ request()->routeIs('admin.utilities.frontoffice.registration-type.*') ? 'bg-indigo-600 text-white font-bold shadow-xs active' : 'text-slate-600 hover:bg-indigo-50 hover:text-indigo-700' }}">
-            <i class="fa-solid fa-address-card text-[11px] w-4 text-center {{ request()->routeIs('admin.utilities.frontoffice.registration-type.*') ? 'text-white' : 'text-slate-400' }}"></i>
+          <a href="{{ route('admin.utilities.frontoffice.registration-type.index') }}" class="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg transition-all admin-sub-item {{ request()->routeIs('admin.utilities.frontoffice.registration-type.*') ? 'active' : 'text-slate-600 hover:bg-indigo-50 hover:text-indigo-700' }}">
+            <i class="fa-solid fa-address-card text-xs w-4 text-center {{ request()->routeIs('admin.utilities.frontoffice.registration-type.*') ? 'text-indigo-600' : 'text-slate-400 group-hover:text-indigo-600' }}"></i>
             <span class="truncate">Registration Type</span>
           </a>
         </li>
         <li>
-          <a href="{{ route('admin.utilities.frontoffice.reservation-mode.index') }}" class="flex items-center gap-2 px-2.5 py-1.5 text-xs font-semibold rounded-lg transition-all admin-sub-item {{ request()->routeIs('admin.utilities.frontoffice.reservation-mode.*') ? 'bg-indigo-600 text-white font-bold shadow-xs active' : 'text-slate-600 hover:bg-indigo-50 hover:text-indigo-700' }}">
-            <i class="fa-solid fa-clipboard-check text-[11px] w-4 text-center {{ request()->routeIs('admin.utilities.frontoffice.reservation-mode.*') ? 'text-white' : 'text-slate-400' }}"></i>
+          <a href="{{ route('admin.utilities.frontoffice.reservation-mode.index') }}" class="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg transition-all admin-sub-item {{ request()->routeIs('admin.utilities.frontoffice.reservation-mode.*') ? 'active' : 'text-slate-600 hover:bg-indigo-50 hover:text-indigo-700' }}">
+            <i class="fa-solid fa-clipboard-check text-xs w-4 text-center {{ request()->routeIs('admin.utilities.frontoffice.reservation-mode.*') ? 'text-indigo-600' : 'text-slate-400 group-hover:text-indigo-600' }}"></i>
             <span class="truncate">Mode of Reserve</span>
           </a>
         </li>
         <li>
-          <a href="{{ route('admin.utilities.frontoffice.title.index') }}" class="flex items-center gap-2 px-2.5 py-1.5 text-xs font-semibold rounded-lg transition-all admin-sub-item {{ request()->routeIs('admin.utilities.frontoffice.title.*') ? 'bg-indigo-600 text-white font-bold shadow-xs active' : 'text-slate-600 hover:bg-indigo-50 hover:text-indigo-700' }}">
-            <i class="fa-solid fa-user-tag text-[11px] w-4 text-center {{ request()->routeIs('admin.utilities.frontoffice.title.*') ? 'text-white' : 'text-slate-400' }}"></i>
+          <a href="{{ route('admin.utilities.frontoffice.title.index') }}" class="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg transition-all admin-sub-item {{ request()->routeIs('admin.utilities.frontoffice.title.*') ? 'active' : 'text-slate-600 hover:bg-indigo-50 hover:text-indigo-700' }}">
+            <i class="fa-solid fa-user-tag text-xs w-4 text-center {{ request()->routeIs('admin.utilities.frontoffice.title.*') ? 'text-indigo-600' : 'text-slate-400 group-hover:text-indigo-600' }}"></i>
             <span class="truncate">Titles</span>
           </a>
         </li>
         <li>
-          <a href="{{ route('admin.utilities.frontoffice.nationality.index') }}" class="flex items-center gap-2 px-2.5 py-1.5 text-xs font-semibold rounded-lg transition-all admin-sub-item {{ request()->routeIs('admin.utilities.frontoffice.nationality.*') ? 'bg-indigo-600 text-white font-bold shadow-xs active' : 'text-slate-600 hover:bg-indigo-50 hover:text-indigo-700' }}">
-            <i class="fa-solid fa-flag text-[11px] w-4 text-center {{ request()->routeIs('admin.utilities.frontoffice.nationality.*') ? 'text-white' : 'text-slate-400' }}"></i>
+          <a href="{{ route('admin.utilities.frontoffice.nationality.index') }}" class="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg transition-all admin-sub-item {{ request()->routeIs('admin.utilities.frontoffice.nationality.*') ? 'active' : 'text-slate-600 hover:bg-indigo-50 hover:text-indigo-700' }}">
+            <i class="fa-solid fa-flag text-xs w-4 text-center {{ request()->routeIs('admin.utilities.frontoffice.nationality.*') ? 'text-indigo-600' : 'text-slate-400 group-hover:text-indigo-600' }}"></i>
             <span class="truncate">Nationality</span>
           </a>
         </li>
         <li>
-          <a href="{{ route('admin.utilities.frontoffice.idcard-type.index') }}" class="flex items-center gap-2 px-2.5 py-1.5 text-xs font-semibold rounded-lg transition-all admin-sub-item {{ request()->routeIs('admin.utilities.frontoffice.idcard-type.*') ? 'bg-indigo-600 text-white font-bold shadow-xs active' : 'text-slate-600 hover:bg-indigo-50 hover:text-indigo-700' }}">
-            <i class="fa-solid fa-id-card text-[11px] w-4 text-center {{ request()->routeIs('admin.utilities.frontoffice.idcard-type.*') ? 'text-white' : 'text-slate-400' }}"></i>
+          <a href="{{ route('admin.utilities.frontoffice.idcard-type.index') }}" class="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg transition-all admin-sub-item {{ request()->routeIs('admin.utilities.frontoffice.idcard-type.*') ? 'active' : 'text-slate-600 hover:bg-indigo-50 hover:text-indigo-700' }}">
+            <i class="fa-solid fa-id-card text-xs w-4 text-center {{ request()->routeIs('admin.utilities.frontoffice.idcard-type.*') ? 'text-indigo-600' : 'text-slate-400 group-hover:text-indigo-600' }}"></i>
             <span class="truncate">ID Card Type</span>
           </a>
         </li>
         <li>
-          <a href="{{ route('admin.utilities.frontoffice.payment-mode.index') }}" class="flex items-center gap-2 px-2.5 py-1.5 text-xs font-semibold rounded-lg transition-all admin-sub-item {{ request()->routeIs('admin.utilities.frontoffice.payment-mode.*') ? 'bg-indigo-600 text-white font-bold shadow-xs active' : 'text-slate-600 hover:bg-indigo-50 hover:text-indigo-700' }}">
-            <i class="fa-solid fa-cash-register text-[11px] w-4 text-center {{ request()->routeIs('admin.utilities.frontoffice.payment-mode.*') ? 'text-white' : 'text-slate-400' }}"></i>
+          <a href="{{ route('admin.utilities.frontoffice.payment-mode.index') }}" class="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg transition-all admin-sub-item {{ request()->routeIs('admin.utilities.frontoffice.payment-mode.*') ? 'active' : 'text-slate-600 hover:bg-indigo-50 hover:text-indigo-700' }}">
+            <i class="fa-solid fa-cash-register text-xs w-4 text-center {{ request()->routeIs('admin.utilities.frontoffice.payment-mode.*') ? 'text-indigo-600' : 'text-slate-400 group-hover:text-indigo-600' }}"></i>
             <span class="truncate">Payment Modes</span>
           </a>
         </li>
         <li>
-          <a href="{{ route('admin.utilities.frontoffice.gst-percentage.index') }}" class="flex items-center gap-2 px-2.5 py-1.5 text-xs font-semibold rounded-lg transition-all admin-sub-item {{ request()->routeIs('admin.utilities.frontoffice.gst-percentage.*') ? 'bg-indigo-600 text-white font-bold shadow-xs active' : 'text-slate-600 hover:bg-indigo-50 hover:text-indigo-700' }}">
-            <i class="fa-solid fa-percent text-[11px] w-4 text-center {{ request()->routeIs('admin.utilities.frontoffice.gst-percentage.*') ? 'text-white' : 'text-slate-400' }}"></i>
+          <a href="{{ route('admin.utilities.frontoffice.gst-percentage.index') }}" class="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg transition-all admin-sub-item {{ request()->routeIs('admin.utilities.frontoffice.gst-percentage.*') ? 'active' : 'text-slate-600 hover:bg-indigo-50 hover:text-indigo-700' }}">
+            <i class="fa-solid fa-percent text-xs w-4 text-center {{ request()->routeIs('admin.utilities.frontoffice.gst-percentage.*') ? 'text-indigo-600' : 'text-slate-400 group-hover:text-indigo-600' }}"></i>
             <span class="truncate">GST Percentage</span>
           </a>
         </li>
         <li>
-          <a href="{{ route('admin.utilities.frontoffice.company.index') }}" class="flex items-center gap-2 px-2.5 py-1.5 text-xs font-semibold rounded-lg transition-all admin-sub-item {{ request()->routeIs('admin.utilities.frontoffice.company.*') ? 'bg-indigo-600 text-white font-bold shadow-xs active' : 'text-slate-600 hover:bg-indigo-50 hover:text-indigo-700' }}">
-            <i class="fa-solid fa-building text-[11px] w-4 text-center {{ request()->routeIs('admin.utilities.frontoffice.company.*') ? 'text-white' : 'text-slate-400' }}"></i>
+          <a href="{{ route('admin.utilities.frontoffice.company.index') }}" class="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg transition-all admin-sub-item {{ request()->routeIs('admin.utilities.frontoffice.company.*') ? 'active' : 'text-slate-600 hover:bg-indigo-50 hover:text-indigo-700' }}">
+            <i class="fa-solid fa-building text-xs w-4 text-center {{ request()->routeIs('admin.utilities.frontoffice.company.*') ? 'text-indigo-600' : 'text-slate-400 group-hover:text-indigo-600' }}"></i>
             <span class="truncate">Company Manage</span>
           </a>
         </li>
         <li>
-          <a href="{{ route('admin.utilities.frontoffice.plans.index') }}" class="flex items-center gap-2 px-2.5 py-1.5 text-xs font-semibold rounded-lg transition-all admin-sub-item {{ request()->routeIs('admin.utilities.frontoffice.plans.*') ? 'bg-indigo-600 text-white font-bold shadow-xs active' : 'text-slate-600 hover:bg-indigo-50 hover:text-indigo-700' }}">
-            <i class="fa-solid fa-utensils text-[11px] w-4 text-center {{ request()->routeIs('admin.utilities.frontoffice.plans.*') ? 'text-white' : 'text-slate-400' }}"></i>
+          <a href="{{ route('admin.utilities.frontoffice.plans.index') }}" class="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg transition-all admin-sub-item {{ request()->routeIs('admin.utilities.frontoffice.plans.*') ? 'active' : 'text-slate-600 hover:bg-indigo-50 hover:text-indigo-700' }}">
+            <i class="fa-solid fa-utensils text-xs w-4 text-center {{ request()->routeIs('admin.utilities.frontoffice.plans.*') ? 'text-indigo-600' : 'text-slate-400 group-hover:text-indigo-600' }}"></i>
             <span class="truncate">Meal Plans</span>
           </a>
         </li>
         <li>
-          <a href="{{ route('admin.utilities.frontoffice.table-manage.index') }}" class="flex items-center gap-2 px-2.5 py-1.5 text-xs font-semibold rounded-lg transition-all admin-sub-item {{ request()->routeIs('admin.utilities.frontoffice.table-manage.*') ? 'bg-indigo-600 text-white font-bold shadow-xs active' : 'text-slate-600 hover:bg-indigo-50 hover:text-indigo-700' }}">
-            <i class="fa-solid fa-chair text-[11px] w-4 text-center {{ request()->routeIs('admin.utilities.frontoffice.table-manage.*') ? 'text-white' : 'text-slate-400' }}"></i>
+          <a href="{{ route('admin.utilities.frontoffice.table-manage.index') }}" class="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg transition-all admin-sub-item {{ request()->routeIs('admin.utilities.frontoffice.table-manage.*') ? 'active' : 'text-slate-600 hover:bg-indigo-50 hover:text-indigo-700' }}">
+            <i class="fa-solid fa-chair text-xs w-4 text-center {{ request()->routeIs('admin.utilities.frontoffice.table-manage.*') ? 'text-indigo-600' : 'text-slate-400 group-hover:text-indigo-600' }}"></i>
             <span class="truncate">Table Manage</span>
           </a>
         </li>
@@ -143,40 +143,40 @@
           <i class="fa-solid fa-chevron-right text-[10px] text-slate-400 transition-transform duration-200 {{ $isRmActive ? 'rotate-90 text-purple-600' : '' }}"></i>
         </div>
       </div>
-      <ul class="admin-sub-list flex flex-col gap-0.5 py-1.5 pl-3 pr-2 list-none border-t border-slate-100/80 bg-slate-50/30 {{ $isRmActive ? '' : 'hidden' }}">
+      <ul class="admin-sub-list flex flex-col gap-1.5 mt-2 pt-3 pb-2.5 px-2.5 list-none border-t border-slate-100 bg-slate-50/40 {{ $isRmActive ? '' : 'hidden' }}">
         <li>
-          <a href="{{ route('admin.utilities.roommanage.category.index') }}" class="flex items-center gap-2 px-2.5 py-1.5 text-xs font-semibold rounded-lg transition-all admin-sub-item {{ request()->routeIs('admin.utilities.roommanage.category.*') ? 'bg-purple-600 text-white font-bold shadow-xs active' : 'text-slate-600 hover:bg-purple-50 hover:text-purple-700' }}">
-            <i class="fa-solid fa-tags text-[11px] w-4 text-center {{ request()->routeIs('admin.utilities.roommanage.category.*') ? 'text-white' : 'text-slate-400' }}"></i>
+          <a href="{{ route('admin.utilities.roommanage.category.index') }}" class="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg transition-all admin-sub-item {{ request()->routeIs('admin.utilities.roommanage.category.*') ? 'active' : 'text-slate-600 hover:bg-purple-50 hover:text-purple-700' }}">
+            <i class="fa-solid fa-tags text-xs w-4 text-center {{ request()->routeIs('admin.utilities.roommanage.category.*') ? 'text-purple-600' : 'text-slate-400 group-hover:text-purple-600' }}"></i>
             <span class="truncate">Room Categories</span>
           </a>
         </li>
         <li>
-          <a href="{{ route('admin.utilities.roommanage.floor.index') }}" class="flex items-center gap-2 px-2.5 py-1.5 text-xs font-semibold rounded-lg transition-all admin-sub-item {{ request()->routeIs('admin.utilities.roommanage.floor.*') ? 'bg-purple-600 text-white font-bold shadow-xs active' : 'text-slate-600 hover:bg-purple-50 hover:text-purple-700' }}">
-            <i class="fa-solid fa-layer-group text-[11px] w-4 text-center {{ request()->routeIs('admin.utilities.roommanage.floor.*') ? 'text-white' : 'text-slate-400' }}"></i>
+          <a href="{{ route('admin.utilities.roommanage.floor.index') }}" class="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg transition-all admin-sub-item {{ request()->routeIs('admin.utilities.roommanage.floor.*') ? 'active' : 'text-slate-600 hover:bg-purple-50 hover:text-purple-700' }}">
+            <i class="fa-solid fa-layer-group text-xs w-4 text-center {{ request()->routeIs('admin.utilities.roommanage.floor.*') ? 'text-purple-600' : 'text-slate-400 group-hover:text-purple-600' }}"></i>
             <span class="truncate">Floors Manage</span>
           </a>
         </li>
         <li>
-          <a href="{{ route('admin.utilities.roommanage.bedding-config.index') }}" class="flex items-center gap-2 px-2.5 py-1.5 text-xs font-semibold rounded-lg transition-all admin-sub-item {{ request()->routeIs('admin.utilities.roommanage.bedding-config.*') ? 'bg-purple-600 text-white font-bold shadow-xs active' : 'text-slate-600 hover:bg-purple-50 hover:text-purple-700' }}">
-            <i class="fa-solid fa-bed text-[11px] w-4 text-center {{ request()->routeIs('admin.utilities.roommanage.bedding-config.*') ? 'text-white' : 'text-slate-400' }}"></i>
+          <a href="{{ route('admin.utilities.roommanage.bedding-config.index') }}" class="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg transition-all admin-sub-item {{ request()->routeIs('admin.utilities.roommanage.bedding-config.*') ? 'active' : 'text-slate-600 hover:bg-purple-50 hover:text-purple-700' }}">
+            <i class="fa-solid fa-bed text-xs w-4 text-center {{ request()->routeIs('admin.utilities.roommanage.bedding-config.*') ? 'text-purple-600' : 'text-slate-400 group-hover:text-purple-600' }}"></i>
             <span class="truncate">Bedding Config</span>
           </a>
         </li>
         <li>
-          <a href="{{ route('admin.utilities.roommanage.amenity.index') }}" class="flex items-center gap-2 px-2.5 py-1.5 text-xs font-semibold rounded-lg transition-all admin-sub-item {{ request()->routeIs('admin.utilities.roommanage.amenity.*') ? 'bg-purple-600 text-white font-bold shadow-xs active' : 'text-slate-600 hover:bg-purple-50 hover:text-purple-700' }}">
-            <i class="fa-solid fa-wifi text-[11px] w-4 text-center {{ request()->routeIs('admin.utilities.roommanage.amenity.*') ? 'text-white' : 'text-slate-400' }}"></i>
+          <a href="{{ route('admin.utilities.roommanage.amenity.index') }}" class="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg transition-all admin-sub-item {{ request()->routeIs('admin.utilities.roommanage.amenity.*') ? 'active' : 'text-slate-600 hover:bg-purple-50 hover:text-purple-700' }}">
+            <i class="fa-solid fa-wifi text-xs w-4 text-center {{ request()->routeIs('admin.utilities.roommanage.amenity.*') ? 'text-purple-600' : 'text-slate-400 group-hover:text-purple-600' }}"></i>
             <span class="truncate">Amenities Master</span>
           </a>
         </li>
         <li>
-          <a href="{{ route('admin.roommanagement.index') }}" class="flex items-center gap-2 px-2.5 py-1.5 text-xs font-semibold rounded-lg transition-all admin-sub-item {{ request()->routeIs('admin.roommanagement.*') ? 'bg-purple-600 text-white font-bold shadow-xs active' : 'text-slate-600 hover:bg-purple-50 hover:text-purple-700' }}">
-            <i class="fa-solid fa-door-closed text-[11px] w-4 text-center {{ request()->routeIs('admin.roommanagement.*') ? 'text-white' : 'text-slate-400' }}"></i>
+          <a href="{{ route('admin.roommanagement.index') }}" class="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg transition-all admin-sub-item {{ request()->routeIs('admin.roommanagement.*') ? 'active' : 'text-slate-600 hover:bg-purple-50 hover:text-purple-700' }}">
+            <i class="fa-solid fa-door-closed text-xs w-4 text-center {{ request()->routeIs('admin.roommanagement.*') ? 'text-purple-600' : 'text-slate-400 group-hover:text-purple-600' }}"></i>
             <span class="truncate">Rooms Add / Inventory</span>
           </a>
         </li>
         <li>
-          <a href="{{ route('admin.roommaintain.index') }}" class="flex items-center gap-2 px-2.5 py-1.5 text-xs font-semibold rounded-lg transition-all admin-sub-item {{ request()->routeIs('admin.roommaintain.*') ? 'bg-purple-600 text-white font-bold shadow-xs active' : 'text-slate-600 hover:bg-purple-50 hover:text-purple-700' }}">
-            <i class="fa-solid fa-screwdriver-wrench text-[11px] w-4 text-center {{ request()->routeIs('admin.roommaintain.*') ? 'text-white' : 'text-slate-400' }}"></i>
+          <a href="{{ route('admin.roommaintain.index') }}" class="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg transition-all admin-sub-item {{ request()->routeIs('admin.roommaintain.*') ? 'active' : 'text-slate-600 hover:bg-purple-50 hover:text-purple-700' }}">
+            <i class="fa-solid fa-screwdriver-wrench text-xs w-4 text-center {{ request()->routeIs('admin.roommaintain.*') ? 'text-purple-600' : 'text-slate-400 group-hover:text-purple-600' }}"></i>
             <span class="truncate">Room Maintenance</span>
           </a>
         </li>
@@ -200,22 +200,22 @@
           <i class="fa-solid fa-chevron-right text-[10px] text-slate-400 transition-transform duration-200 {{ $isHkActive ? 'rotate-90 text-amber-600' : '' }}"></i>
         </div>
       </div>
-      <ul class="admin-sub-list flex flex-col gap-0.5 py-1.5 pl-3 pr-2 list-none border-t border-slate-100/80 bg-slate-50/30 {{ $isHkActive ? '' : 'hidden' }}">
+      <ul class="admin-sub-list flex flex-col gap-1.5 mt-2 pt-3 pb-2.5 px-2.5 list-none border-t border-slate-100 bg-slate-50/40 {{ $isHkActive ? '' : 'hidden' }}">
         <li>
-          <a href="{{ route('admin.utilities.housekeeping.state.index') }}" class="flex items-center gap-2 px-2.5 py-1.5 text-xs font-semibold rounded-lg transition-all admin-sub-item {{ request()->routeIs('admin.utilities.housekeeping.state.*') ? 'bg-amber-600 text-white font-bold shadow-xs active' : 'text-slate-600 hover:bg-amber-50 hover:text-amber-700' }}">
-            <i class="fa-solid fa-spray-can-sparkles text-[11px] w-4 text-center {{ request()->routeIs('admin.utilities.housekeeping.state.*') ? 'text-white' : 'text-slate-400' }}"></i>
+          <a href="{{ route('admin.utilities.housekeeping.state.index') }}" class="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg transition-all admin-sub-item {{ request()->routeIs('admin.utilities.housekeeping.state.*') ? 'active' : 'text-slate-600 hover:bg-amber-50 hover:text-amber-700' }}">
+            <i class="fa-solid fa-spray-can-sparkles text-xs w-4 text-center {{ request()->routeIs('admin.utilities.housekeeping.state.*') ? 'text-amber-600' : 'text-slate-400 group-hover:text-amber-600' }}"></i>
             <span class="truncate">Housekeeping State</span>
           </a>
         </li>
         <li>
-          <a href="{{ route('admin.utilities.housekeeping.operational.index') }}" class="flex items-center gap-2 px-2.5 py-1.5 text-xs font-semibold rounded-lg transition-all admin-sub-item {{ request()->routeIs('admin.utilities.housekeeping.operational.*') ? 'bg-amber-600 text-white font-bold shadow-xs active' : 'text-slate-600 hover:bg-amber-50 hover:text-amber-700' }}">
-            <i class="fa-solid fa-circle-nodes text-[11px] w-4 text-center {{ request()->routeIs('admin.utilities.housekeeping.operational.*') ? 'text-white' : 'text-slate-400' }}"></i>
+          <a href="{{ route('admin.utilities.housekeeping.operational.index') }}" class="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg transition-all admin-sub-item {{ request()->routeIs('admin.utilities.housekeeping.operational.*') ? 'active' : 'text-slate-600 hover:bg-amber-50 hover:text-amber-700' }}">
+            <i class="fa-solid fa-circle-nodes text-xs w-4 text-center {{ request()->routeIs('admin.utilities.housekeeping.operational.*') ? 'text-amber-600' : 'text-slate-400 group-hover:text-amber-600' }}"></i>
             <span class="truncate">Operational Status</span>
           </a>
         </li>
         <li>
-          <a href="{{ route('frontoffice.housekeeping') }}" class="flex items-center gap-2 px-2.5 py-1.5 text-xs font-semibold rounded-lg transition-all admin-sub-item {{ request()->routeIs('frontoffice.housekeeping*') ? 'bg-amber-600 text-white font-bold shadow-xs active' : 'text-slate-600 hover:bg-amber-50 hover:text-amber-700' }}">
-            <i class="fa-solid fa-table-cells text-[11px] w-4 text-center {{ request()->routeIs('frontoffice.housekeeping*') ? 'text-white' : 'text-slate-400' }}"></i>
+          <a href="{{ route('frontoffice.housekeeping') }}" class="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg transition-all admin-sub-item {{ request()->routeIs('frontoffice.housekeeping*') ? 'active' : 'text-slate-600 hover:bg-amber-50 hover:text-amber-700' }}">
+            <i class="fa-solid fa-table-cells text-xs w-4 text-center {{ request()->routeIs('frontoffice.housekeeping*') ? 'text-amber-600' : 'text-slate-400 group-hover:text-amber-600' }}"></i>
             <span class="truncate">Live HK Dashboard</span>
           </a>
         </li>

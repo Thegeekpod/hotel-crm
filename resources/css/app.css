@@ -238,11 +238,25 @@
     transform: translateX(2px) !important;
 }
 
+.admin-sub-item:hover i {
+    color: #4f46e5 !important;
+}
+
 .admin-sub-item.active {
     background: #eef2ff !important;
     color: #4338ca !important;
     font-weight: 800 !important;
     border-left: 3px solid #6366f1 !important;
+}
+
+.admin-sub-item.active i {
+    color: #4f46e5 !important;
+}
+
+.admin-sub-list {
+    margin-top: 0.25rem !important;
+    padding-top: 0.625rem !important;
+    padding-bottom: 0.5rem !important;
 }
 
 /* Universal Inputs & Form Fields */

@@ -114,7 +114,8 @@
 
     <!-- 3. Filter & Search Toolbar -->
     <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-4">
-      <form method="GET" action="{{ route('pos.orders.index') }}" class="flex flex-wrap items-center justify-between gap-3">
+      <form method="GET" action="{{ route('pos.orders.index') }}" id="pos-orders-filter-form" class="flex flex-wrap items-center justify-between gap-3">
+        <input type="hidden" name="per_page" id="pos-filter-per-page" value="{{ request('per_page', 10) }}">
         <div class="flex flex-wrap items-center gap-2.5 flex-1 min-w-[280px]">
           <!-- Search -->
           <div class="relative flex-1 min-w-[220px] max-w-md">
@@ -164,20 +165,35 @@
 
     <!-- 4. Orders Data Table Card -->
     <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden flex flex-col">
-      <div class="px-5 py-4 border-b border-slate-200/80 flex items-center justify-between">
+      <div class="px-5 py-4 border-b border-slate-200/80 flex items-center justify-between flex-wrap gap-3">
         <div class="flex items-center gap-2.5">
           <h2 class="text-sm font-extrabold text-slate-900 tracking-tight">KOT Tickets &amp; Order Register</h2>
           <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200/80">
             {{ $orders->total() }} Records
           </span>
         </div>
-        <span class="text-xs text-slate-400 font-medium">Page {{ $orders->currentPage() }} of {{ $orders->lastPage() ?: 1 }}</span>
+        
+        <div class="flex items-center gap-3">
+          <div class="pms-per-page-wrap">
+            <span>Show</span>
+            <select name="per_page" class="pms-per-page-select" id="pos-orders-per-page" onchange="changePosPerPage(this.value)">
+              <option value="5" {{ request('per_page') == '5' ? 'selected' : '' }}>5</option>
+              <option value="10" {{ request('per_page') == '10' || !request()->filled('per_page') ? 'selected' : '' }}>10</option>
+              <option value="20" {{ request('per_page') == '20' ? 'selected' : '' }}>20</option>
+              <option value="50" {{ request('per_page') == '50' ? 'selected' : '' }}>50</option>
+              <option value="all" {{ request('per_page') == 'all' ? 'selected' : '' }}>All</option>
+            </select>
+            <span>entries</span>
+          </div>
+          <span class="text-xs text-slate-400 font-medium">Page {{ $orders->currentPage() }} of {{ $orders->lastPage() ?: 1 }}</span>
+        </div>
       </div>
 
       <div class="overflow-x-auto">
         <table class="w-full text-left border-collapse text-xs" id="pos-orders-table">
           <thead>
             <tr class="bg-slate-50/80 text-slate-500 uppercase tracking-wider text-[11px] font-bold border-b border-slate-200/80">
+              <th class="px-3.5 py-3 text-center w-12">SL</th>
               <th class="px-4 py-3">Order # &amp; Time</th>
               <th class="px-4 py-3">Destination / Type</th>
               <th class="px-4 py-3">Guest / Customer</th>
@@ -191,6 +207,11 @@
           <tbody class="divide-y divide-slate-100">
             @forelse($orders as $order)
               <tr class="hover:bg-slate-50/70 transition-colors">
+                <!-- SL -->
+                <td class="px-3.5 py-3 text-center font-mono font-bold text-slate-400 text-xs">
+                  {{ ($orders->firstItem() ?? 1) + $loop->index }}
+                </td>
+
                 <!-- Order Number & Timestamp -->
                 <td class="px-4 py-3">
                   <div class="font-mono font-black text-indigo-700 text-xs">
@@ -300,7 +321,7 @@
               </tr>
             @empty
               <tr>
-                <td colspan="8" class="text-center text-slate-400 py-16 text-xs font-medium">
+                <td colspan="9" class="text-center text-slate-400 py-16 text-xs font-medium">
                   <i class="fa-solid fa-receipt text-3xl mb-2 block text-slate-300"></i>
                   No POS orders or KOT tickets found matching the selected criteria.
                 </td>
@@ -310,17 +331,62 @@
         </table>
       </div>
 
-      <!-- Pagination -->
-      @if($orders->hasPages())
-        <div class="px-5 py-4 bg-slate-50/70 border-t border-slate-200/80 flex items-center justify-between flex-wrap gap-3">
-          <div class="text-xs text-slate-500 font-medium">
-            Showing {{ $orders->firstItem() }} to {{ $orders->lastItem() }} of {{ $orders->total() }} orders
-          </div>
-          <div>
-            {{ $orders->links() }}
-          </div>
+      <!-- Pagination Footer -->
+      <div class="px-5 py-3.5 bg-slate-50/70 border-t border-slate-200/80 flex items-center justify-between flex-wrap gap-3">
+        <div class="text-xs text-slate-500 font-medium">
+          Showing <span class="font-bold text-slate-800">{{ $orders->firstItem() ?? ($orders->total() > 0 ? 1 : 0) }}</span> to <span class="font-bold text-slate-800">{{ $orders->lastItem() ?? $orders->total() }}</span> of <span class="font-bold text-slate-800">{{ $orders->total() }}</span> orders
         </div>
-      @endif
+
+        <div class="pms-page-nav flex items-center gap-1">
+          @if ($orders->hasPages())
+            {{-- Previous Page Link --}}
+            @if ($orders->onFirstPage())
+              <span class="pms-page-btn opacity-40 cursor-not-allowed" title="Previous Page"><i class="fa-solid fa-chevron-left"></i></span>
+            @else
+              <a href="{{ $orders->previousPageUrl() }}" class="pms-page-btn" title="Previous Page"><i class="fa-solid fa-chevron-left"></i></a>
+            @endif
+
+            @php
+              $start = max(1, $orders->currentPage() - 2);
+              $end = min($orders->lastPage(), $orders->currentPage() + 2);
+            @endphp
+
+            @if ($start > 1)
+              <a href="{{ $orders->url(1) }}" class="pms-page-btn">1</a>
+              @if ($start > 2)
+                <span class="pms-page-btn border-none cursor-default bg-transparent text-slate-400">...</span>
+              @endif
+            @endif
+
+            {{-- Pagination Number Elements --}}
+            @foreach ($orders->getUrlRange($start, $end) as $page => $url)
+              @if ($page == $orders->currentPage())
+                <span class="pms-page-btn active">{{ $page }}</span>
+              @else
+                <a href="{{ $url }}" class="pms-page-btn">{{ $page }}</a>
+              @endif
+            @endforeach
+
+            @if ($end < $orders->lastPage())
+              @if ($end < $orders->lastPage() - 1)
+                <span class="pms-page-btn border-none cursor-default bg-transparent text-slate-400">...</span>
+              @endif
+              <a href="{{ $orders->url($orders->lastPage()) }}" class="pms-page-btn">{{ $orders->lastPage() }}</a>
+            @endif
+
+            {{-- Next Page Link --}}
+            @if ($orders->hasMorePages())
+              <a href="{{ $orders->nextPageUrl() }}" class="pms-page-btn" title="Next Page"><i class="fa-solid fa-chevron-right"></i></a>
+            @else
+              <span class="pms-page-btn opacity-40 cursor-not-allowed" title="Next Page"><i class="fa-solid fa-chevron-right"></i></span>
+            @endif
+          @else
+            <span class="pms-page-btn opacity-40 cursor-not-allowed"><i class="fa-solid fa-chevron-left"></i></span>
+            <span class="pms-page-btn active">1</span>
+            <span class="pms-page-btn opacity-40 cursor-not-allowed"><i class="fa-solid fa-chevron-right"></i></span>
+          @endif
+        </div>
+      </div>
     </div>
 
   </div>
@@ -588,6 +654,20 @@
     return String(str).replace(/[&<>"']/g, function(m) {
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
     });
+  }
+
+  function changePosPerPage(val) {
+    const form = document.getElementById('pos-orders-filter-form');
+    if (form) {
+      const input = document.getElementById('pos-filter-per-page');
+      if (input) input.value = val;
+      form.submit();
+    } else {
+      const url = new URL(window.location.href);
+      url.searchParams.set('per_page', val);
+      url.searchParams.set('page', '1');
+      window.location.href = url.toString();
+    }
   }
 </script>
 @endpush

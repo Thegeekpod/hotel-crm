@@ -164,8 +164,14 @@ class PosController extends Controller
         $cancelledCount = PosOrder::where('status', 'Cancelled')->count();
         $roomFolioCount = PosOrder::where('billing_type', 'Charged to Room Folio')->count();
 
-        // Paginate results
-        $orders = $query->paginate(20)->withQueryString();
+        // Backend Pagination
+        $perPage = $request->query('per_page', 10);
+        if ($perPage === 'all') {
+            $orders = $query->paginate(1000)->withQueryString();
+        } else {
+            $perPage = (int)$perPage > 0 ? (int)$perPage : 10;
+            $orders = $query->paginate($perPage)->withQueryString();
+        }
 
         return view('pos.orders', compact(
             'orders',

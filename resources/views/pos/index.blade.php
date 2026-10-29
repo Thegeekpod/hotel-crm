@@ -106,16 +106,16 @@
           </select>
         </div>
 
-        <!-- Table Selector (Visible for Table Dine-in) -->
+        <!-- Table Selector (Visible for Table Dine-in & Takeaway) -->
         <div id="table-select-group" class="items-center gap-2 hidden">
           <span class="font-bold text-xs text-slate-500 whitespace-nowrap">Table / Host:</span>
-          <select class="h-9.5 text-xs font-medium rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-indigo-500 min-w-[200px]" id="pos-table-select">
-            <option value="Table 1 (Sea Breeze Deck)">Table 1 (Sea Breeze Deck)</option>
-            <option value="Table 2 (Lawn View)">Table 2 (Lawn View)</option>
-            <option value="Table 3 (Poolside)">Table 3 (Poolside)</option>
-            <option value="Table 4 (Indoor AC)">Table 4 (Indoor AC)</option>
-            <option value="Table 5 (Family Cluster)">Table 5 (Family Cluster)</option>
-            <option value="VIP Booth 01">VIP Booth 01</option>
+          <select class="h-9.5 text-xs font-semibold rounded-xl border border-slate-200 bg-white text-slate-700 px-3 focus:outline-none focus:border-indigo-500 min-w-[220px]" id="pos-table-select">
+            <option value="">-- Select Available Table --</option>
+            @foreach($availableTables as $tbl)
+              <option value="{{ $tbl->table_number }} ({{ $tbl->table_name }})" data-table-id="{{ $tbl->id }}" data-table-num="{{ $tbl->table_number }}" data-table-name="{{ $tbl->table_name }}">
+                {{ $tbl->table_number }} ({{ $tbl->table_name }})
+              </option>
+            @endforeach
           </select>
         </div>
 
@@ -431,6 +431,11 @@
                   @endif
                 @else
                   <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200/80"><i class="fa-solid fa-bag-shopping text-[9px]"></i> Takeaway</span>
+                  @if($ro->table_number)
+                    <div class="text-[10px] text-emerald-700 font-bold mt-0.5 flex items-center gap-1">
+                      <i class="fa-solid fa-chair text-[9px]"></i> {{ $ro->table_number }}
+                    </div>
+                  @endif
                 @endif
               </td>
               <td class="px-3.5 py-2.5">
@@ -483,6 +488,114 @@
     </div>
     <div class="px-6 py-3.5 bg-slate-50/80 border-t border-slate-200/80 flex justify-end">
       <button type="button" class="inline-flex items-center h-9 px-4 text-xs font-bold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200/80 rounded-xl transition-all shadow-xs cursor-pointer" onclick="closeOrdersModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL 3: Live Table Management & Status -->
+<div class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 hidden" id="table-manage-modal">
+  <div class="bg-white w-full max-w-4xl rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[85vh]">
+    <div class="bg-slate-50/80 px-6 py-4 border-b border-slate-200/80 flex items-center justify-between">
+      <div>
+        <h3 class="text-sm font-extrabold text-slate-900 flex items-center gap-2">
+          <i class="fa-solid fa-chair text-purple-600"></i> Live Restaurant Table Management
+        </h3>
+        <p class="text-xs text-slate-500 mt-0.5">
+          Manage live table occupancy, toggle status between Booked and Available, and track dining capacity in real time.
+        </p>
+      </div>
+      <button type="button" onclick="closeTableManageModal()" class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center text-base cursor-pointer transition-colors">&times;</button>
+    </div>
+
+    <!-- Live Status Strip -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 px-6 py-3.5 bg-slate-50/40 border-b border-slate-100">
+      <div class="bg-white border border-slate-200 rounded-xl p-3 shadow-2xs">
+        <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Total Tables</span>
+        <div class="text-xl font-extrabold text-slate-900 font-mono mt-0.5" id="tm-total-count">{{ count($allTables) }}</div>
+      </div>
+      <div class="bg-emerald-50/60 border border-emerald-200 rounded-xl p-3 shadow-2xs">
+        <span class="text-[10px] font-bold text-emerald-700 uppercase tracking-wider block">Available</span>
+        <div class="text-xl font-extrabold text-emerald-700 font-mono mt-0.5" id="tm-available-count">{{ $allTables->where('status', 'available')->count() }}</div>
+      </div>
+      <div class="bg-amber-50/60 border border-amber-200 rounded-xl p-3 shadow-2xs">
+        <span class="text-[10px] font-bold text-amber-700 uppercase tracking-wider block">Booked / Occupied</span>
+        <div class="text-xl font-extrabold text-amber-700 font-mono mt-0.5" id="tm-booked-count">{{ $allTables->where('status', 'booked')->count() }}</div>
+      </div>
+      <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 shadow-2xs">
+        <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Inactive</span>
+        <div class="text-xl font-extrabold text-slate-600 font-mono mt-0.5" id="tm-inactive-count">{{ $allTables->where('status', 'inactive')->count() }}</div>
+      </div>
+    </div>
+
+    <!-- Tables Table -->
+    <div class="p-0 overflow-y-auto flex-1">
+      <table class="w-full text-left border-collapse text-xs">
+        <thead class="sticky top-0 z-10">
+          <tr class="bg-slate-50 text-slate-500 uppercase tracking-wider text-[11px] font-bold border-b border-slate-200">
+            <th class="px-4 py-3">Table Number</th>
+            <th class="px-4 py-3">Table Name / Area</th>
+            <th class="px-4 py-3">Current Status</th>
+            <th class="px-4 py-3 text-right">Quick Status Change</th>
+          </tr>
+        </thead>
+        <tbody id="pos-table-manage-tbody" class="divide-y divide-slate-100">
+          @forelse($allTables as $t)
+            <tr data-table-id="{{ $t->id }}" class="hover:bg-slate-50/80 transition-colors">
+              <td class="px-4 py-3 font-extrabold text-slate-900 flex items-center gap-2">
+                <i class="fa-solid fa-chair text-xs {{ $t->status === 'available' ? 'text-emerald-500' : ($t->status === 'booked' ? 'text-amber-500' : 'text-slate-400') }}"></i>
+                {{ $t->table_number }}
+              </td>
+              <td class="px-4 py-3 text-slate-700 font-medium">
+                {{ $t->table_name }}
+              </td>
+              <td class="px-4 py-3" id="tm-badge-td-{{ $t->id }}">
+                @if($t->status === 'available')
+                  <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Available
+                  </span>
+                @elseif($t->status === 'booked')
+                  <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                    <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Booked
+                  </span>
+                @else
+                  <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200">
+                    <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> Inactive
+                  </span>
+                @endif
+              </td>
+              <td class="px-4 py-3 text-right" id="tm-action-td-{{ $t->id }}">
+                <div class="inline-flex items-center gap-2">
+                  <select class="h-8 text-xs font-semibold rounded-lg border border-slate-200 bg-white px-2 py-1 text-slate-700 focus:outline-none focus:border-indigo-500 cursor-pointer" onchange="updateLiveTableStatus({{ $t->id }}, this.value)">
+                    <option value="available" {{ $t->status === 'available' ? 'selected' : '' }}>Available (Free)</option>
+                    <option value="booked" {{ $t->status === 'booked' ? 'selected' : '' }}>Booked</option>
+                    <option value="inactive" {{ $t->status === 'inactive' ? 'selected' : '' }}>Inactive</option>
+                  </select>
+                  @if($t->status === 'booked')
+                    <button type="button" class="inline-flex items-center gap-1 h-8 px-2.5 text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition-colors cursor-pointer" onclick="updateLiveTableStatus({{ $t->id }}, 'available')">
+                      <i class="fa-solid fa-check text-[10px]"></i> Free Table
+                    </button>
+                  @elseif($t->status === 'available')
+                    <button type="button" class="inline-flex items-center gap-1 h-8 px-2.5 text-xs font-bold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-lg transition-colors cursor-pointer" onclick="updateLiveTableStatus({{ $t->id }}, 'booked')">
+                      <i class="fa-solid fa-chair text-[10px]"></i> Mark Booked
+                    </button>
+                  @endif
+                </div>
+              </td>
+            </tr>
+          @empty
+            <tr>
+              <td colspan="4" class="text-center text-slate-400 py-8">No tables found.</td>
+            </tr>
+          @endforelse
+        </tbody>
+      </table>
+    </div>
+
+    <div class="px-6 py-3.5 bg-slate-50/80 border-t border-slate-200/80 flex items-center justify-between">
+      <a href="{{ route('admin.utilities.frontoffice.table-manage.index') }}" target="_blank" class="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-600 hover:text-indigo-800 transition-colors">
+        <i class="fa-solid fa-gear"></i> Open Full Admin Table Master
+      </a>
+      <button type="button" class="inline-flex items-center h-9 px-4 text-xs font-bold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200/80 rounded-xl transition-all shadow-xs cursor-pointer" onclick="closeTableManageModal()">Close</button>
     </div>
   </div>
 </div>
@@ -659,6 +772,10 @@
       const btn = document.getElementById('type-dinein');
       if (btn) btn.className = 'pos-order-type-btn px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-white text-emerald-700 shadow-xs cursor-pointer';
       tableGrp.style.display = 'flex';
+      const tblSelect = document.getElementById('pos-table-select');
+      if (tblSelect && tblSelect.options.length > 0) {
+        tblSelect.options[0].text = '-- Select Available Table --';
+      }
       if (takeawayGrp) takeawayGrp.style.display = 'none';
       if (folioPill) folioPill.style.display = 'block';
       if (takeawayCustBox) takeawayCustBox.style.display = 'none';
@@ -673,7 +790,11 @@
       const btn = document.getElementById('type-takeaway');
       if (btn) btn.className = 'pos-order-type-btn px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-white text-emerald-700 shadow-xs cursor-pointer';
       if (roomGrp) roomGrp.style.display = 'none';
-      tableGrp.style.display = 'none';
+      tableGrp.style.display = 'flex';
+      const tblSelect = document.getElementById('pos-table-select');
+      if (tblSelect && tblSelect.options.length > 0) {
+        tblSelect.options[0].text = '-- No Table / Takeaway Counter (Optional) --';
+      }
       if (takeawayGrp) takeawayGrp.style.display = 'none';
       if (folioPill) folioPill.style.display = 'none';
       if (folioBox) folioBox.style.display = 'none';
@@ -920,6 +1041,16 @@
       payload.customer_name = custName;
       payload.customer_phone = custPhone || null;
       payload.room_id = null;
+
+      // Optional table for Takeaway
+      const tblSelect = document.getElementById('pos-table-select');
+      if (tblSelect && tblSelect.value) {
+        payload.table_number = tblSelect.value;
+        const selectedOpt = tblSelect.options[tblSelect.selectedIndex];
+        if (selectedOpt && selectedOpt.getAttribute('data-table-id')) {
+          payload.table_id = selectedOpt.getAttribute('data-table-id');
+        }
+      }
     } else {
       // Room Dining or Table Dine-in
       const cartRm = document.getElementById('cart-room-folio-select');
@@ -944,9 +1075,23 @@
       }
 
       if (currentOrderType === 'Table Dine-in') {
-        payload.table_number = document.getElementById('pos-table-select').value;
+        const tblSelect = document.getElementById('pos-table-select');
+        if (!tblSelect || !tblSelect.value) {
+          if (typeof Swal !== 'undefined') {
+            Swal.fire({ icon: 'warning', title: 'Table Required', text: 'Please select an available dining table for Dine-in!' });
+          } else {
+            alert('Please select an available dining table for Dine-in!');
+          }
+          tblSelect?.focus();
+          return;
+        }
+        payload.table_number = tblSelect.value;
+        const selectedOpt = tblSelect.options[tblSelect.selectedIndex];
+        if (selectedOpt && selectedOpt.getAttribute('data-table-id')) {
+          payload.table_id = selectedOpt.getAttribute('data-table-id');
+        }
         if (!payload.room_id) {
-          payload.customer_name = payload.table_number;
+          payload.customer_name = payload.table_number + ' Guest';
         }
       }
     }
@@ -984,6 +1129,9 @@
         document.getElementById('order-instructions').value = '';
         if (document.getElementById('takeaway-customer-name')) document.getElementById('takeaway-customer-name').value = '';
         if (document.getElementById('takeaway-customer-phone')) document.getElementById('takeaway-customer-phone').value = '';
+        
+        // Refresh tables to ensure booked table is no longer selectable
+        fetchAndSyncAvailableTables();
       } else {
         alert(data.message || 'Error posting order.');
       }
@@ -1085,16 +1233,43 @@
 
   // 8. Recent Orders & KOT History Modal
   function openRecentOrdersModal() {
-    document.getElementById('orders-history-modal').style.display = 'flex';
+    const m = document.getElementById('orders-history-modal');
+    if (m) {
+      m.classList.remove('hidden');
+      m.style.display = 'flex';
+    }
   }
 
   function closeOrdersModal() {
-    document.getElementById('orders-history-modal').style.display = 'none';
+    const m = document.getElementById('orders-history-modal');
+    if (m) {
+      m.classList.add('hidden');
+      m.style.display = 'none';
+    }
+  }
+
+  // 9. Table Management Modal & Real-time Status Switching
+  function openTableManageModal() {
+    const m = document.getElementById('table-manage-modal');
+    if (m) {
+      m.classList.remove('hidden');
+      m.style.display = 'flex';
+    }
+    fetchAndSyncAvailableTables();
+  }
+
+  function closeTableManageModal() {
+    const m = document.getElementById('table-manage-modal');
+    if (m) {
+      m.classList.add('hidden');
+      m.style.display = 'none';
+    }
   }
 
   async function updateOrderStatus(orderId, newStatus) {
     try {
-      const res = await fetch(`/pos/orders/${orderId}/status`, {
+      const url = "{{ url('pos/orders') }}/" + orderId + "/status";
+      const res = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -1103,23 +1278,222 @@
         },
         body: JSON.stringify({ status: newStatus })
       });
+
       const data = await res.json();
-      if (data.success && typeof PmsAlert !== 'undefined') {
-        PmsAlert.toast(data.message, 'success');
+      if (res.ok && data.success) {
+        if (typeof Swal !== 'undefined') {
+          Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'success',
+            title: data.message || 'Order status updated',
+            showConfirmButton: false,
+            timer: 2000
+          });
+        } else if (typeof PmsAlert !== 'undefined') {
+          PmsAlert.toast(data.message, 'success');
+        } else {
+          alert(data.message);
+        }
+      } else {
+        if (typeof Swal !== 'undefined') {
+          Swal.fire({
+            icon: 'error',
+            title: 'Update Failed',
+            text: data.message || 'Failed to update order status.'
+          });
+        } else {
+          alert(data.message || 'Error updating order status.');
+        }
       }
     } catch(e) {
-      alert('Error updating order status.');
+      console.error('Error updating order status:', e);
+      if (typeof Swal !== 'undefined') {
+        Swal.fire({
+          icon: 'error',
+          title: 'Update Error',
+          text: 'Network or server error while updating status.'
+        });
+      } else {
+        alert('Error updating order status.');
+      }
     }
+  }
+
+  async function updateLiveTableStatus(tableId, newStatus) {
+    try {
+      const url = "{{ url('pos/tables') }}/" + tableId + "/status";
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': '{{ csrf_token() }}',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ status: newStatus })
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        if (typeof Swal !== 'undefined') {
+          Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'success',
+            title: data.message,
+            showConfirmButton: false,
+            timer: 2000
+          });
+        } else if (typeof PmsAlert !== 'undefined') {
+          PmsAlert.toast(data.message, 'success');
+        }
+
+        const all = data.tables || [];
+        const avail = data.availableTables || [];
+        const booked = all.filter(t => t.status === 'booked');
+        const inactive = all.filter(t => t.status === 'inactive');
+
+        const totEl = document.getElementById('tm-total-count');
+        const avEl = document.getElementById('tm-available-count');
+        const bkEl = document.getElementById('tm-booked-count');
+        const inEl = document.getElementById('tm-inactive-count');
+        if (totEl) totEl.textContent = all.length;
+        if (avEl) avEl.textContent = avail.length;
+        if (bkEl) bkEl.textContent = booked.length;
+        if (inEl) inEl.textContent = inactive.length;
+
+        renderTableManageRows(all);
+        refreshPosTableSelectDropdown(avail);
+      } else {
+        if (typeof Swal !== 'undefined') {
+          Swal.fire({ icon: 'error', title: 'Update Failed', text: data.message || 'Could not update table status.' });
+        } else {
+          alert(data.message || 'Could not update table status.');
+        }
+      }
+    } catch(err) {
+      console.error(err);
+      if (typeof Swal !== 'undefined') {
+        Swal.fire({ icon: 'error', title: 'Error', text: 'Server or network error updating table status.' });
+      } else {
+        alert('Server or network error updating table status.');
+      }
+    }
+  }
+
+  async function fetchAndSyncAvailableTables() {
+    try {
+      const url = "{{ route('pos.tables.index') }}";
+      const res = await fetch(url, {
+        headers: { 'Accept': 'application/json' }
+      });
+      const data = await res.json();
+      if (data.success) {
+        const all = data.tables || [];
+        const avail = data.availableTables || [];
+        const booked = all.filter(t => t.status === 'booked');
+        const inactive = all.filter(t => t.status === 'inactive');
+
+        const totEl = document.getElementById('tm-total-count');
+        const avEl = document.getElementById('tm-available-count');
+        const bkEl = document.getElementById('tm-booked-count');
+        const inEl = document.getElementById('tm-inactive-count');
+        if (totEl) totEl.textContent = all.length;
+        if (avEl) avEl.textContent = avail.length;
+        if (bkEl) bkEl.textContent = booked.length;
+        if (inEl) inEl.textContent = inactive.length;
+
+        renderTableManageRows(all);
+        refreshPosTableSelectDropdown(avail);
+      }
+    } catch(e) {
+      console.error('Failed to sync tables:', e);
+    }
+  }
+
+  function renderTableManageRows(tables) {
+    const tbody = document.getElementById('pos-table-manage-tbody');
+    if (!tbody) return;
+    if (tables.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="4" class="text-center text-slate-400 py-8">No tables found.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = tables.map(t => {
+      const isAvail = (t.status === 'available');
+      const isBooked = (t.status === 'booked');
+      const iconColor = isAvail ? 'text-emerald-500' : (isBooked ? 'text-amber-500' : 'text-slate-400');
+      const badge = isAvail
+        ? '<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Available</span>'
+        : (isBooked
+          ? '<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Booked</span>'
+          : '<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200"><span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> Inactive</span>');
+
+      const actionBtn = isBooked
+        ? `<button type="button" class="inline-flex items-center gap-1 h-8 px-2.5 text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition-colors cursor-pointer" onclick="updateLiveTableStatus(${t.id}, 'available')"><i class="fa-solid fa-check text-[10px]"></i> Free Table</button>`
+        : (isAvail
+          ? `<button type="button" class="inline-flex items-center gap-1 h-8 px-2.5 text-xs font-bold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-lg transition-colors cursor-pointer" onclick="updateLiveTableStatus(${t.id}, 'booked')"><i class="fa-solid fa-chair text-[10px]"></i> Mark Booked</button>`
+          : '');
+
+      return `
+        <tr data-table-id="${t.id}" class="hover:bg-slate-50/80 transition-colors">
+          <td class="px-4 py-3 font-extrabold text-slate-900 flex items-center gap-2">
+            <i class="fa-solid fa-chair text-xs ${iconColor}"></i>
+            ${escapeHtml(t.table_number)}
+          </td>
+          <td class="px-4 py-3 text-slate-700 font-medium">
+            ${escapeHtml(t.table_name)}
+          </td>
+          <td class="px-4 py-3" id="tm-badge-td-${t.id}">${badge}</td>
+          <td class="px-4 py-3 text-right" id="tm-action-td-${t.id}">
+            <div class="inline-flex items-center gap-2">
+              <select class="h-8 text-xs font-semibold rounded-lg border border-slate-200 bg-white px-2 py-1 text-slate-700 focus:outline-none focus:border-indigo-500 cursor-pointer" onchange="updateLiveTableStatus(${t.id}, this.value)">
+                <option value="available" ${isAvail ? 'selected' : ''}>Available (Free)</option>
+                <option value="booked" ${isBooked ? 'selected' : ''}>Booked</option>
+                <option value="inactive" ${t.status === 'inactive' ? 'selected' : ''}>Inactive</option>
+              </select>
+              ${actionBtn}
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  function refreshPosTableSelectDropdown(availableTables) {
+    const sel = document.getElementById('pos-table-select');
+    if (!sel) return;
+    const currentVal = sel.value;
+    const firstOptionText = (currentOrderType === 'Takeaway') 
+      ? '-- No Table / Takeaway Counter (Optional) --' 
+      : '-- Select Available Table --';
+
+    let html = `<option value="">${firstOptionText}</option>`;
+    availableTables.forEach(t => {
+      const val = `${t.table_number} (${t.table_name})`;
+      const selected = (val === currentVal) ? 'selected' : '';
+      html += `<option value="${val}" data-table-id="${t.id}" data-table-num="${t.table_number}" data-table-name="${t.table_name}" ${selected}>${val}</option>`;
+    });
+    sel.innerHTML = html;
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/[&<>"']/g, function(m) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
+    });
   }
 
   async function reprintOrderKot(orderId) {
     try {
-      const res = await fetch(`/pos/orders/${orderId}`, {
+      const url = "{{ url('pos/orders') }}/" + orderId;
+      const res = await fetch(url, {
         headers: { 'Accept': 'application/json' }
       });
       const data = await res.json();
       if (data.success && data.order) {
         showKotModal(data.order);
+      } else {
+        alert(data.message || 'Unable to retrieve KOT.');
       }
     } catch(e) {
       alert('Unable to retrieve KOT.');

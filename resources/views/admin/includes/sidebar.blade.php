@@ -55,6 +55,11 @@
           <i class="fa-solid fa-list-check text-indigo-500 text-[11px]"></i> Meal Plans
         </a>
       </li>
+      <li>
+        <a href="{{ route('admin.utilities.frontoffice.table-manage.index') }}" class="admin-sub-item {{ request()->routeIs('admin.utilities.frontoffice.table-manage.*') ? 'active' : '' }}">
+          <i class="fa-solid fa-chair"></i> Table Manage
+        </a>
+      </li>
     </ul>
   </div>
 

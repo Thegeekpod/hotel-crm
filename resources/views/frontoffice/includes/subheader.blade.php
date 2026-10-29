@@ -69,6 +69,10 @@
         <span class="w-5 h-5 rounded-md bg-cyan-50 text-cyan-600 flex items-center justify-center text-xs ico-box"><i class="fa-solid fa-clock-rotate-left"></i></span>
         <span class="lbl-box">KOT History</span>
       </button>
+      <button type="button" class="{{ $btnBase }} {{ $btnDefault }}" onclick="openTableManageModal()">
+        <span class="w-5 h-5 rounded-md bg-purple-50 text-purple-600 flex items-center justify-center text-xs ico-box"><i class="fa-solid fa-chair"></i></span>
+        <span class="lbl-box">Table Manage</span>
+      </button>
       <a href="{{ route('stores.index') }}" class="{{ $btnBase }} {{ $btnDefault }}">
         <span class="w-5 h-5 rounded-md bg-amber-50 text-amber-600 flex items-center justify-center text-xs ico-box"><i class="fa-solid fa-boxes-stacked"></i></span>
         <span class="lbl-box">Manage Menus &amp; Stock</span>

@@ -13,6 +13,7 @@ use App\Models\RoomServiceOrder;
 use App\Models\RoomServiceOrderItem;
 use App\Models\StoreItem;
 use App\Models\StoreMovement;
+use App\Models\TableManage;
 
 class PosController extends Controller
 {
@@ -95,6 +96,10 @@ class PosController extends Controller
             $menuCategories = ['Breakfast', 'Starters', 'Main Course', 'Beverages', 'Desserts'];
         }
 
+        // 5. Tables: Available for dining selection, and all tables for management modal
+        $availableTables = TableManage::where('status', 'available')->orderBy('table_number')->get();
+        $allTables = TableManage::orderBy('table_number')->get();
+
         return view('pos.index', compact(
             'menuItems',
             'selectableRooms',
@@ -103,7 +108,9 @@ class PosController extends Controller
             'todaySalesTotal',
             'activeKotCount',
             'chargedToRoomCount',
-            'menuCategories'
+            'menuCategories',
+            'availableTables',
+            'allTables'
         ));
     }
 
@@ -115,7 +122,8 @@ class PosController extends Controller
         $validated = $request->validate([
             'order_type' => 'required|in:Room Dining,Table Dine-in,Takeaway',
             'room_id' => 'nullable|exists:rooms,id',
-            'table_number' => 'nullable|string|max:50',
+            'table_number' => 'nullable|string|max:150',
+            'table_id' => 'nullable|integer',
             'customer_name' => 'nullable|string|max:150',
             'customer_phone' => 'nullable|string|max:30',
             'billing_type' => 'required|in:Charged to Room Folio,Cash Paid,Digital UPI / Card Paid',
@@ -128,11 +136,40 @@ class PosController extends Controller
             'items.*.instructions' => 'nullable|string|max:255',
         ]);
 
-        return DB::transaction(function () use ($validated) {
+        return DB::transaction(function () use ($validated, $request) {
             $room = null;
             $booking = null;
             $roomNumber = null;
             $customerName = $validated['customer_name'] ?? 'Walk-in Guest';
+
+            // Manage and synchronize table booking (table_number & table_name)
+            $finalTableString = null;
+            if (!empty($validated['table_number'])) {
+                $rawTable = trim($validated['table_number']);
+                $tableRecord = null;
+                if (!empty($validated['table_id'] ?? $request->input('table_id'))) {
+                    $tableRecord = TableManage::find($validated['table_id'] ?? $request->input('table_id'));
+                }
+                if (!$tableRecord) {
+                    $tableRecord = TableManage::where('table_number', $rawTable)
+                        ->orWhere(DB::raw("CONCAT(table_number, ' (', table_name, ')')"), $rawTable)
+                        ->orWhere(DB::raw("CONCAT(table_number, ' - ', table_name)"), $rawTable)
+                        ->first();
+                }
+
+                if ($tableRecord) {
+                    $tableRecord->update([
+                        'status' => 'booked',
+                    ]);
+                    $finalTableString = $tableRecord->table_number . ' (' . $tableRecord->table_name . ')';
+                } else {
+                    $finalTableString = $rawTable;
+                }
+            }
+
+            if ($validated['order_type'] === 'Table Dine-in' && ($customerName === 'Walk-in Guest' || empty($customerName)) && $finalTableString) {
+                $customerName = $finalTableString . ' Guest';
+            }
 
             if (!empty($validated['room_id'])) {
                 $room = Room::with(['bookings' => function ($q) {
@@ -197,7 +234,7 @@ class PosController extends Controller
                 $instructionsNote = ($validated['billing_type'] === 'Charged to Room Folio')
                     ? 'POS Dining (Folio): '
                     : 'POS Dining (' . $validated['billing_type'] . ' - Settled on Spot): ';
-                $instructionsNote .= (!empty($validated['table_number']) ? '[' . $validated['table_number'] . '] ' : '') . ($validated['special_instructions'] ?? 'None');
+                $instructionsNote .= (!empty($finalTableString) ? '[' . $finalTableString . '] ' : '') . ($validated['special_instructions'] ?? 'None');
 
                 $rsOrder = RoomServiceOrder::create([
                     'order_number' => $rsOrderNumber,
@@ -205,7 +242,7 @@ class PosController extends Controller
                     'booking_id' => $booking->id,
                     'guest_name' => $customerName,
                     'room_number' => $roomNumber,
-                    'table_number' => $validated['table_number'] ?? null,
+                    'table_number' => $finalTableString,
                     'subtotal' => $subtotal,
                     'tax_amount' => $taxAmount,
                     'total_amount' => $totalAmount,
@@ -234,7 +271,7 @@ class PosController extends Controller
             $posOrder = PosOrder::create([
                 'order_number' => $orderNumber,
                 'order_type' => $validated['order_type'],
-                'table_number' => $validated['table_number'] ?? null,
+                'table_number' => $finalTableString,
                 'room_id' => $room?->id,
                 'booking_id' => $booking?->id,
                 'customer_name' => $customerName,
@@ -341,27 +378,81 @@ class PosController extends Controller
      */
     public function updateOrderStatus(Request $request, PosOrder $order)
     {
-        $validated = $request->validate([
-            'status' => 'required|in:Received,In Kitchen,Completed,Cancelled',
-        ]);
+        try {
+            $validated = $request->validate([
+                'status' => 'required|in:Received,In Kitchen,Completed,Cancelled',
+            ]);
 
-        $order->update(['status' => $validated['status']]);
+            $order->update(['status' => $validated['status']]);
 
-        // Sync to room service order if applicable
-        if ($order->roomServiceOrder) {
-            $rsStatus = match ($validated['status']) {
-                'In Kitchen' => 'Preparing',
-                'Completed' => 'Delivered',
-                'Cancelled' => 'Cancelled',
-                default => 'Received',
-            };
-            $order->roomServiceOrder->update(['order_status' => $rsStatus]);
+            // Sync to room service order if applicable
+            if ($order->room_service_order_id && $order->roomServiceOrder) {
+                $rsStatus = match ($validated['status']) {
+                    'In Kitchen' => 'Preparing',
+                    'Completed' => 'Delivered',
+                    'Cancelled' => 'Cancelled',
+                    default => 'Received',
+                };
+                $order->roomServiceOrder->update(['order_status' => $rsStatus]);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => "Order #{$order->order_number} status updated to {$validated['status']}.",
+                'status' => $order->status,
+            ]);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('POS updateOrderStatus error: ' . $e->getMessage(), [
+                'order_id' => $order->id ?? null,
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update order status: ' . $e->getMessage(),
+            ], 500);
         }
+    }
+
+    /**
+     * Get all tables list for POS Table Manage modal.
+     */
+    public function getTablesList()
+    {
+        $tables = TableManage::orderBy('table_number')->get();
+        $available = TableManage::where('status', 'available')->orderBy('table_number')->get();
 
         return response()->json([
             'success' => true,
-            'message' => "Order #{$order->order_number} status updated to {$validated['status']}.",
-            'status' => $order->status,
+            'tables' => $tables,
+            'availableTables' => $available,
+        ]);
+    }
+
+    /**
+     * Update table status (e.g. booked to available, or available to booked).
+     */
+    public function updateTableStatus(Request $request, TableManage $table)
+    {
+        $validated = $request->validate([
+            'status' => 'required|in:available,booked,inactive',
+        ]);
+
+        $status = $validated['status'];
+
+        $table->update([
+            'status' => $status,
+        ]);
+
+        $allTables = TableManage::orderBy('table_number')->get();
+        $availableTables = TableManage::where('status', 'available')->orderBy('table_number')->get();
+
+        return response()->json([
+            'success' => true,
+            'message' => "Table {$table->table_number} ({$table->table_name}) status changed to " . ucfirst($status) . ".",
+            'table' => $table,
+            'tables' => $allTables,
+            'availableTables' => $availableTables,
         ]);
     }
 

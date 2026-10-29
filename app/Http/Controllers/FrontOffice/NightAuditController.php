@@ -546,14 +546,19 @@ class NightAuditController extends Controller
                     $upi += $amt;
                 }
 
-                $custName = $pwi->customer_name ?: 'Takeaway Customer';
+                $tableLabel = !empty($pwi->table_number) ? $pwi->table_number : null;
+                $custName = $pwi->customer_name ?: ($tableLabel ? "{$tableLabel} Guest" : 'Takeaway Customer');
                 $custPhone = $pwi->customer_phone ? ' (' . $pwi->customer_phone . ')' : '';
                 $modeDesc = ($pwi->billing_type === 'Cash Paid') ? 'Cash' : 'UPI / Card';
+                $orderTypeDesc = $pwi->order_type === 'Table Dine-in'
+                    ? ($tableLabel ? "Table Dine-in [{$tableLabel}]" : 'Table Dine-in')
+                    : ($tableLabel ? "Takeaway [{$tableLabel}]" : 'Takeaway POS');
+
                 $paymentsListItems[] = [
                     'id' => 'pos_' . $pwi->id,
                     'time' => $pwi->created_at ? $pwi->created_at->format('h:i A') : '-',
-                    'guest_name' => $custName . $custPhone . ' [Takeaway POS]',
-                    'room_number' => '-',
+                    'guest_name' => $custName . $custPhone . ' [' . ($tableLabel ?: $pwi->order_type) . ']',
+                    'room_number' => $pwi->room_number ? 'Room ' . $pwi->room_number : ($tableLabel ?: '-'),
                     'settle_number' => '-',
                     'folio_number' => '-',
                     'total_bill' => (float)$pwi->total_amount,
@@ -561,7 +566,7 @@ class NightAuditController extends Controller
                     'remaining_amount' => 0.00,
                     'is_settled' => true,
                     'mode' => $modeDesc,
-                    'type' => 'Takeaway POS',
+                    'type' => $orderTypeDesc,
                     'amount' => (float)$pwi->total_amount,
                 ];
             }
@@ -1088,7 +1093,8 @@ class NightAuditController extends Controller
             ->get();
 
         foreach ($posTakeaways as $pwi) {
-            $custName = $pwi->customer_name ?: 'Takeaway Customer';
+            $tableLabel = !empty($pwi->table_number) ? $pwi->table_number : null;
+            $custName = $pwi->customer_name ?: ($tableLabel ? "{$tableLabel} Guest" : 'Takeaway Customer');
             $custPhone = $pwi->customer_phone ?: '-';
             $modeDesc = ($pwi->billing_type === 'Cash Paid') ? 'Cash Paid' : 'UPI / Card Paid';
 
@@ -1101,6 +1107,12 @@ class NightAuditController extends Controller
             $settledBookingsCount++;
             $totalGrandBillAll += $amount;
             $totalPaidAll += $amount;
+
+            $stayStatus = $pwi->order_type === 'Table Dine-in'
+                ? ('Table Dine-in (' . ($tableLabel ?: 'Table') . ')')
+                : ($tableLabel ? ('Takeaway (' . $tableLabel . ')') : 'Takeaway POS');
+
+            $assignedRoomOrTable = $pwi->room_number ? 'Room ' . $pwi->room_number : ($tableLabel ?: '-');
 
             $bookingLedgers[] = [
                 'id' => 'pos_' . $pwi->id,
@@ -1117,19 +1129,19 @@ class NightAuditController extends Controller
                 'rooms' => [
                     [
                         'room_id' => null,
-                        'room_number' => '-',
+                        'room_number' => $assignedRoomOrTable,
                         'floor' => '-',
                         'category' => '-',
                         'label' => '-',
                     ]
                 ],
-                'room_number' => '-',
+                'room_number' => $assignedRoomOrTable,
                 'category' => '-',
                 'checkin_date' => '-',
                 'checkout_date' => '-',
                 'transfers' => [],
-                'stay_status' => 'Takeaway POS',
-                'status' => 'Takeaway POS',
+                'stay_status' => $stayStatus,
+                'status' => $stayStatus,
                 'room_charges' => 0.00,
                 'extra_service_charges' => 0.00,
                 'extra_paid_charges' => $amount,
@@ -1142,7 +1154,7 @@ class NightAuditController extends Controller
                         'date_time' => $pwi->created_at ? $pwi->created_at->format('d M Y, h:i A') : 'N/A',
                         'date_short' => $pwi->created_at ? $pwi->created_at->format('d M') : 'N/A',
                         'items_summary' => implode(', ', $takeawayItems),
-                        'table_number' => null,
+                        'table_number' => $tableLabel,
                         'payment_status' => $modeDesc,
                         'is_paid' => true,
                     ]

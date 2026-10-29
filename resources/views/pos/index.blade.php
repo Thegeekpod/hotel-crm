@@ -888,16 +888,16 @@
           </select>
         </div>
 
-        <!-- Table Selector (Visible for Table Dine-in) -->
+        <!-- Table Selector (Visible for Table Dine-in & Takeaway) -->
         <div id="table-select-group" style="display: none; gap: 8px; align-items: center;">
           <span style="font-weight: 700; font-size: 11px; color: #64748b; white-space: nowrap;">Table / Host:</span>
-          <select class="pms-select" id="pos-table-select" style="min-width: 220px;">
-            <option value="Table 1 (Sea Breeze Deck)">Table 1 (Sea Breeze Deck)</option>
-            <option value="Table 2 (Lawn View)">Table 2 (Lawn View)</option>
-            <option value="Table 3 (Poolside)">Table 3 (Poolside)</option>
-            <option value="Table 4 (Indoor AC)">Table 4 (Indoor AC)</option>
-            <option value="Table 5 (Family Cluster)">Table 5 (Family Cluster)</option>
-            <option value="VIP Booth 01">VIP Booth 01</option>
+          <select class="pms-select" id="pos-table-select" style="min-width: 230px;">
+            <option value="">-- Select Available Table --</option>
+            @foreach($availableTables as $tbl)
+              <option value="{{ $tbl->table_number }} ({{ $tbl->table_name }})" data-table-id="{{ $tbl->id }}" data-table-num="{{ $tbl->table_number }}" data-table-name="{{ $tbl->table_name }}">
+                {{ $tbl->table_number }} ({{ $tbl->table_name }})
+              </option>
+            @endforeach
           </select>
         </div>
 
@@ -1196,6 +1196,11 @@
                   @endif
                 @else
                   <span class="badge-tag yellow"><i class="fa-solid fa-bag-shopping"></i> Takeaway</span>
+                  @if($ro->table_number)
+                    <div style="font-size: 9.5px; color: #15803d; font-weight: 700; margin-top: 2px;">
+                      <i class="fa-solid fa-chair"></i> {{ $ro->table_number }}
+                    </div>
+                  @endif
                 @endif
               </td>
               <td>
@@ -1248,6 +1253,108 @@
     </div>
     <div class="pos-modal-foot">
       <button type="button" class="btn-ui-secondary" onclick="closeOrdersModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL 3: Live Table Management & Status -->
+<div class="pos-modal-backdrop" id="table-manage-modal" style="display: none;">
+  <div class="pos-modal-card" style="max-width: 920px; width: 95%;">
+    <div class="pos-modal-head" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 12px;">
+      <div>
+        <h3 style="margin: 0; font-size: 16px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+          <i class="fa-solid fa-chair" style="color: #8b5cf6;"></i> Live Restaurant Table Management
+        </h3>
+        <p style="margin: 3px 0 0; font-size: 11.5px; color: #64748b;">
+          Manage live table occupancy, toggle status between Booked and Available, and track dining capacity in real time.
+        </p>
+      </div>
+      <button type="button" onclick="closeTableManageModal()" style="border: none; background: transparent; font-size: 22px; cursor: pointer; color: #64748b; padding: 0 4px;">&times;</button>
+    </div>
+
+    <!-- Live Status Strip -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; margin: 14px 0;">
+      <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 14px;">
+        <span style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase;">Total Tables</span>
+        <div style="font-size: 20px; font-weight: 900; color: #0f172a; margin-top: 2px;" id="tm-total-count">{{ count($allTables) }}</div>
+      </div>
+      <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 10px 14px;">
+        <span style="font-size: 11px; font-weight: 700; color: #166534; text-transform: uppercase;">Available Tables</span>
+        <div style="font-size: 20px; font-weight: 900; color: #15803d; margin-top: 2px;" id="tm-available-count">{{ $allTables->where('status', 'available')->count() }}</div>
+      </div>
+      <div style="background: #fff7ed; border: 1px solid #fed7aa; border-radius: 8px; padding: 10px 14px;">
+        <span style="font-size: 11px; font-weight: 700; color: #9a3412; text-transform: uppercase;">Booked / Occupied</span>
+        <div style="font-size: 20px; font-weight: 900; color: #c2410c; margin-top: 2px;" id="tm-booked-count">{{ $allTables->where('status', 'booked')->count() }}</div>
+      </div>
+      <div style="background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 14px;">
+        <span style="font-size: 11px; font-weight: 700; color: #475569; text-transform: uppercase;">Inactive</span>
+        <div style="font-size: 20px; font-weight: 900; color: #475569; margin-top: 2px;" id="tm-inactive-count">{{ $allTables->where('status', 'inactive')->count() }}</div>
+      </div>
+    </div>
+
+    <!-- Tables Table -->
+    <div style="max-height: 380px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 8px;">
+      <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+        <thead>
+          <tr style="background: #f8fafc; border-bottom: 1px solid #e2e8f0; text-align: left;">
+            <th style="padding: 10px 14px; color: #64748b; font-size: 11px; text-transform: uppercase;">Table Number</th>
+            <th style="padding: 10px 14px; color: #64748b; font-size: 11px; text-transform: uppercase;">Table Name / Area</th>
+            <th style="padding: 10px 14px; color: #64748b; font-size: 11px; text-transform: uppercase;">Current Status</th>
+            <th style="padding: 10px 14px; color: #64748b; font-size: 11px; text-transform: uppercase; text-align: right;">Quick Status Change</th>
+          </tr>
+        </thead>
+        <tbody id="pos-table-manage-tbody">
+          @forelse($allTables as $t)
+            <tr data-table-id="{{ $t->id }}" style="border-bottom: 1px solid #f1f5f9;">
+              <td style="padding: 10px 14px; font-weight: 800; color: #0f172a;">
+                <i class="fa-solid fa-chair" style="color: {{ $t->status === 'available' ? '#10b981' : ($t->status === 'booked' ? '#f59e0b' : '#94a3b8') }}; margin-right: 6px;"></i>
+                {{ $t->table_number }}
+              </td>
+              <td style="padding: 10px 14px; color: #475569; font-weight: 600;">
+                {{ $t->table_name }}
+              </td>
+              <td style="padding: 10px 14px;" id="tm-badge-td-{{ $t->id }}">
+                @if($t->status === 'available')
+                  <span class="badge-tag green"><i class="fa-solid fa-circle-check" style="font-size: 6px; margin-right: 4px;"></i>Available</span>
+                @elseif($t->status === 'booked')
+                  <span class="badge-tag amber"><i class="fa-solid fa-circle" style="font-size: 6px; margin-right: 4px;"></i>Booked</span>
+                @else
+                  <span class="badge-tag slate"><i class="fa-solid fa-ban" style="font-size: 6px; margin-right: 4px;"></i>Inactive</span>
+                @endif
+              </td>
+              <td style="padding: 10px 14px; text-align: right;" id="tm-action-td-{{ $t->id }}">
+                <div style="display: inline-flex; align-items: center; gap: 8px;">
+                  <select class="pms-select" style="height: 28px; font-size: 11px; padding: 2px 6px;" onchange="updateLiveTableStatus({{ $t->id }}, this.value)">
+                    <option value="available" {{ $t->status === 'available' ? 'selected' : '' }}>Available (Free)</option>
+                    <option value="booked" {{ $t->status === 'booked' ? 'selected' : '' }}>Booked</option>
+                    <option value="inactive" {{ $t->status === 'inactive' ? 'selected' : '' }}>Inactive</option>
+                  </select>
+                  @if($t->status === 'booked')
+                    <button type="button" class="btn-ui-secondary" style="height: 28px; font-size: 11px; color: #166534; background: #f0fdf4; border-color: #bbf7d0; font-weight: 700;" onclick="updateLiveTableStatus({{ $t->id }}, 'available')">
+                      <i class="fa-solid fa-check"></i> Free Table
+                    </button>
+                  @elseif($t->status === 'available')
+                    <button type="button" class="btn-ui-secondary" style="height: 28px; font-size: 11px; color: #9a3412; background: #fff7ed; border-color: #fed7aa; font-weight: 700;" onclick="updateLiveTableStatus({{ $t->id }}, 'booked')">
+                      <i class="fa-solid fa-chair"></i> Mark Booked
+                    </button>
+                  @endif
+                </div>
+              </td>
+            </tr>
+          @empty
+            <tr>
+              <td colspan="4" style="text-align: center; color: #94a3b8; padding: 24px;">No tables found.</td>
+            </tr>
+          @endforelse
+        </tbody>
+      </table>
+    </div>
+
+    <div class="pos-modal-foot" style="display: flex; justify-content: space-between; align-items: center; margin-top: 14px; border-top: 1px solid #e2e8f0; padding-top: 12px;">
+      <a href="{{ route('admin.utilities.frontoffice.table-manage.index') }}" target="_blank" class="btn-ui-secondary" style="text-decoration: none; display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 700;">
+        <i class="fa-solid fa-gear"></i> Open Full Admin Table Master
+      </a>
+      <button type="button" class="btn-ui-secondary" onclick="closeTableManageModal()">Close</button>
     </div>
   </div>
 </div>
@@ -1424,6 +1531,10 @@
     } else if (type === 'Table Dine-in') {
       document.getElementById('type-dinein').classList.add('active');
       tableGrp.style.display = 'flex';
+      const tblSelect = document.getElementById('pos-table-select');
+      if (tblSelect && tblSelect.options.length > 0) {
+        tblSelect.options[0].text = '-- Select Available Table --';
+      }
       if (takeawayGrp) takeawayGrp.style.display = 'none';
       if (folioPill) folioPill.style.display = 'flex';
       if (takeawayCustBox) takeawayCustBox.style.display = 'none';
@@ -1438,7 +1549,11 @@
     } else if (type === 'Takeaway') {
       document.getElementById('type-takeaway').classList.add('active');
       roomGrp.style.display = 'none';
-      tableGrp.style.display = 'none';
+      tableGrp.style.display = 'flex'; // Keep tables dropdown visible & optional for takeaway
+      const tblSelect = document.getElementById('pos-table-select');
+      if (tblSelect && tblSelect.options.length > 0) {
+        tblSelect.options[0].text = '-- No Table / Takeaway Counter (Optional) --';
+      }
       if (takeawayGrp) takeawayGrp.style.display = 'none';
       if (folioPill) folioPill.style.display = 'none';
       if (folioBox) folioBox.style.display = 'none';
@@ -1681,6 +1796,16 @@
       payload.customer_name = custName;
       payload.customer_phone = custPhone || null;
       payload.room_id = null;
+
+      // Optional table for Takeaway
+      const tblSelect = document.getElementById('pos-table-select');
+      if (tblSelect && tblSelect.value) {
+        payload.table_number = tblSelect.value;
+        const selectedOpt = tblSelect.options[tblSelect.selectedIndex];
+        if (selectedOpt && selectedOpt.getAttribute('data-table-id')) {
+          payload.table_id = selectedOpt.getAttribute('data-table-id');
+        }
+      }
     } else {
       // Room Dining or Table Dine-in
       const cartRm = document.getElementById('cart-room-folio-select');
@@ -1705,9 +1830,23 @@
       }
 
       if (currentOrderType === 'Table Dine-in') {
-        payload.table_number = document.getElementById('pos-table-select').value;
+        const tblSelect = document.getElementById('pos-table-select');
+        if (!tblSelect || !tblSelect.value) {
+          if (typeof Swal !== 'undefined') {
+            Swal.fire({ icon: 'warning', title: 'Table Required', text: 'Please select an available dining table for Dine-in!' });
+          } else {
+            alert('Please select an available dining table for Dine-in!');
+          }
+          tblSelect?.focus();
+          return;
+        }
+        payload.table_number = tblSelect.value;
+        const selectedOpt = tblSelect.options[tblSelect.selectedIndex];
+        if (selectedOpt && selectedOpt.getAttribute('data-table-id')) {
+          payload.table_id = selectedOpt.getAttribute('data-table-id');
+        }
         if (!payload.room_id) {
-          payload.customer_name = payload.table_number;
+          payload.customer_name = payload.table_number + ' Guest';
         }
       }
     }
@@ -1745,6 +1884,9 @@
         document.getElementById('order-instructions').value = '';
         if (document.getElementById('takeaway-customer-name')) document.getElementById('takeaway-customer-name').value = '';
         if (document.getElementById('takeaway-customer-phone')) document.getElementById('takeaway-customer-phone').value = '';
+        
+        // Refresh tables to ensure booked table is no longer selectable
+        fetchAndSyncAvailableTables();
       } else {
         alert(data.message || 'Error posting order.');
       }
@@ -1853,9 +1995,20 @@
     document.getElementById('orders-history-modal').style.display = 'none';
   }
 
+  // 9. Table Management Modal & Real-time Status Switching
+  function openTableManageModal() {
+    document.getElementById('table-manage-modal').style.display = 'flex';
+    fetchAndSyncAvailableTables();
+  }
+
+  function closeTableManageModal() {
+    document.getElementById('table-manage-modal').style.display = 'none';
+  }
+
   async function updateOrderStatus(orderId, newStatus) {
     try {
-      const res = await fetch(`/pos/orders/${orderId}/status`, {
+      const url = "{{ url('pos/orders') }}/" + orderId + "/status";
+      const res = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -1864,23 +2017,222 @@
         },
         body: JSON.stringify({ status: newStatus })
       });
+
       const data = await res.json();
-      if (data.success && typeof PmsAlert !== 'undefined') {
-        PmsAlert.toast(data.message, 'success');
+      if (res.ok && data.success) {
+        if (typeof Swal !== 'undefined') {
+          Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'success',
+            title: data.message || 'Order status updated',
+            showConfirmButton: false,
+            timer: 2000
+          });
+        } else if (typeof PmsAlert !== 'undefined') {
+          PmsAlert.toast(data.message, 'success');
+        } else {
+          alert(data.message);
+        }
+      } else {
+        if (typeof Swal !== 'undefined') {
+          Swal.fire({
+            icon: 'error',
+            title: 'Update Failed',
+            text: data.message || 'Failed to update order status.'
+          });
+        } else {
+          alert(data.message || 'Error updating order status.');
+        }
       }
     } catch(e) {
-      alert('Error updating order status.');
+      console.error('Error updating order status:', e);
+      if (typeof Swal !== 'undefined') {
+        Swal.fire({
+          icon: 'error',
+          title: 'Update Error',
+          text: 'Network or server error while updating status.'
+        });
+      } else {
+        alert('Error updating order status.');
+      }
     }
+  }
+
+  async function updateLiveTableStatus(tableId, newStatus) {
+    try {
+      const url = "{{ url('pos/tables') }}/" + tableId + "/status";
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': '{{ csrf_token() }}',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ status: newStatus })
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        if (typeof Swal !== 'undefined') {
+          Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'success',
+            title: data.message,
+            showConfirmButton: false,
+            timer: 2000
+          });
+        } else if (typeof PmsAlert !== 'undefined') {
+          PmsAlert.toast(data.message, 'success');
+        }
+
+        const all = data.tables || [];
+        const avail = data.availableTables || [];
+        const booked = all.filter(t => t.status === 'booked');
+        const inactive = all.filter(t => t.status === 'inactive');
+
+        const totEl = document.getElementById('tm-total-count');
+        const avEl = document.getElementById('tm-available-count');
+        const bkEl = document.getElementById('tm-booked-count');
+        const inEl = document.getElementById('tm-inactive-count');
+        if (totEl) totEl.textContent = all.length;
+        if (avEl) avEl.textContent = avail.length;
+        if (bkEl) bkEl.textContent = booked.length;
+        if (inEl) inEl.textContent = inactive.length;
+
+        renderTableManageRows(all);
+        refreshPosTableSelectDropdown(avail);
+      } else {
+        if (typeof Swal !== 'undefined') {
+          Swal.fire({ icon: 'error', title: 'Update Failed', text: data.message || 'Could not update table status.' });
+        } else {
+          alert(data.message || 'Could not update table status.');
+        }
+      }
+    } catch(err) {
+      console.error(err);
+      if (typeof Swal !== 'undefined') {
+        Swal.fire({ icon: 'error', title: 'Error', text: 'Server or network error updating table status.' });
+      } else {
+        alert('Server or network error updating table status.');
+      }
+    }
+  }
+
+  async function fetchAndSyncAvailableTables() {
+    try {
+      const url = "{{ route('pos.tables.index') }}";
+      const res = await fetch(url, {
+        headers: { 'Accept': 'application/json' }
+      });
+      const data = await res.json();
+      if (data.success) {
+        const all = data.tables || [];
+        const avail = data.availableTables || [];
+        const booked = all.filter(t => t.status === 'booked');
+        const inactive = all.filter(t => t.status === 'inactive');
+
+        const totEl = document.getElementById('tm-total-count');
+        const avEl = document.getElementById('tm-available-count');
+        const bkEl = document.getElementById('tm-booked-count');
+        const inEl = document.getElementById('tm-inactive-count');
+        if (totEl) totEl.textContent = all.length;
+        if (avEl) avEl.textContent = avail.length;
+        if (bkEl) bkEl.textContent = booked.length;
+        if (inEl) inEl.textContent = inactive.length;
+
+        renderTableManageRows(all);
+        refreshPosTableSelectDropdown(avail);
+      }
+    } catch(e) {
+      console.error('Failed to sync tables:', e);
+    }
+  }
+
+  function renderTableManageRows(tables) {
+    const tbody = document.getElementById('pos-table-manage-tbody');
+    if (!tbody) return;
+    if (tables.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #94a3b8; padding: 24px;">No tables found.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = tables.map(t => {
+      const isAvail = (t.status === 'available');
+      const isBooked = (t.status === 'booked');
+      const iconColor = isAvail ? '#10b981' : (isBooked ? '#f59e0b' : '#94a3b8');
+      const badge = isAvail
+        ? '<span class="badge-tag green"><i class="fa-solid fa-circle-check" style="font-size: 6px; margin-right: 4px;"></i>Available</span>'
+        : (isBooked
+          ? '<span class="badge-tag amber"><i class="fa-solid fa-circle" style="font-size: 6px; margin-right: 4px;"></i>Booked</span>'
+          : '<span class="badge-tag slate"><i class="fa-solid fa-ban" style="font-size: 6px; margin-right: 4px;"></i>Inactive</span>');
+
+      const actionBtn = isBooked
+        ? `<button type="button" class="btn-ui-secondary" style="height: 28px; font-size: 11px; color: #166534; background: #f0fdf4; border-color: #bbf7d0; font-weight: 700;" onclick="updateLiveTableStatus(${t.id}, 'available')"><i class="fa-solid fa-check"></i> Free Table</button>`
+        : (isAvail
+          ? `<button type="button" class="btn-ui-secondary" style="height: 28px; font-size: 11px; color: #9a3412; background: #fff7ed; border-color: #fed7aa; font-weight: 700;" onclick="updateLiveTableStatus(${t.id}, 'booked')"><i class="fa-solid fa-chair"></i> Mark Booked</button>`
+          : '');
+
+      return `
+        <tr data-table-id="${t.id}" style="border-bottom: 1px solid #f1f5f9;">
+          <td style="padding: 10px 14px; font-weight: 800; color: #0f172a;">
+            <i class="fa-solid fa-chair" style="color: ${iconColor}; margin-right: 6px;"></i>
+            ${escapeHtml(t.table_number)}
+          </td>
+          <td style="padding: 10px 14px; color: #475569; font-weight: 600;">
+            ${escapeHtml(t.table_name)}
+          </td>
+          <td style="padding: 10px 14px;" id="tm-badge-td-${t.id}">${badge}</td>
+          <td style="padding: 10px 14px; text-align: right;" id="tm-action-td-${t.id}">
+            <div style="display: inline-flex; align-items: center; gap: 8px;">
+              <select class="pms-select" style="height: 28px; font-size: 11px; padding: 2px 6px;" onchange="updateLiveTableStatus(${t.id}, this.value)">
+                <option value="available" ${isAvail ? 'selected' : ''}>Available (Free)</option>
+                <option value="booked" ${isBooked ? 'selected' : ''}>Booked</option>
+                <option value="inactive" ${t.status === 'inactive' ? 'selected' : ''}>Inactive</option>
+              </select>
+              ${actionBtn}
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  function refreshPosTableSelectDropdown(availableTables) {
+    const sel = document.getElementById('pos-table-select');
+    if (!sel) return;
+    const currentVal = sel.value;
+    const firstOptionText = (currentOrderType === 'Takeaway') 
+      ? '-- No Table / Takeaway Counter (Optional) --' 
+      : '-- Select Available Table --';
+
+    let html = `<option value="">${firstOptionText}</option>`;
+    availableTables.forEach(t => {
+      const val = `${t.table_number} (${t.table_name})`;
+      const selected = (val === currentVal) ? 'selected' : '';
+      html += `<option value="${val}" data-table-id="${t.id}" data-table-num="${t.table_number}" data-table-name="${t.table_name}" ${selected}>${val}</option>`;
+    });
+    sel.innerHTML = html;
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/[&<>"']/g, function(m) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
+    });
   }
 
   async function reprintOrderKot(orderId) {
     try {
-      const res = await fetch(`/pos/orders/${orderId}`, {
+      const url = "{{ url('pos/orders') }}/" + orderId;
+      const res = await fetch(url, {
         headers: { 'Accept': 'application/json' }
       });
       const data = await res.json();
       if (data.success && data.order) {
         showKotModal(data.order);
+      } else {
+        alert(data.message || 'Unable to retrieve KOT.');
       }
     } catch(e) {
       alert('Unable to retrieve KOT.');

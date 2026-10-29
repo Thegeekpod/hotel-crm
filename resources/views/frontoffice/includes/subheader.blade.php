@@ -63,6 +63,10 @@
         <span class="ico-box"><i class="fa-solid fa-clock-rotate-left" style="color: #06b6d4;"></i></span>
         <span class="lbl-box">KOT History</span>
       </button>
+      <button type="button" class="ribbon-btn" onclick="openTableManageModal()">
+        <span class="ico-box"><i class="fa-solid fa-chair" style="color: #8b5cf6;"></i></span>
+        <span class="lbl-box">Table Manage</span>
+      </button>
       <a href="{{ route('stores.index') }}" class="ribbon-btn">
         <span class="ico-box"><i class="fa-solid fa-boxes-stacked" style="color: #f59e0b;"></i></span>
         <span class="lbl-box">Manage Menus &amp; Stock</span>

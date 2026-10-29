@@ -17,5 +17,6 @@ require __DIR__.'/roommanage-routes.php';
 require __DIR__.'/banquet-routes.php';
 require __DIR__.'/pos-routes.php';
 require __DIR__.'/stores-routes.php';
+require __DIR__.'/accounts-routes.php';
 
 

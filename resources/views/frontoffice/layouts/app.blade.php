@@ -386,7 +386,7 @@
     <a href="{{ route('stores.index') }}" class="pms-tab-link {{ request()->routeIs('stores.*') ? 'active' : '' }}">
       <i class="fa-solid fa-boxes-stacked tab-ico" style="color: #22d3ee;"></i> Stores
     </a>
-    <a href="#" class="pms-tab-link" onclick="if(typeof PmsAlert !== 'undefined') PmsAlert.toast('Accounts module queued.', 'info')">
+    <a href="{{ route('accounts.index') }}" class="pms-tab-link {{ request()->routeIs('accounts.*') ? 'active' : '' }}">
       <i class="fa-solid fa-file-invoice-dollar tab-ico" style="color: #a78bfa;"></i> Accounts
     </a>
     <a href="{{ route('frontoffice.services.index') }}" class="pms-tab-link {{ request()->routeIs('frontoffice.services.*') ? 'active' : '' }}">

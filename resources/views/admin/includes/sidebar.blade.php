@@ -144,15 +144,15 @@
     <span>Extra Services</span>
   </a>
 
-  <div class="admin-nav-flat" onclick="PmsAlert.toast('Stores & Inventory master module queued for client review.', 'info')">
+  <a href="{{ route('stores.index') }}" class="admin-nav-flat {{ request()->routeIs('stores.*') ? 'active' : '' }}" style="text-decoration: none; color: inherit; margin-bottom: 6px;">
     <i class="fa-solid fa-boxes-stacked" style="color: #22d3ee;"></i>
     <span>Stores & Inventory</span>
-  </div>
+  </a>
 
-  <div class="admin-nav-flat" onclick="PmsAlert.toast('Accounts & Finance master module queued for client review.', 'info')">
+  <a href="{{ route('accounts.index') }}" class="admin-nav-flat {{ request()->routeIs('accounts.*') ? 'active' : '' }}" style="text-decoration: none; color: inherit; margin-bottom: 6px;">
     <i class="fa-solid fa-file-invoice-dollar" style="color: #a78bfa;"></i>
     <span>Accounts & Finance</span>
-  </div>
+  </a>
 
   <a href="{{ route('banquet.index') }}" class="admin-nav-flat {{ request()->routeIs('banquet.*') ? 'active' : '' }}" style="text-decoration: none; color: inherit; margin-bottom: 6px;">
     <i class="fa-solid fa-champagne-glasses" style="color: #fbbf24;"></i>

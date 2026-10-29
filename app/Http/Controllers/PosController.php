@@ -115,6 +115,70 @@ class PosController extends Controller
     }
 
     /**
+     * Display dedicated POS Orders & KOT History page.
+     */
+    public function ordersIndex(Request $request)
+    {
+        $query = PosOrder::with(['items', 'room', 'booking.guest'])->latest();
+
+        // Search
+        if ($request->filled('search')) {
+            $s = trim($request->search);
+            $query->where(function ($q) use ($s) {
+                $q->where('order_number', 'like', "%{$s}%")
+                  ->orWhere('customer_name', 'like', "%{$s}%")
+                  ->orWhere('customer_phone', 'like', "%{$s}%")
+                  ->orWhere('table_number', 'like', "%{$s}%")
+                  ->orWhere('room_number', 'like', "%{$s}%")
+                  ->orWhereHas('items', function ($iq) use ($s) {
+                      $iq->where('item_name', 'like', "%{$s}%");
+                  });
+            });
+        }
+
+        // Order Type filter
+        if ($request->filled('type') && $request->type !== 'all') {
+            $query->where('order_type', $request->type);
+        }
+
+        // Status filter
+        if ($request->filled('status') && $request->status !== 'all') {
+            $query->where('status', $request->status);
+        }
+
+        // Billing Mode filter
+        if ($request->filled('billing_type') && $request->billing_type !== 'all') {
+            $query->where('billing_type', $request->billing_type);
+        }
+
+        // Date filter
+        if ($request->filled('date')) {
+            $query->whereDate('created_at', $request->date);
+        }
+
+        // Calculate summary metrics
+        $totalOrdersCount = PosOrder::count();
+        $totalSales = PosOrder::where('status', '!=', 'Cancelled')->sum('total_amount');
+        $kitchenActiveCount = PosOrder::whereIn('status', ['Received', 'In Kitchen'])->count();
+        $completedCount = PosOrder::where('status', 'Completed')->count();
+        $cancelledCount = PosOrder::where('status', 'Cancelled')->count();
+        $roomFolioCount = PosOrder::where('billing_type', 'Charged to Room Folio')->count();
+
+        // Paginate results
+        $orders = $query->paginate(20)->withQueryString();
+
+        return view('pos.orders', compact(
+            'orders',
+            'totalOrdersCount',
+            'totalSales',
+            'kitchenActiveCount',
+            'completedCount',
+            'cancelledCount',
+            'roomFolioCount'
+        ));
+    }
+
+    /**
      * Store and process a POS Order (Room Folio or Walk-in Cash/UPI).
      */
     public function storeOrder(Request $request)

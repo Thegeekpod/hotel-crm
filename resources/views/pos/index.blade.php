@@ -129,9 +129,9 @@
         <a href="{{ route('stores.index') }}" class="inline-flex items-center gap-1.5 h-9.5 px-3.5 text-xs font-bold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200/80 rounded-xl transition-all shadow-xs" title="Manage Store & Menus">
           <i class="fa-solid fa-boxes-stacked text-emerald-600"></i> Manage Store
         </a>
-        <button type="button" class="inline-flex items-center gap-1.5 h-9.5 px-3.5 text-xs font-bold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200/80 rounded-xl transition-all shadow-xs cursor-pointer" onclick="openRecentOrdersModal()">
-          <i class="fa-solid fa-clock-rotate-left text-slate-500"></i> KOT History
-        </button>
+        <a href="{{ route('pos.orders.index') }}" class="inline-flex items-center gap-1.5 h-9.5 px-3.5 text-xs font-bold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200/80 rounded-xl transition-all shadow-xs" title="View All KOT Tickets & Orders">
+          <i class="fa-solid fa-clock-rotate-left text-cyan-600"></i> KOT History
+        </a>
       </div>
     </div>
 
@@ -386,108 +386,6 @@
       <button type="button" class="inline-flex items-center gap-1.5 h-9 px-4 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-all shadow-xs cursor-pointer" onclick="printThermalTicket()">
         <i class="fa-solid fa-print text-[11px]"></i> Print KOT Ticket
       </button>
-    </div>
-  </div>
-</div>
-
-<!-- MODAL 2: Recent Orders & KOT History -->
-<div class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 hidden" id="orders-history-modal">
-  <div class="bg-white w-full max-w-4xl rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[85vh]">
-    <div class="bg-slate-50/80 px-6 py-4 border-b border-slate-200/80 flex items-center justify-between">
-      <h3 class="text-sm font-extrabold text-slate-900 flex items-center gap-2">
-        <i class="fa-solid fa-clock-rotate-left text-emerald-600"></i> Recent POS Orders &amp; KOT Tickets
-      </h3>
-      <button type="button" onclick="closeOrdersModal()" class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center text-base cursor-pointer transition-colors">&times;</button>
-    </div>
-    <div class="p-0 overflow-y-auto flex-1">
-      <table class="w-full text-left border-collapse text-xs">
-        <thead>
-          <tr class="bg-slate-50/80 text-slate-500 uppercase tracking-wider text-[11px] font-bold border-b border-slate-200/80">
-            <th class="px-3.5 py-3">Order #</th>
-            <th class="px-3.5 py-3">Type / Destination</th>
-            <th class="px-3.5 py-3">Guest / Customer</th>
-            <th class="px-3.5 py-3">Items</th>
-            <th class="px-3.5 py-3 text-right">Total Bill</th>
-            <th class="px-3.5 py-3">Billing Mode</th>
-            <th class="px-3.5 py-3 text-center">Status</th>
-            <th class="px-3.5 py-3 text-center">Action</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-slate-100">
-          @forelse($recentOrders as $ro)
-            <tr class="hover:bg-slate-50/80 transition-colors">
-              <td class="px-3.5 py-2.5 font-mono font-bold text-sky-700">
-                {{ $ro->order_number }}
-              </td>
-              <td class="px-3.5 py-2.5">
-                @if($ro->order_type === 'Room Dining')
-                  <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200/80"><i class="fa-solid fa-door-open text-[9px]"></i> Room {{ $ro->room_number }}</span>
-                @elseif($ro->order_type === 'Table Dine-in')
-                  <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/80"><i class="fa-solid fa-chair text-[9px]"></i> {{ $ro->table_number ?: 'Table' }}</span>
-                  @if($ro->room_number)
-                    <div class="text-[10px] text-indigo-600 font-bold mt-0.5">
-                      <i class="fa-solid fa-door-open"></i> Room {{ $ro->room_number }}
-                    </div>
-                  @endif
-                @else
-                  <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200/80"><i class="fa-solid fa-bag-shopping text-[9px]"></i> Takeaway</span>
-                  @if($ro->table_number)
-                    <div class="text-[10px] text-emerald-700 font-bold mt-0.5 flex items-center gap-1">
-                      <i class="fa-solid fa-chair text-[9px]"></i> {{ $ro->table_number }}
-                    </div>
-                  @endif
-                @endif
-              </td>
-              <td class="px-3.5 py-2.5">
-                <strong class="text-slate-800">{{ $ro->customer_name ?: 'Guest' }}</strong>
-                @if($ro->customer_phone)
-                  <div class="text-[11px] text-slate-400 font-mono mt-0.5">
-                    <i class="fa-solid fa-phone text-[9px]"></i> {{ $ro->customer_phone }}
-                  </div>
-                @endif
-              </td>
-              <td class="px-3.5 py-2.5 text-slate-600 max-w-[200px] truncate" title="{{ $ro->items->pluck('item_name')->join(', ') }}">
-                {{ $ro->items->pluck('item_name')->join(', ') }}
-              </td>
-              <td class="px-3.5 py-2.5 text-right font-mono font-bold text-emerald-600">
-                ₹ {{ number_format($ro->total_amount, 2) }}
-              </td>
-              <td class="px-3.5 py-2.5">
-                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold {{ $ro->billing_type === 'Charged to Room Folio' ? 'bg-indigo-50 text-indigo-700 border border-indigo-200/80' : 'bg-emerald-50 text-emerald-700 border border-emerald-200/80' }}">
-                  {{ $ro->billing_type }}
-                </span>
-                @if($ro->room_number)
-                  <div class="text-[10px] font-bold mt-1 {{ $ro->billing_type === 'Charged to Room Folio' ? 'text-indigo-600' : 'text-emerald-700' }}">
-                    <i class="fa-solid fa-door-open"></i> Room {{ $ro->room_number }} ({{ $ro->billing_type === 'Charged to Room Folio' ? 'Folio Due' : 'Paid Direct' }})
-                  </div>
-                @endif
-              </td>
-              <td class="px-3.5 py-2.5 text-center">
-                <select class="h-7 text-[11px] font-semibold rounded-lg border border-slate-200 bg-white px-2 focus:outline-none focus:border-indigo-500" onchange="updateOrderStatus({{ $ro->id }}, this.value)">
-                  <option value="Received" {{ $ro->status === 'Received' ? 'selected' : '' }}>Received</option>
-                  <option value="In Kitchen" {{ $ro->status === 'In Kitchen' ? 'selected' : '' }}>In Kitchen</option>
-                  <option value="Completed" {{ $ro->status === 'Completed' ? 'selected' : '' }}>Completed</option>
-                  <option value="Cancelled" {{ $ro->status === 'Cancelled' ? 'selected' : '' }}>Cancelled</option>
-                </select>
-              </td>
-              <td class="px-3.5 py-2.5 text-center">
-                <button type="button" class="inline-flex items-center gap-1 h-7 px-2.5 text-[11px] font-bold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200/80 rounded-lg transition-all shadow-2xs cursor-pointer" onclick="reprintOrderKot({{ $ro->id }})">
-                  <i class="fa-solid fa-print text-[10px]"></i> KOT
-                </button>
-              </td>
-            </tr>
-          @empty
-            <tr>
-              <td colspan="8" class="text-center text-slate-400 py-10 text-xs">
-                No orders recorded yet today.
-              </td>
-            </tr>
-          @endforelse
-        </tbody>
-      </table>
-    </div>
-    <div class="px-6 py-3.5 bg-slate-50/80 border-t border-slate-200/80 flex justify-end">
-      <button type="button" class="inline-flex items-center h-9 px-4 text-xs font-bold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200/80 rounded-xl transition-all shadow-xs cursor-pointer" onclick="closeOrdersModal()">Close</button>
     </div>
   </div>
 </div>
@@ -1231,24 +1129,7 @@
     }, 250);
   }
 
-  // 8. Recent Orders & KOT History Modal
-  function openRecentOrdersModal() {
-    const m = document.getElementById('orders-history-modal');
-    if (m) {
-      m.classList.remove('hidden');
-      m.style.display = 'flex';
-    }
-  }
-
-  function closeOrdersModal() {
-    const m = document.getElementById('orders-history-modal');
-    if (m) {
-      m.classList.add('hidden');
-      m.style.display = 'none';
-    }
-  }
-
-  // 9. Table Management Modal & Real-time Status Switching
+  // 8. Table Management Modal & Real-time Status Switching
   function openTableManageModal() {
     const m = document.getElementById('table-manage-modal');
     if (m) {

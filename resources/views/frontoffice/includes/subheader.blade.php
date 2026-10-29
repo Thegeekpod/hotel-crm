@@ -61,14 +61,14 @@
 <div class="bg-slate-50/95 backdrop-blur-xs border-b border-slate-200/80 px-4 sm:px-6 py-2 flex items-center justify-between gap-4 overflow-x-auto scrollbar-none pms-sub-ribbon">
   <div class="flex items-center gap-2 ribbon-left-section">
     <div class="flex items-center gap-2 ribbon-action-buttons">
-      <a href="{{ route('pos.index') }}" class="{{ $btnBase }} {{ $btnActive }}">
+      <a href="{{ route('pos.index') }}" class="{{ $btnBase }} {{ request()->routeIs('pos.index') ? $btnActive : $btnDefault }}">
         <span class="w-5 h-5 rounded-md bg-emerald-50 text-emerald-600 flex items-center justify-center text-xs ico-box"><i class="fa-solid fa-utensils"></i></span>
         <span class="lbl-box">POS Terminal</span>
       </a>
-      <button type="button" class="{{ $btnBase }} {{ $btnDefault }}" onclick="openRecentOrdersModal()">
+      <a href="{{ route('pos.orders.index') }}" class="{{ $btnBase }} {{ request()->routeIs('pos.orders.*') ? $btnActive : $btnDefault }}">
         <span class="w-5 h-5 rounded-md bg-cyan-50 text-cyan-600 flex items-center justify-center text-xs ico-box"><i class="fa-solid fa-clock-rotate-left"></i></span>
         <span class="lbl-box">KOT History</span>
-      </button>
+      </a>
       <button type="button" class="{{ $btnBase }} {{ $btnDefault }}" onclick="openTableManageModal()">
         <span class="w-5 h-5 rounded-md bg-purple-50 text-purple-600 flex items-center justify-center text-xs ico-box"><i class="fa-solid fa-chair"></i></span>
         <span class="lbl-box">Table Manage</span>

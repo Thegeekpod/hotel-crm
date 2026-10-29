@@ -1402,17 +1402,25 @@
                             ₹ ${fmt(g.room_charges !== undefined ? g.room_charges : (Number(g.total_bill || 0) - extraServicesVal))}
                           </td>
                           <td style="text-align: right; font-family: var(--font-mono, monospace); white-space: nowrap;">
-                            ${extraServicesVal > 0 ? `
-                              <div style="font-weight: 800; color: #b45309;">+₹ ${fmt(extraServicesVal)}</div>
+                            ${(extraServicesVal > 0 || Number(g.extra_paid_charges || 0) > 0) ? `
+                              ${extraServicesVal > 0 ? `<div style="font-weight: 800; color: #b45309;">+₹ ${fmt(extraServicesVal)}</div>` : ''}
+                              ${Number(g.extra_paid_charges || 0) > 0 ? `<div style="font-weight: 800; color: #15803d; font-size: 11px;"><i class="fa-solid fa-circle-check"></i> ₹ ${fmt(g.extra_paid_charges)} <span style="font-size: 9px; opacity: 0.85;">(Paid)</span></div>` : ''}
                               <div style="font-size: 9.5px; font-weight: 700; color: #d97706; margin-top: 1px;">
                                 <i class="fa-solid fa-bell-concierge"></i> ${extraCount} order(s)
                               </div>
                               ${Array.isArray(g.extra_orders_detailed) && g.extra_orders_detailed.length > 0 ? `
                                 <div style="display: flex; flex-direction: column; gap: 2px; margin-top: 4px; align-items: flex-end;">
-                                  ${g.extra_orders_detailed.map(eo => `
-                                    <div style="font-size: 9px; color: #9a3412; background: #fff7ed; border: 1px solid #ffedd5; border-radius: 4px; padding: 1px 5px; display: inline-flex; align-items: center; gap: 4px;" title="${escapeHtml(eo.order_number)}: ${escapeHtml(eo.items_summary || '')}">
+                                  ${g.extra_orders_detailed.map(eo => eo.is_paid ? `
+                                    <div style="font-size: 9px; color: #166534; background: #dcfce7; border: 1px solid #bbf7d0; border-radius: 4px; padding: 1px 5px; display: inline-flex; align-items: center; gap: 4px;" title="${escapeHtml(eo.order_number)}: ${escapeHtml(eo.items_summary || '')} (Paid Direct)">
+                                      <span style="opacity: 0.8; font-size: 8px;"><i class="fa-solid fa-check" style="font-size: 7.5px;"></i> ${escapeHtml(eo.date_short)}:</span>
+                                      <span style="font-weight: 700;">₹ ${fmt(eo.total_amount)} (PAID)</span>
+                                      ${eo.table_number ? `<span style="font-size: 8px; background: #bbf7d0; color: #14532d; padding: 0 4px; border-radius: 3px; font-weight: 700;"><i class="fa-solid fa-chair" style="font-size: 7px;"></i> ${escapeHtml(eo.table_number)}</span>` : ''}
+                                    </div>
+                                  ` : `
+                                    <div style="font-size: 9px; color: #9a3412; background: #fff7ed; border: 1px solid #ffedd5; border-radius: 4px; padding: 1px 5px; display: inline-flex; align-items: center; gap: 4px;" title="${escapeHtml(eo.order_number)}: ${escapeHtml(eo.items_summary || '')} (Charged to Folio)">
                                       <span style="opacity: 0.8; font-size: 8px;"><i class="fa-regular fa-clock" style="font-size: 7.5px;"></i> ${escapeHtml(eo.date_short)}:</span>
-                                      <span style="font-weight: 700;">₹ ${fmt(eo.total_amount)}</span>
+                                      <span style="font-weight: 700;">+ ₹ ${fmt(eo.total_amount)}</span>
+                                      ${eo.table_number ? `<span style="font-size: 8px; background: #fed7aa; color: #7c2d12; padding: 0 4px; border-radius: 3px; font-weight: 700;"><i class="fa-solid fa-chair" style="font-size: 7px;"></i> ${escapeHtml(eo.table_number)}</span>` : ''}
                                     </div>
                                   `).join('')}
                                 </div>

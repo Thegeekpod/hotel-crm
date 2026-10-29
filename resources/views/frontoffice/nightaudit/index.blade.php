@@ -680,11 +680,17 @@
                             <div style="font-size: 9px; color: #166534; background: #dcfce7; border: 1px solid #bbf7d0; border-radius: 4px; padding: 1px 5px; display: inline-flex; align-items: center; gap: 4px;" title="{{ $eOrd['order_number'] }}: {{ $eOrd['items_summary'] }} (Paid Direct)">
                               <span style="opacity: 0.8; font-size: 8px;"><i class="fa-solid fa-check" style="font-size: 7.5px;"></i> {{ $eOrd['date_short'] }}:</span>
                               <span style="font-weight: 700;">₹{{ number_format($eOrd['total_amount'], 2) }} (PAID)</span>
+                              @if(!empty($eOrd['table_number']))
+                                <span style="font-size: 8px; background: #bbf7d0; color: #14532d; padding: 0 4px; border-radius: 3px; font-weight: 700;"><i class="fa-solid fa-chair" style="font-size: 7px;"></i> {{ $eOrd['table_number'] }}</span>
+                              @endif
                             </div>
                           @else
                             <div style="font-size: 9px; color: #9a3412; background: #fff7ed; border: 1px solid #ffedd5; border-radius: 4px; padding: 1px 5px; display: inline-flex; align-items: center; gap: 4px;" title="{{ $eOrd['order_number'] }}: {{ $eOrd['items_summary'] }} (Charged to Folio)">
                               <span style="opacity: 0.8; font-size: 8px;"><i class="fa-regular fa-clock" style="font-size: 7.5px;"></i> {{ $eOrd['date_short'] }}:</span>
                               <span style="font-weight: 700;">+ ₹{{ number_format($eOrd['total_amount'], 2) }}</span>
+                              @if(!empty($eOrd['table_number']))
+                                <span style="font-size: 8px; background: #fed7aa; color: #7c2d12; padding: 0 4px; border-radius: 3px; font-weight: 700;"><i class="fa-solid fa-chair" style="font-size: 7px;"></i> {{ $eOrd['table_number'] }}</span>
+                              @endif
                             </div>
                           @endif
                         @endforeach

@@ -2314,7 +2314,10 @@
         ordHtml += `
           <tr style="border-bottom: 1px solid #ffedd5;">
             <td style="padding: 6px 8px; text-align: center; font-weight: 800; font-family: var(--font-mono, monospace); color: #9a3412; font-size: 10px;">${oIdx + 1}</td>
-            <td style="padding: 6px 10px; font-family: var(--font-mono, monospace); font-weight: 700; color: #c2410c;">${escapeHtml(ro.order_number)}</td>
+            <td style="padding: 6px 10px; font-family: var(--font-mono, monospace); font-weight: 700; color: #c2410c;">
+              ${escapeHtml(ro.order_number)}
+              ${ro.table_number ? `<span style="font-size: 9px; background: #e0e7ff; color: #4338ca; border: 1px solid #c7d2fe; padding: 1px 6px; border-radius: 4px; font-weight: 700; margin-left: 4px; font-family: sans-serif; display: inline-flex; align-items: center; gap: 3px;"><i class="fa-solid fa-chair" style="font-size: 8px;"></i> ${escapeHtml(ro.table_number)}</span>` : ''}
+            </td>
             <td style="padding: 6px 10px; color: #475569; white-space: nowrap;">
               <i class="fa-regular fa-calendar-days" style="font-size: 9px; color: #d97706;"></i> ${escapeHtml(ro.date)}
             </td>

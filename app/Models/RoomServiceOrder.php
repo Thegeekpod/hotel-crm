@@ -15,6 +15,7 @@ class RoomServiceOrder extends Model
         'booking_id',
         'guest_name',
         'room_number',
+        'table_number',
         'subtotal',
         'tax_amount',
         'total_amount',

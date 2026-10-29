@@ -117,6 +117,7 @@ class PosController extends Controller
             'room_id' => 'nullable|exists:rooms,id',
             'table_number' => 'nullable|string|max:50',
             'customer_name' => 'nullable|string|max:150',
+            'customer_phone' => 'nullable|string|max:30',
             'billing_type' => 'required|in:Charged to Room Folio,Cash Paid,Digital UPI / Card Paid',
             'special_instructions' => 'nullable|string|max:500',
             'items' => 'required|array|min:1',
@@ -204,6 +205,7 @@ class PosController extends Controller
                     'booking_id' => $booking->id,
                     'guest_name' => $customerName,
                     'room_number' => $roomNumber,
+                    'table_number' => $validated['table_number'] ?? null,
                     'subtotal' => $subtotal,
                     'tax_amount' => $taxAmount,
                     'total_amount' => $totalAmount,
@@ -236,6 +238,7 @@ class PosController extends Controller
                 'room_id' => $room?->id,
                 'booking_id' => $booking?->id,
                 'customer_name' => $customerName,
+                'customer_phone' => $validated['customer_phone'] ?? null,
                 'room_number' => $roomNumber,
                 'subtotal' => $subtotal,
                 'tax_percentage' => $taxRate,
@@ -313,7 +316,9 @@ class PosController extends Controller
                 'success' => true,
                 'message' => ($validated['billing_type'] === 'Charged to Room Folio')
                     ? "Charge of ₹" . number_format($totalAmount, 2) . " successfully posted to Room {$roomNumber} Folio! Outstanding balance updated for final settlement."
-                    : ($room ? "Order {$orderNumber} (₹" . number_format($totalAmount, 2) . ") settled via {$validated['billing_type']} and recorded under Room {$roomNumber} ({$customerName}) in Settlement!" : "Order {$orderNumber} successfully placed and settled via {$validated['billing_type']}! KOT generated."),
+                    : ($validated['order_type'] === 'Takeaway'
+                        ? "Takeaway Order {$orderNumber} (₹" . number_format($totalAmount, 2) . ") successfully placed and settled via {$validated['billing_type']} for {$customerName}!"
+                        : ($room ? "Order {$orderNumber} (₹" . number_format($totalAmount, 2) . ") settled via {$validated['billing_type']} and recorded under Room {$roomNumber} ({$customerName}) in Settlement!" : "Order {$orderNumber} successfully placed and settled via {$validated['billing_type']}! KOT generated.")),
                 'order' => $posOrder,
             ]);
         });

@@ -1042,7 +1042,25 @@
                 <option value="">No Checked In Guests Found</option>
               @endforelse
             </select>
-            <div id="room-picker-info-note" style="margin-top: 6px; font-size: 11px; line-height: 1.4;"></div>
+          </div>
+
+          <!-- Takeaway Customer Form (Visible ONLY for Takeaway) -->
+          <div id="takeaway-customer-box" style="display: none; margin-top: 10px; background: #fffbeb; border: 1.5px solid #fde68a; border-radius: 8px; padding: 10px;">
+            <label style="font-size: 11px; font-weight: 800; color: #92400e; display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+              <span><i class="fa-solid fa-user-tag" style="color: #d97706;"></i> Walk-in Takeaway Guest Details: *</span>
+              <span style="font-size: 9.5px; background: #fef3c7; color: #b45309; padding: 1px 6px; border-radius: 4px; font-weight: 700;">Takeaway Customer</span>
+            </label>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+              <div>
+                <input type="text" id="takeaway-customer-name" class="pms-input" placeholder="Customer Name *" style="width: 100%; height: 32px; font-size: 11.5px;">
+              </div>
+              <div>
+                <input type="text" id="takeaway-customer-phone" class="pms-input" placeholder="Phone Number (e.g. 9876543210)" style="width: 100%; height: 32px; font-size: 11.5px;">
+              </div>
+            </div>
+            <div style="margin-top: 5px; font-size: 10px; color: #b45309; font-weight: 600;">
+              <i class="fa-solid fa-circle-info"></i> Direct restaurant walk-in order. Recorded in Night Audit payments with direct Cash/UPI settlement.
+            </div>
           </div>
         </div>
 
@@ -1170,12 +1188,24 @@
                 @if($ro->order_type === 'Room Dining')
                   <span class="badge-tag blue"><i class="fa-solid fa-door-open"></i> Room {{ $ro->room_number }}</span>
                 @elseif($ro->order_type === 'Table Dine-in')
-                  <span class="badge-tag green"><i class="fa-solid fa-chair"></i> {{ $ro->table_number ?: 'Dine-in' }}</span>
+                  <span class="badge-tag green"><i class="fa-solid fa-chair"></i> {{ $ro->table_number ?: 'Table' }}</span>
+                  @if($ro->room_number)
+                    <div style="font-size: 9.5px; color: #0284c7; margin-top: 2px;">
+                      <i class="fa-solid fa-door-open"></i> Room {{ $ro->room_number }}
+                    </div>
+                  @endif
                 @else
                   <span class="badge-tag yellow"><i class="fa-solid fa-bag-shopping"></i> Takeaway</span>
                 @endif
               </td>
-              <td><strong>{{ $ro->customer_name ?: 'Guest' }}</strong></td>
+              <td>
+                <strong>{{ $ro->customer_name ?: 'Guest' }}</strong>
+                @if($ro->customer_phone)
+                  <div style="font-size: 10px; color: #64748b; margin-top: 2px;">
+                    <i class="fa-solid fa-phone"></i> {{ $ro->customer_phone }}
+                  </div>
+                @endif
+              </td>
               <td style="font-size: 11px;">
                 {{ $ro->items->pluck('item_name')->join(', ') }}
               </td>
@@ -1267,6 +1297,20 @@
     const grandFmt = '₹ ' + grand.toLocaleString();
 
     const btnLabel = document.getElementById('btn-order-label');
+
+    const isTakeaway = (currentOrderType === 'Takeaway');
+    const takeawayCustBox = document.getElementById('takeaway-customer-box');
+
+    if (isTakeaway) {
+      if (box) box.style.display = 'none';
+      if (takeawayCustBox) takeawayCustBox.style.display = 'block';
+      const isCash = (currentBillingType === 'Cash Paid');
+      const modeName = isCash ? 'Cash' : 'UPI / Card';
+      if (btnLabel) btnLabel.textContent = `Settle Takeaway (${modeName} ${grandFmt}) & Print KOT`;
+      return;
+    }
+
+    if (takeawayCustBox) takeawayCustBox.style.display = 'none';
 
     if (currentBillingType === 'Charged to Room Folio') {
       if (box) {
@@ -1364,35 +1408,45 @@
     const roomGrp = document.getElementById('room-select-group');
     const tableGrp = document.getElementById('table-select-group');
     const takeawayGrp = document.getElementById('takeaway-name-group');
+    const folioPill = document.getElementById('bill-folio');
+    const folioBox = document.getElementById('room-folio-picker-box');
+    const takeawayCustBox = document.getElementById('takeaway-customer-box');
 
     if (type === 'Room Dining') {
       document.getElementById('type-room').classList.add('active');
       roomGrp.style.display = 'flex';
       tableGrp.style.display = 'none';
-      takeawayGrp.style.display = 'none';
+      if (takeawayGrp) takeawayGrp.style.display = 'none';
+      if (folioPill) folioPill.style.display = 'flex';
+      if (takeawayCustBox) takeawayCustBox.style.display = 'none';
+      if (folioBox) folioBox.style.display = 'block';
       setBillingType('Charged to Room Folio');
     } else if (type === 'Table Dine-in') {
       document.getElementById('type-dinein').classList.add('active');
       tableGrp.style.display = 'flex';
-      takeawayGrp.style.display = 'none';
-      // If user had Room Folio active, keep it and show room selector!
+      if (takeawayGrp) takeawayGrp.style.display = 'none';
+      if (folioPill) folioPill.style.display = 'flex';
+      if (takeawayCustBox) takeawayCustBox.style.display = 'none';
+      if (folioBox) folioBox.style.display = 'block';
       if (currentBillingType === 'Charged to Room Folio') {
         roomGrp.style.display = 'flex';
         setBillingType('Charged to Room Folio');
       } else {
         roomGrp.style.display = 'none';
-        setBillingType('Cash Paid');
+        setBillingType(currentBillingType || 'Cash Paid');
       }
     } else if (type === 'Takeaway') {
       document.getElementById('type-takeaway').classList.add('active');
+      roomGrp.style.display = 'none';
       tableGrp.style.display = 'none';
-      takeawayGrp.style.display = 'flex';
+      if (takeawayGrp) takeawayGrp.style.display = 'none';
+      if (folioPill) folioPill.style.display = 'none';
+      if (folioBox) folioBox.style.display = 'none';
+      if (takeawayCustBox) takeawayCustBox.style.display = 'block';
       if (currentBillingType === 'Charged to Room Folio') {
-        roomGrp.style.display = 'flex';
-        setBillingType('Charged to Room Folio');
-      } else {
-        roomGrp.style.display = 'none';
         setBillingType('Cash Paid');
+      } else {
+        setBillingType(currentBillingType || 'Cash Paid');
       }
     }
   }
@@ -1403,19 +1457,35 @@
     document.querySelectorAll('.billing-pill').forEach(p => p.classList.remove('active'));
     
     const headerRoomGrp = document.getElementById('room-select-group');
+    const folioBox = document.getElementById('room-folio-picker-box');
+    const takeawayCustBox = document.getElementById('takeaway-customer-box');
 
-    if (bType === 'Charged to Room Folio') {
-      document.getElementById('bill-folio').classList.add('active');
-      if (headerRoomGrp) headerRoomGrp.style.display = 'flex';
-    } else if (bType === 'Cash Paid') {
-      document.getElementById('bill-cash').classList.add('active');
-      if (headerRoomGrp && currentOrderType !== 'Room Dining') {
-        headerRoomGrp.style.display = 'none';
+    if (currentOrderType === 'Takeaway') {
+      if (folioBox) folioBox.style.display = 'none';
+      if (headerRoomGrp) headerRoomGrp.style.display = 'none';
+      if (takeawayCustBox) takeawayCustBox.style.display = 'block';
+      if (bType === 'Cash Paid') {
+        document.getElementById('bill-cash').classList.add('active');
+      } else {
+        document.getElementById('bill-digital').classList.add('active');
       }
-    } else if (bType === 'Digital UPI / Card Paid') {
-      document.getElementById('bill-digital').classList.add('active');
-      if (headerRoomGrp && currentOrderType !== 'Room Dining') {
-        headerRoomGrp.style.display = 'none';
+    } else {
+      if (takeawayCustBox) takeawayCustBox.style.display = 'none';
+      if (folioBox) folioBox.style.display = 'block';
+
+      if (bType === 'Charged to Room Folio') {
+        document.getElementById('bill-folio').classList.add('active');
+        if (headerRoomGrp) headerRoomGrp.style.display = 'flex';
+      } else if (bType === 'Cash Paid') {
+        document.getElementById('bill-cash').classList.add('active');
+        if (headerRoomGrp && currentOrderType !== 'Room Dining') {
+          headerRoomGrp.style.display = 'none';
+        }
+      } else if (bType === 'Digital UPI / Card Paid') {
+        document.getElementById('bill-digital').classList.add('active');
+        if (headerRoomGrp && currentOrderType !== 'Room Dining') {
+          headerRoomGrp.style.display = 'none';
+        }
       }
     }
     updateRoomPickerNote();
@@ -1596,33 +1666,50 @@
       }))
     };
 
-    // Handle room assignment (Strictly required for Room Folio, optional for Cash/UPI):
-    const cartRm = document.getElementById('cart-room-folio-select');
-    const headRm = document.getElementById('pos-room-select');
-    const chosenRoomId = (cartRm && cartRm.value) ? cartRm.value : (headRm ? headRm.value : null);
-
-    if (currentBillingType === 'Charged to Room Folio') {
-      if (!chosenRoomId) {
+    if (currentOrderType === 'Takeaway') {
+      const custName = document.getElementById('takeaway-customer-name')?.value?.trim();
+      const custPhone = document.getElementById('takeaway-customer-phone')?.value?.trim();
+      if (!custName) {
         if (typeof Swal !== 'undefined') {
-          Swal.fire({ icon: 'warning', title: 'Room Required', text: 'Please select an active Room to charge this bill to the Room Folio!' });
+          Swal.fire({ icon: 'warning', title: 'Customer Name Required', text: 'Please enter Customer Name for Takeaway order!' });
         } else {
-          alert('Please select an active Room to charge this bill to the Room Folio!');
+          alert('Please enter Customer Name for Takeaway order!');
         }
+        document.getElementById('takeaway-customer-name')?.focus();
         return;
       }
-      payload.room_id = chosenRoomId;
+      payload.customer_name = custName;
+      payload.customer_phone = custPhone || null;
+      payload.room_id = null;
     } else {
-      // Cash Paid or Digital UPI / Card Paid: room selection is optional
-      if (chosenRoomId) {
-        payload.room_id = chosenRoomId;
-      }
-    }
+      // Room Dining or Table Dine-in
+      const cartRm = document.getElementById('cart-room-folio-select');
+      const headRm = document.getElementById('pos-room-select');
+      const chosenRoomId = (cartRm && cartRm.value) ? cartRm.value : (headRm ? headRm.value : null);
 
-    if (currentOrderType === 'Table Dine-in') {
-      payload.table_number = document.getElementById('pos-table-select').value;
-      payload.customer_name = payload.table_number;
-    } else if (currentOrderType === 'Takeaway') {
-      payload.customer_name = document.getElementById('pos-takeaway-name').value.trim() || 'Takeaway Customer';
+      if (currentBillingType === 'Charged to Room Folio') {
+        if (!chosenRoomId) {
+          if (typeof Swal !== 'undefined') {
+            Swal.fire({ icon: 'warning', title: 'Room Required', text: 'Please select an active Room to charge this bill to the Room Folio!' });
+          } else {
+            alert('Please select an active Room to charge this bill to the Room Folio!');
+          }
+          return;
+        }
+        payload.room_id = chosenRoomId;
+      } else {
+        // Cash Paid or Digital UPI / Card Paid: room selection is optional
+        if (chosenRoomId) {
+          payload.room_id = chosenRoomId;
+        }
+      }
+
+      if (currentOrderType === 'Table Dine-in') {
+        payload.table_number = document.getElementById('pos-table-select').value;
+        if (!payload.room_id) {
+          payload.customer_name = payload.table_number;
+        }
+      }
     }
 
     try {
@@ -1652,10 +1739,12 @@
         // Open KOT preview modal
         showKotModal(data.order);
 
-        // Reset cart
+        // Reset cart & inputs
         cart = [];
         renderCart();
         document.getElementById('order-instructions').value = '';
+        if (document.getElementById('takeaway-customer-name')) document.getElementById('takeaway-customer-name').value = '';
+        if (document.getElementById('takeaway-customer-phone')) document.getElementById('takeaway-customer-phone').value = '';
       } else {
         alert(data.message || 'Error posting order.');
       }

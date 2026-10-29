@@ -16,6 +16,7 @@ class PosOrder extends Model
         'room_id',
         'booking_id',
         'customer_name',
+        'customer_phone',
         'room_number',
         'subtotal',
         'tax_percentage',

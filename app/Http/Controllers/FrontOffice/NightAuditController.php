@@ -104,6 +104,39 @@ class NightAuditController extends Controller
             ];
         }
 
+        // 2b. Direct Walk-in / Takeaway POS Payments
+        $posTakeaways = \App\Models\PosOrder::with('items')
+            ->whereDate('created_at', $selectedDate)
+            ->where(function($q) {
+                $q->where('order_type', 'Takeaway')
+                  ->orWhereNull('booking_id');
+            })
+            ->where('status', '!=', 'Cancelled')
+            ->whereIn('billing_type', ['Cash Paid', 'Digital UPI / Card Paid'])
+            ->orderBy('id', 'asc')
+            ->get();
+
+        $takeawayCash = 0;
+        $takeawayUpi = 0;
+        foreach ($posTakeaways as $pwi) {
+            $amt = (float)$pwi->total_amount;
+            $totalPayments += $amt;
+            if ($pwi->billing_type === 'Cash Paid') {
+                $cashCollection += $amt;
+                $takeawayCash += $amt;
+            } else {
+                $upiCollection += $amt;
+                $takeawayUpi += $amt;
+            }
+        }
+        if ($takeawayCash > 0 || $takeawayUpi > 0) {
+            $modeBreakdown[] = [
+                'name' => 'POS Walk-in / Takeaway',
+                'amount' => round($takeawayCash + $takeawayUpi, 2),
+                'count' => $posTakeaways->count()
+            ];
+        }
+
         // 3. ROOMS & INVENTORY DATA (Rooms Data)
         $allRooms = Room::with(['categoryRelation', 'floorRelation', 'beddingConfigRelation', 'operationalHistories.operationalStatus', 'housekeepingHistories.housekeepingStatus'])->get();
         $totalRoomsCount = $allRooms->count();
@@ -491,6 +524,47 @@ class NightAuditController extends Controller
                     'amount' => (float)$p->amount,
                 ];
             })->values()->all();
+
+            // 1b. Direct Walk-in / Takeaway POS Payments
+            $posTakeaways = \App\Models\PosOrder::with('items')
+                ->whereDate('created_at', $auditDate)
+                ->where(function($q) {
+                    $q->where('order_type', 'Takeaway')
+                      ->orWhereNull('booking_id');
+                })
+                ->where('status', '!=', 'Cancelled')
+                ->whereIn('billing_type', ['Cash Paid', 'Digital UPI / Card Paid'])
+                ->orderBy('id', 'asc')
+                ->get();
+
+            foreach ($posTakeaways as $pwi) {
+                $amt = (float)$pwi->total_amount;
+                $totalPayments += $amt;
+                if ($pwi->billing_type === 'Cash Paid') {
+                    $cash += $amt;
+                } else {
+                    $upi += $amt;
+                }
+
+                $custName = $pwi->customer_name ?: 'Takeaway Customer';
+                $custPhone = $pwi->customer_phone ? ' (' . $pwi->customer_phone . ')' : '';
+                $modeDesc = ($pwi->billing_type === 'Cash Paid') ? 'Cash' : 'UPI / Card';
+                $paymentsListItems[] = [
+                    'id' => 'pos_' . $pwi->id,
+                    'time' => $pwi->created_at ? $pwi->created_at->format('h:i A') : '-',
+                    'guest_name' => $custName . $custPhone . ' [Takeaway POS]',
+                    'room_number' => '-',
+                    'settle_number' => '-',
+                    'folio_number' => '-',
+                    'total_bill' => (float)$pwi->total_amount,
+                    'paid_amount' => (float)$pwi->total_amount,
+                    'remaining_amount' => 0.00,
+                    'is_settled' => true,
+                    'mode' => $modeDesc,
+                    'type' => 'Takeaway POS',
+                    'amount' => (float)$pwi->total_amount,
+                ];
+            }
 
             // 2. Room metrics & Occupied Rooms List
             $allRoomsList = Room::with(['categoryRelation', 'floorRelation', 'beddingConfigRelation', 'operationalHistories.operationalStatus', 'housekeepingHistories.housekeepingStatus'])->get();
@@ -915,6 +989,7 @@ class NightAuditController extends Controller
                     'date_time' => $eo->created_at ? $eo->created_at->format('d M Y, h:i A') : 'N/A',
                     'date_short' => $eo->created_at ? $eo->created_at->format('d M') : 'N/A',
                     'items_summary' => implode(', ', $orderItems),
+                    'table_number' => $eo->table_number ?: null,
                     'payment_status' => $eo->payment_status,
                     'is_paid' => $isPaid,
                 ];
@@ -997,6 +1072,89 @@ class NightAuditController extends Controller
                 'remaining_amount' => $rem,
                 'remaining_balance' => $rem,
                 'is_settled' => $isSettled,
+            ];
+        }
+
+        // Append POS Walk-in / Takeaway orders with '-' for hotel room/folio fields
+        $posTakeaways = \App\Models\PosOrder::with('items')
+            ->whereDate('created_at', $date)
+            ->where(function($q) {
+                $q->where('order_type', 'Takeaway')
+                  ->orWhereNull('booking_id');
+            })
+            ->where('status', '!=', 'Cancelled')
+            ->whereIn('billing_type', ['Cash Paid', 'Digital UPI / Card Paid'])
+            ->orderBy('id', 'asc')
+            ->get();
+
+        foreach ($posTakeaways as $pwi) {
+            $custName = $pwi->customer_name ?: 'Takeaway Customer';
+            $custPhone = $pwi->customer_phone ?: '-';
+            $modeDesc = ($pwi->billing_type === 'Cash Paid') ? 'Cash Paid' : 'UPI / Card Paid';
+
+            $takeawayItems = [];
+            foreach ($pwi->items as $it) {
+                $takeawayItems[] = "{$it->quantity}x {$it->item_name}";
+            }
+
+            $amount = (float)$pwi->total_amount;
+            $settledBookingsCount++;
+            $totalGrandBillAll += $amount;
+            $totalPaidAll += $amount;
+
+            $bookingLedgers[] = [
+                'id' => 'pos_' . $pwi->id,
+                'booking_id' => null,
+                'booking_number' => '-',
+                'settle_number' => '-',
+                'folio_number' => '-',
+                'primary_guest_name' => $custName,
+                'guest_name' => $custName,
+                'primary_mobile' => $custPhone,
+                'mobile_no' => $custPhone,
+                'occupants_names' => [$custName],
+                'total_occupants' => 1,
+                'rooms' => [
+                    [
+                        'room_id' => null,
+                        'room_number' => '-',
+                        'floor' => '-',
+                        'category' => '-',
+                        'label' => '-',
+                    ]
+                ],
+                'room_number' => '-',
+                'category' => '-',
+                'checkin_date' => '-',
+                'checkout_date' => '-',
+                'transfers' => [],
+                'stay_status' => 'Takeaway POS',
+                'status' => 'Takeaway POS',
+                'room_charges' => 0.00,
+                'extra_service_charges' => 0.00,
+                'extra_paid_charges' => $amount,
+                'extra_orders_count' => 1,
+                'extra_orders_detailed' => [
+                    [
+                        'id' => $pwi->id,
+                        'order_number' => $pwi->order_number,
+                        'total_amount' => $amount,
+                        'date_time' => $pwi->created_at ? $pwi->created_at->format('d M Y, h:i A') : 'N/A',
+                        'date_short' => $pwi->created_at ? $pwi->created_at->format('d M') : 'N/A',
+                        'items_summary' => implode(', ', $takeawayItems),
+                        'table_number' => null,
+                        'payment_status' => $modeDesc,
+                        'is_paid' => true,
+                    ]
+                ],
+                'extra_items_list' => $takeawayItems,
+                'grand_total_bill' => $amount,
+                'total_bill' => $amount,
+                'paid_amount' => $amount,
+                'total_paid' => $amount,
+                'remaining_amount' => 0.00,
+                'remaining_balance' => 0.00,
+                'is_settled' => true,
             ];
         }
 

@@ -178,6 +178,7 @@ class DashboardController extends Controller
                             'id' => $ro->id,
                             'order_number' => $ro->order_number,
                             'room_number' => $ro->room_number,
+                            'table_number' => $ro->table_number,
                             'guest_name' => $ro->guest_name,
                             'date' => $ro->created_at ? $ro->created_at->format('d M Y, h:i A') : 'N/A',
                             'subtotal' => (float)$ro->subtotal,

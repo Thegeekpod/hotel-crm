@@ -16,7 +16,7 @@ use App\Models\Booking;
 class BanquetController extends Controller
 {
     /**
-     * Display the main Banquet & Services dashboard.
+     * Display the main Banquet & Events dashboard.
      */
     public function index(Request $request)
     {
@@ -24,49 +24,47 @@ class BanquetController extends Controller
             $q->latest();
         }])->get();
 
-        $services = HotelService::where('status', 'Active')->orderBy('category')->orderBy('name')->get();
+        // Banquet Bookings Query with Search & Status filters
+        $bookingsQuery = BanquetBooking::with('hall')->latest();
 
-        // Room Service Orders
-        $roomOrdersQuery = RoomServiceOrder::with(['room', 'booking.guest', 'items.service'])->latest();
+        if ($request->filled('status') && $request->status !== 'all') {
+            $bookingsQuery->where('status', $request->status);
+        }
 
-        if ($request->filled('order_status') && $request->order_status !== 'all') {
-            $roomOrdersQuery->where('order_status', $request->order_status);
+        if ($request->filled('hall_id') && $request->hall_id !== 'all') {
+            $bookingsQuery->where('banquet_hall_id', $request->hall_id);
         }
 
         if ($request->filled('search')) {
             $s = trim($request->search);
-            $roomOrdersQuery->where(function ($q) use ($s) {
-                $q->where('order_number', 'like', "%{$s}%")
-                  ->orWhere('room_number', 'like', "%{$s}%")
-                  ->orWhere('guest_name', 'like', "%{$s}%");
+            $bookingsQuery->where(function ($q) use ($s) {
+                $q->where('booking_reference', 'like', "%{$s}%")
+                  ->orWhere('client_name', 'like', "%{$s}%")
+                  ->orWhere('event_name', 'like', "%{$s}%")
+                  ->orWhere('phone', 'like', "%{$s}%")
+                  ->orWhere('company_name', 'like', "%{$s}%")
+                  ->orWhereHas('hall', function ($hq) use ($s) {
+                      $hq->where('name', 'like', "%{$s}%");
+                  });
             });
         }
 
-        $roomOrders = $roomOrdersQuery->get();
+        $banquetBookings = $bookingsQuery->get();
 
-        // Banquet Bookings
-        $banquetBookings = BanquetBooking::with('hall')->latest()->get();
-
-        // Currently Occupied / Active Rooms for quick order placement
-        $activeRooms = Room::with(['activeBooking.guest', 'categoryRelation'])->orderBy('room_number')->get();
-
-        // Metrics
+        // Banquet-specific metrics
         $totalHalls = BanquetHall::count();
         $totalEventsBooked = BanquetBooking::where('status', 'Confirmed')->count();
-        $activeRoomOrdersCount = RoomServiceOrder::whereIn('order_status', ['Received', 'Preparing', 'Out for Delivery'])->count();
-        $totalServicesRevenue = RoomServiceOrder::sum('total_amount') + BanquetBooking::sum('total_amount');
+        $totalPaxBooked = (int) BanquetBooking::where('status', '!=', 'Cancelled')->sum('guaranteed_pax');
+        $totalBanquetRevenue = (float) BanquetBooking::where('status', '!=', 'Cancelled')->sum('total_amount');
         $defaultGstBanquet = (float) AppSetting::get('default_gst_banquet', 5.00);
 
         return view('banquet.index', compact(
             'halls',
-            'services',
-            'roomOrders',
             'banquetBookings',
-            'activeRooms',
             'totalHalls',
             'totalEventsBooked',
-            'activeRoomOrdersCount',
-            'totalServicesRevenue',
+            'totalPaxBooked',
+            'totalBanquetRevenue',
             'defaultGstBanquet'
         ));
     }

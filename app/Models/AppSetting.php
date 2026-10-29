@@ -36,3 +36,4 @@ class AppSetting extends Model
         );
     }
 }
+

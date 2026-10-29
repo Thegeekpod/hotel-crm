@@ -2,471 +2,153 @@
 
 @section('title', 'Housekeeping State Master - Hotel Sagar Sonnet PMS')
 
-@push('styles')
-<style>
-  .admin-layout {
-    display: grid;
-    grid-template-columns: 280px 1fr;
-    gap: 20px;
-    min-height: calc(100vh - 165px);
-  }
-  .pms-page-header {
-    border-bottom: none !important;
-    background: transparent !important;
-  }
-  .admin-sidebar {
-    background: #ffffff;
-    border: 1px solid var(--border-medium);
-    border-radius: var(--radius-lg);
-    box-shadow: 0 4px 16px rgba(0,0,0,0.03);
-    padding: 14px;
-    height: fit-content;
-    position: sticky;
-    top: 10px;
-    max-height: calc(100vh - 180px);
-    overflow-y: auto;
-  }
-  .admin-nav-group { margin-bottom: 8px; }
-  .admin-nav-header {
-    font-size: 11px;
-    font-weight: 800;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-    padding: 9px 12px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    border-radius: var(--radius-md);
-    cursor: pointer;
-    user-select: none;
-    transition: all 0.2s ease;
-    background: #f8fafc;
-    border: 1px solid #f1f5f9;
-  }
-  .admin-nav-header:hover { background: #f1f5f9; color: var(--accent-primary); }
-  .admin-nav-header.active {
-    color: var(--accent-primary);
-    font-weight: 900;
-    background: rgba(99, 102, 241, 0.08);
-    border-color: rgba(99, 102, 241, 0.2);
-  }
-  .admin-nav-flat {
-    font-size: 11px;
-    font-weight: 800;
-    color: var(--text-secondary);
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-    padding: 10px 12px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    border-radius: var(--radius-md);
-    cursor: pointer;
-    user-select: none;
-    transition: all 0.2s ease;
-    background: #ffffff;
-    border: 1px solid #f1f5f9;
-    margin-bottom: 6px;
-  }
-  .admin-nav-flat:hover { background: #f8fafc; color: var(--accent-primary); }
-  .admin-sub-list {
-    list-style: none;
-    padding: 4px 0 4px 8px;
-    margin: 4px 0 0 4px;
-    border-left: 2px solid var(--border-medium);
-  }
-  .admin-sub-item {
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--text-secondary);
-    padding: 7px 10px;
-    border-radius: 6px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    transition: all 0.2s ease;
-    margin-bottom: 2px;
-    text-decoration: none;
-  }
-  .admin-sub-item:hover {
-    background: rgba(99, 102, 241, 0.06);
-    color: var(--accent-primary);
-    transform: translateX(3px);
-  }
-  .admin-sub-item.active {
-    background: linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(168, 85, 247, 0.08));
-    color: var(--accent-primary);
-    font-weight: 800;
-    border-left: 3px solid var(--accent-primary);
-  }
-  .admin-content-pane {
-    background: #ffffff;
-    border: 1px solid var(--border-medium);
-    border-radius: var(--radius-lg);
-    box-shadow: 0 4px 16px rgba(0,0,0,0.03);
-    padding: 24px;
-  }
-  .crud-header-card {
-    background: #ffffff;
-    border: 1px solid var(--border-medium);
-    border-radius: var(--radius-md);
-    padding: 16px 20px;
-    margin-bottom: 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.02);
-  }
-  .crud-toolbar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 16px;
-    flex-wrap: wrap;
-  }
-  .crud-toolbar-left {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex-wrap: wrap;
-  }
-  .crud-toolbar-right {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex-wrap: wrap;
-  }
-  .crud-search-wrap {
-    position: relative;
-    display: flex;
-    align-items: center;
-  }
-  .crud-search-wrap i {
-    position: absolute;
-    left: 12px;
-    color: var(--text-muted);
-    font-size: 12px;
-  }
-  .crud-search-input {
-    height: 38px;
-    padding: 8px 14px 8px 34px;
-    font-size: 13px;
-    border: 1px solid var(--border-medium);
-    border-radius: var(--radius-md);
-    background: #fff;
-    color: var(--text-primary);
-    width: 260px;
-    max-width: 100%;
-    outline: none;
-  }
-  .crud-search-input:focus {
-    border-color: var(--accent-primary);
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
-  }
-  .crud-filter-select {
-    height: 38px;
-    padding: 6px 12px;
-    font-size: 12px;
-    font-weight: 600;
-    border: 1px solid var(--border-medium);
-    border-radius: var(--radius-md);
-    background: #fff;
-    color: var(--text-primary);
-    outline: none;
-    cursor: pointer;
-  }
-  .crud-filter-select:focus {
-    border-color: var(--accent-primary);
-  }
-  .crud-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 13px;
-    background: #ffffff;
-    border-radius: var(--radius-md);
-    overflow: hidden;
-    border: 1px solid var(--border-medium);
-  }
-  .crud-table th {
-    background: #f8fafc;
-    padding: 12px 16px;
-    font-size: 10px;
-    font-weight: 800;
-    color: var(--text-secondary);
-    text-transform: uppercase;
-    letter-spacing: 0.6px;
-    border-bottom: 1px solid var(--border-medium);
-    text-align: left;
-  }
-  .crud-table td {
-    padding: 12px 16px;
-    border-bottom: 1px solid #f1f5f9;
-    color: var(--text-primary);
-    vertical-align: middle;
-  }
-  .crud-table tr:hover td { background: rgba(99, 102, 241, 0.02); }
-  .crud-actions { display: flex; gap: 8px; justify-content: flex-end; }
-  .btn-action-edit {
-    padding: 6px 11px;
-    font-size: 11px;
-    font-weight: 700;
-    border: 1px solid var(--border-medium);
-    border-radius: var(--radius-sm);
-    background: #fff;
-    color: var(--accent-primary);
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-  .btn-action-edit:hover { background: var(--accent-primary); color: #fff; }
-  .btn-action-del {
-    padding: 6px 11px;
-    font-size: 11px;
-    font-weight: 700;
-    border: 1px solid #fecaca;
-    border-radius: var(--radius-sm);
-    background: #fff;
-    color: var(--accent-rose);
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-  .btn-action-del:hover { background: var(--accent-rose); color: #fff; }
-  .badge-tag {
-    display: inline-flex;
-    align-items: center;
-    padding: 3px 8px;
-    border-radius: 20px;
-    font-size: 11px;
-    font-weight: 700;
-    line-height: 1;
-    gap: 4px;
-  }
-  .badge-tag.green { background: rgba(16, 185, 129, 0.12); color: #059669; border: 1px solid rgba(16, 185, 129, 0.25); }
-  .badge-tag.red { background: rgba(239, 68, 68, 0.12); color: #dc2626; border: 1px solid rgba(239, 68, 68, 0.25); }
-  .badge-tag.yellow { background: rgba(245, 158, 11, 0.12); color: #d97706; border: 1px solid rgba(245, 158, 11, 0.25); }
-  .badge-tag.purple { background: rgba(168, 85, 247, 0.12); color: #7c3aed; border: 1px solid rgba(168, 85, 247, 0.25); }
-  .badge-tag.blue { background: rgba(59, 130, 246, 0.12); color: #2563eb; border: 1px solid rgba(59, 130, 246, 0.25); }
-
-  .admin-form-group { margin-bottom: 16px; }
-  .admin-form-label {
-    display: block;
-    font-size: 11px;
-    font-weight: 800;
-    color: var(--text-secondary);
-    text-transform: uppercase;
-    letter-spacing: 0.6px;
-    margin-bottom: 6px;
-  }
-  .admin-form-input {
-    width: 100%;
-    height: 40px;
-    padding: 8px 14px;
-    font-size: 13px;
-    border: 1px solid var(--border-medium);
-    border-radius: var(--radius-md);
-    background: #fff;
-    color: var(--text-primary);
-    box-sizing: border-box;
-  }
-  .admin-form-input:focus {
-    outline: none;
-    border-color: var(--accent-primary);
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
-  }
-
-  /* Table Pagination Styles */
-  .table-pagination-footer {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 12px 18px;
-    border-top: 1px solid var(--border-medium);
-    background: #f8fafc;
-    flex-wrap: wrap;
-    gap: 12px;
-    border-radius: 0 0 var(--radius-md) var(--radius-md);
-  }
-  .pagination-controls-group {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-  .pms-page-btn {
-    min-width: 32px;
-    height: 32px;
-    padding: 0 6px;
-    border-radius: 6px;
-    border: 1px solid var(--border-medium);
-    background: #ffffff;
-    color: var(--text-secondary);
-    font-size: 12px;
-    font-weight: 700;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s ease;
-  }
-  .pms-page-btn:hover:not(:disabled) {
-    border-color: var(--accent-primary);
-    color: var(--accent-primary);
-    background: rgba(99, 102, 241, 0.05);
-  }
-  .pms-page-btn.active {
-    background: var(--accent-primary);
-    color: #ffffff;
-    border-color: var(--accent-primary);
-    box-shadow: 0 2px 6px rgba(99, 102, 241, 0.35);
-  }
-  .pms-page-btn:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-  }
-  .pms-page-dots {
-    padding: 0 4px;
-    color: var(--text-muted);
-    font-weight: 800;
-    font-size: 12px;
-  }
-</style>
-@endpush
-
 @section('content')
-<main class="pms-main-viewport">
-  <div class="pms-page-container">
-
-    <div class="pms-page-header">
-      <div class="pms-header-title-block">
-        <div class="pms-status-indicator"></div>
-        <div>
-          <h1 class="pms-page-title">Administrator • Master Data Management</h1>
-          <div class="pms-page-subtitle">Configure and manage live records for active hotel modules.</div>
-        </div>
-      </div>
-      <div style="display: flex; gap: 10px;">
-        <button class="btn-ui-secondary" onclick="exportDataCSV()"><i class="fa-solid fa-file-csv"></i> Export CSV</button>
+<main class="flex-1 p-4 lg:p-6 space-y-6">
+  <!-- Page Header -->
+  <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div class="flex items-center gap-3">
+      <div class="w-2.5 h-8 bg-indigo-600 rounded-full"></div>
+      <div>
+        <h1 class="text-xl lg:text-2xl font-black text-slate-800 tracking-tight">Administrator • Master Data Management</h1>
+        <p class="text-xs lg:text-sm text-slate-500 font-medium">Configure and manage live records for active hotel modules.</p>
       </div>
     </div>
+    <div class="flex items-center gap-2.5">
+      <button type="button" onclick="exportDataCSV()" class="h-9.5 px-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold shadow-xs hover:border-slate-300 transition-all flex items-center gap-2 cursor-pointer">
+        <i class="fa-solid fa-file-csv text-slate-500"></i> Export CSV
+      </button>
+    </div>
+  </div>
 
-    <div class="admin-layout">
-      <!-- Sidebar -->
-      @include('admin.includes.sidebar')
+  <div class="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6 items-start">
+    <!-- Sidebar -->
+    @include('admin.includes.sidebar')
 
-      <!-- Content Pane -->
-      <section class="admin-content-pane">
-        <div id="crud-view-container">
-          
-          <div class="crud-header-card">
-            <div>
-              <div style="display: flex; align-items: center; gap: 8px;">
-                <h2 style="font-size: 16px; font-weight: 800; color: var(--text-primary); margin: 0;">Housekeeping State Master</h2>
-                <span class="badge-tag green" id="view-count">{{ count($items) }} Records</span>
-              </div>
-              <div style="font-size: 12px; color: var(--text-secondary); margin-top: 3px;">
-                Define housekeeping inspection states, clean/dirty triggers, and staff badge indicators.
-              </div>
+    <!-- Content Pane -->
+    <section class="min-w-0 space-y-6">
+      <div id="crud-view-container" class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+        
+        <!-- Header Card -->
+        <div class="p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50/50">
+          <div>
+            <div class="flex items-center gap-2.5">
+              <h2 class="text-base font-bold text-slate-800 tracking-tight">Housekeeping State Master</h2>
+              <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/60" id="view-count">{{ count($items) }} Records</span>
             </div>
-            <button class="btn-ui-primary" onclick="openAddModal()"><i class="fa-solid fa-plus"></i> Add Entry</button>
+            <p class="text-xs text-slate-500 mt-0.5">Define housekeeping inspection states, clean/dirty triggers, and staff badge indicators.</p>
           </div>
+          <button type="button" class="h-9.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-xs shadow-indigo-200 transition-all flex items-center gap-2 self-start sm:self-auto cursor-pointer" onclick="openAddModal()">
+            <i class="fa-solid fa-plus text-xs"></i> Add Entry
+          </button>
+        </div>
 
-          <div class="crud-toolbar">
-            <div class="crud-toolbar-left">
-              <div class="crud-search-wrap">
-                <i class="fa-solid fa-magnifying-glass"></i>
-                <input type="text" id="table-search" class="crud-search-input" placeholder="Search active records..." value="{{ request('search') }}" oninput="handleSearch(this.value)">
-              </div>
-              <select id="status-filter" class="crud-filter-select" onchange="handleStatusFilter(this.value)">
-                <option value="all" {{ request('status', 'all') === 'all' ? 'selected' : '' }}>All Statuses</option>
-                <option value="Active" {{ request('status') === 'Active' ? 'selected' : '' }}>Active</option>
-                <option value="Inactive" {{ request('status') === 'Inactive' ? 'selected' : '' }}>Inactive</option>
+        <!-- Toolbar -->
+        <div class="p-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white">
+          <div class="flex flex-wrap items-center gap-2.5 flex-1 max-w-xl">
+            <div class="relative flex-1 min-w-[200px]">
+              <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+              <input type="text" id="table-search" class="w-full h-9.5 pl-9 pr-3.5 rounded-xl border border-slate-200 bg-white text-xs font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all" placeholder="Search active records..." value="{{ request('search') }}" oninput="handleSearch(this.value)">
+            </div>
+            <select id="status-filter" class="h-9.5 px-3 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all cursor-pointer" onchange="handleStatusFilter(this.value)">
+              <option value="all" {{ request('status', 'all') === 'all' ? 'selected' : '' }}>All Statuses</option>
+              <option value="Active" {{ request('status') === 'Active' ? 'selected' : '' }}>Active</option>
+              <option value="Inactive" {{ request('status') === 'Inactive' ? 'selected' : '' }}>Inactive</option>
+            </select>
+          </div>
+          <div class="flex items-center gap-2">
+            <button type="button" class="h-9.5 px-3.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-xs transition-all hidden items-center gap-2 cursor-pointer" id="btn-bulk-delete" onclick="handleBulkDelete()">
+              <i class="fa-solid fa-trash-can text-xs"></i> Delete Selected (<span id="bulk-selected-count">0</span>)
+            </button>
+            <div class="flex items-center gap-1.5">
+              <span class="text-[11px] font-bold text-slate-400 uppercase">Rows:</span>
+              <select id="page-size-select" class="h-9.5 px-2.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all cursor-pointer" onchange="handlePageSizeChange(this.value)">
+                <option value="10" {{ request('per_page', '10') == '10' ? 'selected' : '' }}>10</option>
+                <option value="20" {{ request('per_page') == '20' ? 'selected' : '' }}>20</option>
+                <option value="100" {{ request('per_page') == '100' ? 'selected' : '' }}>100</option>
+                <option value="all" {{ request('per_page') == 'all' ? 'selected' : '' }}>All</option>
               </select>
-              <button id="btn-bulk-delete" class="btn-action-del" style="display: none; height: 38px; padding: 0 14px; font-size: 12px; align-items: center; gap: 6px;" onclick="handleBulkDelete()">
-                <i class="fa-solid fa-trash-can"></i> Delete Selected (<span id="bulk-selected-count">0</span>)
-              </button>
             </div>
-            <div class="crud-toolbar-right">
-              <div style="display: flex; align-items: center; gap: 6px;">
-                <span style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Rows:</span>
-                <select id="page-size-select" class="crud-filter-select" style="height: 38px; width: 75px; font-size: 12px; padding: 6px 8px;" onchange="handlePageSizeChange(this.value)">
-                  <option value="10" {{ request('per_page', '10') == '10' ? 'selected' : '' }}>10</option>
-                  <option value="20" {{ request('per_page') == '20' ? 'selected' : '' }}>20</option>
-                  <option value="100" {{ request('per_page') == '100' ? 'selected' : '' }}>100</option>
-                  <option value="all" {{ request('per_page') == 'all' ? 'selected' : '' }}>All</option>
-                </select>
-              </div>
-              <button class="btn-ui-secondary" onclick="exportDataCSV()"><i class="fa-solid fa-file-csv"></i> Export CSV</button>
-              <button class="btn-ui-secondary" onclick="loadTableData()"><i class="fa-solid fa-rotate"></i> Refresh</button>
-            </div>
+            <button type="button" class="h-9.5 px-3.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all flex items-center gap-2 cursor-pointer" onclick="exportDataCSV()">
+              <i class="fa-solid fa-file-csv text-slate-500 text-xs"></i> Export
+            </button>
+            <button type="button" class="h-9.5 px-3.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all flex items-center gap-2 cursor-pointer" onclick="loadTableData()">
+              <i class="fa-solid fa-rotate text-slate-500 text-xs"></i> Refresh
+            </button>
           </div>
-
-          <div style="overflow-x: auto; max-height: 520px; overflow-y: auto; border: 1px solid var(--border-medium); border-radius: var(--radius-md) var(--radius-md) 0 0;">
-            <table class="crud-table" id="crud-table" style="border: none;">
-              <thead>
-                <tr>
-                  <th style="width: 40px; text-align: center;"><input type="checkbox" id="select-all-check" onchange="toggleSelectAll(this)" style="cursor: pointer;"></th>
-                  <th style="width: 50px;">#</th>
-                  <th>State Name</th>
-                  <th>Task Stage Type</th>
-                  <th>Badge Color</th>
-                  <th>System Status</th>
-                  <th style="text-align: right; width: 120px;">Actions</th>
-                </tr>
-              </thead>
-              <tbody id="table-body">
-                <!-- Dynamically loaded via JavaScript -->
-              </tbody>
-            </table>
-          </div>
-
-          <!-- Pagination Bar -->
-          <div class="table-pagination-footer">
-            <div id="pagination-info" style="font-size: 12px; color: var(--text-secondary);">
-              Showing 1 to 10 of {{ count($items) }} records
-            </div>
-            <div class="pagination-controls-group" id="pagination-nav">
-              <!-- Rendered dynamically -->
-            </div>
-          </div>
-
         </div>
-      </section>
-    </div>
 
+        <!-- Responsive Table -->
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse" id="crud-table">
+            <thead>
+              <tr class="border-b border-slate-200 bg-slate-50/80 text-[11px] font-black uppercase tracking-wider text-slate-500">
+                <th class="w-10 px-4 py-3.5 text-center">
+                  <input type="checkbox" id="select-all-check" onchange="toggleSelectAll(this)" class="cursor-pointer w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 border-slate-300">
+                </th>
+                <th class="w-12 px-3 py-3.5 text-slate-400 font-mono">#</th>
+                <th class="px-4 py-3.5">State Name</th>
+                <th class="px-4 py-3.5">Task Stage Type</th>
+                <th class="px-4 py-3.5">Badge Color</th>
+                <th class="px-4 py-3.5">System Status</th>
+                <th class="px-4 py-3.5 text-right w-28">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="table-body" class="divide-y divide-slate-100 text-xs font-medium text-slate-700">
+              <!-- Dynamically loaded via JavaScript -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination Bar -->
+        <div class="p-4 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50/50">
+          <div class="text-xs text-slate-500 font-medium" id="pagination-info">
+            Showing 1 to 10 of {{ count($items) }} records
+          </div>
+          <div class="flex items-center gap-1" id="pagination-nav">
+            <!-- Rendered dynamically -->
+          </div>
+        </div>
+
+      </div>
+    </section>
   </div>
 </main>
 
 <!-- Add / Edit Master Modal -->
-<div class="modal-backdrop" id="crud-modal">
-  <div class="modal-window" style="width: 480px; max-width: 95vw;">
-    <div class="modal-top">
-      <h3 id="modal-title"><i class="fa-solid fa-spray-can-sparkles"></i> Add Housekeeping State</h3>
-      <button class="modal-close" onclick="closeModal('crud-modal')">&times;</button>
+<div class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 hidden" id="crud-modal">
+  <div class="w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden flex flex-col">
+    <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+      <h3 class="text-base font-bold text-slate-800 flex items-center gap-2.5">
+        <span class="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-sm">
+          <i class="fa-solid fa-spray-can-sparkles"></i>
+        </span>
+        <span id="modal-title">Add Housekeeping State</span>
+      </h3>
+      <button type="button" class="w-8 h-8 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors flex items-center justify-center cursor-pointer text-base" onclick="closeModal('crud-modal')">&times;</button>
     </div>
     <form id="crud-form" onsubmit="handleFormSubmit(event)">
       <input type="hidden" id="item-id">
-      <div style="padding: 22px 24px;">
-        <div class="admin-form-group">
-          <label class="admin-form-label">State Name <span style="color: red;">*</span></label>
-          <input type="text" id="form-name" class="admin-form-input" placeholder="e.g. Cleaned & Inspected" required>
+      <div class="p-6 space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1.5">State Name <span class="text-rose-500">*</span></label>
+          <input type="text" id="form-name" class="w-full h-9.5 px-3.5 rounded-xl border border-slate-200 bg-white text-xs font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all" placeholder="e.g. Cleaned & Inspected" required>
         </div>
 
-        <div class="admin-form-group" style="margin-bottom: 14px;">
-          <label class="admin-form-label">Task Stage Type <span style="color: red;">*</span></label>
-          <select id="form-type" class="admin-form-input" required>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1.5">Task Stage Type <span class="text-rose-500">*</span></label>
+          <select id="form-type" class="w-full h-9.5 px-3.5 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all cursor-pointer" required>
             <option value="assign_task">Assign Task (Pending Cleaning / Due)</option>
             <option value="completed_task">Completed Task (Finished & Ready)</option>
           </select>
-          <span style="font-size: 11px; color: var(--text-muted); margin-top: 3px; display: block;">
+          <p class="text-[11px] text-slate-400 mt-1">
             Determines whether rooms with this status belong to <strong>Tasks Queue</strong> or <strong>Completed Tasks</strong> in Front Desk.
-          </span>
+          </p>
         </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
-          <div class="admin-form-group">
-            <label class="admin-form-label">Badge Theme</label>
-            <select id="form-badge" class="admin-form-input">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1.5">Badge Theme</label>
+            <select id="form-badge" class="w-full h-9.5 px-3.5 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all cursor-pointer">
               <option value="green">Green (Clean / Ready)</option>
               <option value="red">Red (Dirty / Due)</option>
               <option value="yellow">Yellow (Inspecting / Touch-up)</option>
@@ -474,9 +156,9 @@
               <option value="blue">Blue (In-Progress / Standard)</option>
             </select>
           </div>
-          <div class="admin-form-group">
-            <label class="admin-form-label">Status <span style="color: red;">*</span></label>
-            <select id="form-status" class="admin-form-input" required>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1.5">Status <span class="text-rose-500">*</span></label>
+            <select id="form-status" class="w-full h-9.5 px-3.5 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all cursor-pointer" required>
               <option value="Active">Active</option>
               <option value="Inactive">Inactive</option>
             </select>
@@ -484,9 +166,11 @@
         </div>
       </div>
 
-      <div class="modal-bot" style="padding: 14px 24px; background: #f8fafc; border-top: 1px solid var(--border-medium); display: flex; justify-content: flex-end; gap: 10px;">
-        <button type="button" class="btn-ui-secondary" onclick="closeModal('crud-modal')" style="height: 38px; padding: 0 18px;">Cancel</button>
-        <button type="submit" class="btn-ui-primary" style="height: 38px; padding: 0 20px;"><i class="fa-solid fa-check"></i> Save State</button>
+      <div class="px-6 py-3.5 bg-slate-50/50 border-t border-slate-100 flex justify-end items-center gap-2.5">
+        <button type="button" class="h-9.5 px-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all cursor-pointer" onclick="closeModal('crud-modal')">Cancel</button>
+        <button type="submit" class="h-9.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-xs shadow-indigo-200 transition-all flex items-center gap-2 cursor-pointer">
+          <i class="fa-solid fa-check text-xs"></i> Save State
+        </button>
       </div>
     </form>
   </div>
@@ -513,7 +197,13 @@
 
     if (btn && countSpan) {
       countSpan.textContent = selectedIds.size;
-      btn.style.display = selectedIds.size > 0 ? 'inline-flex' : 'none';
+      if (selectedIds.size > 0) {
+        btn.classList.remove('hidden');
+        btn.classList.add('inline-flex');
+      } else {
+        btn.classList.add('hidden');
+        btn.classList.remove('inline-flex');
+      }
     }
 
     if (selectAllCheck) {
@@ -639,7 +329,7 @@
   }
 
   function openAddModal() {
-    document.getElementById('modal-title').innerHTML = '<i class="fa-solid fa-plus-circle"></i> Add Housekeeping State';
+    document.getElementById('modal-title').innerHTML = '<i class="fa-solid fa-plus-circle text-indigo-600 mr-2"></i> Add Housekeeping State';
     document.getElementById('item-id').value = '';
     document.getElementById('form-name').value = '';
     document.getElementById('form-type').value = 'assign_task';
@@ -652,7 +342,7 @@
     const item = tableRecords.find(r => r.id === id);
     if (!item) return;
 
-    document.getElementById('modal-title').innerHTML = '<i class="fa-solid fa-pen-to-square"></i> Edit Housekeeping State';
+    document.getElementById('modal-title').innerHTML = '<i class="fa-solid fa-pen-to-square text-indigo-600 mr-2"></i> Edit Housekeeping State';
     document.getElementById('item-id').value = item.id;
     document.getElementById('form-name').value = item.name;
     document.getElementById('form-type').value = item.type || (item.name.toLowerCase().includes('clean') || item.name.toLowerCase().includes('sanit') ? 'completed_task' : 'assign_task');
@@ -674,7 +364,6 @@
       return;
     }
 
-    // Client-side duplicate check
     const isDuplicate = tableRecords.some(r => {
       const isSameName = r.name && r.name.toLowerCase() === name.toLowerCase();
       const isDifferentId = !id || String(r.id) !== String(id);
@@ -753,6 +442,22 @@
     });
   }
 
+  function getBadgeClasses(color) {
+    switch (color) {
+      case 'red':
+        return 'bg-rose-50 text-rose-700 border-rose-200/60';
+      case 'yellow':
+        return 'bg-amber-50 text-amber-700 border-amber-200/60';
+      case 'blue':
+        return 'bg-sky-50 text-sky-700 border-sky-200/60';
+      case 'purple':
+        return 'bg-purple-50 text-purple-700 border-purple-200/60';
+      case 'green':
+      default:
+        return 'bg-emerald-50 text-emerald-700 border-emerald-200/60';
+    }
+  }
+
   function renderTable() {
     const filtered = getFilteredRecords();
     const totalCount = filtered.length;
@@ -769,44 +474,53 @@
 
     const tbody = document.getElementById('table-body');
     if (!pageItems.length) {
-      tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 40px; color: var(--text-muted);"><i class="fa-solid fa-inbox" style="font-size: 28px; margin-bottom: 10px; display: block;"></i>No matching records found.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="7" class="px-6 py-12 text-center text-slate-400"><i class="fa-solid fa-inbox text-3xl mb-2 text-slate-300 block"></i>No matching records found.</td></tr>`;
     } else {
       let html = '';
       pageItems.forEach((item, idx) => {
         const badgeColor = item.badge_color || 'green';
-        const statusBadgeClass = item.status === 'Active' ? 'green' : 'yellow';
+        const colorClasses = getBadgeClasses(badgeColor);
         const isSelected = selectedIds.has(item.id);
         const isCompleted = item.type === 'completed_task';
 
+        const statusBadge = item.status === 'Active'
+          ? '<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/60"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Active</span>'
+          : '<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200/60"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Inactive</span>';
+
+        const stageBadge = isCompleted
+          ? '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/60"><i class="fa-solid fa-circle-check text-[9px]"></i> COMPLETED TASK</span>'
+          : '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200/60"><i class="fa-solid fa-list-check text-[9px]"></i> ASSIGN TASK</span>';
+
         html += `
-          <tr data-id="${item.id}" class="${isSelected ? 'row-selected' : ''}">
-            <td style="text-align: center;">
-              <input type="checkbox" class="row-select-check" value="${item.id}" ${isSelected ? 'checked' : ''} onchange="handleRowSelect(this, ${item.id})" style="cursor: pointer;">
+          <tr data-id="${item.id}" class="hover:bg-slate-50/70 transition-colors ${isSelected ? 'bg-indigo-50/40' : ''}">
+            <td class="px-4 py-3 text-center">
+              <input type="checkbox" class="row-select-check cursor-pointer w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 border-slate-300" value="${item.id}" ${isSelected ? 'checked' : ''} onchange="handleRowSelect(this, ${item.id})">
             </td>
-            <td style="font-family: var(--font-mono); font-weight: 700; color: var(--text-muted); font-size: 11px;">${startIdx + idx + 1}</td>
-            <td style="font-weight: 800; color: var(--text-primary);">
-              <span class="badge-tag ${badgeColor}" style="margin-right: 6px;"><i class="fa-solid fa-spray-can-sparkles" style="font-size: 9px;"></i>${item.name}</span>
-            </td>
-            <td>
-              <span class="badge-tag ${isCompleted ? 'green' : 'yellow'}" style="font-weight: 700;">
-                <i class="fa-solid ${isCompleted ? 'fa-circle-check' : 'fa-list-check'}" style="font-size: 8px;"></i>
-                ${isCompleted ? 'COMPLETED TASK' : 'ASSIGN TASK'}
+            <td class="px-3 py-3 font-mono font-bold text-slate-400 text-[11px]">${startIdx + idx + 1}</td>
+            <td class="px-4 py-3 font-bold text-slate-800">
+              <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg border font-bold text-xs ${colorClasses}">
+                <i class="fa-solid fa-spray-can-sparkles text-[10px]"></i> ${escapeHtml(item.name)}
               </span>
             </td>
-            <td>
-              <span class="badge-tag ${badgeColor}">
-                <i class="fa-solid fa-circle" style="font-size: 6px;"></i>${badgeColor.toUpperCase()}
+            <td class="px-4 py-3">
+              ${stageBadge}
+            </td>
+            <td class="px-4 py-3">
+              <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border text-[11px] font-bold uppercase tracking-wider ${colorClasses}">
+                <span class="w-1.5 h-1.5 rounded-full bg-current"></span> ${escapeHtml(badgeColor)}
               </span>
             </td>
-            <td>
-              <span class="badge-tag ${statusBadgeClass}">
-                <i class="fa-solid fa-circle-check" style="font-size: 6px;"></i>${item.status}
-              </span>
+            <td class="px-4 py-3">
+              ${statusBadge}
             </td>
-            <td style="text-align: right;">
-              <div class="crud-actions">
-                <button class="btn-action-edit" onclick="openEditModal(${item.id})" title="Edit Record"><i class="fa-solid fa-pen"></i></button>
-                <button class="btn-action-del" onclick="deleteItem(${item.id})" title="Delete Record"><i class="fa-solid fa-trash"></i></button>
+            <td class="px-4 py-3 text-right">
+              <div class="inline-flex items-center gap-1 justify-end">
+                <button type="button" class="w-7 h-7 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 border border-slate-200 transition-all flex items-center justify-center cursor-pointer" onclick="openEditModal(${item.id})" title="Edit Record">
+                  <i class="fa-solid fa-pen text-xs"></i>
+                </button>
+                <button type="button" class="w-7 h-7 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 border border-slate-200 transition-all flex items-center justify-center cursor-pointer" onclick="deleteItem(${item.id})" title="Delete Record">
+                  <i class="fa-solid fa-trash text-xs"></i>
+                </button>
               </div>
             </td>
           </tr>
@@ -819,7 +533,7 @@
     if (totalCount === 0) {
       infoEl.textContent = 'Showing 0 to 0 of 0 records';
     } else {
-      infoEl.innerHTML = `Showing <strong style="color: var(--text-primary);">${startIdx + 1}</strong> to <strong style="color: var(--text-primary);">${endIdx}</strong> of <strong style="color: var(--text-primary);">${totalCount}</strong> records${totalCount !== tableRecords.length ? ' (filtered from ' + tableRecords.length + ' total)' : ''}`;
+      infoEl.innerHTML = `Showing <strong class="text-slate-800">${startIdx + 1}</strong> to <strong class="text-slate-800">${endIdx}</strong> of <strong class="text-slate-800">${totalCount}</strong> records${totalCount !== tableRecords.length ? ' (filtered from ' + tableRecords.length + ' total)' : ''}`;
     }
 
     renderPaginationNav(totalPages);
@@ -832,15 +546,15 @@
 
     if (totalPages <= 1) {
       nav.innerHTML = `
-        <button class="pms-page-btn" disabled><i class="fa-solid fa-chevron-left"></i></button>
-        <button class="pms-page-btn active">1</button>
-        <button class="pms-page-btn" disabled><i class="fa-solid fa-chevron-right"></i></button>
+        <button class="w-8 h-8 rounded-lg border border-slate-200 bg-white text-slate-300 text-xs flex items-center justify-center cursor-not-allowed" disabled><i class="fa-solid fa-chevron-left text-[10px]"></i></button>
+        <button class="w-8 h-8 rounded-lg bg-indigo-600 text-white text-xs font-bold flex items-center justify-center shadow-xs">1</button>
+        <button class="w-8 h-8 rounded-lg border border-slate-200 bg-white text-slate-300 text-xs flex items-center justify-center cursor-not-allowed" disabled><i class="fa-solid fa-chevron-right text-[10px]"></i></button>
       `;
       return;
     }
 
     let html = '';
-    html += `<button class="pms-page-btn" onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''} title="Previous Page"><i class="fa-solid fa-chevron-left"></i></button>`;
+    html += `<button class="w-8 h-8 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 text-xs flex items-center justify-center transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer" onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''} title="Previous Page"><i class="fa-solid fa-chevron-left text-[10px]"></i></button>`;
 
     const delta = 1;
     const range = [];
@@ -867,13 +581,14 @@
 
     rangeWithDots.forEach(page => {
       if (page === '...') {
-        html += `<span class="pms-page-dots">...</span>`;
+        html += `<span class="w-8 h-8 text-slate-400 text-xs flex items-center justify-center font-bold">...</span>`;
       } else {
-        html += `<button class="pms-page-btn ${page === currentPage ? 'active' : ''}" onclick="goToPage(${page})">${page}</button>`;
+        const isActive = page === currentPage;
+        html += `<button class="w-8 h-8 rounded-lg text-xs font-bold flex items-center justify-center transition-all cursor-pointer ${isActive ? 'bg-indigo-600 text-white shadow-xs' : 'border border-slate-200 bg-white text-slate-700 hover:bg-slate-50'}" onclick="goToPage(${page})">${page}</button>`;
       }
     });
 
-    html += `<button class="pms-page-btn" onclick="goToPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''} title="Next Page"><i class="fa-solid fa-chevron-right"></i></button>`;
+    html += `<button class="w-8 h-8 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 text-xs flex items-center justify-center transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer" onclick="goToPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''} title="Next Page"><i class="fa-solid fa-chevron-right text-[10px]"></i></button>`;
 
     nav.innerHTML = html;
   }
@@ -884,9 +599,9 @@
       PmsAlert.toast('No records to export', 'info');
       return;
     }
-    let csv = '"ID","State Name","Badge Color","Status"\n';
+    let csv = '"ID","State Name","Task Stage Type","Badge Color","Status"\n';
     filtered.forEach(r => {
-      csv += `"${r.id}","${r.name}","${r.badge_color || ''}","${r.status}"\n`;
+      csv += `"${r.id}","${r.name}","${r.type || ''}","${r.badge_color || ''}","${r.status}"\n`;
     });
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
@@ -895,6 +610,16 @@
     a.download = `Housekeeping_States_${Date.now()}.csv`;
     a.click();
     PmsAlert.toast('CSV exported successfully!');
+  }
+
+  function escapeHtml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
   }
 
   window.addEventListener('DOMContentLoaded', () => {

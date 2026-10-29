@@ -2,728 +2,6 @@
 
 @section('title', 'Guest Arrivals & Reservations - Hotel Sagar Sonnet CRM / PMS')
 
-@push('styles')
-<style>
-  /* Header Card */
-  .arrivals-header-card {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.9));
-    border: 1px solid rgba(226, 232, 240, 0.8);
-    border-radius: 14px;
-    padding: 16px 20px;
-    margin-bottom: 16px;
-    box-shadow: 0 4px 16px -4px rgba(0, 0, 0, 0.04);
-  }
-
-  /* Filter toolbar */
-  .arrivals-toolbar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 14px;
-    flex-wrap: wrap;
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    padding: 10px 16px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
-  }
-
-  .search-box-wrap {
-    position: relative;
-    flex: 1;
-    min-width: 260px;
-    max-width: 440px;
-  }
-
-  .search-box-wrap input {
-    width: 100%;
-    height: 38px;
-    padding: 6px 14px 6px 36px;
-    border: 1px solid #cbd5e1;
-    border-radius: 10px;
-    background: #f8fafc;
-    font-size: 12px;
-    color: #1e293b;
-    outline: none;
-    transition: all 0.2s;
-  }
-
-  .search-box-wrap input:focus {
-    background: #ffffff;
-    border-color: #6366f1;
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
-  }
-
-  .search-box-wrap i {
-    position: absolute;
-    left: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #94a3b8;
-    font-size: 13px;
-  }
-
-  .pms-filter-select {
-    height: 38px;
-    padding: 6px 32px 6px 12px;
-    font-size: 12px;
-    font-weight: 700;
-    border-radius: 10px;
-    border: 1px solid #cbd5e1;
-    background: #f8fafc url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 10px center;
-    appearance: none;
-    -webkit-appearance: none;
-    color: #1e293b;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .pms-filter-select:focus {
-    background-color: #ffffff;
-    border-color: #6366f1;
-    outline: none;
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
-  }
-
-  .pms-filter-date {
-    height: 38px;
-    padding: 6px 12px;
-    font-size: 12px;
-    font-weight: 700;
-    border-radius: 10px;
-    border: 1px solid #cbd5e1;
-    background: #f8fafc;
-    color: #1e293b;
-    cursor: pointer;
-    outline: none;
-    transition: all 0.2s;
-    font-family: inherit;
-  }
-
-  .pms-filter-date:focus {
-    background-color: #ffffff;
-    border-color: #6366f1;
-    outline: none;
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
-  }
-
-  /* Status Badges */
-  .status-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 3px 10px;
-    border-radius: 20px;
-    font-size: 10px;
-    font-weight: 800;
-    letter-spacing: 0.3px;
-    text-transform: capitalize;
-    white-space: nowrap;
-  }
-
-  .status-badge.confirmed, .status-badge.blue {
-    background: rgba(99, 102, 241, 0.12);
-    color: #4338ca;
-    border: 1px solid rgba(99, 102, 241, 0.25);
-  }
-
-  .status-badge.arrived, .status-badge.green {
-    background: rgba(16, 185, 129, 0.12);
-    color: #047857;
-    border: 1px solid rgba(16, 185, 129, 0.25);
-  }
-
-  .status-badge.checked-in, .status-badge.checkedin, .status-badge.cyan {
-    background: rgba(6, 182, 212, 0.12);
-    color: #0e7490;
-    border: 1px solid rgba(6, 182, 212, 0.25);
-  }
-
-  .status-badge.stay-over, .status-badge.stayover, .status-badge.yellow {
-    background: rgba(245, 158, 11, 0.12);
-    color: #b45309;
-    border: 1px solid rgba(245, 158, 11, 0.25);
-  }
-
-  .status-badge.checked-out, .status-badge.checkedout, .status-badge.purple, .status-badge.gray {
-    background: rgba(100, 116, 139, 0.12);
-    color: #475569;
-    border: 1px solid rgba(100, 116, 139, 0.25);
-  }
-
-  .status-badge.cancelled, .status-badge.red {
-    background: rgba(239, 68, 68, 0.12);
-    color: #b91c1c;
-    border: 1px solid rgba(239, 68, 68, 0.25);
-  }
-
-  .status-badge.settlement-done, .status-badge.settled, .status-badge.settlement_done {
-    background: #ede9fe;
-    color: #5b21b6;
-    border: 1px solid #ddd6fe;
-    font-weight: 800;
-  }
-
-  .badge-locked {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 4px 10px;
-    border-radius: 8px;
-    font-size: 11px;
-    font-weight: 800;
-    background: #f1f5f9;
-    color: #475569;
-    border: 1px solid #cbd5e1;
-    white-space: nowrap;
-  }
-
-  .badge-locked.settled {
-    background: #ede9fe;
-    color: #5b21b6;
-    border-color: #ddd6fe;
-  }
-
-  /* Action buttons */
-  .action-flex-wrap {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .status-quick-select {
-    height: 30px;
-    padding: 2px 24px 2px 8px;
-    font-size: 11px;
-    font-weight: 700;
-    border-radius: 8px;
-    border: 1px solid #cbd5e1;
-    background: #ffffff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 8px center;
-    appearance: none;
-    -webkit-appearance: none;
-    color: #334155;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .status-quick-select:hover {
-    border-color: #6366f1;
-    background-color: #f8fafc;
-  }
-
-  .status-quick-select:focus {
-    border-color: #6366f1;
-    outline: none;
-    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.15);
-  }
-
-  .btn-action-view {
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
-    border: 1px solid rgba(99, 102, 241, 0.25);
-    background: rgba(99, 102, 241, 0.08);
-    color: #4f46e5;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 13px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-  }
-
-  .btn-action-view:hover {
-    background: #4f46e5;
-    color: #ffffff;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3);
-  }
-
-  .btn-action-extend {
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
-    border: 1px solid #ddd6fe;
-    background: #f5f3ff;
-    color: #7c3aed;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 13px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-  }
-  .btn-action-extend:hover {
-    background: #7c3aed;
-    color: #ffffff;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 10px rgba(124, 58, 237, 0.3);
-  }
-
-  /* Guest Details Modal Uniform Cards */
-  .dossier-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 16px;
-    margin-bottom: 16px;
-  }
-
-  @media (max-width: 768px) {
-    .dossier-grid {
-      grid-template-columns: 1fr;
-    }
-  }
-
-  .dossier-card {
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    padding: 14px 16px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
-  }
-
-  .dossier-card-title {
-    font-size: 11px;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 0.7px;
-    color: #475569;
-    margin-bottom: 12px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    border-bottom: 1px solid #f1f5f9;
-    padding-bottom: 8px;
-  }
-
-  .dossier-card-title i {
-    color: #6366f1;
-    font-size: 13px;
-  }
-
-  .dossier-field-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 6px 0;
-    border-bottom: 1px dashed #f1f5f9;
-    font-size: 12px;
-  }
-
-  .dossier-field-row:last-child {
-    border-bottom: none;
-    padding-bottom: 0;
-  }
-
-  .dossier-label {
-    color: #64748b;
-    font-weight: 600;
-    font-size: 11px;
-  }
-
-  .dossier-val {
-    color: #0f172a;
-    font-weight: 700;
-    text-align: right;
-  }
-
-  .dossier-val.mono {
-    font-family: var(--font-mono, monospace);
-  }
-
-  /* Highlight Banner */
-  .dossier-highlight-box {
-    background: linear-gradient(135deg, #f8fafc, #f1f5f9);
-    border: 1px solid #e2e8f0;
-    border-radius: 10px;
-    padding: 12px 16px;
-    margin-bottom: 16px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 12px;
-  }
-
-  .badge-extra-guests {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 10px;
-    font-weight: 800;
-    padding: 2px 7px;
-    border-radius: 9999px;
-    background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
-    color: #3730a3;
-    border: 1px solid #a5b4fc;
-    margin-left: 6px;
-    vertical-align: middle;
-  }
-
-  .room-tag {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    background: #eef2ff;
-    color: #4338ca;
-    border: 1px solid #c7d2fe;
-    padding: 3px 8px;
-    border-radius: 6px;
-    font-weight: 800;
-    font-family: var(--font-mono, monospace);
-    font-size: 11px;
-    box-sizing: border-box;
-  }
-
-  .room-tag-clickable {
-    cursor: pointer;
-    transition: all 0.15s ease-in-out;
-    outline: none;
-    line-height: normal;
-    text-decoration: none;
-  }
-
-  .room-tag-clickable:hover {
-    transform: translateY(-1px);
-  }
-
-  .room-tag-clickable:active {
-    transform: translateY(0);
-  }
-
-  .room-tag-clickable.disabled {
-    cursor: not-allowed;
-    opacity: 0.8;
-  }
-
-  /* Room Tag Status-Specific Colors */
-  .room-tag.status-confirmed, .room-tag.status-blue {
-    background: rgba(99, 102, 241, 0.12);
-    color: #4338ca;
-    border-color: rgba(99, 102, 241, 0.3);
-  }
-  .room-tag.status-confirmed:hover, .room-tag.status-blue:hover {
-    background: rgba(99, 102, 241, 0.22);
-    border-color: #6366f1;
-    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.25);
-  }
-
-  .room-tag.status-checkedin, .room-tag.status-checked-in, .room-tag.status-cyan {
-    background: rgba(6, 182, 212, 0.12);
-    color: #0e7490;
-    border-color: rgba(6, 182, 212, 0.3);
-  }
-  .room-tag.status-checkedin:hover, .room-tag.status-checked-in:hover, .room-tag.status-cyan:hover {
-    background: rgba(6, 182, 212, 0.22);
-    border-color: #06b6d4;
-    box-shadow: 0 2px 8px rgba(6, 182, 212, 0.25);
-  }
-
-  .room-tag.status-cancelled, .room-tag.status-red {
-    background: rgba(239, 68, 68, 0.12);
-    color: #b91c1c;
-    border-color: rgba(239, 68, 68, 0.3);
-  }
-  .room-tag.status-cancelled:hover, .room-tag.status-red:hover {
-    background: rgba(239, 68, 68, 0.22);
-    border-color: #ef4444;
-    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.25);
-  }
-
-  .room-tag.status-arrived, .room-tag.status-green {
-    background: rgba(16, 185, 129, 0.12);
-    color: #047857;
-    border-color: rgba(16, 185, 129, 0.3);
-  }
-  .room-tag.status-arrived:hover, .room-tag.status-green:hover {
-    background: rgba(16, 185, 129, 0.22);
-    border-color: #10b981;
-    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.25);
-  }
-
-  .room-tag.status-stayover, .room-tag.status-stay-over, .room-tag.status-yellow {
-    background: rgba(245, 158, 11, 0.12);
-    color: #b45309;
-    border-color: rgba(245, 158, 11, 0.3);
-  }
-  .room-tag.status-stayover:hover, .room-tag.status-stay-over:hover, .room-tag.status-yellow:hover {
-    background: rgba(245, 158, 11, 0.22);
-    border-color: #f59e0b;
-    box-shadow: 0 2px 8px rgba(245, 158, 11, 0.25);
-  }
-
-  .room-tag.status-settled, .room-tag.status-settlement-done {
-    background: #ede9fe;
-    color: #5b21b6;
-    border-color: #ddd6fe;
-  }
-  .room-tag.status-settled:hover, .room-tag.status-settlement-done:hover {
-    background: #ddd6fe;
-    border-color: #8b5cf6;
-    box-shadow: 0 2px 8px rgba(139, 92, 246, 0.25);
-  }
-
-  .room-tag.status-checkedout, .room-tag.status-checked-out, .room-tag.status-purple, .room-tag.status-gray {
-    background: rgba(100, 116, 139, 0.12);
-    color: #475569;
-    border-color: rgba(100, 116, 139, 0.3);
-  }
-  .room-tag.status-checkedout:hover, .room-tag.status-checked-out:hover, .room-tag.status-purple:hover, .room-tag.status-gray:hover {
-    background: rgba(100, 116, 139, 0.22);
-    border-color: #64748b;
-    box-shadow: 0 2px 8px rgba(100, 116, 139, 0.25);
-  }
-
-  /* Floating Room Status Dropdown Portal */
-  .room-status-dropdown-portal {
-    position: fixed;
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 10px;
-    box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.18), 0 4px 6px -2px rgba(15, 23, 42, 0.05);
-    padding: 6px;
-    z-index: 999999;
-    min-width: 145px;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    animation: pmsFadeInDown 0.15s cubic-bezier(0.16, 1, 0.3, 1);
-  }
-
-  @keyframes pmsFadeInDown {
-    from {
-      opacity: 0;
-      transform: translateY(-4px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  .room-status-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 7px 10px;
-    border-radius: 6px;
-    font-size: 12px;
-    font-weight: 700;
-    color: #1e293b;
-    cursor: pointer;
-    transition: all 0.12s ease;
-    user-select: none;
-  }
-
-  .room-status-item:hover {
-    background: #f1f5f9;
-  }
-
-  .room-status-item.active {
-    background: #eef2ff;
-    color: #4338ca;
-  }
-
-  .room-status-item .dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    display: inline-block;
-    margin-right: 8px;
-  }
-
-  .room-status-item.confirmed .dot { background: #6366f1; }
-  .room-status-item.checkedin .dot { background: #06b6d4; }
-  .room-status-item.cancelled .dot { background: #ef4444; }
-
-  .room-status-item.active .check-icon {
-    opacity: 1 !important;
-    color: #4338ca;
-  }
-
-  /* Room card inside dossier */
-  .room-alloc-card {
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 10px;
-    padding: 12px 14px;
-    margin-bottom: 10px;
-  }
-
-  .room-alloc-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 1px solid #f1f5f9;
-    padding-bottom: 8px;
-    margin-bottom: 8px;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-
-  /* Occupant row */
-  .occupant-badge-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 6px 10px;
-    background: #f8fafc;
-    border-radius: 6px;
-    margin-bottom: 4px;
-    font-size: 11px;
-    flex-wrap: wrap;
-    gap: 6px;
-    border: 1px solid #f1f5f9;
-  }
-
-  /* Room Swipe / Shift Styles */
-  .btn-room-swipe {
-    background: #eef2ff;
-    color: #4338ca;
-    border: 1px solid #c7d2fe;
-    padding: 3px 9px;
-    border-radius: 6px;
-    font-size: 10px;
-    font-weight: 800;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    transition: all 0.15s ease;
-    white-space: nowrap;
-  }
-  .btn-room-swipe:hover {
-    background: #4338ca;
-    color: #ffffff;
-    border-color: #4338ca;
-    box-shadow: 0 2px 6px rgba(67, 56, 202, 0.25);
-  }
-  .btn-room-swipe-mini {
-    background: #f1f5f9;
-    color: #475569;
-    border: 1px solid #cbd5e1;
-    padding: 2px 7px;
-    border-radius: 5px;
-    font-size: 9px;
-    font-weight: 800;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 3px;
-    transition: all 0.15s ease;
-    white-space: nowrap;
-  }
-  .btn-room-swipe-mini:hover {
-    background: #4338ca;
-    color: #ffffff;
-    border-color: #4338ca;
-  }
-  #room-swipe-modal.modal-backdrop {
-    position: fixed;
-    inset: 0;
-    z-index: 100100 !important;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-    background: rgba(15, 23, 42, 0.55) !important;
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
-    box-sizing: border-box;
-  }
-  #room-swipe-modal.open {
-    display: flex !important;
-  }
-  .room-swipe-card {
-    width: 640px;
-    max-width: 95vw;
-    max-height: 90vh;
-    background: #ffffff;
-    border-radius: 16px;
-    box-shadow: 0 25px 60px -15px rgba(0,0,0,0.45);
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-  }
-  .room-swipe-header {
-    background: linear-gradient(135deg, #4338ca 0%, #312e81 100%);
-    padding: 14px 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    color: #ffffff;
-  }
-  .room-swipe-body {
-    padding: 18px 22px;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-  }
-  .swipe-preview-box {
-    background: #f8fafc;
-    border: 1.5px solid #e2e8f0;
-    border-radius: 12px;
-    padding: 12px 14px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    font-size: 11px;
-  }
-  /* Select2 Styling for Room Swipe Modal */
-  #room-swipe-modal .select2-container {
-    width: 100% !important;
-  }
-  #room-swipe-modal .select2-container--default .select2-selection--single {
-    height: 38px !important;
-    padding: 4px 10px !important;
-    border: 1.5px solid #cbd5e1 !important;
-    border-radius: 8px !important;
-    display: flex !important;
-    align-items: center !important;
-    background: #ffffff !important;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.04) !important;
-  }
-  #room-swipe-modal .select2-container--default .select2-selection--single:focus,
-  #room-swipe-modal .select2-container--default.select2-container--open .select2-selection--single {
-    border-color: #4338ca !important;
-    box-shadow: 0 0 0 3px rgba(67, 56, 202, 0.15) !important;
-  }
-  #room-swipe-modal .select2-container--default .select2-selection--single .select2-selection__rendered {
-    line-height: normal !important;
-    font-size: 12px !important;
-    font-weight: 700 !important;
-    color: #0f172a !important;
-    padding-left: 2px !important;
-  }
-  #room-swipe-modal .select2-container--default .select2-selection--single .select2-selection__arrow {
-    height: 36px !important;
-    right: 8px !important;
-  }
-  .select2-dropdown.rswipe-select2-drop {
-    z-index: 100200 !important;
-    border-radius: 10px !important;
-    box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.25) !important;
-    border: 1.5px solid #cbd5e1 !important;
-    overflow: hidden !important;
-  }
-
-  /* Media Print Rules */
-  @media print {
-    body > *:not(#print-area) {
-      display: none !important;
-    }
-    #print-area {
-      display: block !important;
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-    }
-  }
-</style>
-@endpush
 
 @section('content')
 @php
@@ -845,31 +123,31 @@
   })->values();
 @endphp
 
-<main class="pms-main-viewport">
-  <div class="pms-page-container">
+<main class="flex-1 w-full p-3 sm:p-4 lg:p-5 flex flex-col gap-4 pms-main-viewport">
+  <div class="w-full flex flex-col gap-4 pms-page-container">
     
     <!-- Clean Header (Pill ribbon removed as requested) -->
     <div class="arrivals-header-card">
-      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+      <div class="flex justify-between items-center flex-wrap gap-3">
         <div>
-          <h2 style="margin: 0; font-size: 18px; font-weight: 800; color: #1e293b; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-            <i class="fa-solid fa-plane-arrival" style="color: #6366f1;"></i> 
-            Guest Arrivals & Advance Bookings
+          <h2 class="m-0 text-lg font-extrabold text-slate-800 flex items-center gap-2.5 flex-wrap">
+            <i class="fa-solid fa-plane-arrival text-indigo-600"></i> 
+            Guest Arrivals &amp; Advance Bookings
             @if(!empty($selectedDate))
-              <span style="font-size: 11px; font-weight: 700; background: #e0e7ff; color: #4338ca; border: 1px solid #c7d2fe; padding: 2px 10px; border-radius: 20px; display: inline-flex; align-items: center; gap: 6px;">
+              <span class="text-[11px] font-bold bg-indigo-100 text-indigo-800 border border-indigo-200 px-2.5 py-0.5 rounded-full inline-flex items-center gap-1.5">
                 <i class="fa-regular fa-calendar-check"></i> {{ \Carbon\Carbon::parse($selectedDate)->format('D, d M Y') }}
               </span>
             @else
-              <span style="font-size: 11px; font-weight: 700; background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; padding: 2px 10px; border-radius: 20px; display: inline-flex; align-items: center; gap: 6px;">
-                <i class="fa-solid fa-users-viewfinder"></i> Confirmed & Upcoming Arrivals
+              <span class="text-[11px] font-bold bg-slate-100 text-slate-600 border border-slate-200 px-2.5 py-0.5 rounded-full inline-flex items-center gap-1.5">
+                <i class="fa-solid fa-users-viewfinder"></i> Confirmed &amp; Upcoming Arrivals
               </span>
             @endif
           </h2>
-          <div style="font-size: 12px; color: #64748b; margin-top: 2px;">
+          <div class="text-xs text-slate-500 mt-0.5">
             @if(!empty($selectedDate))
               Showing guests arriving on <strong>{{ \Carbon\Carbon::parse($selectedDate)->format('l, d F Y') }}</strong>.
             @else
-              Confirmed bookings awaiting check-in & upcoming guest arrivals arranged chronologically with indexing, search, status filter, and live reservation dossiers.
+              Confirmed bookings awaiting check-in &amp; upcoming guest arrivals arranged chronologically with indexing, search, status filter, and live reservation dossiers.
             @endif
           </div>
         </div>
@@ -878,7 +156,7 @@
 
     <!-- Toolbar: Search Filter & Status Dropdown Filter -->
     <div class="arrivals-toolbar">
-      <div style="display: flex; gap: 12px; align-items: center; flex: 1; flex-wrap: wrap;">
+      <div class="flex gap-3 items-center flex-1 flex-wrap">
         <!-- Search Box -->
         <div class="search-box-wrap">
           <i class="fa-solid fa-magnifying-glass"></i>
@@ -886,11 +164,11 @@
         </div>
 
         <!-- Date Choose Filter -->
-        <div style="display: inline-flex; align-items: center; gap: 6px;">
-          <label for="arrival-date-filter" style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">
-            <i class="fa-regular fa-calendar-days" style="color: #6366f1;"></i> Arrival Date:
+        <div class="inline-flex items-center gap-1.5">
+          <label for="arrival-date-filter" class="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider whitespace-nowrap">
+            <i class="fa-regular fa-calendar-days text-indigo-600"></i> Arrival Date:
           </label>
-          <div style="display: inline-flex; align-items: center; gap: 6px;">
+          <div class="inline-flex items-center gap-1.5">
             <input type="date" 
                    id="arrival-date-filter" 
                    class="pms-filter-date" 
@@ -899,9 +177,8 @@
                    title="Choose date to see guests arriving on that date">
             @if(!empty($selectedDate))
               <button type="button" 
-                      class="btn-ui-secondary" 
+                      class="btn-ui-secondary px-2.5 py-1.5 text-[11px] h-[38px] rounded-lg border border-indigo-200 bg-indigo-50 text-indigo-700 font-bold inline-flex items-center gap-1" 
                       onclick="clearArrivalDateFilter()" 
-                      style="padding: 6px 10px; font-size: 11px; height: 38px; border-radius: 8px; border: 1px solid #c7d2fe; background: #eef2ff; color: #4338ca; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;" 
                       title="Clear date & view all arrivals">
                 <i class="fa-solid fa-xmark"></i> All Arrivals
               </button>
@@ -910,9 +187,9 @@
         </div>
 
         <!-- Single Status Filter Dropdown -->
-        <div style="display: inline-flex; align-items: center; gap: 6px;">
-          <label for="status-filter-select" style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">
-            <i class="fa-solid fa-filter" style="color: #6366f1;"></i> Status:
+        <div class="inline-flex items-center gap-1.5">
+          <label for="status-filter-select" class="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider whitespace-nowrap">
+            <i class="fa-solid fa-filter text-indigo-600"></i> Status:
           </label>
           <select id="status-filter-select" class="pms-filter-select" onchange="onSearchOrFilterChange()">
             <option value="all">All Statuses</option>
@@ -923,13 +200,13 @@
         </div>
 
         <!-- Reset Button -->
-        <button type="button" class="btn-ui-secondary" onclick="resetFilters()" style="padding: 7px 14px; border-radius: 8px; border: 1px solid #cbd5e1; background: #ffffff; font-size: 11px; font-weight: 700; color: #475569; display: inline-flex; align-items: center; gap: 5px;">
+        <button type="button" class="btn-ui-secondary px-3.5 py-2 rounded-lg border border-slate-300 bg-white text-[11px] font-bold text-slate-600 inline-flex items-center gap-1.5 hover:bg-slate-50" onclick="resetFilters()">
           <i class="fa-solid fa-rotate-left"></i> Reset
         </button>
       </div>
 
       <!-- Page Size Selector -->
-      <div style="display: flex; gap: 12px; align-items: center;">
+      <div class="flex gap-3 items-center">
         <div class="pms-per-page-wrap">
           <span>Show</span>
           <select class="pms-per-page-select" id="per-page-select" onchange="changePageSize(this.value)">
@@ -945,20 +222,20 @@
 
     <!-- Main Guests Arrivals Table with SL Indexing -->
     <div class="pms-page-content">
-      <div class="pms-table-box" style="border-radius: 14px; box-shadow: 0 4px 20px -5px rgba(0,0,0,0.06); background: #ffffff;">
+      <div class="pms-table-box rounded-xl shadow-xs bg-white">
         <table class="pms-table" id="arrivals-guest-table">
           <thead>
             <tr>
-              <th style="width: 45px; text-align: center;">SL</th>
-              <th style="min-width: 140px;">Allotted Room</th>
-              <th style="min-width: 145px; white-space: nowrap;">Booking Ref</th>
-              <th style="min-width: 175px;">Guest Details</th>
-              <th style="min-width: 140px;">Stay Dates</th>
-              <th style="min-width: 90px; text-align: right;">Total Gross</th>
-              <th style="min-width: 90px; text-align: right;">Advance</th>
-              <th style="min-width: 90px; text-align: right;">Balance</th>
-              <th style="min-width: 105px; text-align: center;">Status</th>
-              <th style="width: 70px; text-align: center;">Action</th>
+              <th class="w-11 text-center">SL</th>
+              <th class="min-w-[140px]">Allotted Room</th>
+              <th class="min-w-[145px] whitespace-nowrap">Booking Ref</th>
+              <th class="min-w-[175px]">Guest Details</th>
+              <th class="min-w-[140px]">Stay Dates</th>
+              <th class="min-w-[90px] text-right">Total Gross</th>
+              <th class="min-w-[90px] text-right">Advance</th>
+              <th class="min-w-[90px] text-right">Balance</th>
+              <th class="min-w-[105px] text-center">Status</th>
+              <th class="w-[70px] text-center">Action</th>
             </tr>
           </thead>
           <tbody id="arrivals-guest-tbody">
@@ -967,8 +244,8 @@
         </table>
 
         <!-- Table Pagination Footer -->
-        <div class="pms-table-pagination" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 18px; border-top: 1px solid #e2e8f0; background: #ffffff; flex-wrap: wrap; gap: 10px;">
-          <div class="pms-pagination-info" id="pagination-info" style="font-size: 12px; font-weight: 600; color: #64748b;">
+        <div class="pms-table-pagination flex justify-between items-center py-3 px-4.5 border-t border-slate-200 bg-white flex-wrap gap-2.5">
+          <div class="pms-pagination-info text-xs font-semibold text-slate-500" id="pagination-info">
             Showing 0 to 0 of 0 records
           </div>
           <div class="pms-page-nav" id="pagination-nav"></div>
@@ -980,15 +257,15 @@
 </main>
 
 <!-- Bottom Summary Bar -->
-<footer class="pms-bottom-bar">
-  <div style="font-size: 11px; font-weight: 700; color: var(--text-secondary); display: flex; align-items: center; gap: 14px;">
-    <span><i class="fa-solid fa-plane-arrival" style="color: #6366f1;"></i> Total Arrivals: <strong id="footer-total">{{ $stats['total'] ?? count($guests) }}</strong></span>
-    <span>•</span>
-    <span><i class="fa-solid fa-circle-check" style="color: #4338ca;"></i> Confirmed: <strong id="footer-confirmed">{{ $stats['confirmed'] ?? 0 }}</strong></span>
-    <span>•</span>
-    <span><i class="fa-solid fa-bell-concierge" style="color: #059669;"></i> Arrived: <strong id="footer-arrived">{{ $stats['arrived'] ?? 0 }}</strong></span>
-    <span>•</span>
-    <span><i class="fa-solid fa-ban" style="color: #ef4444;"></i> Cancelled: <strong id="footer-cancelled">{{ $stats['cancelled'] ?? 0 }}</strong></span>
+<footer class="bg-white border-t border-slate-200 px-4 sm:px-6 py-2.5 flex flex-wrap items-center justify-between gap-3 shadow-2xs z-30 shrink-0 pms-bottom-bar">
+  <div class="text-[11px] font-bold text-slate-500 flex items-center gap-3.5 flex-wrap">
+    <span><i class="fa-solid fa-plane-arrival text-indigo-600"></i> Total Arrivals: <strong id="footer-total" class="text-slate-800">{{ $stats['total'] ?? count($guests) }}</strong></span>
+    <span class="text-slate-300">•</span>
+    <span><i class="fa-solid fa-circle-check text-indigo-700"></i> Confirmed: <strong id="footer-confirmed" class="text-slate-800">{{ $stats['confirmed'] ?? 0 }}</strong></span>
+    <span class="text-slate-300">•</span>
+    <span><i class="fa-solid fa-bell-concierge text-emerald-600"></i> Arrived: <strong id="footer-arrived" class="text-slate-800">{{ $stats['arrived'] ?? 0 }}</strong></span>
+    <span class="text-slate-300">•</span>
+    <span><i class="fa-solid fa-ban text-rose-500"></i> Cancelled: <strong id="footer-cancelled" class="text-slate-800">{{ $stats['cancelled'] ?? 0 }}</strong></span>
   </div>
 </footer>
 
@@ -996,56 +273,56 @@
 <!-- UNIFORM GUEST & RESERVATION DETAILS MODAL  -->
 <!-- ========================================== -->
 <div class="modal-backdrop" id="guest-details-modal">
-  <div class="modal-window large" style="width: 900px; max-width: 95vw; max-height: 92vh; display: flex; flex-direction: column; border-radius: 16px; overflow: hidden; box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.3); border: none; box-sizing: border-box;">
+  <div class="modal-window max-w-4xl w-full max-h-[92vh] flex flex-col rounded-2xl overflow-hidden shadow-2xl border border-slate-200">
     
     <!-- Modal Header -->
-    <div class="modal-top" style="background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%); color: #ffffff; padding: 14px 22px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.15);">
-      <div style="display: flex; align-items: center; gap: 12px;">
-        <div style="width: 38px; height: 38px; border-radius: 10px; background: rgba(255,255,255,0.18); display: flex; align-items: center; justify-content: center; font-size: 16px; color: #ffffff;">
+    <div class="modal-top bg-gradient-to-r from-indigo-600 to-indigo-800 text-white px-5 py-3.5 flex justify-between items-center border-b border-indigo-500/30">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center text-base text-white flex-shrink-0">
           <i class="fa-solid fa-plane-arrival"></i>
         </div>
         <div>
-          <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-            <h3 id="mdl-guest-name" style="margin: 0; font-size: 16px; font-weight: 800; color: #ffffff;">Guest Profile &amp; Arrival Dossier</h3>
-            <span id="mdl-status-badge" class="status-badge" style="background: #ffffff; color: #4338ca; font-weight: 800;">Confirmed</span>
+          <div class="flex items-center gap-2 flex-wrap">
+            <h3 id="mdl-guest-name" class="m-0 text-base font-extrabold text-white">Guest Profile &amp; Arrival Dossier</h3>
+            <span id="mdl-status-badge" class="status-badge bg-white text-indigo-700 font-extrabold shadow-xs">Confirmed</span>
           </div>
-          <div style="font-size: 11px; opacity: 0.85; margin-top: 2px; font-family: var(--font-mono, monospace);">
-            Reserve Ref: <span id="mdl-reserve-id" style="font-weight: 700;">-</span> &nbsp;|&nbsp; Folio: <span id="mdl-folio-number" style="font-weight: 700;">-</span>
+          <div class="text-[11px] text-indigo-100 font-mono mt-0.5">
+            Reserve Ref: <span id="mdl-reserve-id" class="font-bold">-</span> &nbsp;|&nbsp; Folio: <span id="mdl-folio-number" class="font-bold">-</span>
           </div>
         </div>
       </div>
-      <button type="button" class="modal-close" onclick="closeModal('guest-details-modal')" style="background: rgba(255,255,255,0.2); border: none; color: #ffffff; width: 32px; height: 32px; border-radius: 50%; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s;">&times;</button>
+      <button type="button" class="modal-close bg-white/20 hover:bg-white/30 text-white w-8 h-8 rounded-full text-lg cursor-pointer flex items-center justify-center transition border-none" onclick="closeModal('guest-details-modal')">&times;</button>
     </div>
 
     <!-- Modal Body Area -->
-    <div class="modal-content-area" id="arrival-modal-body" style="padding: 20px 24px; background: #f8fafc; overflow-y: auto; max-height: calc(92vh - 130px);">
+    <div class="modal-content-area p-5 bg-slate-50 overflow-y-auto max-h-[calc(92vh-130px)]" id="arrival-modal-body">
       
       <!-- Top Highlight Banner -->
-      <div class="dossier-highlight-box">
-        <div style="display: flex; align-items: center; gap: 12px;">
-          <div style="width: 44px; height: 44px; border-radius: 10px; background: #e0e7ff; color: #4338ca; display: flex; align-items: center; justify-content: center; font-size: 20px;">
+      <div class="dossier-highlight-box bg-gradient-to-r from-slate-50 to-slate-100 border border-slate-200 rounded-xl p-3.5 mb-4 flex justify-between items-center flex-wrap gap-3">
+        <div class="flex items-center gap-3">
+          <div class="w-11 h-11 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center text-xl flex-shrink-0">
             <i class="fa-solid fa-door-open"></i>
           </div>
           <div>
-            <div style="font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Allotted Room(s) &amp; Category</div>
-            <div style="font-size: 15px; font-weight: 900; color: #0f172a; margin-top: 1px;" id="mdl-highlight-rooms">
+            <div class="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">Allotted Room(s) &amp; Category</div>
+            <div class="text-sm font-black text-slate-900 mt-0.5" id="mdl-highlight-rooms">
               -
             </div>
           </div>
         </div>
 
-        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-          <span style="font-size: 11px; font-weight: 800; background: #ffffff; border: 1px solid #cbd5e1; padding: 4px 10px; border-radius: 6px; color: #475569;">
-            <i class="fa-solid fa-users" style="color: #6366f1;"></i> <span id="mdl-total-guests">1 Person</span>
+        <div class="flex gap-2 items-center flex-wrap">
+          <span class="text-xs font-extrabold bg-white border border-slate-300 px-2.5 py-1 rounded-md text-slate-700 inline-flex items-center gap-1.5 shadow-2xs">
+            <i class="fa-solid fa-users text-indigo-600"></i> <span id="mdl-total-guests">1 Person</span>
           </span>
-          <span style="font-size: 11px; font-weight: 800; background: #fff7ed; border: 1px solid #fed7aa; padding: 4px 10px; border-radius: 6px; color: #c2410c;">
-            <i class="fa-solid fa-utensils" style="color: #ea580c;"></i> <span id="mdl-plan-name">Room Only (EP)</span>
+          <span class="text-xs font-extrabold bg-orange-50 border border-orange-200 px-2.5 py-1 rounded-md text-orange-800 inline-flex items-center gap-1.5 shadow-2xs">
+            <i class="fa-solid fa-utensils text-orange-600"></i> <span id="mdl-plan-name">Room Only (EP)</span>
           </span>
-          <span style="font-size: 11px; font-weight: 800; background: #e0e7ff; border: 1px solid #c7d2fe; padding: 4px 10px; border-radius: 6px; color: #4338ca;">
-            <i class="fa-solid fa-moon"></i> <span id="mdl-total-nights">1</span> Night(s) Stay
+          <span class="text-xs font-extrabold bg-indigo-50 border border-indigo-200 px-2.5 py-1 rounded-md text-indigo-800 inline-flex items-center gap-1.5 shadow-2xs">
+            <i class="fa-solid fa-moon text-indigo-600"></i> <span id="mdl-total-nights">1</span> Night(s) Stay
           </span>
-          <span style="font-size: 11px; font-weight: 800; background: #f0fdf4; border: 1px solid #bbf7d0; padding: 4px 10px; border-radius: 6px; color: #15803d;">
-            <i class="fa-solid fa-headset" style="color: #16a34a;"></i> <span id="mdl-reservation-mode">Front Desk</span>
+          <span class="text-xs font-extrabold bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-md text-emerald-800 inline-flex items-center gap-1.5 shadow-2xs">
+            <i class="fa-solid fa-headset text-emerald-600"></i> <span id="mdl-reservation-mode">Front Desk</span>
           </span>
         </div>
       </div>
@@ -1066,7 +343,7 @@
 
           <div class="dossier-field-row">
             <span class="dossier-label">Registration Type</span>
-            <span class="dossier-val" id="mdl-card-regtype" style="color: #4338ca; font-weight: 800;">-</span>
+            <span class="dossier-val text-indigo-700 font-extrabold" id="mdl-card-regtype">-</span>
           </div>
 
           <div class="dossier-field-row">
@@ -1086,7 +363,7 @@
 
           <div class="dossier-field-row">
             <span class="dossier-label">Full Address</span>
-            <span class="dossier-val" id="mdl-card-address" style="max-width: 220px; white-space: normal;">-</span>
+            <span class="dossier-val max-w-[220px] whitespace-normal" id="mdl-card-address">-</span>
           </div>
 
           <div class="dossier-field-row">
@@ -1099,22 +376,22 @@
             <span class="dossier-val" id="mdl-card-idproof">-</span>
           </div>
 
-          <div class="dossier-field-row" id="mdl-card-privilege-row" style="display: none;">
+          <div class="dossier-field-row hidden" id="mdl-card-privilege-row">
             <span class="dossier-label">Privilege / VIP Card</span>
-            <span class="dossier-val mono" id="mdl-card-privilege" style="color: #b45309;">-</span>
+            <span class="dossier-val mono text-amber-700 font-bold" id="mdl-card-privilege">-</span>
           </div>
         </div>
 
         <!-- CARD 2: Stay Schedule & Corporate Account -->
         <div class="dossier-card">
-          <div class="dossier-card-title" style="display: flex; justify-content: space-between; align-items: center;">
-            <div style="display: flex; align-items: center; gap: 8px;">
+          <div class="dossier-card-title flex justify-between items-center">
+            <div class="flex items-center gap-2">
               <i class="fa-solid fa-calendar-days"></i> Stay &amp; Corporate Details
             </div>
             <button type="button" 
                     id="mdl-btn-extend-stay" 
                     onclick="if(currentActiveGuest) openExtendStayModal(currentActiveGuest.id)" 
-                    style="border: 1px solid #c7d2fe; background: #e0e7ff; color: #4338ca; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;" 
+                    class="border border-indigo-200 bg-indigo-50 text-indigo-700 text-[10px] font-extrabold px-2 py-0.5 rounded-md cursor-pointer inline-flex items-center gap-1 hover:bg-indigo-100 transition" 
                     title="Extend Stay Duration (Live Room Availability Check)">
               <i class="fa-solid fa-calendar-plus"></i> Extend Stay
             </button>
@@ -1122,12 +399,12 @@
 
           <div class="dossier-field-row">
             <span class="dossier-label">Check-In (Arrival)</span>
-            <span class="dossier-val mono" id="mdl-card-checkin" style="color: #4f46e5;">-</span>
+            <span class="dossier-val mono text-indigo-600 font-bold" id="mdl-card-checkin">-</span>
           </div>
 
           <div class="dossier-field-row">
             <span class="dossier-label">Check-Out (Departure)</span>
-            <span class="dossier-val mono" id="mdl-card-checkout" style="color: #059669;">-</span>
+            <span class="dossier-val mono text-emerald-600 font-bold" id="mdl-card-checkout">-</span>
           </div>
 
           <div class="dossier-field-row">
@@ -1142,25 +419,25 @@
 
           <div class="dossier-field-row">
             <span class="dossier-label">Meal Plan</span>
-            <span class="dossier-val" id="mdl-card-mealplan" style="color: #c2410c; font-weight: 800;">-</span>
+            <span class="dossier-val text-orange-700 font-extrabold" id="mdl-card-mealplan">-</span>
           </div>
 
           <!-- Corporate Account Block -->
-          <div id="mdl-corporate-card-section" style="margin-top: 10px; padding: 10px; border-radius: 8px; background: rgba(99, 102, 241, 0.05); border: 1px solid rgba(99, 102, 241, 0.15); display: none;">
-            <div style="font-size: 10px; font-weight: 800; color: #4338ca; text-transform: uppercase; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+          <div id="mdl-corporate-card-section" class="mt-2.5 p-2.5 rounded-lg bg-indigo-50/50 border border-indigo-100 hidden">
+            <div class="text-[10px] font-extrabold text-indigo-800 uppercase mb-1.5 flex items-center gap-1.5">
               <i class="fa-solid fa-building"></i> Corporate Account
             </div>
-            <div class="dossier-field-row" style="padding: 3px 0;">
+            <div class="dossier-field-row py-1">
               <span class="dossier-label">Company Name</span>
-              <span class="dossier-val" id="mdl-company-name" style="color: #4338ca;">-</span>
+              <span class="dossier-val text-indigo-700 font-bold" id="mdl-company-name">-</span>
             </div>
-            <div class="dossier-field-row" style="padding: 3px 0;">
+            <div class="dossier-field-row py-1">
               <span class="dossier-label">Company GSTIN</span>
               <span class="dossier-val mono" id="mdl-company-gstin">-</span>
             </div>
-            <div class="dossier-field-row" style="padding: 3px 0;">
+            <div class="dossier-field-row py-1">
               <span class="dossier-label">Corporate Discount</span>
-              <span class="dossier-val" id="mdl-company-discount" style="color: #059669;">-</span>
+              <span class="dossier-val text-emerald-600 font-bold" id="mdl-company-discount">-</span>
             </div>
           </div>
         </div>
@@ -1168,7 +445,7 @@
       </div>
 
       <!-- CARD 3: Allocated Rooms & Registered Occupants (Room-Wise) -->
-      <div class="dossier-card" style="margin-bottom: 0;">
+      <div class="dossier-card mb-0">
         <div class="dossier-card-title">
           <i class="fa-solid fa-bed"></i> Allocated Rooms &amp; Registered Occupants (Room-Wise)
         </div>
@@ -1180,31 +457,31 @@
     </div>
 
     <!-- Modal Footer Actions -->
-    <div class="modal-bot" style="padding: 12px 22px; background: #ffffff; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+    <div class="modal-bot py-3 px-5 bg-white border-t border-slate-200 flex justify-between items-center flex-wrap gap-2.5">
       
       <!-- Quick Status Changer or Locked Badge from inside Modal -->
-      <div id="mdl-status-control-container" style="display: flex; align-items: center; gap: 8px;">
-        <span style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase;">Status:</span>
-        <div id="mdl-status-control-wrapper" style="display: inline-flex; align-items: center;">
+      <div id="mdl-status-control-container" class="flex items-center gap-2">
+        <span class="text-[11px] font-extrabold text-slate-500 uppercase">Status:</span>
+        <div id="mdl-status-control-wrapper" class="inline-flex items-center">
           <select class="status-quick-select" id="mdl-quick-status-select" onchange="onModalStatusChange(this.value)">
             <option value="Confirmed">Confirm</option>
             <option value="Checked In">Checkin</option>
             <option value="Cancelled">Cancel</option>
           </select>
-          <span id="mdl-status-locked-indicator" class="badge-locked settled" style="display: none; padding: 4px 10px; font-size: 12px; font-weight: 700;">
+          <span id="mdl-status-locked-indicator" class="badge-locked settled hidden py-1 px-2.5 text-xs font-bold">
             <i class="fa-solid fa-lock"></i> <span id="mdl-status-locked-text">Settlement Done (Locked)</span>
           </span>
         </div>
       </div>
 
-      <div style="display: flex; gap: 8px; align-items: center;">
-        <a id="mdl-btn-goto-crm" href="{{ url('front-office/guest') }}" class="btn-ui-secondary" style="display: none; padding: 7px 14px; border-radius: 8px; border: 1px solid #c7d2fe; background: #eef2ff; color: #4338ca; font-size: 12px; font-weight: 700; text-decoration: none; align-items: center; gap: 5px;" title="Open Guest Profile & Folio in CRM">
+      <div class="flex gap-2 items-center">
+        <a id="mdl-btn-goto-crm" href="{{ url('front-office/guest') }}" class="btn-ui-secondary hidden px-3.5 py-1.5 rounded-lg border border-indigo-200 bg-indigo-50 text-indigo-700 text-xs font-bold no-underline items-center gap-1.5 hover:bg-indigo-100 transition" title="Open Guest Profile & Folio in CRM">
           <i class="fa-solid fa-users"></i> Guest CRM
         </a>
-        <button type="button" class="btn-ui-secondary" onclick="printGuestDossier()" style="padding: 7px 16px; border-radius: 8px; border: 1px solid #cbd5e1; background: #f8fafc; color: #334155; font-size: 12px; font-weight: 700;">
+        <button type="button" class="btn-ui-secondary px-4 py-1.5 rounded-lg border border-slate-300 bg-slate-50 text-slate-700 text-xs font-bold inline-flex items-center gap-1.5 hover:bg-slate-100 transition" onclick="printGuestDossier()">
           <i class="fa-solid fa-print"></i> Print Dossier
         </button>
-        <button type="button" class="btn-ui-primary" onclick="closeModal('guest-details-modal')" style="padding: 7px 20px; border-radius: 8px; font-size: 12px; font-weight: 700;">
+        <button type="button" class="btn-ui-primary px-5 py-1.5 rounded-lg text-xs font-bold" onclick="closeModal('guest-details-modal')">
           Close
         </button>
       </div>
@@ -1214,22 +491,25 @@
   </div>
 </div>
 
+  </div>
+</div>
+
 <!-- ========================================================================= -->
 <!-- ROOM SWIPE / SHIFT MODAL                                                  -->
 <!-- ========================================================================= -->
 <div class="modal-backdrop" id="room-swipe-modal">
-  <div class="room-swipe-card">
-    <div class="room-swipe-header">
-      <div style="display: flex; align-items: center; gap: 10px;">
-        <div style="width: 34px; height: 34px; border-radius: 8px; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 15px; color: #ffffff;">
+  <div class="room-swipe-card max-w-xl w-full max-h-[90vh] bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col border border-slate-200">
+    <div class="room-swipe-header bg-gradient-to-r from-indigo-700 to-indigo-900 px-5 py-3.5 flex justify-between items-center text-white">
+      <div class="flex items-center gap-2.5">
+        <div class="w-8.5 h-8.5 rounded-lg bg-white/20 flex items-center justify-center text-sm text-white">
           <i class="fa-solid fa-arrow-right-arrow-left"></i>
         </div>
         <div>
-          <h4 style="margin: 0; font-size: 15px; font-weight: 800; color: #ffffff;">Room Swipe / Shift Manager</h4>
-          <div style="font-size: 10px; opacity: 0.9; color: #e0e7ff;">Transfer room mid-stay with prorated tariff &amp; housekeeping sync</div>
+          <h4 class="m-0 text-sm font-extrabold text-white">Room Swipe / Shift Manager</h4>
+          <div class="text-[10px] text-indigo-100 opacity-90">Transfer room mid-stay with prorated tariff &amp; housekeeping sync</div>
         </div>
       </div>
-      <button type="button" onclick="closeRoomSwipeModal()" style="background: rgba(255,255,255,0.2); border: none; color: #ffffff; width: 28px; height: 28px; border-radius: 50%; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s;">&times;</button>
+      <button type="button" onclick="closeRoomSwipeModal()" class="bg-white/20 hover:bg-white/30 border-none text-white w-7 h-7 rounded-full text-base cursor-pointer flex items-center justify-center transition">&times;</button>
     </div>
 
     <!-- Hidden state inputs -->
@@ -1238,35 +518,35 @@
     <input type="hidden" id="rswipe-old-rate">
     <input type="hidden" id="rswipe-checkout-date">
 
-    <div class="room-swipe-body">
+    <div class="room-swipe-body p-4.5 overflow-y-auto flex flex-col gap-3.5">
       <!-- Loading state -->
-      <div id="rswipe-loading" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 20px; gap: 10px; color: #4338ca;">
-        <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 24px;"></i>
-        <span style="font-size: 12px; font-weight: 600;">Fetching available rooms and stay info...</span>
+      <div id="rswipe-loading" class="flex flex-col items-center justify-center py-10 px-5 gap-2.5 text-indigo-700">
+        <i class="fa-solid fa-circle-notch fa-spin text-2xl"></i>
+        <span class="text-xs font-semibold">Fetching available rooms and stay info...</span>
       </div>
 
       <!-- Content wrapper -->
-      <div id="rswipe-content" style="display: none; flex-direction: column; gap: 14px;">
+      <div id="rswipe-content" class="hidden flex-col gap-3.5">
         
         <!-- Reservation Dossier & Source Room Info Box -->
-        <div style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 12px 14px;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 6px;">
-            <div style="display: flex; align-items: center; gap: 6px;">
-              <span style="font-size: 10px; font-weight: 800; text-transform: uppercase; color: #64748b;">Reservation:</span>
-              <span id="rswipe-reserve-id" style="font-family: var(--font-mono, monospace); font-weight: 800; color: #4338ca; font-size: 12px;">-</span>
+        <div class="bg-slate-50 border border-slate-200 rounded-xl p-3">
+          <div class="flex justify-between items-center mb-2 flex-wrap gap-1.5">
+            <div class="flex items-center gap-1.5">
+              <span class="text-[10px] font-extrabold uppercase text-slate-500">Reservation:</span>
+              <span id="rswipe-reserve-id" class="font-mono font-extrabold text-indigo-700 text-xs">-</span>
             </div>
-            <div style="font-size: 11px; color: #64748b;">
-              <i class="fa-regular fa-calendar" style="color: #6366f1;"></i> Stay: <strong id="rswipe-stay-dates" style="color: #0f172a;">-</strong>
+            <div class="text-[11px] text-slate-500">
+              <i class="fa-regular fa-calendar text-indigo-600"></i> Stay: <strong id="rswipe-stay-dates" class="text-slate-900">-</strong>
             </div>
           </div>
-          <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed #e2e8f0; padding-top: 8px; flex-wrap: wrap; gap: 8px;">
-            <div style="display: flex; align-items: center; gap: 8px;">
-              <span class="room-tag status-cyan" style="font-size: 12px; padding: 4px 10px;">
+          <div class="flex justify-between items-center border-t border-dashed border-slate-200 pt-2 flex-wrap gap-2">
+            <div class="flex items-center gap-2">
+              <span class="room-tag status-cyan text-xs py-1 px-2.5">
                 <i class="fa-solid fa-door-open"></i> Current Room: <strong id="rswipe-from-room-num">-</strong>
               </span>
-              <span id="rswipe-from-room-meta" style="font-size: 11px; color: #475569;">-</span>
+              <span id="rswipe-from-room-meta" class="text-[11px] text-slate-600">-</span>
             </div>
-            <div style="font-size: 12px; font-family: var(--font-mono, monospace); font-weight: 800; color: #4338ca;">
+            <div class="text-xs font-mono font-extrabold text-indigo-700">
               Current Rate: <span id="rswipe-from-room-rate">₹ 0.00</span> / night
             </div>
           </div>
@@ -1274,95 +554,95 @@
 
         <!-- Occupants to Transfer Checkbox Box -->
         <div>
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-            <label style="font-size: 11px; font-weight: 800; color: #0f172a; text-transform: uppercase; letter-spacing: 0.3px;">
+          <div class="flex justify-between items-center mb-1.5">
+            <label class="text-[11px] font-extrabold text-slate-900 uppercase tracking-wide">
               <i class="fa-solid fa-users"></i> Select Occupant(s) to Shift:
             </label>
-            <label style="font-size: 11px; color: #4338ca; cursor: pointer; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
+            <label class="text-[11px] text-indigo-700 cursor-pointer font-bold inline-flex items-center gap-1">
               <input type="checkbox" id="rswipe-select-all-occ" onchange="toggleAllSwipeOccupants(this)"> All in Room
             </label>
           </div>
-          <div id="rswipe-occupants-list" style="display: flex; flex-direction: column; gap: 6px;">
+          <div id="rswipe-occupants-list" class="flex flex-col gap-1.5">
             <!-- Populated via JS -->
           </div>
-          <div id="rswipe-shift-mode-hint" style="font-size: 10.5px; color: #64748b; font-style: italic; margin-top: 4px;">
+          <div id="rswipe-shift-mode-hint" class="text-[10px] text-slate-500 italic mt-1">
             Whole room shift: Old room vacated &amp; scheduled for cleaning.
           </div>
         </div>
 
         <!-- Stay Dates & Transfer Date Input Grid -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+        <div class="grid grid-cols-2 gap-3">
           <div>
-            <label style="display: block; font-size: 11px; font-weight: 700; color: #334155; margin-bottom: 4px;">
-              <i class="fa-regular fa-calendar-check" style="color: #4338ca;"></i> Effective Shift Date:
+            <label class="block text-[11px] font-bold text-slate-700 mb-1">
+              <i class="fa-regular fa-calendar-check text-indigo-700"></i> Effective Shift Date:
             </label>
-            <input type="date" id="rswipe-transfer-date" class="form-input" style="width: 100%; padding: 7px 10px; border-radius: 8px; border: 1.5px solid #cbd5e1; font-size: 12px; font-weight: 700; color: #0f172a;" onchange="onSwipeTransferDateChange()">
+            <input type="date" id="rswipe-transfer-date" class="form-input w-full py-1.5 px-2.5 rounded-lg border border-slate-300 text-xs font-bold text-slate-900" onchange="onSwipeTransferDateChange()">
           </div>
           <div>
-            <label style="display: block; font-size: 11px; font-weight: 700; color: #334155; margin-bottom: 4px;">
-              <i class="fa-solid fa-clock-rotate-left" style="color: #6366f1;"></i> Nights Partition:
+            <label class="block text-[11px] font-bold text-slate-700 mb-1">
+              <i class="fa-solid fa-clock-rotate-left text-indigo-600"></i> Nights Partition:
             </label>
-            <div style="background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 8px; padding: 7px 10px; font-size: 11.5px; font-weight: 700; color: #334155; display: flex; justify-content: space-between;">
+            <div class="bg-slate-100 border border-slate-200 rounded-lg py-1.5 px-2.5 text-xs font-bold text-slate-700 flex justify-between">
               <span>Past: <strong id="rswipe-past-nights">1</strong>n</span>
-              <span style="color: #cbd5e1;">|</span>
-              <span style="color: #4338ca;">Remaining: <strong id="rswipe-rem-nights">1</strong>n</span>
+              <span class="text-slate-300">|</span>
+              <span class="text-indigo-700">Remaining: <strong id="rswipe-rem-nights">1</strong>n</span>
             </div>
           </div>
         </div>
 
         <!-- New Destination Room Selection -->
-        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 12px; align-items: flex-start;">
-          <div>
-            <label style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; font-weight: 700; color: #334155; margin-bottom: 4px;">
-              <span><i class="fa-solid fa-door-open" style="color: #10b981;"></i> Destination Room (Available Only):</span>
-              <span id="rswipe-avail-count-badge" style="font-size: 10px; font-weight: 800; color: #059669; background: #ecfdf5; border: 1px solid #a7f3d0; padding: 1px 7px; border-radius: 10px;">Available Rooms Only</span>
+        <div class="grid grid-cols-3 gap-3 items-start">
+          <div class="col-span-2">
+            <label class="flex justify-between items-center text-[11px] font-bold text-slate-700 mb-1">
+              <span><i class="fa-solid fa-door-open text-emerald-500"></i> Destination Room (Available Only):</span>
+              <span id="rswipe-avail-count-badge" class="text-[10px] font-extrabold text-emerald-700 bg-emerald-50 border border-emerald-200 py-0.5 px-2 rounded-full">Available Rooms Only</span>
             </label>
-            <select id="rswipe-target-room-select" class="form-input" style="width: 100%;">
-              <option value="">-- Search & Choose Available Room --</option>
+            <select id="rswipe-target-room-select" class="form-input w-full pms-select">
+              <option value="">-- Search &amp; Choose Available Room --</option>
             </select>
           </div>
           <div>
-            <label style="display: block; font-size: 11px; font-weight: 700; color: #334155; margin-bottom: 4px;">
-              <i class="fa-solid fa-indian-rupee-sign" style="color: #10b981;"></i> New Daily Rate:
+            <label class="block text-[11px] font-bold text-slate-700 mb-1">
+              <i class="fa-solid fa-indian-rupee-sign text-emerald-500"></i> New Daily Rate:
             </label>
-            <input type="number" id="rswipe-new-rate-input" step="0.01" min="0" class="form-input" style="width: 100%; padding: 7px 10px; border-radius: 8px; border: 1.5px solid #cbd5e1; font-size: 12px; font-weight: 700; font-family: var(--font-mono, monospace); color: #0f172a;" oninput="calculateSwipePricing()">
+            <input type="number" id="rswipe-new-rate-input" step="0.01" min="0" class="form-input w-full py-1.5 px-2.5 rounded-lg border border-slate-300 text-xs font-bold font-mono text-slate-900" oninput="calculateSwipePricing()">
           </div>
         </div>
 
         <!-- Live Tariff Recalculation & Impact Preview Box -->
         <div class="swipe-preview-box" id="rswipe-preview-box">
-          <div style="display: flex; justify-content: space-between; align-items: center; font-weight: 800; font-size: 11px; color: #0f172a; border-bottom: 1px dashed #cbd5e1; padding-bottom: 6px;">
-            <span><i class="fa-solid fa-calculator" style="color: #4338ca;"></i> Tariff Impact Breakdown:</span>
-            <span id="rswipe-preview-tag" style="background: #e0e7ff; color: #4338ca; padding: 2px 8px; border-radius: 4px; font-size: 10px;">Shift Calculations</span>
+          <div class="flex justify-between items-center font-extrabold text-xs text-slate-900 border-b border-dashed border-slate-300 pb-1.5">
+            <span><i class="fa-solid fa-calculator text-indigo-700"></i> Tariff Impact Breakdown:</span>
+            <span id="rswipe-preview-tag" class="bg-indigo-100 text-indigo-700 py-0.5 px-2 rounded text-[10px]">Shift Calculations</span>
           </div>
-          <div style="display: flex; flex-direction: column; gap: 4px; font-size: 11px;">
-            <div style="display: flex; justify-content: space-between; color: #475569;">
+          <div class="flex flex-col gap-1 text-[11px]">
+            <div class="flex justify-between text-slate-600">
               <span>Past Stay in Room <span id="rswipe-prev-src-room">302</span>:</span>
-              <strong id="rswipe-prev-past-calc" style="font-family: var(--font-mono, monospace);">-</strong>
+              <strong id="rswipe-prev-past-calc" class="font-mono">-</strong>
             </div>
-            <div style="display: flex; justify-content: space-between; color: #475569;">
+            <div class="flex justify-between text-slate-600">
               <span>New Stay in Room <span id="rswipe-prev-dst-room">-</span>:</span>
-              <strong id="rswipe-prev-new-calc" style="font-family: var(--font-mono, monospace);">-</strong>
+              <strong id="rswipe-prev-new-calc" class="font-mono">-</strong>
             </div>
-            <div style="display: flex; justify-content: space-between; border-top: 1px dashed #cbd5e1; padding-top: 4px; font-weight: 800;">
+            <div class="flex justify-between border-t border-dashed border-slate-300 pt-1 font-extrabold">
               <span>Net Tariff Difference (<span id="rswipe-prev-rem-n">1</span> nights):</span>
-              <span id="rswipe-prev-diff" style="font-family: var(--font-mono, monospace); font-size: 12px; color: #4338ca;">₹ 0.00</span>
+              <span id="rswipe-prev-diff" class="font-mono text-xs text-indigo-700">₹ 0.00</span>
             </div>
           </div>
           <!-- Housekeeping Notification Alert -->
-          <div id="rswipe-hk-notice" style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 6px; padding: 6px 10px; font-size: 10.5px; color: #b91c1c; display: flex; align-items: center; gap: 6px;">
+          <div id="rswipe-hk-notice" class="bg-red-50 border border-red-200 rounded-md p-2 text-[10px] text-red-700 flex items-center gap-1.5">
             <i class="fa-solid fa-broom"></i>
             <span>Room <strong id="rswipe-hk-room-name">-</strong> will be automatically marked <strong>Dirty (Pending Cleaning)</strong> in Housekeeping history.</span>
           </div>
         </div>
 
         <!-- Reason & Remarks -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+        <div class="grid grid-cols-2 gap-3">
           <div>
-            <label style="display: block; font-size: 11px; font-weight: 700; color: #334155; margin-bottom: 4px;">
+            <label class="block text-[11px] font-bold text-slate-700 mb-1">
               Reason for Shift:
             </label>
-            <select id="rswipe-reason" class="form-input" style="width: 100%; padding: 7px 10px; border-radius: 8px; border: 1.5px solid #cbd5e1; font-size: 12px;">
+            <select id="rswipe-reason" class="form-input w-full pms-select text-xs">
               <option value="Guest Upgrade">Guest Upgrade / Preference</option>
               <option value="Guest Request">Guest Request (View/Location)</option>
               <option value="AC / Electrical Issue">AC / Electrical Issue</option>
@@ -1373,10 +653,10 @@
             </select>
           </div>
           <div>
-            <label style="display: block; font-size: 11px; font-weight: 700; color: #334155; margin-bottom: 4px;">
+            <label class="block text-[11px] font-bold text-slate-700 mb-1">
               Staff Remarks (Optional):
             </label>
-            <input type="text" id="rswipe-remarks" placeholder="Optional notes for transfer dossier..." class="form-input" style="width: 100%; padding: 7px 10px; border-radius: 8px; border: 1.5px solid #cbd5e1; font-size: 12px;">
+            <input type="text" id="rswipe-remarks" placeholder="Optional notes for transfer dossier..." class="form-input w-full pms-input text-xs">
           </div>
         </div>
 
@@ -1384,11 +664,11 @@
     </div>
 
     <!-- Modal Footer Actions -->
-    <div style="background: #f8fafc; border-top: 1px solid #e2e8f0; padding: 12px 20px; display: flex; justify-content: flex-end; gap: 10px; align-items: center;">
-      <button type="button" onclick="closeRoomSwipeModal()" style="padding: 7px 14px; border-radius: 8px; border: 1px solid #cbd5e1; background: #ffffff; color: #475569; font-size: 12px; font-weight: 700; cursor: pointer;">
+    <div class="bg-slate-50 border-t border-slate-200 py-3 px-5 flex justify-end gap-2.5 items-center">
+      <button type="button" onclick="closeRoomSwipeModal()" class="btn-ui-secondary px-3.5 py-1.5 rounded-lg text-xs font-bold cursor-pointer">
         Cancel
       </button>
-      <button type="button" id="btn-submit-room-swipe" onclick="submitRoomSwipe()" style="padding: 7px 18px; border-radius: 8px; border: none; background: linear-gradient(135deg, #4338ca 0%, #312e81 100%); color: #ffffff; font-size: 12px; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(67, 56, 202, 0.3);">
+      <button type="button" id="btn-submit-room-swipe" onclick="submitRoomSwipe()" class="btn-ui-primary px-4.5 py-1.5 rounded-lg text-xs font-extrabold cursor-pointer inline-flex items-center gap-1.5">
         <i class="fa-solid fa-arrow-right-arrow-left"></i> Confirm Room Swipe
       </button>
     </div>
@@ -1397,27 +677,27 @@
 </div>
 
 <!-- Floating Room Status Dropdown Menu Portal (Click room to change status) -->
-<div id="floating-room-status-dropdown" class="room-status-dropdown-portal" style="display: none;">
+<div id="floating-room-status-dropdown" class="room-status-dropdown-portal hidden" style="display: none;">
   <div class="room-status-item confirmed" data-status="Confirmed" onclick="selectRoomStatus('Confirmed')">
-    <div style="display: flex; align-items: center;">
+    <div class="flex items-center">
       <span class="dot"></span>
       <span>Confirm</span>
     </div>
-    <i class="fa-solid fa-check check-icon" style="font-size: 10px; opacity: 0;"></i>
+    <i class="fa-solid fa-check check-icon text-[10px] opacity-0"></i>
   </div>
   <div class="room-status-item checkedin" data-status="Checked In" onclick="selectRoomStatus('Checked In')">
-    <div style="display: flex; align-items: center;">
+    <div class="flex items-center">
       <span class="dot"></span>
       <span>Checkin</span>
     </div>
-    <i class="fa-solid fa-check check-icon" style="font-size: 10px; opacity: 0;"></i>
+    <i class="fa-solid fa-check check-icon text-[10px] opacity-0"></i>
   </div>
   <div class="room-status-item cancelled" data-status="Cancelled" onclick="selectRoomStatus('Cancelled')">
-    <div style="display: flex; align-items: center;">
+    <div class="flex items-center">
       <span class="dot"></span>
       <span>Cancel</span>
     </div>
-    <i class="fa-solid fa-check check-icon" style="font-size: 10px; opacity: 0;"></i>
+    <i class="fa-solid fa-check check-icon text-[10px] opacity-0"></i>
   </div>
 </div>
 
@@ -1568,10 +848,10 @@
     if (paginatedRecords.length === 0) {
       tbody.innerHTML = `
         <tr>
-          <td colspan="10" style="text-align: center; color: var(--text-muted); padding: 36px 20px;">
-            <div style="font-size: 28px; color: #cbd5e1; margin-bottom: 8px;"><i class="fa-solid fa-users-slash"></i></div>
-            <div style="font-size: 13px; font-weight: 700; color: #64748b;">No matching arrivals found.</div>
-            <div style="font-size: 11px; color: #94a3b8; margin-top: 4px;">Try modifying your search or status filter.</div>
+          <td colspan="10" class="text-center text-slate-400 py-9 px-5">
+            <div class="text-2xl text-slate-300 mb-2"><i class="fa-solid fa-users-slash"></i></div>
+            <div class="text-xs font-bold text-slate-500">No matching arrivals found.</div>
+            <div class="text-[11px] text-slate-400 mt-1">Try modifying your search or status filter.</div>
           </td>
         </tr>
       `;
@@ -1589,33 +869,33 @@
       return `
         <tr class="guest-row" id="row-guest-${item.id}">
           <!-- SL Indexing -->
-          <td style="text-align: center; font-family: var(--font-mono, monospace); font-weight: 800; color: #64748b; font-size: 11px;">
+          <td class="text-center font-mono font-extrabold text-slate-500 text-xs">
             ${sl}
           </td>
 
           <!-- Allotted Room (Clickable Room Number to Change Status: Confirm, Checkin, Cancel) -->
           <td>
             ${item.rooms && item.rooms.length > 0 ? `
-              <div style="display: flex; flex-direction: column; gap: 4px;">
+              <div class="flex flex-col gap-1">
                 ${item.rooms.map(r => `
-                  <div style="display: inline-flex; align-items: center; gap: 6px;">
+                  <div class="inline-flex items-center gap-1.5">
                     <button type="button" 
                             class="room-tag room-tag-clickable status-${badgeColor} ${(item.is_locked || ['settlement done', 'checked out'].includes((item.status || '').toLowerCase())) ? 'disabled' : ''}" 
                             onclick="openRoomStatusDropdown(event, ${item.id}, '${escapeHtml(item.status)}', ${item.is_locked ? 'true' : 'false'})"
                             title="${(item.is_locked || ['settlement done', 'checked out'].includes((item.status || '').toLowerCase())) ? 'Reservation is locked' : 'Click to change status (Confirm, Checkin, Cancel)'}">
-                      <i class="fa-solid fa-door-open" style="font-size: 10px;"></i>
+                      <i class="fa-solid fa-door-open text-[10px]"></i>
                       <span>${escapeHtml(r.room_number)}</span>
                       ${(item.is_locked || ['settlement done', 'checked out'].includes((item.status || '').toLowerCase())) ? `
-                        <i class="fa-solid fa-lock" style="font-size: 8px; opacity: 0.6; margin-left: 2px;"></i>
+                        <i class="fa-solid fa-lock text-[8px] opacity-60 ml-0.5"></i>
                       ` : `
-                        <i class="fa-solid fa-chevron-down" style="font-size: 8px; opacity: 0.7; margin-left: 2px;"></i>
+                        <i class="fa-solid fa-chevron-down text-[8px] opacity-70 ml-0.5"></i>
                       `}
                     </button>
-                    <span style="font-size: 10px; color: #64748b; font-weight: 700;">
+                    <span class="text-[10px] text-slate-500 font-bold">
                       Floor ${escapeHtml(r.floor)}
                     </span>
-                    <span style="color: #cbd5e1;">•</span>
-                    <span style="font-size: 10px; color: #94a3b8;">${escapeHtml(r.category)}</span>
+                    <span class="text-slate-300">•</span>
+                    <span class="text-[10px] text-slate-400">${escapeHtml(r.category)}</span>
                   </div>
                 `).join('')}
               </div>
@@ -1624,20 +904,20 @@
                       class="room-tag room-tag-clickable status-${badgeColor} ${(item.is_locked || ['settlement done', 'checked out'].includes((item.status || '').toLowerCase())) ? 'disabled' : ''}"
                       onclick="openRoomStatusDropdown(event, ${item.id}, '${escapeHtml(item.status)}', ${item.is_locked ? 'true' : 'false'})"
                       title="${(item.is_locked || ['settlement done', 'checked out'].includes((item.status || '').toLowerCase())) ? 'Reservation is locked' : 'Click to change status (Confirm, Checkin, Cancel)'}">
-                <i class="fa-solid fa-hourglass-half" style="font-size: 10px;"></i>
+                <i class="fa-solid fa-hourglass-half text-[10px]"></i>
                 <span>Unassigned</span>
-                <i class="fa-solid fa-chevron-down" style="font-size: 8px; opacity: 0.7; margin-left: 2px;"></i>
+                <i class="fa-solid fa-chevron-down text-[8px] opacity-70 ml-0.5"></i>
               </button>
             `}
           </td>
 
           <!-- Booking Ref & Folio (Not in text wrap) -->
-          <td style="white-space: nowrap;">
-            <div style="font-family: var(--font-mono, monospace); font-weight: 800; color: #4f46e5; font-size: 12px; cursor: pointer; white-space: nowrap; display: inline-flex; align-items: center; gap: 4px;" onclick="openGuestDetailsModalById(${item.id})" title="Click to view Arrival Dossier">
-              <i class="fa-solid fa-receipt" style="color: #6366f1; font-size: 11px;"></i>
+          <td class="whitespace-nowrap">
+            <div class="font-mono font-extrabold text-indigo-600 text-xs cursor-pointer whitespace-nowrap inline-flex items-center gap-1 hover:underline" onclick="openGuestDetailsModalById(${item.id})" title="Click to view Arrival Dossier">
+              <i class="fa-solid fa-receipt text-indigo-500 text-[11px]"></i>
               <span>${escapeHtml(item.reserve_id)}</span>
             </div>
-            <div style="font-size: 10px; color: #64748b; font-family: var(--font-mono, monospace); margin-top: 2px; white-space: nowrap; display: flex; align-items: center; gap: 4px;">
+            <div class="text-[10px] text-slate-500 font-mono mt-0.5 whitespace-nowrap flex items-center gap-1">
               <i class="fa-regular fa-file-lines"></i>
               <span>${escapeHtml(item.folio_number)}</span>
             </div>
@@ -1645,61 +925,61 @@
 
           <!-- Guest Details with +N persons -->
           <td>
-            <div style="font-weight: 800; color: #0f172a; font-size: 13px; display: inline-flex; align-items: center; flex-wrap: wrap;">
+            <div class="font-extrabold text-slate-900 text-xs inline-flex items-center flex-wrap gap-1">
               <span>${escapeHtml(item.guest_name)}</span>
               ${item.extra_guests_count > 0 ? `
                 <span class="badge-extra-guests" title="${item.extra_guests_count} additional person(s) registered under this reservation">
-                  <i class="fa-solid fa-user-plus" style="font-size: 9px;"></i>
+                  <i class="fa-solid fa-user-plus text-[9px]"></i>
                   +${item.extra_guests_count} ${item.extra_guests_count === 1 ? 'person' : 'persons'}
                 </span>
               ` : ''}
             </div>
-            <div style="font-size: 11px; color: #64748b; display: flex; align-items: center; gap: 8px; margin-top: 2px;">
-              ${item.mobile && item.mobile !== 'N/A' ? `<span><i class="fa-solid fa-phone" style="font-size: 9px; color: #10b981;"></i> ${escapeHtml(item.mobile)}</span>` : ''}
-              ${item.registration_type ? `<span style="font-size: 9px; padding: 1px 6px; border-radius: 4px; background: #e2e8f0; color: #475569; font-weight: 700;">${escapeHtml(item.registration_type)}</span>` : ''}
-              ${item.city && item.city !== 'N/A' ? `<span style="color: #94a3b8;"><i class="fa-solid fa-location-dot" style="font-size: 9px;"></i> ${escapeHtml(item.city)}</span>` : ''}
+            <div class="text-[11px] text-slate-500 flex items-center gap-2 mt-0.5">
+              ${item.mobile && item.mobile !== 'N/A' ? `<span><i class="fa-solid fa-phone text-[9px] text-emerald-500"></i> ${escapeHtml(item.mobile)}</span>` : ''}
+              ${item.registration_type ? `<span class="text-[9px] py-0.5 px-1.5 rounded bg-slate-200 text-slate-700 font-bold">${escapeHtml(item.registration_type)}</span>` : ''}
+              ${item.city && item.city !== 'N/A' ? `<span class="text-slate-400"><i class="fa-solid fa-location-dot text-[9px]"></i> ${escapeHtml(item.city)}</span>` : ''}
             </div>
           </td>
 
           <!-- Stay Dates & Plan -->
           <td>
-            <div style="font-size: 11px; font-weight: 700; color: #1e293b;">
+            <div class="text-[11px] font-bold text-slate-800">
               ${escapeHtml(item.reserve_date)}
             </div>
-            <div style="font-size: 10px; color: #64748b; display: flex; align-items: center; gap: 4px; margin-top: 2px;">
+            <div class="text-[10px] text-slate-500 flex items-center gap-1 mt-0.5">
               <span>to ${escapeHtml(item.checkout_date)}</span>
-              <span style="background: #f1f5f9; padding: 1px 5px; border-radius: 4px; font-weight: 800; font-size: 9px;">
+              <span class="bg-slate-100 py-0.5 px-1.5 rounded font-extrabold text-[9px]">
                 ${item.total_nights || 1}N
               </span>
             </div>
           </td>
 
           <!-- Total Gross -->
-          <td style="text-align: right; font-family: var(--font-mono, monospace); font-weight: 700; font-size: 12px; color: #334155;">
+          <td class="text-right font-mono font-bold text-xs text-slate-700">
             ${formatINR(item.total_amount)}
           </td>
 
           <!-- Advance Paid -->
-          <td style="text-align: right; font-family: var(--font-mono, monospace); font-weight: 700; font-size: 12px; color: #059669;">
+          <td class="text-right font-mono font-bold text-xs text-emerald-600">
             ${formatINR(item.advance_amount)}
           </td>
 
           <!-- Balance Pending -->
-          <td style="text-align: right; font-family: var(--font-mono, monospace); font-weight: 800; font-size: 12px; color: ${item.balance > 0 ? '#e11d48' : '#059669'};">
+          <td class="text-right font-mono font-extrabold text-xs ${item.balance > 0 ? 'text-rose-600' : 'text-emerald-600'}">
             ${formatINR(item.balance)}
           </td>
 
           <!-- Status Badge -->
-          <td style="text-align: center;">
+          <td class="text-center">
             <span id="badge-status-${item.id}" class="status-badge ${badgeColor}">
-              ${(item.is_locked || ['settlement done', 'checked out'].includes((item.status || '').toLowerCase())) ? '<i class="fa-solid fa-lock" style="font-size: 8px;"></i>' : '<i class="fa-solid fa-circle" style="font-size: 6px;"></i>'}
+              ${(item.is_locked || ['settlement done', 'checked out'].includes((item.status || '').toLowerCase())) ? '<i class="fa-solid fa-lock text-[8px]"></i>' : '<i class="fa-solid fa-circle text-[6px]"></i>'}
               <span class="status-text">${escapeHtml(item.status)}</span>
             </span>
           </td>
 
           <!-- Actions: Eye View Button & Extend Stay Button -->
-          <td style="text-align: center; white-space: nowrap;">
-            <div style="display: inline-flex; align-items: center; gap: 6px;">
+          <td class="text-center whitespace-nowrap">
+            <div class="inline-flex items-center gap-1.5">
               <button type="button" 
                       class="btn-action-view" 
                       onclick="openGuestDetailsModalById(${item.id})" 
@@ -1754,7 +1034,7 @@
           </button>
         `;
       } else if (p === currentPage - 2 || p === currentPage + 2) {
-        buttons += `<span class="pms-page-btn" style="border:none; cursor:default; background:transparent;">...</span>`;
+        buttons += `<span class="pms-page-btn border-none cursor-default bg-transparent">...</span>`;
       }
     }
 
@@ -1971,7 +1251,7 @@
     const container = document.getElementById('mdl-rooms-container');
     if (!container) return;
     if (!rooms || rooms.length === 0) {
-      container.innerHTML = '<div style="color: #94a3b8; font-size: 11px; font-style: italic; padding: 10px;">No specific room allocated.</div>';
+      container.innerHTML = '<div class="text-slate-400 text-xs italic p-2.5">No specific room allocated.</div>';
       return;
     }
 
@@ -1990,28 +1270,28 @@
       html += `
         <div class="room-alloc-card">
           <div class="room-alloc-header">
-            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <div class="flex items-center gap-2 flex-wrap">
               <span class="room-tag ${currentActiveGuest ? 'status-' + getStatusBadgeColor(currentActiveGuest.status) : ''}">
                 <i class="fa-solid fa-door-open"></i> ${escapeHtml(r.room_number)}
               </span>
-              <span style="font-size: 12px; font-weight: 800; color: #0f172a;">Floor ${escapeHtml(r.floor)}</span>
-              <span style="color: #cbd5e1;">•</span>
-              <span style="font-size: 11px; color: #64748b; font-weight: 600;">${escapeHtml(r.category)}</span>
-              <span style="color: #cbd5e1;">•</span>
-              <span style="font-size: 11px; color: #64748b;">${escapeHtml(r.bedding)}</span>
+              <span class="text-xs font-extrabold text-slate-900">Floor ${escapeHtml(r.floor)}</span>
+              <span class="text-slate-300">•</span>
+              <span class="text-[11px] text-slate-500 font-semibold">${escapeHtml(r.category)}</span>
+              <span class="text-slate-300">•</span>
+              <span class="text-[11px] text-slate-500">${escapeHtml(r.bedding)}</span>
             </div>
-            <div style="display: flex; align-items: center; gap: 8px;">
-              <span style="font-size: 10px; font-weight: 800; background: #e0e7ff; color: #4338ca; padding: 2px 8px; border-radius: 4px;">
+            <div class="flex items-center gap-2">
+              <span class="text-[10px] font-extrabold bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded">
                 ${(r.occupants || []).length} Occupant(s)
               </span>
               ${swipeBtnMarkup}
             </div>
           </div>
           <div>
-            <div style="font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.3px;">
+            <div class="text-[10px] font-extrabold text-slate-500 uppercase mb-1.5 tracking-wide">
               Registered Occupants in this Room:
             </div>
-            <div style="display: flex; flex-direction: column; gap: 4px;">
+            <div class="flex flex-col gap-1">
       `;
 
       if (r.occupants && r.occupants.length > 0) {
@@ -2027,18 +1307,18 @@
 
           html += `
             <div class="occupant-badge-row">
-              <div style="display: flex; align-items: center; gap: 6px;">
-                <i class="fa-solid ${occ.is_primary ? 'fa-star' : 'fa-user'}" style="color: ${occ.is_primary ? '#f59e0b' : '#94a3b8'};"></i>
-                <strong style="color: #1e293b;">${escapeHtml(occ.name)}</strong>
-                ${occ.is_primary ? '<span style="background: #fef3c7; color: #b45309; font-size: 9px; font-weight: 800; padding: 1px 5px; border-radius: 4px;">Primary</span>' : ''}
+              <div class="flex items-center gap-1.5">
+                <i class="fa-solid ${occ.is_primary ? 'fa-star' : 'fa-user'} ${occ.is_primary ? 'text-amber-500' : 'text-slate-400'}"></i>
+                <strong class="text-slate-800">${escapeHtml(occ.name)}</strong>
+                ${occ.is_primary ? '<span class="bg-amber-100 text-amber-800 text-[9px] font-extrabold px-1.5 py-0.5 rounded">Primary</span>' : ''}
               </div>
-              <div style="display: flex; align-items: center; gap: 10px; color: #64748b; font-family: var(--font-mono, monospace); font-size: 11px; flex-wrap: wrap;">
-                <span><i class="fa-solid fa-phone" style="font-size: 9px; color: #10b981;"></i> ${escapeHtml(occ.mobile)}</span>
-                <span>•</span>
+              <div class="flex items-center gap-2.5 text-slate-500 font-mono text-[11px] flex-wrap">
+                <span><i class="fa-solid fa-phone text-[9px] text-emerald-500"></i> ${escapeHtml(occ.mobile)}</span>
+                <span class="text-slate-300">•</span>
                 <span>${escapeHtml(occ.id_card_type)}: ${escapeHtml(occ.id_card_number)}</span>
-                <span>•</span>
-                <span class="status-badge ${getStatusBadgeColor(occ.status || 'Confirmed')}" style="font-size: 9px; padding: 2px 8px; font-weight: 800; border-radius: 4px;">
-                  <i class="fa-solid fa-circle" style="font-size: 5px;"></i> ${escapeHtml(occ.status || 'Confirmed')}
+                <span class="text-slate-300">•</span>
+                <span class="status-badge ${getStatusBadgeColor(occ.status || 'Confirmed')} text-[9px] py-0.5 px-2 font-extrabold rounded">
+                  <i class="fa-solid fa-circle text-[5px]"></i> ${escapeHtml(occ.status || 'Confirmed')}
                 </span>
                 ${swipeGuestMarkup}
               </div>
@@ -2046,7 +1326,7 @@
           `;
         });
       } else {
-        html += '<div style="font-size: 11px; color: #94a3b8; padding: 4px;">No occupants assigned yet.</div>';
+        html += '<div class="text-xs text-slate-400 p-1">No occupants assigned yet.</div>';
       }
 
       html += `
@@ -2095,7 +1375,7 @@
       }
       const escName = typeof escapeHtml === 'function' ? escapeHtml(clean) : clean;
       if (original > effPrice) {
-        return `${escName} (+<span style="text-decoration: line-through; opacity: 0.65; margin-right: 3px;">₹${original.toLocaleString('en-IN')}</span><strong>₹${effPrice.toLocaleString('en-IN')}</strong>)`;
+        return `${escName} (+<span class="line-through opacity-65 mr-1">₹${original.toLocaleString('en-IN')}</span><strong>₹${effPrice.toLocaleString('en-IN')}</strong>)`;
       }
       if (effPrice > 0) {
         return `${escName} (+₹${effPrice.toLocaleString('en-IN')})`;
@@ -2227,26 +1507,26 @@
     let roomsHtml = '';
     (g.rooms || []).forEach(r => {
       roomsHtml += `
-        <div style="margin-bottom: 12px; border: 1px solid #cbd5e1; border-radius: 6px; padding: 10px;">
-          <div style="font-weight: 800; font-size: 13px; color: #1e293b; margin-bottom: 6px;">
+        <div class="mb-3 border border-slate-300 rounded-lg p-2.5">
+          <div class="font-extrabold text-xs text-slate-800 mb-1.5">
             Room ${r.room_number} (Floor ${r.floor} • ${r.category} • ${r.bedding})
           </div>
-          <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
+          <table class="w-full border-collapse text-[11px]">
             <thead>
-              <tr style="background: #f1f5f9; text-align: left;">
-                <th style="padding: 4px 6px;">Occupant Name</th>
-                <th style="padding: 4px 6px;">Phone</th>
-                <th style="padding: 4px 6px;">ID Proof</th>
-                <th style="padding: 4px 6px;">Type</th>
+              <tr class="bg-slate-100 text-left">
+                <th class="p-1 px-1.5">Occupant Name</th>
+                <th class="p-1 px-1.5">Phone</th>
+                <th class="p-1 px-1.5">ID Proof</th>
+                <th class="p-1 px-1.5">Type</th>
               </tr>
             </thead>
             <tbody>
               ${(r.occupants || []).map(occ => `
-                <tr style="border-bottom: 1px solid #f1f5f9;">
-                  <td style="padding: 4px 6px; font-weight: 700;">${occ.name}</td>
-                  <td style="padding: 4px 6px;">${occ.mobile}</td>
-                  <td style="padding: 4px 6px;">${occ.id_card_type} - ${occ.id_card_number}</td>
-                  <td style="padding: 4px 6px;">${occ.is_primary ? 'Primary Guest' : 'Co-occupant'}</td>
+                <tr class="border-b border-slate-100">
+                  <td class="p-1 px-1.5 font-bold">${occ.name}</td>
+                  <td class="p-1 px-1.5">${occ.mobile}</td>
+                  <td class="p-1 px-1.5">${occ.id_card_type} - ${occ.id_card_number}</td>
+                  <td class="p-1 px-1.5">${occ.is_primary ? 'Primary Guest' : 'Co-occupant'}</td>
                 </tr>
               `).join('')}
             </tbody>
@@ -2256,43 +1536,43 @@
     });
 
     printArea.innerHTML = `
-      <div style="padding: 30px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #1e293b; background: #ffffff;">
-        <div style="text-align: center; border-bottom: 2px solid #334155; padding-bottom: 12px; margin-bottom: 20px;">
-          <div style="font-size: 22px; font-weight: 800; color: #4338ca;">HOTEL SAGAR SONNET</div>
-          <div style="font-size: 12px; color: #64748b; margin-top: 4px;">Front Desk Property Management System • Arrival &amp; Stay Dossier</div>
+      <div class="p-8 font-sans text-slate-800 bg-white">
+        <div class="text-center border-b-2 border-slate-700 pb-3 mb-5">
+          <div class="text-2xl font-black text-indigo-700">HOTEL SAGAR SONNET</div>
+          <div class="text-xs text-slate-500 mt-1">Front Desk Property Management System • Arrival &amp; Stay Dossier</div>
         </div>
-        <div style="display: flex; justify-content: space-between; margin-bottom: 16px; background: #f8fafc; padding: 10px 14px; border: 1px solid #cbd5e1; font-size: 12px; font-weight: 700; border-radius: 6px;">
+        <div class="flex justify-between mb-4 bg-slate-50 p-2.5 px-3.5 border border-slate-300 text-xs font-bold rounded-lg">
           <span>Reserve ID: ${g.reserve_id}</span>
           <span>Folio No: ${g.folio_number}</span>
           <span>Status: ${g.status}</span>
         </div>
-        <div style="margin-bottom: 16px; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px;">
-          <div style="font-size: 12px; font-weight: 800; text-transform: uppercase; margin-bottom: 8px; color: #4338ca; border-bottom: 1px solid #f1f5f9; padding-bottom: 4px;">Primary Guest Profile</div>
-          <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
-            <tr><td style="width: 35%; color: #64748b; font-weight: 600; padding: 4px 6px;">Guest Name:</td><td style="font-weight: 700; color: #0f172a; padding: 4px 6px;">${g.guest_name}</td></tr>
-            <tr><td style="color: #64748b; font-weight: 600; padding: 4px 6px;">Phone / Mobile:</td><td style="font-weight: 700; color: #0f172a; padding: 4px 6px;">${g.mobile}</td></tr>
-            <tr><td style="color: #64748b; font-weight: 600; padding: 4px 6px;">Email:</td><td style="font-weight: 700; color: #0f172a; padding: 4px 6px;">${g.email}</td></tr>
-            <tr><td style="color: #64748b; font-weight: 600; padding: 4px 6px;">Address:</td><td style="font-weight: 700; color: #0f172a; padding: 4px 6px;">${g.guest_address}, ${g.city}</td></tr>
-            <tr><td style="color: #64748b; font-weight: 600; padding: 4px 6px;">ID Proof:</td><td style="font-weight: 700; color: #0f172a; padding: 4px 6px;">${g.id_card_type} - ${g.id_card_number}</td></tr>
-            <tr><td style="color: #64748b; font-weight: 600; padding: 4px 6px;">Nationality:</td><td style="font-weight: 700; color: #0f172a; padding: 4px 6px;">${g.nationality}</td></tr>
+        <div class="mb-4 border border-slate-200 rounded-xl p-3.5">
+          <div class="text-xs font-extrabold uppercase mb-2 text-indigo-700 border-b border-slate-100 pb-1">Primary Guest Profile</div>
+          <table class="w-full border-collapse text-xs">
+            <tr><td class="w-[35%] text-slate-500 font-semibold p-1 px-1.5">Guest Name:</td><td class="font-bold text-slate-900 p-1 px-1.5">${g.guest_name}</td></tr>
+            <tr><td class="text-slate-500 font-semibold p-1 px-1.5">Phone / Mobile:</td><td class="font-bold text-slate-900 p-1 px-1.5">${g.mobile}</td></tr>
+            <tr><td class="text-slate-500 font-semibold p-1 px-1.5">Email:</td><td class="font-bold text-slate-900 p-1 px-1.5">${g.email}</td></tr>
+            <tr><td class="text-slate-500 font-semibold p-1 px-1.5">Address:</td><td class="font-bold text-slate-900 p-1 px-1.5">${g.guest_address}, ${g.city}</td></tr>
+            <tr><td class="text-slate-500 font-semibold p-1 px-1.5">ID Proof:</td><td class="font-bold text-slate-900 p-1 px-1.5">${g.id_card_type} - ${g.id_card_number}</td></tr>
+            <tr><td class="text-slate-500 font-semibold p-1 px-1.5">Nationality:</td><td class="font-bold text-slate-900 p-1 px-1.5">${g.nationality}</td></tr>
           </table>
         </div>
-        <div style="margin-bottom: 16px; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px;">
-          <div style="font-size: 12px; font-weight: 800; text-transform: uppercase; margin-bottom: 8px; color: #4338ca; border-bottom: 1px solid #f1f5f9; padding-bottom: 4px;">Stay &amp; Meal Plan Information</div>
-          <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
-            <tr><td style="width: 35%; color: #64748b; font-weight: 600; padding: 4px 6px;">Check-In:</td><td style="font-weight: 700; color: #0f172a; padding: 4px 6px;">${g.reserve_date} ${g.reserve_time}</td></tr>
-            <tr><td style="color: #64748b; font-weight: 600; padding: 4px 6px;">Check-Out:</td><td style="font-weight: 700; color: #0f172a; padding: 4px 6px;">${g.checkout_date} ${g.checkout_time}</td></tr>
-            <tr><td style="color: #64748b; font-weight: 600; padding: 4px 6px;">Duration:</td><td style="font-weight: 700; color: #0f172a; padding: 4px 6px;">${g.total_nights} Night(s)</td></tr>
-            <tr><td style="color: #64748b; font-weight: 600; padding: 4px 6px;">Meal Plan:</td><td style="font-weight: 700; color: #c2410c; padding: 4px 6px;">${g.plan_name}</td></tr>
-            <tr><td style="color: #64748b; font-weight: 600; padding: 4px 6px;">Reservation Mode:</td><td style="font-weight: 700; color: #0f172a; padding: 4px 6px;">${g.reservation_mode}</td></tr>
-            ${g.company ? `<tr><td style="color: #64748b; font-weight: 600; padding: 4px 6px;">Company:</td><td style="font-weight: 700; color: #0f172a; padding: 4px 6px;">${g.company.name} (GSTIN: ${g.company.gstin})</td></tr>` : ''}
+        <div class="mb-4 border border-slate-200 rounded-xl p-3.5">
+          <div class="text-xs font-extrabold uppercase mb-2 text-indigo-700 border-b border-slate-100 pb-1">Stay &amp; Meal Plan Information</div>
+          <table class="w-full border-collapse text-xs">
+            <tr><td class="w-[35%] text-slate-500 font-semibold p-1 px-1.5">Check-In:</td><td class="font-bold text-slate-900 p-1 px-1.5">${g.reserve_date} ${g.reserve_time}</td></tr>
+            <tr><td class="text-slate-500 font-semibold p-1 px-1.5">Check-Out:</td><td class="font-bold text-slate-900 p-1 px-1.5">${g.checkout_date} ${g.checkout_time}</td></tr>
+            <tr><td class="text-slate-500 font-semibold p-1 px-1.5">Duration:</td><td class="font-bold text-slate-900 p-1 px-1.5">${g.total_nights} Night(s)</td></tr>
+            <tr><td class="text-slate-500 font-semibold p-1 px-1.5">Meal Plan:</td><td class="font-bold text-orange-700 p-1 px-1.5">${g.plan_name}</td></tr>
+            <tr><td class="text-slate-500 font-semibold p-1 px-1.5">Reservation Mode:</td><td class="font-bold text-slate-900 p-1 px-1.5">${g.reservation_mode}</td></tr>
+            ${g.company ? `<tr><td class="text-slate-500 font-semibold p-1 px-1.5">Company:</td><td class="font-bold text-slate-900 p-1 px-1.5">${g.company.name} (GSTIN: ${g.company.gstin})</td></tr>` : ''}
           </table>
         </div>
-        <div style="margin-bottom: 16px; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px;">
-          <div style="font-size: 12px; font-weight: 800; text-transform: uppercase; margin-bottom: 8px; color: #4338ca; border-bottom: 1px solid #f1f5f9; padding-bottom: 4px;">Allocated Room(s) &amp; Registered Occupants</div>
+        <div class="mb-4 border border-slate-200 rounded-xl p-3.5">
+          <div class="text-xs font-extrabold uppercase mb-2 text-indigo-700 border-b border-slate-100 pb-1">Allocated Room(s) &amp; Registered Occupants</div>
           ${roomsHtml}
         </div>
-        <div style="display: flex; justify-content: space-between; margin-top: 40px; font-size: 11px; font-weight: 700;">
+        <div class="flex justify-between mt-10 text-xs font-bold text-slate-600">
           <div>Guest Signature: __________________</div>
           <div>Front Desk Staff: __________________</div>
         </div>
@@ -2370,19 +1650,19 @@
       (data.occupants || []).forEach(occ => {
         const isSelected = (!specificBookingId || Number(occ.booking_id) === Number(specificBookingId));
         occHtml += `
-          <label style="display: flex; align-items: center; justify-content: space-between; padding: 7px 12px; background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: all 0.15s ease;" class="swipe-occ-item">
-            <div style="display: flex; align-items: center; gap: 8px;">
-              <input type="checkbox" name="rswipe_occupants[]" value="${occ.booking_id}" class="rswipe-occ-chk" ${isSelected ? 'checked' : ''} onchange="calculateSwipePricing()" style="width: 15px; height: 15px; accent-color: #4338ca;">
-              <span style="font-weight: 700; color: #0f172a; font-size: 12px;">${escapeHtml(occ.guest_name)}</span>
-              ${occ.is_primary ? '<span style="background: #fef3c7; color: #b45309; font-size: 9px; font-weight: 800; padding: 1px 5px; border-radius: 4px;">Primary</span>' : ''}
+          <label class="swipe-occ-item flex items-center justify-between py-1.5 px-3 bg-white border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition">
+            <div class="flex items-center gap-2">
+              <input type="checkbox" name="rswipe_occupants[]" value="${occ.booking_id}" class="rswipe-occ-chk w-3.5 h-3.5 accent-indigo-600" ${isSelected ? 'checked' : ''} onchange="calculateSwipePricing()">
+              <span class="font-bold text-slate-900 text-xs">${escapeHtml(occ.guest_name)}</span>
+              ${occ.is_primary ? '<span class="bg-amber-100 text-amber-800 text-[9px] font-extrabold px-1.5 py-0.5 rounded">Primary</span>' : ''}
             </div>
-            <div style="font-size: 11px; color: #64748b; font-family: var(--font-mono, monospace);">
-              <i class="fa-solid fa-phone" style="font-size: 9px; color: #10b981;"></i> ${escapeHtml(occ.mobile)}
+            <div class="text-[11px] text-slate-500 font-mono">
+              <i class="fa-solid fa-phone text-[9px] text-emerald-500"></i> ${escapeHtml(occ.mobile)}
             </div>
           </label>
         `;
       });
-      occList.innerHTML = occHtml || '<div style="font-size: 11px; color: #94a3b8; padding: 6px;">No occupants found in this room.</div>';
+      occList.innerHTML = occHtml || '<div class="text-xs text-slate-400 p-1.5">No occupants found in this room.</div>';
 
       const selectAllChk = document.getElementById('rswipe-select-all-occ');
       if (selectAllChk) selectAllChk.checked = !specificBookingId;
@@ -2422,7 +1702,7 @@
     const availList = rooms || [];
     const availBadge = document.getElementById('rswipe-avail-count-badge');
     if (availBadge) {
-      availBadge.innerHTML = `<i class="fa-solid fa-circle-check" style="color: #10b981;"></i> ${availList.length} Available Rooms`;
+      availBadge.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-500"></i> ${availList.length} Available Rooms`;
     }
 
     if (availList.length === 0) {
@@ -2469,18 +1749,18 @@
     const bedding = elem.dataset.bedding || '';
 
     const container = document.createElement('div');
-    container.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 4px 2px;';
+    container.className = 'flex justify-between items-center py-1 px-0.5';
     container.innerHTML = `
-      <div style="display: flex; align-items: center; gap: 8px;">
-        <span style="font-weight: 800; font-family: monospace; font-size: 12px; color: #4338ca; background: #e0e7ff; padding: 2px 7px; border-radius: 6px;">
-          <i class="fa-solid fa-door-open" style="font-size: 9px;"></i> R${roomNum}
+      <div class="flex items-center gap-2">
+        <span class="font-extrabold font-mono text-xs text-indigo-700 bg-indigo-100 px-2 py-0.5 rounded-md">
+          <i class="fa-solid fa-door-open text-[9px]"></i> R${roomNum}
         </span>
-        <span style="font-weight: 700; color: #1e293b; font-size: 12px;">Floor ${floor} • ${cat}</span>
-        ${bedding ? `<span style="font-size: 10px; color: #64748b; background: #f1f5f9; padding: 1px 5px; border-radius: 4px;">${bedding}</span>` : ''}
+        <span class="font-bold text-slate-800 text-xs">Floor ${floor} • ${cat}</span>
+        ${bedding ? `<span class="text-[10px] text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">${bedding}</span>` : ''}
       </div>
-      <div style="display: flex; align-items: center; gap: 6px;">
-        <span style="font-weight: 800; font-family: monospace; color: #047857; font-size: 12px;">₹ ${rate.toLocaleString('en-IN')}/n</span>
-        <span style="background: #ecfdf5; color: #059669; font-size: 9px; font-weight: 800; padding: 1px 6px; border-radius: 10px; border: 1px solid #a7f3d0;">Vacant</span>
+      <div class="flex items-center gap-1.5">
+        <span class="font-extrabold font-mono text-emerald-700 text-xs">₹ ${rate.toLocaleString('en-IN')}/n</span>
+        <span class="bg-emerald-50 text-emerald-600 text-[9px] font-extrabold px-1.5 py-0.5 rounded-full border border-emerald-200">Vacant</span>
       </div>
     `;
     return $(container);

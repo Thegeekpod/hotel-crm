@@ -2,997 +2,36 @@
 
 @section('title', 'Settlement Management & Master Ledger - Hotel Sagar Sonnet CRM / PMS')
 
-@push('styles')
-<style>
-  /* Prevent awkward text wrapping and provide responsive table behavior */
-  .pms-table th,
-  .pms-table td {
-    white-space: nowrap !important;
-    padding: 10px 12px !important;
-  }
-
-  .pms-page-container {
-    min-width: 0 !important;
-    max-width: 100% !important;
-    box-sizing: border-box !important;
-  }
-
-  .pms-page-content {
-    min-width: 0 !important;
-    max-width: 100% !important;
-    box-sizing: border-box !important;
-    padding: 0 0 16px 0 !important;
-  }
-
-  .pms-table-box {
-    width: 100% !important;
-    max-width: 100% !important;
-    overflow-x: auto !important;
-    -webkit-overflow-scrolling: touch !important;
-    box-sizing: border-box !important;
-    border-radius: 14px !important;
-    box-shadow: 0 4px 20px -5px rgba(0,0,0,0.06) !important;
-    background: #ffffff !important;
-  }
-
-  /* Sleek custom scrollbar */
-  .pms-table-box::-webkit-scrollbar {
-    height: 7px;
-  }
-  .pms-table-box::-webkit-scrollbar-track {
-    background: #f1f5f9;
-    border-radius: 4px;
-  }
-  .pms-table-box::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
-    border-radius: 4px;
-  }
-  .pms-table-box::-webkit-scrollbar-thumb:hover {
-    background: #94a3b8;
-  }
-
-  .pms-table {
-    width: 100% !important;
-    min-width: 1050px;
-    border-collapse: collapse;
-  }
-
-  .folio-id-text {
-    font-family: var(--font-mono, monospace);
-    font-weight: 800;
-    color: #4f46e5;
-    font-size: 12px;
-    white-space: nowrap;
-    letter-spacing: 0.3px;
-    cursor: pointer;
-    transition: color 0.15s ease;
-  }
-  .folio-id-text:hover {
-    color: #3730a3;
-    text-decoration: underline;
-  }
-
-  .folio-number-sub {
-    font-size: 10px;
-    color: #64748b;
-    font-family: var(--font-mono, monospace);
-    margin-top: 2px;
-    white-space: nowrap;
-    cursor: pointer;
-  }
-  .folio-number-sub:hover {
-    color: #4338ca;
-  }
-
-  .badge-extra-guests {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 10px;
-    font-weight: 800;
-    padding: 2px 7px;
-    border-radius: 9999px;
-    background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
-    color: #3730a3;
-    border: 1px solid #a5b4fc;
-    margin-left: 6px;
-    vertical-align: middle;
-  }
-
-  .room-tag {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    background: #eef2ff;
-    color: #4338ca;
-    border: 1px solid #c7d2fe;
-    padding: 2px 8px;
-    border-radius: 6px;
-    font-weight: 800;
-    font-size: 11px;
-    font-family: var(--font-mono, monospace);
-  }
-
-  /* Header card styling */
-  .folio-header-card {
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 14px;
-    padding: 14px 18px;
-    margin-bottom: 14px;
-    box-shadow: 0 2px 10px -3px rgba(0,0,0,0.04);
-    box-sizing: border-box;
-    width: 100%;
-    max-width: 100%;
-  }
-
-  /* Toolbar styling */
-  .folio-toolbar {
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    padding: 12px 16px;
-    margin-bottom: 14px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
-    box-sizing: border-box;
-    width: 100%;
-    max-width: 100%;
-  }
-
-  .folio-toolbar-inner {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 10px 14px;
-    width: 100%;
-    box-sizing: border-box;
-  }
-
-  .folio-toolbar-filters {
-    display: flex;
-    gap: 8px 12px;
-    align-items: center;
-    flex: 1 1 650px;
-    flex-wrap: wrap;
-    min-width: 0;
-  }
-
-  .search-box-wrap {
-    position: relative;
-    flex: 1 1 200px;
-    min-width: 180px;
-    max-width: 320px;
-  }
-
-  .folio-filter-group {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    flex-shrink: 0;
-  }
-
-  .folio-filter-actions {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    flex-shrink: 0;
-  }
-
-  .folio-toolbar-pagesize {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    flex-shrink: 0;
-    margin-left: auto;
-  }
-
-  .search-box-wrap i.search-icon {
-    position: absolute;
-    left: 14px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #94a3b8;
-    font-size: 13px;
-  }
-
-  .search-box-wrap input {
-    width: 100%;
-    height: 38px;
-    padding: 6px 36px 6px 36px;
-    font-size: 12px;
-    font-weight: 600;
-    border-radius: 10px;
-    border: 1px solid #cbd5e1;
-    background: #f8fafc;
-    color: #1e293b;
-    outline: none;
-    transition: all 0.2s ease;
-    box-sizing: border-box;
-  }
-  .search-box-wrap input:focus {
-    background-color: #ffffff;
-    border-color: #6366f1;
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
-  }
-
-  .pms-filter-select {
-    height: 38px;
-    padding: 6px 30px 6px 12px;
-    font-size: 12px;
-    font-weight: 700;
-    border-radius: 10px;
-    border: 1px solid #cbd5e1;
-    background: #f8fafc url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 10px center;
-    appearance: none;
-    -webkit-appearance: none;
-    color: #1e293b;
-    cursor: pointer;
-    outline: none;
-    transition: all 0.2s;
-  }
-  .pms-filter-select:focus {
-    background-color: #ffffff;
-    border-color: #6366f1;
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
-  }
-
-  .pms-filter-date {
-    height: 38px;
-    padding: 6px 12px;
-    font-size: 12px;
-    font-weight: 700;
-    border-radius: 10px;
-    border: 1px solid #cbd5e1;
-    background: #f8fafc;
-    color: #1e293b;
-    cursor: pointer;
-    outline: none;
-    transition: all 0.2s;
-    font-family: inherit;
-  }
-  .pms-filter-date:focus {
-    background-color: #ffffff;
-    border-color: #6366f1;
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
-  }
-
-  .pms-per-page-wrap {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 12px;
-    font-weight: 600;
-    color: #64748b;
-  }
-
-  .pms-per-page-select {
-    height: 34px;
-    padding: 2px 26px 2px 8px;
-    font-size: 12px;
-    font-weight: 700;
-    border-radius: 8px;
-    border: 1px solid #cbd5e1;
-    background: #ffffff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 8px center;
-    appearance: none;
-    -webkit-appearance: none;
-    color: #1e293b;
-    cursor: pointer;
-    outline: none;
-  }
-
-  /* Table styling */
-  .folio-row {
-    transition: background 0.15s ease;
-  }
-  .folio-row:hover {
-    background-color: #f8fafc;
-  }
-
-  /* Status Badges */
-  .status-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 3px 10px;
-    border-radius: 20px;
-    font-size: 10px;
-    font-weight: 800;
-    letter-spacing: 0.3px;
-    text-transform: capitalize;
-    white-space: nowrap;
-  }
-  .status-badge.confirmed, .status-badge.blue {
-    background: rgba(99, 102, 241, 0.12);
-    color: #4338ca;
-    border: 1px solid rgba(99, 102, 241, 0.25);
-  }
-  .status-badge.arrived, .status-badge.green {
-    background: rgba(16, 185, 129, 0.12);
-    color: #047857;
-    border: 1px solid rgba(16, 185, 129, 0.25);
-  }
-  .status-badge.checked-in, .status-badge.checkedin, .status-badge.cyan {
-    background: rgba(6, 182, 212, 0.12);
-    color: #0e7490;
-    border: 1px solid rgba(6, 182, 212, 0.25);
-  }
-  .status-badge.stay-over, .status-badge.stayover, .status-badge.yellow {
-    background: rgba(245, 158, 11, 0.12);
-    color: #b45309;
-    border: 1px solid rgba(245, 158, 11, 0.25);
-  }
-  .status-badge.checked-out, .status-badge.checkedout, .status-badge.purple, .status-badge.gray {
-    background: rgba(100, 116, 139, 0.12);
-    color: #475569;
-    border: 1px solid rgba(100, 116, 139, 0.25);
-  }
-  .status-badge.cancelled, .status-badge.red {
-    background: rgba(239, 68, 68, 0.12);
-    color: #b91c1c;
-    border: 1px solid rgba(239, 68, 68, 0.25);
-  }
-  .status-badge.settlement-done, .status-badge.settled, .status-badge.settlement_done {
-    background: #ecfdf5;
-    color: #047857;
-    border: 1px solid #a7f3d0;
-    font-weight: 800;
-  }
-  .status-badge.unsettled {
-    background: #fff1f2;
-    color: #be123c;
-    border: 1px solid #fecdd3;
-    font-weight: 800;
-  }
-
-  /* Action button matching guest CRM exactly */
-  .btn-action-view {
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
-    border: 1px solid #c7d2fe;
-    background: #eef2ff;
-    color: #4f46e5;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 13px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-  }
-  .btn-action-view:hover {
-    background: #4f46e5;
-    color: #ffffff;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3);
-  }
-
-  .btn-action-extend {
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
-    border: 1px solid #ddd6fe;
-    background: #f5f3ff;
-    color: #7c3aed;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 13px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-  }
-  .btn-action-extend:hover {
-    background: #7c3aed;
-    color: #ffffff;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 10px rgba(124, 58, 237, 0.3);
-  }
-
-  /* Table Action Swipe Button */
-  .btn-action-swipe {
-    height: 32px;
-    padding: 0 10px;
-    border-radius: 8px;
-    border: 1px solid #c7d2fe;
-    background: #eef2ff;
-    color: #4338ca;
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    font-size: 11px;
-    font-weight: 800;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    white-space: nowrap;
-    text-decoration: none;
-  }
-  .btn-action-swipe:hover {
-    background: #4338ca;
-    color: #ffffff;
-    border-color: #4338ca;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 10px rgba(67, 56, 202, 0.25);
-  }
-
-  /* Smooth pulse & glow when redirected to swipe section inside modal */
-  @keyframes swipeSectionGlow {
-    0% {
-      box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.45);
-      border-color: #6366f1;
-    }
-    50% {
-      box-shadow: 0 0 0 8px rgba(79, 70, 229, 0.2);
-      border-color: #4f46e5;
-    }
-    100% {
-      box-shadow: 0 0 0 0 rgba(79, 70, 229, 0);
-    }
-  }
-  .pulse-swipe-highlight {
-    animation: swipeSectionGlow 1.2s ease-in-out 2;
-    border-color: #6366f1 !important;
-  }
-  @keyframes swipeBtnBounce {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.08); box-shadow: 0 4px 12px rgba(67, 56, 202, 0.4); }
-  }
-  .pulse-swipe-btn {
-    animation: swipeBtnBounce 0.8s ease-in-out 2;
-  }
-
-  /* Pagination styles */
-  .pms-table-pagination {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 18px;
-    border-top: 1px solid #e2e8f0;
-    background: #ffffff;
-    flex-wrap: wrap;
-    gap: 10px;
-  }
-  .pms-pagination-info {
-    font-size: 12px;
-    font-weight: 600;
-    color: #64748b;
-  }
-  .pms-page-nav {
-    display: flex;
-    gap: 4px;
-    align-items: center;
-  }
-  .pms-page-btn {
-    min-width: 30px;
-    height: 30px;
-    padding: 0 8px;
-    border-radius: 6px;
-    border: 1px solid #cbd5e1;
-    background: #ffffff;
-    font-size: 12px;
-    font-weight: 700;
-    color: #334155;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    text-decoration: none;
-    transition: all 0.15s ease;
-  }
-  .pms-page-btn:hover:not(.active) {
-    border-color: #6366f1;
-    color: #6366f1;
-    background: #eef2ff;
-  }
-  .pms-page-btn.active {
-    background: #6366f1;
-    border-color: #6366f1;
-    color: #ffffff;
-  }
-  .pms-page-nav svg,
-  .pms-table-pagination svg,
-  nav svg {
-    width: 14px !important;
-    height: 14px !important;
-    max-width: 14px !important;
-    max-height: 14px !important;
-  }
-
-  /* Dossier Modal Styles matching guest/index.blade.php */
-  .dossier-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 16px;
-    margin-bottom: 16px;
-  }
-  @media (max-width: 768px) {
-    .dossier-grid {
-      grid-template-columns: 1fr;
-    }
-  }
-
-  .dossier-card {
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    padding: 14px 16px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
-  }
-
-  .dossier-card-title {
-    font-size: 11px;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 0.7px;
-    color: #475569;
-    margin-bottom: 12px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    border-bottom: 1px solid #f1f5f9;
-    padding-bottom: 8px;
-  }
-  .dossier-card-title i {
-    color: #6366f1;
-    font-size: 13px;
-  }
-
-  .dossier-field-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 6px 0;
-    border-bottom: 1px dashed #f1f5f9;
-    font-size: 12px;
-  }
-  .dossier-field-row:last-child {
-    border-bottom: none;
-    padding-bottom: 0;
-  }
-  .dossier-label {
-    color: #64748b;
-    font-weight: 600;
-    font-size: 11px;
-  }
-  .dossier-val {
-    color: #0f172a;
-    font-weight: 700;
-    text-align: right;
-  }
-  .dossier-val.mono {
-    font-family: var(--font-mono, monospace);
-  }
-
-  /* Highlight Banner like guest CRM */
-  .dossier-highlight-box {
-    background: linear-gradient(135deg, #f8fafc, #f1f5f9);
-    border: 1px solid #e2e8f0;
-    border-radius: 10px;
-    padding: 12px 16px;
-    margin-bottom: 16px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 12px;
-  }
-
-  .billing-summary-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 10px;
-    margin-top: 10px;
-  }
-  @media (max-width: 640px) {
-    .billing-summary-grid {
-      grid-template-columns: repeat(2, 1fr);
-    }
-  }
-
-  .bill-stat-item {
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    padding: 8px 10px;
-    text-align: center;
-  }
-  .bill-stat-label {
-    font-size: 10px;
-    font-weight: 700;
-    color: #64748b;
-    text-transform: uppercase;
-  }
-  .bill-stat-value {
-    font-size: 14px;
-    font-weight: 900;
-    font-family: var(--font-mono, monospace);
-    margin-top: 2px;
-  }
-
-  /* Room card inside dossier */
-  .room-alloc-card {
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 10px;
-    padding: 12px 14px;
-    margin-bottom: 10px;
-  }
-  .room-alloc-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 1px solid #f1f5f9;
-    padding-bottom: 8px;
-    margin-bottom: 8px;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-
-  /* Occupant row */
-  .occupant-badge-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 6px 10px;
-    background: #f8fafc;
-    border-radius: 8px;
-    margin-bottom: 5px;
-    font-size: 11px;
-    flex-wrap: wrap;
-    gap: 8px;
-    border: 1px solid #f1f5f9;
-    transition: all 0.15s ease;
-  }
-  .occupant-badge-row.checked-out {
-    background: #f8fafc;
-    border-color: #e2e8f0;
-    opacity: 0.9;
-  }
-  .btn-early-checkout {
-    background: #fef2f2;
-    color: #dc2626;
-    border: 1px solid #fecaca;
-    padding: 3px 9px;
-    border-radius: 6px;
-    font-size: 10px;
-    font-weight: 800;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    transition: all 0.15s ease;
-    white-space: nowrap;
-  }
-  .btn-early-checkout:hover {
-    background: #dc2626;
-    color: #ffffff;
-    border-color: #dc2626;
-    box-shadow: 0 2px 6px rgba(220, 38, 38, 0.25);
-  }
-  .badge-checked-out-occupant {
-    background: #f1f5f9;
-    color: #475569;
-    border: 1px solid #cbd5e1;
-    padding: 2px 8px;
-    border-radius: 6px;
-    font-size: 10px;
-    font-weight: 700;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    font-family: var(--font-mono, monospace);
-    white-space: nowrap;
-  }
-  #early-checkout-confirm-modal.modal-backdrop {
-    position: fixed;
-    inset: 0;
-    z-index: 100099 !important;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-    background: rgba(15, 23, 42, 0.55) !important;
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
-    box-sizing: border-box;
-  }
-  #early-checkout-confirm-modal.open {
-    display: flex !important;
-  }
-
-  /* Room Swipe / Shift Styles */
-  .btn-room-swipe {
-    background: #eef2ff;
-    color: #4338ca;
-    border: 1px solid #c7d2fe;
-    padding: 3px 9px;
-    border-radius: 6px;
-    font-size: 10px;
-    font-weight: 800;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    transition: all 0.15s ease;
-    white-space: nowrap;
-  }
-  .btn-room-swipe:hover {
-    background: #4338ca;
-    color: #ffffff;
-    border-color: #4338ca;
-    box-shadow: 0 2px 6px rgba(67, 56, 202, 0.25);
-  }
-  .btn-room-swipe-mini {
-    background: #f1f5f9;
-    color: #475569;
-    border: 1px solid #cbd5e1;
-    padding: 2px 7px;
-    border-radius: 5px;
-    font-size: 9px;
-    font-weight: 800;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 3px;
-    transition: all 0.15s ease;
-    white-space: nowrap;
-  }
-  .btn-room-swipe-mini:hover {
-    background: #4338ca;
-    color: #ffffff;
-    border-color: #4338ca;
-  }
-  #room-swipe-modal.modal-backdrop {
-    position: fixed;
-    inset: 0;
-    z-index: 100100 !important;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-    background: rgba(15, 23, 42, 0.55) !important;
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
-    box-sizing: border-box;
-  }
-  #room-swipe-modal.open {
-    display: flex !important;
-  }
-  .room-swipe-card {
-    width: 640px;
-    max-width: 95vw;
-    max-height: 90vh;
-    background: #ffffff;
-    border-radius: 16px;
-    box-shadow: 0 25px 60px -15px rgba(0,0,0,0.45);
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-  }
-  .room-swipe-header {
-    background: linear-gradient(135deg, #4338ca 0%, #312e81 100%);
-    padding: 14px 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    color: #ffffff;
-  }
-  .room-swipe-body {
-    padding: 18px 22px;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-  }
-  .swipe-preview-box {
-    background: #f8fafc;
-    border: 1.5px solid #e2e8f0;
-    border-radius: 12px;
-    padding: 12px 14px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    font-size: 11px;
-  }
-  /* Select2 Styling for Room Swipe Modal */
-  #room-swipe-modal .select2-container {
-    width: 100% !important;
-  }
-  #room-swipe-modal .select2-container--default .select2-selection--single {
-    height: 38px !important;
-    padding: 4px 10px !important;
-    border: 1.5px solid #cbd5e1 !important;
-    border-radius: 8px !important;
-    display: flex !important;
-    align-items: center !important;
-    background: #ffffff !important;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.04) !important;
-  }
-  #room-swipe-modal .select2-container--default .select2-selection--single:focus,
-  #room-swipe-modal .select2-container--default.select2-container--open .select2-selection--single {
-    border-color: #4338ca !important;
-    box-shadow: 0 0 0 3px rgba(67, 56, 202, 0.15) !important;
-  }
-  #room-swipe-modal .select2-container--default .select2-selection--single .select2-selection__rendered {
-    line-height: normal !important;
-    font-size: 12px !important;
-    font-weight: 700 !important;
-    color: #0f172a !important;
-    padding-left: 2px !important;
-  }
-  #room-swipe-modal .select2-container--default .select2-selection--single .select2-selection__arrow {
-    height: 36px !important;
-    right: 8px !important;
-  }
-  .select2-dropdown.rswipe-select2-drop {
-    z-index: 100200 !important;
-    border-radius: 10px !important;
-    box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.25) !important;
-    border: 1.5px solid #cbd5e1 !important;
-    overflow: hidden !important;
-  }
-  .room-swipe-history-box {
-    background: #f0fdf4;
-    border: 1px solid #bbf7d0;
-    border-radius: 10px;
-    padding: 10px 14px;
-    margin-top: 10px;
-    font-size: 11px;
-  }
-  .room-swipe-history-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 5px 0;
-    border-bottom: 1px dashed #dcfce7;
-    flex-wrap: wrap;
-    gap: 6px;
-  }
-  .room-swipe-history-item:last-child {
-    border-bottom: none;
-  }
-
-  /* Settlement Inline Panel */
-  .settlement-panel {
-    background: #f0fdf4;
-    border: 1.5px solid #bbf7d0;
-    border-radius: 12px;
-    padding: 14px 16px;
-    margin-top: 14px;
-  }
-
-  /* Modal Window & Backdrop like guest CRM */
-  #folio-details-modal.modal-backdrop {
-    position: fixed;
-    inset: 0;
-    z-index: 100050 !important;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-    background: rgba(15, 23, 42, 0.3) !important;
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    overflow-y: auto !important;
-    box-sizing: border-box;
-  }
-  #folio-details-modal.open {
-    display: flex !important;
-  }
-  #folio-details-modal .modal-window.large {
-    width: 900px;
-    max-width: 95vw;
-    max-height: 92vh;
-    display: flex;
-    flex-direction: column;
-    border-radius: 16px;
-    overflow: hidden;
-    box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.3);
-    border: none;
-    box-sizing: border-box;
-    background: #ffffff;
-  }
-  #folio-details-modal .modal-top {
-    flex-shrink: 0;
-    background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%);
-    color: #ffffff;
-    padding: 14px 22px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 1px solid rgba(255,255,255,0.15);
-  }
-  #folio-details-modal .modal-content-area {
-    padding: 20px 24px 30px 24px;
-    background: #f8fafc;
-    overflow-y: auto !important;
-    max-height: calc(90vh - 130px) !important;
-    -webkit-overflow-scrolling: touch;
-    box-sizing: border-box;
-  }
-  #folio-details-modal .modal-content-area::-webkit-scrollbar {
-    width: 6px;
-  }
-  #folio-details-modal .modal-content-area::-webkit-scrollbar-track {
-    background: #f1f5f9;
-  }
-  #folio-details-modal .modal-content-area::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
-    border-radius: 4px;
-  }
-  #folio-details-modal .modal-bot {
-    flex-shrink: 0;
-    padding: 12px 22px;
-    background: #ffffff;
-    border-top: 1px solid #e2e8f0;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 10px;
-  }
-  @media (max-width: 640px) {
-    #folio-details-modal.modal-backdrop {
-      padding: 10px;
-    }
-    #folio-details-modal .modal-top {
-      padding: 12px 16px;
-    }
-    #folio-details-modal .modal-content-area {
-      padding: 14px 16px;
-    }
-    #folio-details-modal .modal-bot {
-      padding: 10px 16px;
-    }
-  }
-
-  /* Media Print Rules - Folio Invoice */
-  @media print {
-    body.folio-printing > *:not(#folio-print-overlay) {
-      display: none !important;
-    }
-    body.folio-printing #folio-print-overlay {
-      display: block !important;
-      position: fixed !important;
-      top: 0 !important;
-      left: 0 !important;
-      width: 100% !important;
-      height: auto !important;
-      z-index: 99999 !important;
-      background: #fff !important;
-    }
-  }
-</style>
-@endpush
 
 @section('content')
-<main class="pms-main-viewport">
-  <div class="pms-page-container">
+<main class="flex-1 w-full p-3 sm:p-4 lg:p-5 flex flex-col gap-4 pms-main-viewport">
+  <div class="w-full flex flex-col gap-4 pms-page-container">
 
     <!-- Clean Header Card (like guest CRM) -->
     <div class="folio-header-card">
-      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+      <div class="flex justify-between items-center flex-wrap gap-3">
         <div>
-          <h2 style="margin: 0; font-size: 18px; font-weight: 800; color: #1e293b; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-            <i class="fa-solid fa-file-invoice-dollar" style="color: #6366f1;"></i> 
+          <h2 class="m-0 text-lg font-extrabold text-slate-800 flex items-center gap-2.5 flex-wrap">
+            <i class="fa-solid fa-file-invoice-dollar text-indigo-600"></i> 
             Settlement Management &amp; Master Ledger
-            <span style="font-size: 11px; font-weight: 700; background: #e0e7ff; color: #4338ca; border: 1px solid #c7d2fe; padding: 2px 10px; border-radius: 20px;">
+            <span class="text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 px-2.5 py-0.5 rounded-full">
               {{ $folios->total() }} Records
             </span>
             @if(!empty($fromDate) && !empty($toDate) && $fromDate === $toDate)
-              <span style="font-size: 11px; font-weight: 700; background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; padding: 2px 10px; border-radius: 20px;">
+              <span class="text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-0.5 rounded-full inline-flex items-center gap-1.5">
                 <i class="fa-regular fa-calendar-check"></i> {{ $fromDate === $today ? "Today's Check-ins (" . \Carbon\Carbon::parse($fromDate)->format('d M Y') . ")" : "Check-in: " . \Carbon\Carbon::parse($fromDate)->format('d M Y') }}
               </span>
             @elseif(!empty($fromDate) || !empty($toDate))
-              <span style="font-size: 11px; font-weight: 700; background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; padding: 2px 10px; border-radius: 20px;">
+              <span class="text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-0.5 rounded-full inline-flex items-center gap-1.5">
                 <i class="fa-regular fa-calendar-check"></i> Check-in: {{ !empty($fromDate) ? \Carbon\Carbon::parse($fromDate)->format('d M Y') : 'Start' }} &rarr; {{ !empty($toDate) ? \Carbon\Carbon::parse($toDate)->format('d M Y') : 'End' }}
               </span>
             @else
-              <span style="font-size: 11px; font-weight: 700; background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; padding: 2px 10px; border-radius: 20px;">
+              <span class="text-xs font-bold bg-slate-100 text-slate-600 border border-slate-300 px-2.5 py-0.5 rounded-full inline-flex items-center gap-1.5">
                 <i class="fa-regular fa-calendar"></i> All Check-in Dates
               </span>
             @endif
           </h2>
-          <div style="font-size: 12px; color: #64748b; margin-top: 2px;">
+          <div class="text-xs text-slate-500 mt-0.5">
             @if(!empty($fromDate) && !empty($toDate) && $fromDate === $toDate)
               Showing settlement records with check-in on <strong>{{ \Carbon\Carbon::parse($fromDate)->format('D, d F Y') }}</strong> ({{ $fromDate === $today ? 'Today' : 'Selected Date' }}).
             @elseif(!empty($fromDate) || !empty($toDate))
@@ -1002,8 +41,6 @@
             @endif
           </div>
         </div>
-
-        
       </div>
     </div>
 
@@ -1011,8 +48,8 @@
     <!-- Search & Filter Controls Toolbar (like guest) -->
     <!-- ========================================== -->
     <form method="GET" action="{{ route('frontoffice.folio') }}" id="folio-filter-form" class="folio-toolbar">
-      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; width: 100%;">
-        <div style="display: flex; gap: 12px; align-items: center; flex: 1; flex-wrap: wrap;">
+      <div class="flex justify-between items-center flex-wrap gap-3 w-full">
+        <div class="flex gap-3 items-center flex-1 flex-wrap">
           
           <!-- Search Box with Clear Button -->
           <div class="search-box-wrap">
@@ -1027,16 +64,16 @@
             @if(request()->filled('search'))
               <a href="{{ route('frontoffice.folio', request()->except('search', 'page')) }}" 
                  title="Clear search" 
-                 style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; text-decoration: none; font-size: 12px;">
+                 class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 no-underline text-xs">
                 <i class="fa-solid fa-xmark"></i>
               </a>
             @endif
           </div>
 
           <!-- Date Range: From & To Date Filter -->
-          <div style="display: inline-flex; align-items: center; gap: 6px;">
-            <label for="folio-from-date" style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">
-              <i class="fa-regular fa-calendar-days" style="color: #6366f1;"></i> Check-in From:
+          <div class="inline-flex items-center gap-1.5">
+            <label for="folio-from-date" class="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider whitespace-nowrap">
+              <i class="fa-regular fa-calendar-days text-indigo-500"></i> Check-in From:
             </label>
             <input type="date" 
                    name="from_date" 
@@ -1046,7 +83,7 @@
                    onchange="this.form.submit()"
                    title="Filter by Check-in Date From">
 
-            <label for="folio-to-date" style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">
+            <label for="folio-to-date" class="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider whitespace-nowrap">
               To:
             </label>
             <input type="date" 
@@ -1059,9 +96,9 @@
           </div>
 
           <!-- Status Filter Dropdown (Settled / Unsettled) -->
-          <div style="display: inline-flex; align-items: center; gap: 6px;">
-            <label for="folio-status-filter" style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">
-              <i class="fa-solid fa-filter" style="color: #6366f1;"></i> Status:
+          <div class="inline-flex items-center gap-1.5">
+            <label for="folio-status-filter" class="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider whitespace-nowrap">
+              <i class="fa-solid fa-filter text-indigo-500"></i> Status:
             </label>
             <select name="status" id="folio-status-filter" class="pms-filter-select" onchange="this.form.submit()">
               <option value="all" {{ request('status') === 'all' || !request()->filled('status') ? 'selected' : '' }}>All Statuses</option>
@@ -1071,9 +108,9 @@
           </div>
 
           <!-- Registration Type Filter -->
-          <div style="display: inline-flex; align-items: center; gap: 6px;">
-            <label for="folio-regtype-filter" style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">
-              <i class="fa-solid fa-id-badge" style="color: #6366f1;"></i> Reg Type:
+          <div class="inline-flex items-center gap-1.5">
+            <label for="folio-regtype-filter" class="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider whitespace-nowrap">
+              <i class="fa-solid fa-id-badge text-indigo-500"></i> Reg Type:
             </label>
             <select name="registration_type" id="folio-regtype-filter" class="pms-filter-select" onchange="this.form.submit()">
               <option value="all" {{ request('registration_type') === 'all' || !request()->filled('registration_type') ? 'selected' : '' }}>All Reg Types</option>
@@ -1086,8 +123,7 @@
           <!-- All Dates Quick Button (if date filter active) -->
           @if(!empty($fromDate) || !empty($toDate))
             <a href="{{ route('frontoffice.folio', array_merge(request()->except(['from_date', 'to_date', 'page']), ['all_dates' => 1])) }}" 
-               class="btn-ui-secondary" 
-               style="padding: 7px 12px; border-radius: 8px; border: 1px solid #cbd5e1; background: #ffffff; font-size: 11px; font-weight: 700; color: #475569; display: inline-flex; align-items: center; gap: 5px; text-decoration: none;"
+               class="btn-ui-secondary px-3 py-1.5 rounded-lg border border-slate-300 bg-white text-xs font-bold text-slate-600 inline-flex items-center gap-1.5 no-underline hover:bg-slate-50 transition shadow-2xs" 
                title="View all records without date restrictions">
               <i class="fa-regular fa-calendar"></i> All Dates
             </a>
@@ -1095,15 +131,14 @@
 
           <!-- Today / Reset Button (resets to today's data) -->
           <a href="{{ route('frontoffice.folio') }}" 
-             class="btn-ui-secondary" 
-             style="padding: 7px 12px; border-radius: 8px; border: 1px solid #cbd5e1; background: #ffffff; font-size: 11px; font-weight: 700; color: #475569; display: inline-flex; align-items: center; gap: 5px; text-decoration: none;"
+             class="btn-ui-secondary px-3 py-1.5 rounded-lg border border-slate-300 bg-white text-xs font-bold text-slate-600 inline-flex items-center gap-1.5 no-underline hover:bg-slate-50 transition shadow-2xs" 
              title="Reset filters to today's check-ins">
             <i class="fa-solid fa-rotate-left"></i> Today / Reset
           </a>
         </div>
 
         <!-- Page Size Selector -->
-        <div style="display: flex; gap: 12px; align-items: center;">
+        <div class="flex gap-3 items-center">
           <div class="pms-per-page-wrap">
             <span>Show</span>
             <select name="per_page" class="pms-per-page-select" id="folio-per-page-select" onchange="this.form.submit()">
@@ -1121,21 +156,21 @@
 
     <!-- Main Settlement Master Table with SL Indexing -->
     <div class="pms-page-content">
-      <div class="pms-table-box" style="border-radius: 14px; box-shadow: 0 4px 20px -5px rgba(0,0,0,0.06); background: #ffffff; overflow-x: auto;">
+      <div class="pms-table-box rounded-2xl shadow-sm bg-white overflow-x-auto border border-slate-200">
         <table class="pms-table" id="folio-master-table">
           <thead>
             <tr>
-              <th style="width: 45px; text-align: center; white-space: nowrap;">SL</th>
-              <th style="min-width: 160px; white-space: nowrap;">Room(s) &amp; Floor</th>
-              <th style="min-width: 140px; text-align: left; white-space: nowrap;">Booking Number</th>
-              <th style="min-width: 180px; white-space: nowrap;">Primary Guest Details</th>
-              <th style="min-width: 130px; white-space: nowrap;">Mobile / Phone</th>
-              <th style="min-width: 120px; text-align: right; white-space: nowrap;">Paid Amount</th>
-              <th style="min-width: 130px; text-align: right; white-space: nowrap;">Remaining Amount</th>
-              <th style="min-width: 135px; white-space: nowrap;">Check-in</th>
-              <th style="min-width: 135px; white-space: nowrap;">Check-out</th>
-              <th style="min-width: 100px; text-align: center; white-space: nowrap;">Status</th>
-              <th style="min-width: 130px; text-align: center; white-space: nowrap;">Action</th>
+              <th class="w-11 text-center whitespace-nowrap">SL</th>
+              <th class="min-w-[160px] whitespace-nowrap">Room(s) &amp; Floor</th>
+              <th class="min-w-[140px] text-left whitespace-nowrap">Booking Number</th>
+              <th class="min-w-[180px] whitespace-nowrap">Primary Guest Details</th>
+              <th class="min-w-[130px] whitespace-nowrap">Mobile / Phone</th>
+              <th class="min-w-[120px] text-right whitespace-nowrap">Paid Amount</th>
+              <th class="min-w-[130px] text-right whitespace-nowrap">Remaining Amount</th>
+              <th class="min-w-[135px] whitespace-nowrap">Check-in</th>
+              <th class="min-w-[135px] whitespace-nowrap">Check-out</th>
+              <th class="min-w-[100px] text-center whitespace-nowrap">Status</th>
+              <th class="min-w-[130px] text-center whitespace-nowrap">Action</th>
             </tr>
           </thead>
           <tbody id="folio-table-tbody">
@@ -1190,14 +225,14 @@
               <tr class="folio-row" id="row-folio-{{ $item->id }}">
                 
                 <!-- 0. SL -->
-                <td style="text-align: center; font-family: var(--font-mono, monospace); font-weight: 800; color: #64748b; font-size: 11px;">
+                <td class="text-center font-mono font-extrabold text-slate-500 text-xs">
                   {{ $sl }}
                 </td>
 
                 <!-- 1. Room(s) & Floor (First) -->
-                <td style="white-space: nowrap;">
+                <td class="whitespace-nowrap">
                   @if($uniqueRooms->isNotEmpty())
-                    <div style="display: flex; flex-direction: column; gap: 4px;">
+                    <div class="flex flex-col gap-1">
                       @foreach($uniqueRooms as $uRoom)
                         @php
                           $cleanRNum = preg_replace('/^r[-_\s]?/i', '', trim($uRoom->room_number));
@@ -1205,77 +240,75 @@
                           $flrDisp = $uRoom->floorRelation?->floor ?? ($uRoom->floor ?? '1');
                           $catDisp = $uRoom->categoryRelation?->name ?? ($uRoom->category ?? 'Standard');
                         @endphp
-                        <div style="display: inline-flex; align-items: center; gap: 6px; flex-direction: row; ">
+                        <div class="inline-flex items-center gap-1.5 flex-row">
                           <span class="room-tag">
-                            <i class="fa-solid fa-door-open" style="font-size: 10px;"></i>
+                            <i class="fa-solid fa-door-open text-[10px]"></i>
                             {{ $rDisp }}
-                          </span><br>
-                          <span style="font-size: 10px; color: #64748b; font-weight: 700;">
+                          </span>
+                          <span class="text-[10px] text-slate-500 font-bold">
                             Floor {{ $flrDisp }}
                           </span>
-                          <!-- <span style="color: #242425ff;">•</span> -->
-                          <!-- <span style="font-size: 10px; color: #94a3b8;">{{ $catDisp }}</span> -->
                         </div>
                       @endforeach
                     </div>
                   @else
-                    <span style="font-size: 11px; color: #94a3b8; font-style: italic;">
-                      <i class="fa-solid fa-hourglass-half" style="font-size: 10px;"></i> Unassigned
+                    <span class="text-xs text-slate-400 italic">
+                      <i class="fa-solid fa-hourglass-half text-[10px]"></i> Unassigned
                     </span>
                   @endif
                 </td>
 
                 <!-- 2. Booking Number (Then Booking Number) -->
-                <td style="white-space: nowrap;">
-                  <div class="folio-id-text" style="cursor: pointer;" onclick="openFolioModalById({{ $item->id }})" data-booking-id="{{ $item->id }}" title="Click to open Settlement Dossier">
-                    <i class="fa-solid fa-receipt" style="color: #6366f1; margin-right: 4px; font-size: 11px; pointer-events: none;"></i>
+                <td class="whitespace-nowrap">
+                  <div class="folio-id-text cursor-pointer" onclick="openFolioModalById({{ $item->id }})" data-booking-id="{{ $item->id }}" title="Click to open Settlement Dossier">
+                    <i class="fa-solid fa-receipt text-indigo-500 mr-1 text-[11px] pointer-events-none"></i>
                     {{ $item->reserve_id ?: ('RES-' . $item->id) }}
                   </div>
-                  <div class="folio-number-sub" style="cursor: pointer;" onclick="openFolioModalById({{ $item->id }})" data-booking-id="{{ $item->id }}" title="Click to open Settlement Dossier">
+                  <div class="folio-number-sub cursor-pointer" onclick="openFolioModalById({{ $item->id }})" data-booking-id="{{ $item->id }}" title="Click to open Settlement Dossier">
                     Settlement: {{ $item->folio_number ?: '-' }}
                   </div>
                 </td>
 
                 <!-- 3. Primary Guest Details with Dynamic +N persons -->
-                <td style="white-space: nowrap;">
-                  <div style="font-weight: 800; color: #0f172a; font-size: 13px; display: inline-flex; align-items: center;">
+                <td class="whitespace-nowrap">
+                  <div class="font-extrabold text-slate-900 text-xs inline-flex items-center">
                     <span>{{ $primaryGuestName }}</span>
                     @if($extraCount > 0)
                       <span class="badge-extra-guests" title="{{ $extraCount }} additional person(s) registered under this booking">
-                        <i class="fa-solid fa-user-plus" style="font-size: 9px;"></i>
+                        <i class="fa-solid fa-user-plus text-[9px]"></i>
                         +{{ $extraCount }} {{ $extraCount === 1 ? 'person' : 'persons' }}
                       </span>
                     @endif
                   </div>
-                  <div style="font-size: 10px; color: #64748b; margin-top: 2px; display: flex; align-items: center; gap: 6px;">
+                  <div class="text-[10px] text-slate-500 mt-0.5 flex items-center gap-1.5">
                     @if($item->registrationType?->name)
-                      <span style="background: #f1f5f9; padding: 1px 6px; border-radius: 4px; font-weight: 700; color: #475569;">
+                      <span class="bg-slate-100 px-1.5 py-0.5 rounded font-bold text-slate-600">
                         {{ $item->registrationType->name }}
                       </span>
                     @endif
                     @if($item->guest?->city)
-                      <span style="color: #cbd5e1;">•</span>
-                      <span style="color: #94a3b8;"><i class="fa-solid fa-location-dot" style="font-size: 9px;"></i> {{ $item->guest->city }}</span>
+                      <span class="text-slate-300">•</span>
+                      <span class="text-slate-400"><i class="fa-solid fa-location-dot text-[9px]"></i> {{ $item->guest->city }}</span>
                     @endif
                   </div>
                 </td>
 
                 <!-- 4. Primary Mobile / Phone -->
-                <td style="white-space: nowrap;">
-                  <div style="font-family: var(--font-mono, monospace); font-weight: 700; font-size: 12px; color: #1e293b; display: inline-flex; align-items: center; gap: 6px;">
-                    <i class="fa-solid fa-phone" style="font-size: 10px; color: #10b981;"></i>
+                <td class="whitespace-nowrap">
+                  <div class="font-mono font-bold text-xs text-slate-800 inline-flex items-center gap-1.5">
+                    <i class="fa-solid fa-phone text-[10px] text-emerald-500"></i>
                     <span>{{ $item->guest?->mobile ?: 'N/A' }}</span>
                   </div>
                 </td>
 
                 <!-- 5. Paid Amount -->
-                <td style="text-align: right; white-space: nowrap;">
-                  <div style="font-family: var(--font-mono, monospace); font-weight: 800; font-size: 13px; color: #059669;">
+                <td class="text-right whitespace-nowrap">
+                  <div class="font-mono font-extrabold text-xs text-emerald-600">
                     ₹ {{ number_format($totalPaid, 2) }}
                   </div>
-                  <div style="font-size: 10px; color: #64748b; margin-top: 2px;">
+                  <div class="text-[10px] text-slate-500 mt-0.5">
                     @if($settleAmount > 0)
-                      <span style="color: #4f46e5; font-weight: 700;">(Incl. ₹{{ number_format($settleAmount, 0) }} Settle)</span>
+                      <span class="text-indigo-600 font-bold">(Incl. ₹{{ number_format($settleAmount, 0) }} Settle)</span>
                     @else
                       <span>Advance Deposit</span>
                     @endif
@@ -1283,87 +316,87 @@
                 </td>
 
                 <!-- 6. Remaining Amount -->
-                <td style="text-align: right; white-space: nowrap;">
-                  <div style="font-family: var(--font-mono, monospace); font-weight: 800; font-size: 13px; color: {{ $balanceVal > 0 ? '#e11d48' : '#059669' }};">
+                <td class="text-right whitespace-nowrap">
+                  <div class="font-mono font-extrabold text-xs {{ $balanceVal > 0 ? 'text-rose-600' : 'text-emerald-600' }}">
                     ₹ {{ number_format($balanceVal, 2) }}
                   </div>
-                  <div style="margin-top: 2px;">
+                  <div class="mt-0.5">
                     @if($balanceVal > 0)
-                      <span style="color: #e11d48; background: #ffe4e6; padding: 1px 7px; border-radius: 4px; font-size: 9px; font-weight: 800;">
-                        <i class="fa-solid fa-triangle-exclamation" style="font-size: 8px;"></i> Due
+                      <span class="text-rose-700 bg-rose-100 px-1.5 py-0.5 rounded text-[9px] font-extrabold">
+                        <i class="fa-solid fa-triangle-exclamation text-[8px]"></i> Due
                       </span>
                       @if($extraServicesTotal > 0)
-                        <div style="font-size: 9.5px; color: #d97706; font-weight: 700; margin-top: 3px;" title="{{ $allResServiceOrders->map(fn($o) => ($o->created_at ? $o->created_at->format('d M, h:i A') : 'N/A') . ' - ₹' . number_format($o->total_amount, 2) . ' (' . ($o->items ? $o->items->map(fn($it)=>$it->quantity.'x '.$it->item_name)->implode(', ') : 'Order') . ')')->implode(' | ') }}">
-                          <i class="fa-solid fa-bell-concierge" style="font-size: 8.5px;"></i> +₹{{ number_format($extraServicesTotal, 2) }} ({{ $allResServiceOrders->count() }} {{ $allResServiceOrders->count() === 1 ? 'order' : 'orders' }})
+                        <div class="text-[9.5px] text-amber-700 font-bold mt-0.5" title="{{ $allResServiceOrders->map(fn($o) => ($o->created_at ? $o->created_at->format('d M, h:i A') : 'N/A') . ' - ₹' . number_format($o->total_amount, 2) . ' (' . ($o->items ? $o->items->map(fn($it)=>$it->quantity.'x '.$it->item_name)->implode(', ') : 'Order') . ')')->implode(' | ') }}">
+                          <i class="fa-solid fa-bell-concierge text-[8.5px]"></i> +₹{{ number_format($extraServicesTotal, 2) }} ({{ $allResServiceOrders->count() }} {{ $allResServiceOrders->count() === 1 ? 'order' : 'orders' }})
                         </div>
                         @if($allResServiceOrders->count() > 1)
-                          <div style="display: flex; flex-direction: column; gap: 2px; margin-top: 3px; align-items: flex-end;">
+                          <div class="flex flex-col gap-0.5 mt-0.5 items-end">
                             @foreach($allResServiceOrders as $ord)
-                              <span style="font-size: 8.5px; font-weight: 700; color: #9a3412; background: #fff7ed; border: 1px solid #ffedd5; padding: 1px 5px; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px;" title="{{ $ord->created_at ? $ord->created_at->format('d M Y, h:i A') : '-' }}">
-                                <i class="fa-regular fa-clock" style="font-size: 7.5px; opacity: 0.7;"></i> {{ $ord->created_at ? $ord->created_at->format('d M') : '-' }}: ₹{{ number_format($ord->total_amount, 2) }}
+                              <span class="text-[8.5px] font-bold text-amber-800 bg-orange-50 border border-orange-200 px-1 py-0.2 rounded inline-flex items-center gap-1" title="{{ $ord->created_at ? $ord->created_at->format('d M Y, h:i A') : '-' }}">
+                                <i class="fa-regular fa-clock text-[7.5px] opacity-70"></i> {{ $ord->created_at ? $ord->created_at->format('d M') : '-' }}: ₹{{ number_format($ord->total_amount, 2) }}
                               </span>
                             @endforeach
                           </div>
                         @endif
                       @endif
                     @else
-                      <span style="color: #059669; background: #ecfdf5; padding: 1px 7px; border-radius: 4px; font-size: 9px; font-weight: 800;">
-                        <i class="fa-solid fa-check" style="font-size: 8px;"></i> Cleared
+                      <span class="text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded text-[9px] font-extrabold">
+                        <i class="fa-solid fa-check text-[8px]"></i> Cleared
                       </span>
                     @endif
                   </div>
                 </td>
 
                 <!-- 7. Check-in Date & Time -->
-                <td style="white-space: nowrap;">
-                  <div style="font-weight: 700; color: #1e293b; font-size: 12px; display: inline-flex; align-items: center; gap: 5px;">
-                    <i class="fa-regular fa-calendar-check" style="color: #6366f1; font-size: 11px;"></i>
+                <td class="whitespace-nowrap">
+                  <div class="font-bold text-slate-800 text-xs inline-flex items-center gap-1.5">
+                    <i class="fa-regular fa-calendar-check text-indigo-500 text-[11px]"></i>
                     <span>{{ $cInDate ? \Carbon\Carbon::parse($cInDate)->format('d M Y') : 'N/A' }}</span>
                   </div>
                   @if($cInTime)
-                    <div style="font-size: 10px; color: #64748b; font-family: var(--font-mono, monospace); margin-top: 2px;">
-                      <i class="fa-regular fa-clock" style="font-size: 9px; color: #94a3b8;"></i> {{ date('h:i A', strtotime($cInTime)) }}
+                    <div class="text-[10px] text-slate-500 font-mono mt-0.5">
+                      <i class="fa-regular fa-clock text-[9px] text-slate-400"></i> {{ date('h:i A', strtotime($cInTime)) }}
                     </div>
                   @endif
                 </td>
 
                 <!-- 8. Check-out Date & Time -->
-                <td style="white-space: nowrap;">
-                  <div style="font-weight: 700; color: #1e293b; font-size: 12px; display: inline-flex; align-items: center; gap: 5px;">
-                    <i class="fa-regular fa-calendar-xmark" style="color: #e11d48; font-size: 11px;"></i>
+                <td class="whitespace-nowrap">
+                  <div class="font-bold text-slate-800 text-xs inline-flex items-center gap-1.5">
+                    <i class="fa-regular fa-calendar-xmark text-rose-500 text-[11px]"></i>
                     <span>{{ $cOutDate ? \Carbon\Carbon::parse($cOutDate)->format('d M Y') : 'N/A' }}</span>
                   </div>
                   @if($cOutTime)
-                    <div style="font-size: 10px; color: #64748b; font-family: var(--font-mono, monospace); margin-top: 2px;">
-                      <i class="fa-regular fa-clock" style="font-size: 9px; color: #94a3b8;"></i> {{ date('h:i A', strtotime($cOutTime)) }}
+                    <div class="text-[10px] text-slate-500 font-mono mt-0.5">
+                      <i class="fa-regular fa-clock text-[9px] text-slate-400"></i> {{ date('h:i A', strtotime($cOutTime)) }}
                     </div>
                   @endif
                 </td>
 
                 <!-- 9. Status: Only Settled (payments all clear) & Unsettled (not settled) -->
-                <td style="text-align: center; white-space: nowrap;">
+                <td class="text-center whitespace-nowrap">
                   @if($isSettled)
                     <span class="status-badge settled" title="Settled: All payments cleared (Balance ₹0.00)">
-                      <i class="fa-solid fa-circle-check" style="font-size: 8px;"></i>
+                      <i class="fa-solid fa-circle-check text-[8px]"></i>
                       <span>Settled</span>
                     </span>
                   @else
                     <span class="status-badge unsettled" title="Unsettled: Pending balance ₹{{ number_format($balanceVal, 2) }}">
-                      <i class="fa-solid fa-clock" style="font-size: 8px;"></i>
+                      <i class="fa-solid fa-clock text-[8px]"></i>
                       <span>Unsettled</span>
                     </span>
                   @endif
                 </td>
 
                 <!-- 10. Action: View Details Modal, Swipe & Extend Stay -->
-                <td style="text-align: center; white-space: nowrap;">
-                  <div style="display: inline-flex; align-items: center; gap: 6px;">
+                <td class="text-center whitespace-nowrap">
+                  <div class="inline-flex items-center gap-1.5">
                     <button type="button" 
                             class="btn-action-view" 
                             data-booking-id="{{ $item->id }}"
                             onclick="openFolioModalById({{ $item->id }})" 
                             title="View Full Settlement Dossier (Rooms, Occupants, Billings, Settle &amp; Checkout)">
-                      <i class="fa-solid fa-eye" style="pointer-events: none;"></i>
+                      <i class="fa-solid fa-eye pointer-events-none"></i>
                     </button>
                     @if(!in_array($item->status, ['Checked Out', 'Cancelled', 'Settlement Done', 'Settled']) && !$isSettled)
                       <button type="button" 
@@ -1371,7 +404,7 @@
                               data-booking-id="{{ $item->id }}"
                               onclick="openFolioModalForSwipe({{ $item->id }})" 
                               title="Swipe / Shift Guest Room">
-                        <i class="fa-solid fa-arrow-right-arrow-left" style="pointer-events: none;"></i>
+                        <i class="fa-solid fa-arrow-right-arrow-left pointer-events-none"></i>
                         <span>Swipe</span>
                       </button>
                     @endif
@@ -1380,7 +413,7 @@
                               class="btn-action-extend" 
                               onclick="openExtendStayModal({{ $item->id }})" 
                               title="Extend Stay Duration (Live Room Availability Check)">
-                        <i class="fa-solid fa-calendar-plus" style="pointer-events: none;"></i>
+                        <i class="fa-solid fa-calendar-plus pointer-events-none"></i>
                       </button>
                     @endif
                   </div>
@@ -1389,13 +422,13 @@
               </tr>
             @empty
               <tr>
-                <td colspan="11" style="text-align: center; color: var(--text-muted); padding: 40px 20px;">
-                  <div style="font-size: 32px; color: #cbd5e1; margin-bottom: 8px;"><i class="fa-solid fa-receipt"></i></div>
-                  <div style="font-size: 14px; font-weight: 700; color: #64748b;">No matching settlements found for this filter.</div>
-                  <div style="font-size: 11px; color: #94a3b8; margin-top: 4px;">
+                <td colspan="11" class="text-center text-slate-400 py-10 px-5">
+                  <div class="text-3xl text-slate-300 mb-2"><i class="fa-solid fa-receipt"></i></div>
+                  <div class="text-sm font-bold text-slate-600">No matching settlements found for this filter.</div>
+                  <div class="text-xs text-slate-400 mt-1">
                     Showing check-ins for {{ $fromDate ? \Carbon\Carbon::parse($fromDate)->format('d M Y') : 'selected dates' }}. 
                     @if(!empty($fromDate) || !empty($toDate))
-                      <a href="{{ route('frontoffice.folio', ['all_dates' => 1]) }}" style="color: #6366f1; font-weight: 800; text-decoration: underline;">Click here to view All Dates</a>.
+                      <a href="{{ route('frontoffice.folio', ['all_dates' => 1]) }}" class="text-indigo-600 font-extrabold underline hover:text-indigo-800">Click here to view All Dates</a>.
                     @endif
                   </div>
                 </td>
@@ -1405,15 +438,15 @@
         </table>
 
         <!-- Backend Table Pagination Footer -->
-        <div class="pms-table-pagination" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 18px; border-top: 1px solid #e2e8f0; background: #ffffff; flex-wrap: wrap; gap: 10px;">
-          <div class="pms-pagination-info" style="font-size: 12px; font-weight: 600; color: #64748b;">
+        <div class="pms-table-pagination flex justify-between items-center px-4.5 py-3 border-t border-slate-200 bg-white flex-wrap gap-2.5">
+          <div class="pms-pagination-info text-xs font-semibold text-slate-500">
             Showing {{ $folios->firstItem() ?? 0 }} to {{ $folios->lastItem() ?? 0 }} of {{ $folios->total() }} records
           </div>
           <div class="pms-page-nav">
             @if ($folios->hasPages())
               {{-- Previous Page Link --}}
               @if ($folios->onFirstPage())
-                <span class="pms-page-btn" style="opacity: 0.4; cursor: not-allowed;" title="First Page"><i class="fa-solid fa-chevron-left"></i></span>
+                <span class="pms-page-btn opacity-40 cursor-not-allowed" title="First Page"><i class="fa-solid fa-chevron-left"></i></span>
               @else
                 <a href="{{ $folios->previousPageUrl() }}" class="pms-page-btn" title="Previous Page"><i class="fa-solid fa-chevron-left"></i></a>
               @endif
@@ -1431,7 +464,7 @@
               @if ($folios->hasMorePages())
                 <a href="{{ $folios->nextPageUrl() }}" class="pms-page-btn" title="Next Page"><i class="fa-solid fa-chevron-right"></i></a>
               @else
-                <span class="pms-page-btn" style="opacity: 0.4; cursor: not-allowed;" title="Last Page"><i class="fa-solid fa-chevron-right"></i></span>
+                <span class="pms-page-btn opacity-40 cursor-not-allowed" title="Last Page"><i class="fa-solid fa-chevron-right"></i></span>
               @endif
             @endif
           </div>
@@ -1443,19 +476,19 @@
 </main>
 
 <!-- Bottom Summary Bar (like guest CRM) -->
-<footer class="pms-bottom-bar">
-  <div style="font-size: 11px; font-weight: 700; color: var(--text-secondary); display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
-    <span><i class="fa-solid fa-receipt" style="color: #6366f1;"></i> Total Settlements: <strong>{{ $stats['total_folios'] ?? 0 }}</strong></span>
-    <span>•</span>
-    <span><i class="fa-solid fa-file-invoice" style="color: #0891b2;"></i> Total Receivable: <strong>₹ {{ number_format($stats['total_receivable'] ?? 0, 2) }}</strong></span>
-    <span>•</span>
-    <span><i class="fa-solid fa-circle-check" style="color: #059669;"></i> Total Paid: <strong>₹ {{ number_format($stats['total_paid'] ?? 0, 2) }}</strong></span>
-    <span>•</span>
-    <span><i class="fa-solid fa-triangle-exclamation" style="color: {{ ($stats['total_outstanding'] ?? 0) > 0 ? '#e11d48' : '#059669' }};"></i> Remaining Due: <strong>₹ {{ number_format($stats['total_outstanding'] ?? 0, 2) }}</strong></span>
-    <span>•</span>
-    <span><i class="fa-solid fa-circle-check" style="color: #059669;"></i> Settled: <strong>{{ $stats['settled_count'] ?? 0 }}</strong></span>
-    <span>•</span>
-    <span><i class="fa-solid fa-clock" style="color: #e11d48;"></i> Unsettled: <strong>{{ $stats['pending_settle_count'] ?? 0 }}</strong></span>
+<footer class="bg-white border-t border-slate-200 px-4 sm:px-6 py-2.5 flex flex-wrap items-center justify-between gap-3 shadow-2xs z-30 shrink-0 pms-bottom-bar">
+  <div class="text-xs font-bold text-slate-600 flex items-center gap-3.5 flex-wrap">
+    <span><i class="fa-solid fa-receipt text-indigo-500"></i> Total Settlements: <strong>{{ $stats['total_folios'] ?? 0 }}</strong></span>
+    <span class="text-slate-300">•</span>
+    <span><i class="fa-solid fa-file-invoice text-cyan-600"></i> Total Receivable: <strong>₹ {{ number_format($stats['total_receivable'] ?? 0, 2) }}</strong></span>
+    <span class="text-slate-300">•</span>
+    <span><i class="fa-solid fa-circle-check text-emerald-600"></i> Total Paid: <strong>₹ {{ number_format($stats['total_paid'] ?? 0, 2) }}</strong></span>
+    <span class="text-slate-300">•</span>
+    <span><i class="fa-solid fa-triangle-exclamation {{ ($stats['total_outstanding'] ?? 0) > 0 ? 'text-rose-600' : 'text-emerald-600' }}"></i> Remaining Due: <strong>₹ {{ number_format($stats['total_outstanding'] ?? 0, 2) }}</strong></span>
+    <span class="text-slate-300">•</span>
+    <span><i class="fa-solid fa-circle-check text-emerald-600"></i> Settled: <strong>{{ $stats['settled_count'] ?? 0 }}</strong></span>
+    <span class="text-slate-300">•</span>
+    <span><i class="fa-solid fa-clock text-rose-600"></i> Unsettled: <strong>{{ $stats['pending_settle_count'] ?? 0 }}</strong></span>
   </div>
 </footer>
 
@@ -1463,56 +496,56 @@
 <!-- EXTENSIVE SETTLEMENT DOSSIER MODAL (Design matching guest CRM)             -->
 <!-- ========================================================================= -->
 <div class="modal-backdrop" id="folio-details-modal">
-  <div class="modal-window large" style="width: 900px; max-width: 95vw; max-height: 92vh; display: flex; flex-direction: column; border-radius: 16px; overflow: hidden; box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.3); border: none; box-sizing: border-box;">
+  <div class="modal-window max-w-4xl w-full max-h-[92vh] flex flex-col rounded-2xl overflow-hidden shadow-2xl border border-slate-200">
     
     <!-- Modal Header (Gradient style matching guest CRM) -->
-    <div class="modal-top">
-      <div style="display: flex; align-items: center; gap: 12px;">
-        <div style="width: 38px; height: 38px; border-radius: 10px; background: rgba(255,255,255,0.18); display: flex; align-items: center; justify-content: center; font-size: 16px; color: #ffffff;">
+    <div class="modal-top bg-gradient-to-r from-indigo-600 to-indigo-800 text-white px-5 py-3.5 flex justify-between items-center border-b border-indigo-500/30">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center text-base text-white flex-shrink-0">
           <i class="fa-solid fa-receipt"></i>
         </div>
         <div>
-          <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-            <h3 id="fmdl-guest-name" style="margin: 0; font-size: 16px; font-weight: 800; color: #ffffff;">Guest Profile &amp; Settlement Dossier</h3>
-            <span id="fmdl-status-badge" class="status-badge" style="background: #ffffff; color: #4338ca; font-weight: 800;">Confirmed</span>
+          <div class="flex items-center gap-2 flex-wrap">
+            <h3 id="fmdl-guest-name" class="m-0 text-base font-extrabold text-white">Guest Profile &amp; Settlement Dossier</h3>
+            <span id="fmdl-status-badge" class="status-badge bg-white text-indigo-700 font-extrabold shadow-xs">Confirmed</span>
           </div>
-          <div style="font-size: 11px; opacity: 0.85; margin-top: 2px; font-family: var(--font-mono, monospace);">
-            Booking Ref: <span id="fmdl-reserve-id" style="font-weight: 700;">-</span> &nbsp;|&nbsp; Settlement: <span id="fmdl-folio-number" style="font-weight: 700;">-</span>
+          <div class="text-[11px] text-indigo-100 font-mono mt-0.5">
+            Booking Ref: <span id="fmdl-reserve-id" class="font-bold">-</span> &nbsp;|&nbsp; Settlement: <span id="fmdl-folio-number" class="font-bold">-</span>
           </div>
         </div>
       </div>
-      <button type="button" class="modal-close" onclick="closeFolioModal()" style="background: rgba(255,255,255,0.2); border: none; color: #ffffff; width: 32px; height: 32px; border-radius: 50%; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s;">&times;</button>
+      <button type="button" class="modal-close bg-white/20 hover:bg-white/30 text-white w-8 h-8 rounded-full text-lg cursor-pointer flex items-center justify-center transition border-none" onclick="closeFolioModal()">&times;</button>
     </div>
 
     <!-- Modal Content Area -->
-    <div class="modal-content-area" id="folio-modal-body">
+    <div class="modal-content-area p-5 bg-slate-50 overflow-y-auto max-h-[calc(92vh-130px)]" id="folio-modal-body">
       
       <!-- Top Highlight Banner (like guest CRM) -->
-      <div class="dossier-highlight-box">
-        <div style="display: flex; align-items: center; gap: 12px;">
-          <div style="width: 44px; height: 44px; border-radius: 10px; background: #e0e7ff; color: #4338ca; display: flex; align-items: center; justify-content: center; font-size: 20px;">
+      <div class="dossier-highlight-box bg-gradient-to-r from-slate-50 to-slate-100 border border-slate-200 rounded-xl p-3.5 mb-4 flex justify-between items-center flex-wrap gap-3">
+        <div class="flex items-center gap-3">
+          <div class="w-11 h-11 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center text-xl flex-shrink-0">
             <i class="fa-solid fa-door-open"></i>
           </div>
           <div>
-            <div style="font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Allotted Room(s) &amp; Status</div>
-            <div style="font-size: 16px; font-weight: 900; color: #0f172a; margin-top: 1px;" id="fmdl-highlight-rooms">
+            <div class="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">Allotted Room(s) &amp; Status</div>
+            <div class="text-base font-black text-slate-900 mt-0.5" id="fmdl-highlight-rooms">
               -
             </div>
           </div>
         </div>
 
-        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-          <span style="font-size: 11px; font-weight: 800; background: #ffffff; border: 1px solid #cbd5e1; padding: 4px 10px; border-radius: 6px; color: #475569;">
-            <i class="fa-solid fa-users" style="color: #6366f1;"></i> <span id="fmdl-total-guests-count">1 Person</span>
+        <div class="flex gap-2 items-center flex-wrap">
+          <span class="text-xs font-extrabold bg-white border border-slate-300 px-2.5 py-1 rounded-md text-slate-700 inline-flex items-center gap-1.5 shadow-2xs">
+            <i class="fa-solid fa-users text-indigo-600"></i> <span id="fmdl-total-guests-count">1 Person</span>
           </span>
-          <span style="font-size: 11px; font-weight: 800; background: #fff7ed; border: 1px solid #fed7aa; padding: 4px 10px; border-radius: 6px; color: #c2410c;">
-            <i class="fa-solid fa-utensils" style="color: #ea580c;"></i> <span id="fmdl-plan-name">EP</span>
+          <span class="text-xs font-extrabold bg-orange-50 border border-orange-200 px-2.5 py-1 rounded-md text-orange-800 inline-flex items-center gap-1.5 shadow-2xs">
+            <i class="fa-solid fa-utensils text-orange-600"></i> <span id="fmdl-plan-name">EP</span>
           </span>
-          <span style="font-size: 11px; font-weight: 800; background: #e0e7ff; border: 1px solid #c7d2fe; padding: 4px 10px; border-radius: 6px; color: #4338ca;">
-            <i class="fa-solid fa-moon"></i> <span id="fmdl-nights-sched">1 Night(s) Stay</span>
+          <span class="text-xs font-extrabold bg-indigo-50 border border-indigo-200 px-2.5 py-1 rounded-md text-indigo-800 inline-flex items-center gap-1.5 shadow-2xs">
+            <i class="fa-solid fa-moon text-indigo-600"></i> <span id="fmdl-nights-sched">1 Night(s) Stay</span>
           </span>
-          <span style="font-size: 11px; font-weight: 800; background: #f0fdf4; border: 1px solid #bbf7d0; padding: 4px 10px; border-radius: 6px; color: #15803d;">
-            <i class="fa-solid fa-headset" style="color: #16a34a;"></i> <span id="fmdl-reservation-mode">Front Desk</span>
+          <span class="text-xs font-extrabold bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-md text-emerald-800 inline-flex items-center gap-1.5 shadow-2xs">
+            <i class="fa-solid fa-headset text-emerald-600"></i> <span id="fmdl-reservation-mode">Front Desk</span>
           </span>
         </div>
       </div>
@@ -1533,7 +566,7 @@
 
           <div class="dossier-field-row">
             <span class="dossier-label">Registration Type</span>
-            <span class="dossier-val" id="fmdl-card-regtype" style="color: #4338ca; font-weight: 800;">-</span>
+            <span class="dossier-val text-indigo-700 font-extrabold" id="fmdl-card-regtype">-</span>
           </div>
 
           <div class="dossier-field-row">
@@ -1553,7 +586,7 @@
 
           <div class="dossier-field-row">
             <span class="dossier-label">Full Address</span>
-            <span class="dossier-val" id="fmdl-guest-address" style="max-width: 220px; white-space: normal;">-</span>
+            <span class="dossier-val max-w-[220px] whitespace-normal" id="fmdl-guest-address">-</span>
           </div>
 
           <div class="dossier-field-row">
@@ -1566,22 +599,22 @@
             <span class="dossier-val" id="fmdl-guest-idproof">-</span>
           </div>
 
-          <div class="dossier-field-row" id="fmdl-card-privilege-row" style="display: none;">
+          <div class="dossier-field-row hidden" id="fmdl-card-privilege-row">
             <span class="dossier-label">Privilege / VIP Card</span>
-            <span class="dossier-val mono" id="fmdl-card-privilege" style="color: #b45309;">-</span>
+            <span class="dossier-val mono text-amber-700 font-bold" id="fmdl-card-privilege">-</span>
           </div>
         </div>
 
         <!-- CARD 2: Stay Schedule & Corporate Account -->
         <div class="dossier-card">
-          <div class="dossier-card-title" style="display: flex; justify-content: space-between; align-items: center;">
-            <div style="display: flex; align-items: center; gap: 8px;">
+          <div class="dossier-card-title flex justify-between items-center">
+            <div class="flex items-center gap-2">
               <i class="fa-solid fa-calendar-days"></i> Stay &amp; Corporate Details
             </div>
             <button type="button" 
                     id="fmdl-btn-extend-stay" 
                     onclick="if(activeFolioData) openExtendStayModal(activeFolioData.id)" 
-                    style="border: 1px solid #c7d2fe; background: #e0e7ff; color: #4338ca; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;" 
+                    class="border border-indigo-200 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-[10px] font-extrabold px-2 py-0.5 rounded-md cursor-pointer inline-flex items-center gap-1 transition shadow-2xs" 
                     title="Extend Stay Duration (Live Room Availability Check)">
               <i class="fa-solid fa-calendar-plus"></i> Extend Stay
             </button>
@@ -1589,12 +622,12 @@
 
           <div class="dossier-field-row">
             <span class="dossier-label">Check-In (Arrival)</span>
-            <span class="dossier-val mono" id="fmdl-checkin-sched" style="color: #4f46e5;">-</span>
+            <span class="dossier-val mono text-indigo-600" id="fmdl-checkin-sched">-</span>
           </div>
 
           <div class="dossier-field-row">
             <span class="dossier-label">Check-Out (Departure)</span>
-            <span class="dossier-val mono" id="fmdl-checkout-sched" style="color: #059669;">-</span>
+            <span class="dossier-val mono text-emerald-600" id="fmdl-checkout-sched">-</span>
           </div>
 
           <div class="dossier-field-row">
@@ -1609,23 +642,23 @@
 
           <div class="dossier-field-row">
             <span class="dossier-label">Meal Plan</span>
-            <span class="dossier-val" id="fmdl-mealplan-val" style="color: #c2410c; font-weight: 800;">-</span>
+            <span class="dossier-val text-orange-700 font-extrabold" id="fmdl-mealplan-val">-</span>
           </div>
 
           <!-- Corporate Account Block -->
-          <div id="fmdl-company-row" style="margin-top: 10px; padding: 10px; border-radius: 8px; background: rgba(99, 102, 241, 0.05); border: 1px solid rgba(99, 102, 241, 0.15); display: none;">
-            <div style="font-size: 10px; font-weight: 800; color: #4338ca; text-transform: uppercase; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+          <div id="fmdl-company-row" class="mt-2.5 p-2.5 rounded-lg bg-indigo-50/50 border border-indigo-200 hidden">
+            <div class="text-[10px] font-extrabold text-indigo-700 uppercase mb-1.5 flex items-center gap-1.5">
               <i class="fa-solid fa-building"></i> Corporate Account
             </div>
-            <div class="dossier-field-row" style="padding: 3px 0;">
+            <div class="dossier-field-row py-1">
               <span class="dossier-label">Company Name</span>
-              <span class="dossier-val" id="fmdl-company-name" style="color: #4338ca;">-</span>
+              <span class="dossier-val text-indigo-700 font-bold" id="fmdl-company-name">-</span>
             </div>
-            <div class="dossier-field-row" style="padding: 3px 0;">
+            <div class="dossier-field-row py-1">
               <span class="dossier-label">Company GSTIN</span>
               <span class="dossier-val mono" id="fmdl-company-gstin">-</span>
             </div>
-            <div class="dossier-field-row" style="padding: 3px 0;">
+            <div class="dossier-field-row py-1">
               <span class="dossier-label">Phone</span>
               <span class="dossier-val mono" id="fmdl-company-phone">-</span>
             </div>
@@ -1635,7 +668,7 @@
       </div>
 
       <!-- CARD 3: Allocated Rooms & Registered Occupants Details -->
-      <div class="dossier-card" id="fmdl-card-rooms-occupants" style="margin-bottom: 16px;">
+      <div class="dossier-card mb-4" id="fmdl-card-rooms-occupants">
         <div class="dossier-card-title">
           <i class="fa-solid fa-bed"></i> Allocated Rooms &amp; Registered Occupants
         </div>
@@ -1645,7 +678,7 @@
       </div>
 
       <!-- CARD 4: Pricing & Billing Breakdown (like guest CRM) -->
-      <div class="dossier-card" style="margin-bottom: 0;">
+      <div class="dossier-card mb-0">
         <div class="dossier-card-title">
           <i class="fa-solid fa-file-invoice-dollar"></i> Pricing &amp; Billing Breakdown
         </div>
@@ -1654,60 +687,60 @@
         <div class="billing-summary-grid">
           <div class="bill-stat-item">
             <div class="bill-stat-label">Daily Room Rate</div>
-            <div class="bill-stat-value" id="fmdl-bill-rate" style="color: #334155;">₹ 0.00</div>
+            <div class="bill-stat-value text-slate-700" id="fmdl-bill-rate">₹ 0.00</div>
           </div>
 
           <div class="bill-stat-item">
             <div class="bill-stat-label">Gross Amount</div>
-            <div class="bill-stat-value" id="fmdl-gross-amount" style="color: #1e293b;">₹ 0.00</div>
+            <div class="bill-stat-value text-slate-800" id="fmdl-gross-amount">₹ 0.00</div>
           </div>
 
           <div class="bill-stat-item">
             <div class="bill-stat-label">Total Amount Paid</div>
-            <div class="bill-stat-value" id="fmdl-totalpaid-amount" style="color: #059669;">₹ 0.00</div>
+            <div class="bill-stat-value text-emerald-600" id="fmdl-totalpaid-amount">₹ 0.00</div>
           </div>
 
           <div class="bill-stat-item" id="fmdl-balance-box">
             <div class="bill-stat-label" id="fmdl-balance-label">Balance Due</div>
-            <div class="bill-stat-value" id="fmdl-balance-amount" style="color: #e11d48;">₹ 0.00</div>
+            <div class="bill-stat-value text-rose-600" id="fmdl-balance-amount">₹ 0.00</div>
           </div>
         </div>
 
         <!-- Itemized Line Rows -->
-        <div style="margin-top: 14px; background: #ffffff; border: 1px solid #f1f5f9; border-radius: 8px; padding: 10px 14px;">
+        <div class="mt-3.5 bg-white border border-slate-100 rounded-lg p-2.5 px-3.5">
           <div class="dossier-field-row">
             <span class="dossier-label">Room Rate × Nights</span>
             <span class="dossier-val mono" id="fmdl-calc-row">-</span>
           </div>
           <div class="dossier-field-row">
             <span class="dossier-label">Advance Deposit Paid</span>
-            <span class="dossier-val mono" id="fmdl-advance-row" style="color: #059669;">₹ 0.00</span>
+            <span class="dossier-val mono text-emerald-600" id="fmdl-advance-row">₹ 0.00</span>
           </div>
           <div class="dossier-field-row" id="fmdl-settle-field-row">
             <span class="dossier-label">Settlement Amount Paid</span>
-            <span class="dossier-val mono" id="fmdl-settlement-row" style="color: #6366f1; font-weight: 800;">₹ 0.00</span>
+            <span class="dossier-val mono text-indigo-600 font-extrabold" id="fmdl-settlement-row">₹ 0.00</span>
           </div>
           <div class="dossier-field-row">
             <span class="dossier-label">Total Amount Paid</span>
-            <span class="dossier-val mono" id="fmdl-totalpaid-row" style="color: #059669; font-weight: 800;">₹ 0.00</span>
+            <span class="dossier-val mono text-emerald-600 font-extrabold" id="fmdl-totalpaid-row">₹ 0.00</span>
           </div>
-          <div class="dossier-field-row" id="fmdl-services-field-row" style="display: none;">
-            <span class="dossier-label" style="display: flex; align-items: center; gap: 5px; color: #d97706; font-weight: 700;">
+          <div class="dossier-field-row hidden" id="fmdl-services-field-row">
+            <span class="dossier-label flex items-center gap-1.5 text-amber-700 font-bold">
               <i class="fa-solid fa-utensils"></i> In-Room Dining &amp; Services Total
             </span>
-            <span class="dossier-val mono" id="fmdl-services-row" style="color: #d97706; font-weight: 800;">₹ 0.00</span>
+            <span class="dossier-val mono text-amber-700 font-extrabold" id="fmdl-services-row">₹ 0.00</span>
           </div>
           <div class="dossier-field-row">
             <span class="dossier-label">Discount</span>
-            <span class="dossier-val mono" id="fmdl-discount-row" style="color: #059669;">-</span>
+            <span class="dossier-val mono text-emerald-600 font-bold" id="fmdl-discount-row">-</span>
           </div>
           <div class="dossier-field-row">
             <span class="dossier-label">GST / Tax</span>
-            <span class="dossier-val mono" id="fmdl-tax-row" style="color: #6366f1;">-</span>
+            <span class="dossier-val mono text-indigo-600 font-bold" id="fmdl-tax-row">-</span>
           </div>
-          <div class="dossier-field-row" style="background: #f8fafc; padding: 6px 8px; border-radius: 6px; margin: 4px 0;">
-            <span class="dossier-label" style="font-weight: 800; color: #0f172a;">Grand Total Net Payable</span>
-            <span class="dossier-val mono" id="fmdl-payable-amount" style="font-size: 14px; font-weight: 900; color: #4338ca;">-</span>
+          <div class="dossier-field-row bg-slate-50 p-2 rounded-md my-1">
+            <span class="dossier-label font-extrabold text-slate-900">Grand Total Net Payable</span>
+            <span class="dossier-val mono text-sm font-black text-indigo-700" id="fmdl-payable-amount">-</span>
           </div>
           <div class="dossier-field-row">
             <span class="dossier-label">Payment Mode</span>
@@ -1715,76 +748,76 @@
           </div>
           <div class="dossier-field-row">
             <span class="dossier-label">Payment Remarks / Reference</span>
-            <span class="dossier-val" id="fmdl-remarks-row" style="color: #64748b;">-</span>
+            <span class="dossier-val text-slate-500" id="fmdl-remarks-row">-</span>
           </div>
         </div>
 
         <!-- Room Service & Extra Services Invoices Box -->
-        <div style="margin-top: 14px; display: none;" id="fmdl-room-services-box">
-          <div style="font-size: 11px; font-weight: 800; color: #d97706; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center;">
+        <div class="mt-3.5 hidden" id="fmdl-room-services-box">
+          <div class="text-xs font-extrabold text-amber-700 uppercase tracking-wider mb-1.5 flex justify-between items-center">
             <span><i class="fa-solid fa-bell-concierge"></i> In-Room Dining &amp; Service Bills (<span id="fmdl-services-count">0</span> Orders)</span>
-            <span style="font-size: 10px; color: #64748b; text-transform: none; font-weight: 600;">Charged to Guest Folio</span>
+            <span class="text-[10px] text-slate-500 normal-case font-semibold">Charged to Guest Folio</span>
           </div>
-          <div id="fmdl-room-services-list" style="font-size: 11px;">
+          <div id="fmdl-room-services-list" class="text-xs">
             <!-- Populated via JS -->
           </div>
         </div>
 
         <!-- Settlement Receipts History List -->
-        <div style="margin-top: 14px;" id="fmdl-settle-history-box">
-          <div style="font-size: 11px; font-weight: 800; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">
+        <div class="mt-3.5" id="fmdl-settle-history-box">
+          <div class="text-xs font-extrabold text-slate-600 uppercase tracking-wider mb-1.5">
             <i class="fa-solid fa-clock-rotate-left"></i> Settlement Receipts History
           </div>
-          <div id="fmdl-settle-history-list" style="font-size: 11px;">
+          <div id="fmdl-settle-history-list" class="text-xs">
             <!-- Populated via JS -->
           </div>
         </div>
 
         <!-- Room Swipes & Transfers History Box -->
-        <div style="margin-top: 14px; display: none;" id="fmdl-room-swipes-box">
-          <div style="font-size: 11px; font-weight: 800; color: #4338ca; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center;">
+        <div class="mt-3.5 hidden" id="fmdl-room-swipes-box">
+          <div class="text-xs font-extrabold text-indigo-700 uppercase tracking-wider mb-1.5 flex justify-between items-center">
             <span><i class="fa-solid fa-arrow-right-arrow-left"></i> Room Swipe / Transfer History (<span id="fmdl-swipes-count">0</span> Shifts)</span>
-            <span style="font-size: 10px; color: #64748b; text-transform: none; font-weight: 600;">Prorated Daily Tariffs</span>
+            <span class="text-[10px] text-slate-500 normal-case font-semibold">Prorated Daily Tariffs</span>
           </div>
-          <div id="fmdl-room-swipes-list" style="font-size: 11px;">
+          <div id="fmdl-room-swipes-list" class="text-xs">
             <!-- Populated via JS -->
           </div>
         </div>
 
         <!-- Interactive Inline Settlement Panel -->
-        <div id="fmdl-settlement-interactive-panel" class="settlement-panel" style="display: none;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
-            <div style="font-size: 12px; font-weight: 800; color: #065f46; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px;">
+        <div id="fmdl-settlement-interactive-panel" class="settlement-panel hidden">
+          <div class="flex justify-between items-center mb-2.5 flex-wrap gap-2">
+            <div class="text-xs font-extrabold text-emerald-800 uppercase tracking-wider flex items-center gap-1.5">
               <i class="fa-solid fa-calculator"></i> Process Settlement
             </div>
-            <button type="button" onclick="setFullFolioSettlementAmount()" style="background: none; border: none; color: #047857; font-weight: 800; cursor: pointer; text-decoration: underline; font-size: 11px; padding: 0;">
+            <button type="button" onclick="setFullFolioSettlementAmount()" class="bg-transparent border-none text-emerald-700 font-extrabold cursor-pointer underline text-xs p-0 hover:text-emerald-900">
               Pay Full Due (<span id="fmdl-btn-payfull-val">₹ 0.00</span>)
             </button>
           </div>
 
           <!-- Dynamic Settlement Price Breakdown (Room + Extra Services Date-wise) -->
-          <div id="fmdl-settle-breakdown-box" style="margin-bottom: 12px;"></div>
+          <div id="fmdl-settle-breakdown-box" class="mb-3"></div>
 
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-bottom: 10px;">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 mb-2.5">
             <div>
-              <label style="display: block; font-size: 11px; font-weight: 800; color: #1e293b; margin-bottom: 4px;">
-                Settlement Amount (₹) <span style="color: #e11d48;">*</span>
+              <label class="block text-[11px] font-extrabold text-slate-800 mb-1">
+                Settlement Amount (₹) <span class="text-rose-600">*</span>
               </label>
-              <div style="position: relative;">
-                <span style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-weight: 800; color: #64748b; font-size: 13px;">₹</span>
+              <div class="relative">
+                <span class="absolute left-2.5 top-1/2 -translate-y-1/2 font-extrabold text-slate-400 text-xs">₹</span>
                 <input type="number" 
                        step="0.01" 
                        min="0.01" 
                        id="fmdl-input-settle-amount" 
-                       style="width: 100%; box-sizing: border-box; padding: 8px 10px 8px 24px; border-radius: 8px; border: 1.5px solid #a7f3d0; font-size: 13px; font-weight: 800; font-family: var(--font-mono, monospace); color: #0f172a; outline: none; background: #ffffff;">
+                       class="w-full box-border py-2 pr-2.5 pl-6 rounded-lg border border-emerald-300 text-xs font-extrabold font-mono text-slate-900 outline-none bg-white focus:ring-2 focus:ring-emerald-500/20">
               </div>
             </div>
 
             <div>
-              <label style="display: block; font-size: 11px; font-weight: 800; color: #1e293b; margin-bottom: 4px;">
-                Payment Method <span style="color: #e11d48;">*</span>
+              <label class="block text-[11px] font-extrabold text-slate-800 mb-1">
+                Payment Method <span class="text-rose-600">*</span>
               </label>
-              <select id="fmdl-select-settle-mode" style="width: 100%; box-sizing: border-box; padding: 8px 10px; border-radius: 8px; border: 1.5px solid #a7f3d0; font-size: 12px; font-weight: 700; color: #1e293b; background: #ffffff; outline: none;">
+              <select id="fmdl-select-settle-mode" class="w-full box-border py-2 px-2.5 rounded-lg border border-emerald-300 text-xs font-bold text-slate-800 bg-white outline-none focus:ring-2 focus:ring-emerald-500/20">
                 @foreach($paymentModes ?? [] as $pm)
                   <option value="{{ $pm->id }}" {{ strtolower($pm->name) === 'cash' ? 'selected' : '' }}>{{ $pm->name }}</option>
                 @endforeach
@@ -1792,31 +825,31 @@
             </div>
 
             <div>
-              <label style="display: block; font-size: 11px; font-weight: 800; color: #1e293b; margin-bottom: 4px;">
+              <label class="block text-[11px] font-extrabold text-slate-800 mb-1">
                 Txn / Reference ID (Optional)
               </label>
               <input type="text" 
                      id="fmdl-input-settle-txn" 
                      placeholder="e.g. UPI-998234, CARD-1049" 
-                     style="width: 100%; box-sizing: border-box; padding: 8px 10px; border-radius: 8px; border: 1.5px solid #a7f3d0; font-size: 12px; font-family: var(--font-mono, monospace); outline: none; background: #ffffff;">
+                     class="w-full box-border py-2 px-2.5 rounded-lg border border-emerald-300 text-xs font-mono outline-none bg-white focus:ring-2 focus:ring-emerald-500/20">
             </div>
           </div>
 
-          <div style="margin-bottom: 12px;">
-            <label style="display: block; font-size: 11px; font-weight: 800; color: #1e293b; margin-bottom: 4px;">
+          <div class="mb-3">
+            <label class="block text-[11px] font-extrabold text-slate-800 mb-1">
               Settlement Notes / Remarks
             </label>
             <input type="text" 
                    id="fmdl-input-settle-remarks" 
                    placeholder="e.g. Counter settlement finalized with primary guest." 
-                   style="width: 100%; box-sizing: border-box; padding: 8px 10px; border-radius: 8px; border: 1.5px solid #a7f3d0; font-size: 12px; outline: none; background: #ffffff;">
+                   class="w-full box-border py-2 px-2.5 rounded-lg border border-emerald-300 text-xs outline-none bg-white focus:ring-2 focus:ring-emerald-500/20">
           </div>
 
-          <div style="display: flex; justify-content: flex-end; gap: 8px;">
+          <div class="flex justify-end gap-2">
             <button type="button" 
                     id="fmdl-btn-confirm-settlement" 
                     onclick="executeFolioSettlement()" 
-                    style="padding: 8px 22px; border-radius: 8px; background: linear-gradient(135deg, #059669 0%, #047857 100%); color: #ffffff; border: none; font-size: 12px; font-weight: 800; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; box-shadow: 0 4px 12px rgba(5,150,105,0.25);">
+                    class="px-5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white border-none text-xs font-extrabold inline-flex items-center gap-1.5 cursor-pointer shadow-sm transition">
               <i class="fa-solid fa-check-circle"></i> Confirm &amp; Save Settlement
             </button>
           </div>
@@ -1826,17 +859,17 @@
     </div>
 
     <!-- Modal Footer Actions (matches guest CRM) -->
-    <div class="modal-bot">
-      <div style="font-size: 11px; color: #64748b; font-weight: 600;">
-        <i class="fa-solid fa-clock-rotate-left"></i> Record Registered: <span id="fmdl-created-at">-</span>
+    <div class="modal-bot px-5.5 py-3 bg-white border-t border-slate-200 flex justify-between items-center flex-wrap gap-2.5">
+      <div class="text-xs text-slate-500 font-semibold flex items-center gap-1.5">
+        <i class="fa-solid fa-clock-rotate-left text-slate-400"></i> Record Registered: <span id="fmdl-created-at">-</span>
       </div>
 
-      <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+      <div class="flex gap-2 items-center flex-wrap">
         <!-- Settle Balance Button -->
         <button type="button" 
                 id="fmdl-action-btn-settle" 
                 onclick="toggleFolioSettlementPanel()" 
-                style="padding: 7px 18px; border-radius: 8px; background: linear-gradient(135deg, #059669 0%, #047857 100%); color: #ffffff; border: none; font-size: 12px; font-weight: 800; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; box-shadow: 0 4px 12px rgba(5,150,105,0.25);">
+                class="px-4.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white border-none text-xs font-extrabold inline-flex items-center gap-1.5 cursor-pointer shadow-sm transition">
           <i class="fa-solid fa-calculator"></i> Settle Balance
         </button>
 
@@ -1844,23 +877,23 @@
         <button type="button" 
                 id="fmdl-action-btn-checkout" 
                 onclick="executeFolioCheckout()" 
-                style="padding: 7px 18px; border-radius: 8px; background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); color: #ffffff; border: none; font-size: 12px; font-weight: 800; display: none; align-items: center; gap: 6px; cursor: pointer; box-shadow: 0 4px 12px rgba(99,102,241,0.25);">
+                class="px-4.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white border-none text-xs font-extrabold hidden items-center gap-1.5 cursor-pointer shadow-sm transition">
           <i class="fa-solid fa-right-from-bracket"></i> Check Out
         </button>
 
         <!-- Locked Badge -->
         <div id="fmdl-badge-locked" 
-             style="display: none; padding: 6px 14px; border-radius: 8px; background: #f1f5f9; border: 1px solid #cbd5e1; color: #475569; font-size: 12px; font-weight: 800; align-items: center; gap: 6px;">
-          <i class="fa-solid fa-lock" style="color: #64748b;"></i> Stay Finalized &amp; Checked Out (Locked)
+             class="hidden px-3.5 py-1.5 rounded-lg bg-slate-100 border border-slate-300 text-slate-600 text-xs font-extrabold items-center gap-1.5">
+          <i class="fa-solid fa-lock text-slate-500"></i> Stay Finalized &amp; Checked Out (Locked)
         </div>
 
         <!-- Print Invoice Button -->
-        <button type="button" class="btn-ui-secondary" onclick="printFolioInvoice()" style="padding: 7px 16px; border-radius: 8px; border: 1px solid #cbd5e1; background: #ffffff; font-size: 12px; font-weight: 700; color: #334155; display: inline-flex; align-items: center; gap: 6px; cursor: pointer;">
+        <button type="button" class="btn-ui-secondary px-4 py-1.5 rounded-lg border border-slate-300 bg-white text-xs font-bold text-slate-700 hover:bg-slate-50 inline-flex items-center gap-1.5 cursor-pointer shadow-2xs transition" onclick="printFolioInvoice()">
           <i class="fa-solid fa-print"></i> Print Invoice
         </button>
 
         <!-- Close Button -->
-        <button type="button" class="btn-ui-secondary" onclick="closeFolioModal()" style="padding: 7px 16px; border-radius: 8px; border: 1px solid #cbd5e1; background: #ffffff; font-size: 12px; font-weight: 700; color: #64748b; cursor: pointer;">
+        <button type="button" class="btn-ui-secondary px-4 py-1.5 rounded-lg border border-slate-300 bg-white text-xs font-bold text-slate-500 hover:text-slate-700 hover:bg-slate-50 cursor-pointer shadow-2xs transition" onclick="closeFolioModal()">
           Close
         </button>
       </div>
@@ -1873,64 +906,64 @@
 <!-- CONFIRMATION MODAL: EARLY CHECK-OUT INDIVIDUAL GUEST                     -->
 <!-- ========================================================================= -->
 <div class="modal-backdrop" id="early-checkout-confirm-modal">
-  <div class="modal-window" style="width: 480px; max-width: 95vw; border-radius: 16px; overflow: hidden; box-shadow: 0 25px 60px -15px rgba(0,0,0,0.45); border: none; background: #ffffff;">
+  <div class="modal-window max-w-md w-full rounded-2xl overflow-hidden shadow-2xl border border-slate-200 bg-white">
     
-    <div style="background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; color: #ffffff;">
-      <div style="display: flex; align-items: center; gap: 10px;">
-        <div style="width: 34px; height: 34px; border-radius: 8px; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 15px; color: #ffffff;">
+    <div class="bg-gradient-to-r from-rose-600 to-rose-700 px-5 py-3.5 flex justify-between items-center text-white border-b border-rose-500/30">
+      <div class="flex items-center gap-2.5">
+        <div class="w-8.5 h-8.5 rounded-lg bg-white/20 flex items-center justify-center text-sm text-white flex-shrink-0">
           <i class="fa-solid fa-person-walking-arrow-right"></i>
         </div>
         <div>
-          <h4 style="margin: 0; font-size: 15px; font-weight: 800; color: #ffffff;">Early Check-Out Confirmation</h4>
-          <div style="font-size: 10px; opacity: 0.9; color: #fee2e2;">Individual Occupant Check-Out</div>
+          <h4 class="m-0 text-sm font-extrabold text-white">Early Check-Out Confirmation</h4>
+          <div class="text-[10px] text-rose-100">Individual Occupant Check-Out</div>
         </div>
       </div>
-      <button type="button" onclick="closeEarlyCheckoutConfirmModal()" style="background: rgba(255,255,255,0.2); border: none; color: #ffffff; width: 28px; height: 28px; border-radius: 50%; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s;">&times;</button>
+      <button type="button" onclick="closeEarlyCheckoutConfirmModal()" class="bg-white/20 hover:bg-white/30 text-white w-7 h-7 rounded-full text-base cursor-pointer flex items-center justify-center transition border-none">&times;</button>
     </div>
 
-    <div style="padding: 20px; background: #ffffff;">
-      <div style="display: flex; gap: 14px; align-items: flex-start; margin-bottom: 16px;">
-        <div style="width: 40px; height: 40px; border-radius: 50%; background: #fee2e2; color: #dc2626; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;">
+    <div class="p-5 bg-white">
+      <div class="flex gap-3.5 items-start mb-4">
+        <div class="w-10 h-10 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center text-lg flex-shrink-0">
           <i class="fa-solid fa-triangle-exclamation"></i>
         </div>
         <div>
-          <div style="font-size: 13px; font-weight: 800; color: #0f172a; margin-bottom: 3px;">
+          <div class="text-xs font-extrabold text-slate-900 mb-0.5">
             Are you sure you want to early check-out this guest?
           </div>
-          <div style="font-size: 11px; color: #64748b; line-height: 1.5;">
+          <div class="text-[11px] text-slate-500 leading-relaxed">
             Only this particular occupant will be marked as checked out. Other occupants and room billing stay active.
           </div>
         </div>
       </div>
 
       <!-- Guest and Checkout Info Box -->
-      <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 14px; font-size: 12px; display: flex; flex-direction: column; gap: 8px;">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-          <span style="color: #64748b; font-weight: 600;">Guest Name:</span>
-          <strong id="eccm-guest-name" style="color: #0f172a; font-size: 13px;">-</strong>
+      <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs flex flex-col gap-2">
+        <div class="flex justify-between items-center">
+          <span class="text-slate-500 font-semibold">Guest Name:</span>
+          <strong id="eccm-guest-name" class="text-slate-900 font-bold text-xs">-</strong>
         </div>
-        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed #e2e8f0; padding-top: 6px;">
-          <span style="color: #64748b; font-weight: 600;">Allotted Room:</span>
-          <strong id="eccm-room-no" style="color: #4338ca; font-weight: 800;">-</strong>
+        <div class="flex justify-between items-center border-t border-dashed border-slate-200 pt-1.5">
+          <span class="text-slate-500 font-semibold">Allotted Room:</span>
+          <strong id="eccm-room-no" class="text-indigo-700 font-extrabold">-</strong>
         </div>
-        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed #e2e8f0; padding-top: 6px;">
-          <span style="color: #64748b; font-weight: 600;">Check-Out Date:</span>
-          <span id="eccm-checkout-date" style="font-family: var(--font-mono, monospace); font-weight: 800; color: #047857;">-</span>
+        <div class="flex justify-between items-center border-t border-dashed border-slate-200 pt-1.5">
+          <span class="text-slate-500 font-semibold">Check-Out Date:</span>
+          <span id="eccm-checkout-date" class="font-mono font-extrabold text-emerald-700">-</span>
         </div>
-        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed #e2e8f0; padding-top: 6px;">
-          <span style="color: #64748b; font-weight: 600;">Check-Out Time:</span>
-          <span id="eccm-checkout-time" style="font-family: var(--font-mono, monospace); font-weight: 800; color: #047857;">-</span>
+        <div class="flex justify-between items-center border-t border-dashed border-slate-200 pt-1.5">
+          <span class="text-slate-500 font-semibold">Check-Out Time:</span>
+          <span id="eccm-checkout-time" class="font-mono font-extrabold text-emerald-700">-</span>
         </div>
       </div>
 
       <input type="hidden" id="eccm-booking-id" value="">
     </div>
 
-    <div style="padding: 12px 20px; background: #f8fafc; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; gap: 10px; align-items: center;">
-      <button type="button" onclick="closeEarlyCheckoutConfirmModal()" style="padding: 7px 16px; border-radius: 8px; border: 1px solid #cbd5e1; background: #ffffff; color: #475569; font-size: 12px; font-weight: 700; cursor: pointer;">
+    <div class="px-5 py-3 bg-slate-50 border-t border-slate-200 flex justify-end gap-2.5 items-center">
+      <button type="button" onclick="closeEarlyCheckoutConfirmModal()" class="px-4 py-1.5 rounded-lg border border-slate-300 bg-white text-slate-600 text-xs font-bold hover:bg-slate-50 cursor-pointer shadow-2xs transition">
         Cancel
       </button>
-      <button type="button" id="eccm-btn-confirm" onclick="executeEarlyCheckout()" style="padding: 7px 20px; border-radius: 8px; border: none; background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: #ffffff; font-size: 12px; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25);">
+      <button type="button" id="eccm-btn-confirm" onclick="executeEarlyCheckout()" class="px-5 py-1.5 rounded-lg border-none bg-rose-600 hover:bg-rose-700 text-white text-xs font-extrabold cursor-pointer inline-flex items-center gap-1.5 shadow-sm transition">
         <i class="fa-solid fa-check"></i> Yes, Early Check Out
       </button>
     </div>
@@ -1942,18 +975,18 @@
 <!-- ROOM SWIPE / SHIFT MODAL                                                  -->
 <!-- ========================================================================= -->
 <div class="modal-backdrop" id="room-swipe-modal">
-  <div class="room-swipe-card">
-    <div class="room-swipe-header">
-      <div style="display: flex; align-items: center; gap: 10px;">
-        <div style="width: 34px; height: 34px; border-radius: 8px; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 15px; color: #ffffff;">
+  <div class="room-swipe-card max-w-xl w-full max-h-[90vh] bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col border border-slate-200">
+    <div class="room-swipe-header bg-gradient-to-r from-indigo-700 to-indigo-900 px-5 py-3.5 flex justify-between items-center text-white border-b border-indigo-600/30">
+      <div class="flex items-center gap-2.5">
+        <div class="w-8.5 h-8.5 rounded-lg bg-white/20 flex items-center justify-center text-sm text-white flex-shrink-0">
           <i class="fa-solid fa-arrow-right-arrow-left"></i>
         </div>
         <div>
-          <h4 style="margin: 0; font-size: 15px; font-weight: 800; color: #ffffff;">Room Swipe / Shift Manager</h4>
-          <div style="font-size: 10px; opacity: 0.9; color: #e0e7ff;">Transfer room mid-stay with prorated tariff &amp; housekeeping sync</div>
+          <h4 class="m-0 text-sm font-extrabold text-white">Room Swipe / Shift Manager</h4>
+          <div class="text-[10px] text-indigo-100">Transfer room mid-stay with prorated tariff &amp; housekeeping sync</div>
         </div>
       </div>
-      <button type="button" onclick="closeRoomSwipeModal()" style="background: rgba(255,255,255,0.2); border: none; color: #ffffff; width: 28px; height: 28px; border-radius: 50%; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s;">&times;</button>
+      <button type="button" onclick="closeRoomSwipeModal()" class="bg-white/20 hover:bg-white/30 text-white w-7 h-7 rounded-full text-base cursor-pointer flex items-center justify-center transition border-none">&times;</button>
     </div>
 
     <!-- Hidden state inputs -->
@@ -1962,35 +995,35 @@
     <input type="hidden" id="rswipe-old-rate">
     <input type="hidden" id="rswipe-checkout-date">
 
-    <div class="room-swipe-body">
+    <div class="room-swipe-body p-5 overflow-y-auto flex flex-col gap-3.5">
       <!-- Loading state -->
-      <div id="rswipe-loading" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 20px; gap: 10px; color: #4338ca;">
-        <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 24px;"></i>
-        <span style="font-size: 12px; font-weight: 600;">Fetching available rooms and stay info...</span>
+      <div id="rswipe-loading" class="flex flex-col items-center justify-center py-10 px-5 gap-2.5 text-indigo-700">
+        <i class="fa-solid fa-circle-notch fa-spin text-2xl"></i>
+        <span class="text-xs font-semibold">Fetching available rooms and stay info...</span>
       </div>
 
       <!-- Content wrapper -->
-      <div id="rswipe-content" style="display: none; flex-direction: column; gap: 14px;">
+      <div id="rswipe-content" class="hidden flex-col gap-3.5">
         
         <!-- Reservation Dossier & Source Room Info Box -->
-        <div style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 12px 14px;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 6px;">
-            <div style="display: flex; align-items: center; gap: 6px;">
-              <span style="font-size: 10px; font-weight: 800; text-transform: uppercase; color: #64748b;">Reservation:</span>
-              <span id="rswipe-reserve-id" style="font-family: var(--font-mono, monospace); font-weight: 800; color: #4338ca; font-size: 12px;">-</span>
+        <div class="bg-slate-50 border border-slate-200 rounded-xl p-3">
+          <div class="flex justify-between items-center mb-2 flex-wrap gap-1.5">
+            <div class="flex items-center gap-1.5">
+              <span class="text-[10px] font-extrabold uppercase text-slate-500">Reservation:</span>
+              <span id="rswipe-reserve-id" class="font-mono font-extrabold text-indigo-700 text-xs">-</span>
             </div>
-            <div style="font-size: 11px; color: #64748b;">
-              <i class="fa-regular fa-calendar" style="color: #6366f1;"></i> Stay: <strong id="rswipe-stay-dates" style="color: #0f172a;">-</strong>
+            <div class="text-xs text-slate-500">
+              <i class="fa-regular fa-calendar text-indigo-500"></i> Stay: <strong id="rswipe-stay-dates" class="text-slate-900">-</strong>
             </div>
           </div>
-          <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed #e2e8f0; padding-top: 8px; flex-wrap: wrap; gap: 8px;">
-            <div style="display: flex; align-items: center; gap: 8px;">
-              <span class="room-tag status-cyan" style="font-size: 12px; padding: 4px 10px;">
+          <div class="flex justify-between items-center border-t border-dashed border-slate-200 pt-2 flex-wrap gap-2">
+            <div class="flex items-center gap-2">
+              <span class="room-tag status-cyan text-xs py-1 px-2.5">
                 <i class="fa-solid fa-door-open"></i> Current Room: <strong id="rswipe-from-room-num">-</strong>
               </span>
-              <span id="rswipe-from-room-meta" style="font-size: 11px; color: #475569;">-</span>
+              <span id="rswipe-from-room-meta" class="text-xs text-slate-600">-</span>
             </div>
-            <div style="font-size: 12px; font-family: var(--font-mono, monospace); font-weight: 800; color: #4338ca;">
+            <div class="text-xs font-mono font-extrabold text-indigo-700">
               Current Rate: <span id="rswipe-from-room-rate">₹ 0.00</span> / night
             </div>
           </div>
@@ -1998,95 +1031,95 @@
 
         <!-- Occupants to Transfer Checkbox Box -->
         <div>
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-            <label style="font-size: 11px; font-weight: 800; color: #0f172a; text-transform: uppercase; letter-spacing: 0.3px;">
-              <i class="fa-solid fa-users"></i> Select Occupant(s) to Shift:
+          <div class="flex justify-between items-center mb-1.5">
+            <label class="text-xs font-extrabold text-slate-900 uppercase tracking-wider">
+              <i class="fa-solid fa-users text-indigo-500"></i> Select Occupant(s) to Shift:
             </label>
-            <label style="font-size: 11px; color: #4338ca; cursor: pointer; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
-              <input type="checkbox" id="rswipe-select-all-occ" onchange="toggleAllSwipeOccupants(this)"> All in Room
+            <label class="text-xs text-indigo-700 cursor-pointer font-bold inline-flex items-center gap-1">
+              <input type="checkbox" id="rswipe-select-all-occ" onchange="toggleAllSwipeOccupants(this)" class="w-3.5 h-3.5 accent-indigo-600 rounded"> All in Room
             </label>
           </div>
-          <div id="rswipe-occupants-list" style="display: flex; flex-direction: column; gap: 6px;">
+          <div id="rswipe-occupants-list" class="flex flex-col gap-1.5">
             <!-- Populated via JS -->
           </div>
-          <div id="rswipe-shift-mode-hint" style="font-size: 10.5px; color: #64748b; font-style: italic; margin-top: 4px;">
+          <div id="rswipe-shift-mode-hint" class="text-[10.5px] text-slate-500 italic mt-1">
             Whole room shift: Old room vacated &amp; scheduled for cleaning.
           </div>
         </div>
 
         <!-- Stay Dates & Transfer Date Input Grid -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label style="display: block; font-size: 11px; font-weight: 700; color: #334155; margin-bottom: 4px;">
-              <i class="fa-regular fa-calendar-check" style="color: #4338ca;"></i> Effective Shift Date:
+            <label class="block text-xs font-bold text-slate-700 mb-1">
+              <i class="fa-regular fa-calendar-check text-indigo-600"></i> Effective Shift Date:
             </label>
-            <input type="date" id="rswipe-transfer-date" class="form-input" style="width: 100%; padding: 7px 10px; border-radius: 8px; border: 1.5px solid #cbd5e1; font-size: 12px; font-weight: 700; color: #0f172a;" onchange="onSwipeTransferDateChange()">
+            <input type="date" id="rswipe-transfer-date" class="form-input w-full py-1.5 px-2.5 rounded-lg border border-slate-300 text-xs font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500/20" onchange="onSwipeTransferDateChange()">
           </div>
           <div>
-            <label style="display: block; font-size: 11px; font-weight: 700; color: #334155; margin-bottom: 4px;">
-              <i class="fa-solid fa-clock-rotate-left" style="color: #6366f1;"></i> Nights Partition:
+            <label class="block text-xs font-bold text-slate-700 mb-1">
+              <i class="fa-solid fa-clock-rotate-left text-indigo-500"></i> Nights Partition:
             </label>
-            <div style="background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 8px; padding: 7px 10px; font-size: 11.5px; font-weight: 700; color: #334155; display: flex; justify-content: space-between;">
+            <div class="bg-slate-100 border border-slate-200 rounded-lg py-1.5 px-2.5 text-xs font-bold text-slate-700 flex justify-between items-center">
               <span>Past: <strong id="rswipe-past-nights">1</strong>n</span>
-              <span style="color: #cbd5e1;">|</span>
-              <span style="color: #4338ca;">Remaining: <strong id="rswipe-rem-nights">1</strong>n</span>
+              <span class="text-slate-300">|</span>
+              <span class="text-indigo-700">Remaining: <strong id="rswipe-rem-nights">1</strong>n</span>
             </div>
           </div>
         </div>
 
         <!-- New Destination Room Selection -->
-        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 12px; align-items: flex-start;">
-          <div>
-            <label style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; font-weight: 700; color: #334155; margin-bottom: 4px;">
-              <span><i class="fa-solid fa-door-open" style="color: #10b981;"></i> Destination Room (Available Only):</span>
-              <span id="rswipe-avail-count-badge" style="font-size: 10px; font-weight: 800; color: #059669; background: #ecfdf5; border: 1px solid #a7f3d0; padding: 1px 7px; border-radius: 10px;">Available Rooms Only</span>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 items-start">
+          <div class="sm:col-span-2">
+            <label class="flex justify-between items-center text-xs font-bold text-slate-700 mb-1">
+              <span><i class="fa-solid fa-door-open text-emerald-500"></i> Destination Room (Available Only):</span>
+              <span id="rswipe-avail-count-badge" class="text-[10px] font-extrabold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">Available Rooms Only</span>
             </label>
-            <select id="rswipe-target-room-select" class="form-input" style="width: 100%;">
-              <option value="">-- Search & Choose Available Room --</option>
+            <select id="rswipe-target-room-select" class="form-input w-full py-1.5 px-2.5 rounded-lg border border-slate-300 text-xs font-bold text-slate-800 bg-white outline-none focus:ring-2 focus:ring-indigo-500/20">
+              <option value="">-- Search &amp; Choose Available Room --</option>
             </select>
           </div>
           <div>
-            <label style="display: block; font-size: 11px; font-weight: 700; color: #334155; margin-bottom: 4px;">
-              <i class="fa-solid fa-indian-rupee-sign" style="color: #10b981;"></i> New Daily Rate:
+            <label class="block text-xs font-bold text-slate-700 mb-1">
+              <i class="fa-solid fa-indian-rupee-sign text-emerald-500"></i> New Daily Rate:
             </label>
-            <input type="number" id="rswipe-new-rate-input" step="0.01" min="0" class="form-input" style="width: 100%; padding: 7px 10px; border-radius: 8px; border: 1.5px solid #cbd5e1; font-size: 12px; font-weight: 700; font-family: var(--font-mono, monospace); color: #0f172a;" oninput="calculateSwipePricing()">
+            <input type="number" id="rswipe-new-rate-input" step="0.01" min="0" class="form-input w-full py-1.5 px-2.5 rounded-lg border border-slate-300 text-xs font-bold font-mono text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500/20" oninput="calculateSwipePricing()">
           </div>
         </div>
 
         <!-- Live Tariff Recalculation & Impact Preview Box -->
-        <div class="swipe-preview-box" id="rswipe-preview-box">
-          <div style="display: flex; justify-content: space-between; align-items: center; font-weight: 800; font-size: 11px; color: #0f172a; border-bottom: 1px dashed #cbd5e1; padding-bottom: 6px;">
-            <span><i class="fa-solid fa-calculator" style="color: #4338ca;"></i> Tariff Impact Breakdown:</span>
-            <span id="rswipe-preview-tag" style="background: #e0e7ff; color: #4338ca; padding: 2px 8px; border-radius: 4px; font-size: 10px;">Shift Calculations</span>
+        <div class="swipe-preview-box bg-slate-50 border border-slate-200 rounded-xl p-3 flex flex-col gap-2 text-xs" id="rswipe-preview-box">
+          <div class="flex justify-between items-center font-extrabold text-xs text-slate-900 border-b border-dashed border-slate-200 pb-1.5">
+            <span><i class="fa-solid fa-calculator text-indigo-600"></i> Tariff Impact Breakdown:</span>
+            <span id="rswipe-preview-tag" class="bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded text-[10px]">Shift Calculations</span>
           </div>
-          <div style="display: flex; flex-direction: column; gap: 4px; font-size: 11px;">
-            <div style="display: flex; justify-content: space-between; color: #475569;">
+          <div class="flex flex-col gap-1 text-xs text-slate-600">
+            <div class="flex justify-between">
               <span>Past Stay in Room <span id="rswipe-prev-src-room">302</span>:</span>
-              <strong id="rswipe-prev-past-calc" style="font-family: var(--font-mono, monospace);">-</strong>
+              <strong id="rswipe-prev-past-calc" class="font-mono text-slate-800">-</strong>
             </div>
-            <div style="display: flex; justify-content: space-between; color: #475569;">
+            <div class="flex justify-between">
               <span>New Stay in Room <span id="rswipe-prev-dst-room">-</span>:</span>
-              <strong id="rswipe-prev-new-calc" style="font-family: var(--font-mono, monospace);">-</strong>
+              <strong id="rswipe-prev-new-calc" class="font-mono text-slate-800">-</strong>
             </div>
-            <div style="display: flex; justify-content: space-between; border-top: 1px dashed #cbd5e1; padding-top: 4px; font-weight: 800;">
+            <div class="flex justify-between border-t border-dashed border-slate-200 pt-1 font-extrabold">
               <span>Net Tariff Difference (<span id="rswipe-prev-rem-n">1</span> nights):</span>
-              <span id="rswipe-prev-diff" style="font-family: var(--font-mono, monospace); font-size: 12px; color: #4338ca;">₹ 0.00</span>
+              <span id="rswipe-prev-diff" class="font-mono text-xs text-indigo-700 font-black">₹ 0.00</span>
             </div>
           </div>
           <!-- Housekeeping Notification Alert -->
-          <div id="rswipe-hk-notice" style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 6px; padding: 6px 10px; font-size: 10.5px; color: #b91c1c; display: flex; align-items: center; gap: 6px;">
-            <i class="fa-solid fa-broom"></i>
+          <div id="rswipe-hk-notice" class="bg-rose-50 border border-rose-200 rounded-lg p-2 text-xs text-rose-700 flex items-center gap-2">
+            <i class="fa-solid fa-broom text-rose-500"></i>
             <span>Room <strong id="rswipe-hk-room-name">-</strong> will be automatically marked <strong>Dirty (Pending Cleaning)</strong> in Housekeeping history.</span>
           </div>
         </div>
 
         <!-- Reason & Remarks -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label style="display: block; font-size: 11px; font-weight: 700; color: #334155; margin-bottom: 4px;">
+            <label class="block text-xs font-bold text-slate-700 mb-1">
               Reason for Shift:
             </label>
-            <select id="rswipe-reason" class="form-input" style="width: 100%; padding: 7px 10px; border-radius: 8px; border: 1.5px solid #cbd5e1; font-size: 12px;">
+            <select id="rswipe-reason" class="form-input w-full py-1.5 px-2.5 rounded-lg border border-slate-300 text-xs font-semibold text-slate-800 bg-white outline-none focus:ring-2 focus:ring-indigo-500/20">
               <option value="Guest Upgrade">Guest Upgrade / Preference</option>
               <option value="Guest Request">Guest Request (View/Location)</option>
               <option value="AC / Electrical Issue">AC / Electrical Issue</option>
@@ -2097,10 +1130,10 @@
             </select>
           </div>
           <div>
-            <label style="display: block; font-size: 11px; font-weight: 700; color: #334155; margin-bottom: 4px;">
+            <label class="block text-xs font-bold text-slate-700 mb-1">
               Staff Remarks (Optional):
             </label>
-            <input type="text" id="rswipe-remarks" placeholder="Optional notes for transfer dossier..." class="form-input" style="width: 100%; padding: 7px 10px; border-radius: 8px; border: 1.5px solid #cbd5e1; font-size: 12px;">
+            <input type="text" id="rswipe-remarks" placeholder="Optional notes for transfer dossier..." class="form-input w-full py-1.5 px-2.5 rounded-lg border border-slate-300 text-xs text-slate-800 bg-white outline-none focus:ring-2 focus:ring-indigo-500/20">
           </div>
         </div>
 
@@ -2108,11 +1141,11 @@
     </div>
 
     <!-- Modal Footer Actions -->
-    <div style="background: #f8fafc; border-top: 1px solid #e2e8f0; padding: 12px 20px; display: flex; justify-content: flex-end; gap: 10px; align-items: center;">
-      <button type="button" onclick="closeRoomSwipeModal()" style="padding: 7px 14px; border-radius: 8px; border: 1px solid #cbd5e1; background: #ffffff; color: #475569; font-size: 12px; font-weight: 700; cursor: pointer;">
+    <div class="bg-slate-50 border-t border-slate-200 px-5 py-3 flex justify-end gap-2.5 items-center">
+      <button type="button" onclick="closeRoomSwipeModal()" class="px-4 py-1.5 rounded-lg border border-slate-300 bg-white text-slate-600 text-xs font-bold hover:bg-slate-50 cursor-pointer shadow-2xs transition">
         Cancel
       </button>
-      <button type="button" id="btn-submit-room-swipe" onclick="submitRoomSwipe()" style="padding: 7px 18px; border-radius: 8px; border: none; background: linear-gradient(135deg, #4338ca 0%, #312e81 100%); color: #ffffff; font-size: 12px; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(67, 56, 202, 0.3);">
+      <button type="button" id="btn-submit-room-swipe" onclick="submitRoomSwipe()" class="px-5 py-1.5 rounded-lg border-none bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-extrabold cursor-pointer inline-flex items-center gap-1.5 shadow-sm transition">
         <i class="fa-solid fa-arrow-right-arrow-left"></i> Confirm Room Swipe
       </button>
     </div>
@@ -2124,7 +1157,7 @@
 @include('frontoffice.includes.extend-stay-modal')
 
 <!-- Hidden Clean Print Template Area -->
-<div id="folio-print-area" style="display: none;"></div>
+<div id="folio-print-area" class="hidden"></div>
 
 @endsection
 
@@ -2246,7 +1279,7 @@
         }
         const esc = typeof escapeHtml === 'function' ? escapeHtml(clean) : clean;
         if (original > effPrice) {
-          return `${esc} (+<span style="text-decoration: line-through; opacity: 0.65; margin-right: 3px;">₹${original.toLocaleString('en-IN')}</span><strong>₹${effPrice.toLocaleString('en-IN')}</strong>)`;
+          return `${esc} (+<span class="line-through opacity-65 mr-1">₹${original.toLocaleString('en-IN')}</span><strong>₹${effPrice.toLocaleString('en-IN')}</strong>)`;
         }
         if (effPrice > 0) {
           return `${esc} (+₹${effPrice.toLocaleString('en-IN')})`;
@@ -2394,7 +1427,7 @@
   function renderRoomsOccupants(rooms) {
     const container = document.getElementById('fmdl-rooms-container');
     if (!rooms || rooms.length === 0) {
-      container.innerHTML = '<div style="color: #94a3b8; font-size: 11px; font-style: italic;">No specific room allocated.</div>';
+      container.innerHTML = '<div class="text-slate-400 text-[11px] italic">No specific room allocated.</div>';
       return;
     }
 
@@ -2415,8 +1448,8 @@
     rooms.forEach(r => {
       const isVacated = r.is_vacated === true;
       const roomStatusBadge = isVacated
-        ? `<span style="background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;"><i class="fa-solid fa-broom"></i> Vacated (Housekeeping Dirty)</span>`
-        : `<span style="background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;"><i class="fa-solid fa-bed"></i> Reserved / Occupied</span>`;
+        ? `<span class="bg-rose-50 text-rose-700 border border-rose-200 text-[10px] font-extrabold px-2 py-0.5 rounded-md inline-flex items-center gap-1"><i class="fa-solid fa-broom"></i> Vacated (Housekeeping Dirty)</span>`
+        : `<span class="bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-extrabold px-2 py-0.5 rounded-md inline-flex items-center gap-1"><i class="fa-solid fa-bed"></i> Reserved / Occupied</span>`;
 
       const canSwipe = activeFolioData && 
         activeFolioData.status !== 'Checked Out' && 
@@ -2435,30 +1468,30 @@
 
       html += `
         <div class="room-alloc-card">
-          <div class="room-alloc-header">
-            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+          <div class="room-alloc-header flex justify-between items-center flex-wrap gap-2">
+            <div class="flex items-center gap-2 flex-wrap">
               <span class="room-tag">
                 <i class="fa-solid fa-door-open"></i> ${escapeHtml(r.room_number)}
               </span>
-              <span style="font-size: 12px; font-weight: 800; color: #0f172a;">Floor ${escapeHtml(r.floor)}</span>
-              <span style="color: #cbd5e1;">•</span>
-              <span style="font-size: 11px; color: #64748b; font-weight: 600;">${escapeHtml(r.category)}</span>
-              <span style="color: #cbd5e1;">•</span>
-              <span style="font-size: 11px; color: #64748b;">${escapeHtml(r.bedding)}</span>
+              <span class="text-xs font-extrabold text-slate-900">Floor ${escapeHtml(r.floor)}</span>
+              <span class="text-slate-300">•</span>
+              <span class="text-[11px] text-slate-500 font-semibold">${escapeHtml(r.category)}</span>
+              <span class="text-slate-300">•</span>
+              <span class="text-[11px] text-slate-500">${escapeHtml(r.bedding)}</span>
               ${roomStatusBadge}
             </div>
-            <div style="display: flex; align-items: center; gap: 8px;">
-              <span style="font-size: 11px; font-family: var(--font-mono, monospace); font-weight: 800; color: #4338ca;">
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-mono font-extrabold text-indigo-700">
                 ${formatINR(r.rate)} / night
               </span>
               ${swipeBtnMarkup}
             </div>
           </div>
           <div>
-            <div style="font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 5px;">
+            <div class="text-[10px] font-extrabold text-slate-500 uppercase mb-1.5">
               Registered Occupants in this Room:
             </div>
-            <div style="display: flex; flex-direction: column; gap: 4px;">
+            <div class="flex flex-col gap-1">
       `;
 
       if (r.occupants && r.occupants.length > 0) {
@@ -2474,7 +1507,7 @@
               const dtText = dtParts.join(' ');
               actionMarkup = `
                 <span class="badge-checked-out-occupant" title="This occupant is checked out">
-                  <i class="fa-solid fa-circle-check" style="color: #10b981;"></i> Checked Out ${dtText ? '(' + escapeHtml(dtText) + ')' : ''}
+                  <i class="fa-solid fa-circle-check text-emerald-500"></i> Checked Out ${dtText ? '(' + escapeHtml(dtText) + ')' : ''}
                 </span>
               `;
             } else if (canEarlyCheckout && activeFolioData && activeFolioData.status !== 'Checked Out' && activeFolioData.status !== 'Cancelled') {
@@ -2494,7 +1527,7 @@
             const dtText = dtParts.join(' ');
             actionMarkup = `
               <span class="badge-checked-out-occupant" title="This occupant is checked out">
-                <i class="fa-solid fa-circle-check" style="color: #10b981;"></i> Checked Out ${dtText ? '(' + escapeHtml(dtText) + ')' : ''}
+                <i class="fa-solid fa-circle-check text-emerald-500"></i> Checked Out ${dtText ? '(' + escapeHtml(dtText) + ')' : ''}
               </span>
             `;
           }
@@ -2510,14 +1543,14 @@
 
           html += `
             <div class="occupant-badge-row ${isCheckedOut ? 'checked-out' : ''}">
-              <div style="display: flex; align-items: center; gap: 6px;">
-                <i class="fa-solid ${occ.is_primary ? 'fa-star' : 'fa-user'}" style="color: ${isCheckedOut ? '#94a3b8' : (occ.is_primary ? '#f59e0b' : '#6366f1')};"></i>
-                <strong style="color: ${isCheckedOut ? '#64748b' : '#1e293b'}; ${isCheckedOut ? 'text-decoration: line-through;' : ''}">${escapeHtml(occ.name)}</strong>
-                ${occ.is_primary ? '<span style="background: #fef3c7; color: #b45309; font-size: 9px; font-weight: 800; padding: 1px 5px; border-radius: 4px;">Primary</span>' : ''}
+              <div class="flex items-center gap-1.5">
+                <i class="fa-solid ${occ.is_primary ? 'fa-star text-amber-500' : 'fa-user text-indigo-500'} ${isCheckedOut ? 'opacity-50' : ''}"></i>
+                <strong class="${isCheckedOut ? 'text-slate-500 line-through' : 'text-slate-800'}">${escapeHtml(occ.name)}</strong>
+                ${occ.is_primary ? '<span class="bg-amber-100 text-amber-800 text-[9px] font-extrabold px-1.5 py-0.2 rounded">Primary</span>' : ''}
               </div>
-              <div style="display: flex; align-items: center; gap: 10px; color: #64748b; font-family: var(--font-mono, monospace);">
-                <span><i class="fa-solid fa-phone" style="font-size: 9px;"></i> ${escapeHtml(occ.mobile)}</span>
-                <span>•</span>
+              <div class="flex items-center gap-2.5 text-slate-500 font-mono text-xs">
+                <span><i class="fa-solid fa-phone text-[9px] text-emerald-500"></i> ${escapeHtml(occ.mobile)}</span>
+                <span class="text-slate-300">•</span>
                 <span>${escapeHtml(occ.id_card_type)}: ${escapeHtml(occ.id_card_number)}</span>
                 ${swipeGuestMarkup}
                 ${actionMarkup}
@@ -2526,7 +1559,7 @@
           `;
         });
       } else {
-        html += '<div style="font-size: 11px; color: #94a3b8;">No occupants assigned yet.</div>';
+        html += '<div class="text-xs text-slate-400 italic">No occupants assigned yet.</div>';
       }
 
       html += `
@@ -2608,15 +1641,15 @@
       if (servicesCount) servicesCount.textContent = folio.room_service_orders.length;
 
       let ordHtml = `
-        <table style="width: 100%; border-collapse: collapse; background: #ffffff; border: 1px solid #fed7aa; border-radius: 8px; overflow: hidden; margin-bottom: 4px;">
+        <table class="w-full border-collapse bg-white border border-amber-200 rounded-lg overflow-hidden mb-1">
           <thead>
-            <tr style="background: #fff7ed; border-bottom: 1px solid #fed7aa; text-align: left;">
-              <th style="padding: 6px 8px; font-size: 10px; color: #9a3412; width: 35px; text-align: center;">SL</th>
-              <th style="padding: 6px 10px; font-size: 10px; color: #9a3412;">Order #</th>
-              <th style="padding: 6px 10px; font-size: 10px; color: #9a3412;">Date &amp; Time</th>
-              <th style="padding: 6px 10px; font-size: 10px; color: #9a3412;">Ordered Items</th>
-              <th style="padding: 6px 10px; font-size: 10px; color: #9a3412; text-align: center;">Status</th>
-              <th style="padding: 6px 10px; font-size: 10px; color: #9a3412; text-align: right;">Bill Amount</th>
+            <tr class="bg-amber-50 border-b border-amber-200 text-left">
+              <th class="py-1.5 px-2 text-[10px] text-amber-800 w-[35px] text-center font-bold">SL</th>
+              <th class="py-1.5 px-2.5 text-[10px] text-amber-800 font-bold">Order #</th>
+              <th class="py-1.5 px-2.5 text-[10px] text-amber-800 font-bold">Date &amp; Time</th>
+              <th class="py-1.5 px-2.5 text-[10px] text-amber-800 font-bold">Ordered Items</th>
+              <th class="py-1.5 px-2.5 text-[10px] text-amber-800 text-center font-bold">Status</th>
+              <th class="py-1.5 px-2.5 text-[10px] text-amber-800 text-right font-bold">Bill Amount</th>
             </tr>
           </thead>
           <tbody>
@@ -2638,46 +1671,46 @@
         let amountCol = '';
 
         if (isPaid) {
-          statusBadge = `<span style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 7px; border-radius: 4px; font-size: 10px; font-weight: 800; background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0;"><i class="fa-solid fa-circle-check"></i> PAID (${escapeHtml(ro.payment_status)})</span>`;
-          amountCol = `<div style="font-family: var(--font-mono, monospace); font-weight: 800; color: #059669; font-size: 11px;">${formatINR(ro.total_amount)}</div><span style="font-size: 9px; color: #16a34a; font-weight: 700;">(Settled Direct)</span>`;
+          statusBadge = `<span class="inline-flex items-center gap-1 py-0.5 px-1.5 rounded text-[10px] font-extrabold bg-emerald-100 text-emerald-700 border border-emerald-200"><i class="fa-solid fa-circle-check"></i> PAID (${escapeHtml(ro.payment_status)})</span>`;
+          amountCol = `<div class="font-mono font-extrabold text-emerald-600 text-[11px]">${formatINR(ro.total_amount)}</div><span class="text-[9px] text-emerald-600 font-bold">(Settled Direct)</span>`;
         } else if (isFolio) {
-          statusBadge = `<span style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 7px; border-radius: 4px; font-size: 10px; font-weight: 800; background: #fef3c7; color: #b45309; border: 1px solid #fde68a;"><i class="fa-solid fa-clock"></i> UNPAID (Charged to Room)</span>`;
-          amountCol = `<div style="font-family: var(--font-mono, monospace); font-weight: 800; color: #ea580c; font-size: 11px;">+ ${formatINR(ro.total_amount)}</div><span style="font-size: 9px; color: #c2410c; font-weight: 700;">(Due at Checkout)</span>`;
+          statusBadge = `<span class="inline-flex items-center gap-1 py-0.5 px-1.5 rounded text-[10px] font-extrabold bg-amber-100 text-amber-800 border border-amber-200"><i class="fa-solid fa-clock"></i> UNPAID (Charged to Room)</span>`;
+          amountCol = `<div class="font-mono font-extrabold text-orange-600 text-[11px]">+ ${formatINR(ro.total_amount)}</div><span class="text-[9px] text-orange-700 font-bold">(Due at Checkout)</span>`;
         } else {
-          statusBadge = `<span style="display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 700; background: #f1f5f9; color: #475569;">${escapeHtml(ro.payment_status || ro.order_status || 'Pending')}</span>`;
-          amountCol = `<span style="font-family: var(--font-mono, monospace); font-weight: 800; color: #475569;">${formatINR(ro.total_amount)}</span>`;
+          statusBadge = `<span class="inline-block py-0.5 px-1.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600">${escapeHtml(ro.payment_status || ro.order_status || 'Pending')}</span>`;
+          amountCol = `<span class="font-mono font-extrabold text-slate-600">${formatINR(ro.total_amount)}</span>`;
         }
 
         ordHtml += `
-          <tr style="border-bottom: 1px solid #ffedd5;">
-            <td style="padding: 6px 8px; text-align: center; font-weight: 800; font-family: var(--font-mono, monospace); color: #9a3412; font-size: 10px;">${oIdx + 1}</td>
-            <td style="padding: 6px 10px; font-family: var(--font-mono, monospace); font-weight: 700; color: #c2410c;">
+          <tr class="border-b border-orange-100">
+            <td class="py-1.5 px-2 text-center font-extrabold font-mono text-amber-800 text-[10px]">${oIdx + 1}</td>
+            <td class="py-1.5 px-2.5 font-mono font-bold text-orange-700">
               ${escapeHtml(ro.order_number)}
-              ${ro.table_number ? `<span style="font-size: 9px; background: #e0e7ff; color: #4338ca; border: 1px solid #c7d2fe; padding: 1px 6px; border-radius: 4px; font-weight: 700; margin-left: 4px; font-family: sans-serif; display: inline-flex; align-items: center; gap: 3px;"><i class="fa-solid fa-chair" style="font-size: 8px;"></i> ${escapeHtml(ro.table_number)}</span>` : ''}
+              ${ro.table_number ? `<span class="text-[9px] bg-indigo-100 text-indigo-700 border border-indigo-200 py-px px-1.5 rounded font-bold ml-1 font-sans inline-flex items-center gap-0.5"><i class="fa-solid fa-chair text-[8px]"></i> ${escapeHtml(ro.table_number)}</span>` : ''}
             </td>
-            <td style="padding: 6px 10px; color: #475569; white-space: nowrap;">
-              <i class="fa-regular fa-calendar-days" style="font-size: 9px; color: #d97706;"></i> ${escapeHtml(ro.date)}
+            <td class="py-1.5 px-2.5 text-slate-600 whitespace-nowrap">
+              <i class="fa-regular fa-calendar-days text-[9px] text-amber-600"></i> ${escapeHtml(ro.date)}
             </td>
-            <td style="padding: 6px 10px; color: #1e293b; font-size: 10.5px;">${itemsDetail || escapeHtml(ro.items_summary) || 'Room Dining Service'}</td>
-            <td style="padding: 6px 10px; text-align: center;">
+            <td class="py-1.5 px-2.5 text-slate-800 text-[10.5px]">${itemsDetail || escapeHtml(ro.items_summary) || 'Room Dining Service'}</td>
+            <td class="py-1.5 px-2.5 text-center">
               ${statusBadge}
             </td>
-            <td style="padding: 6px 10px; text-align: right; white-space: nowrap;">${amountCol}</td>
+            <td class="py-1.5 px-2.5 text-right whitespace-nowrap">${amountCol}</td>
           </tr>
         `;
       });
       ordHtml += `
           </tbody>
           <tfoot>
-            <tr style="background: #fff7ed; font-weight: 800; border-top: 1.5px solid #fed7aa;">
-              <td colspan="4" style="padding: 8px 10px; font-size: 10px; color: #9a3412;">
+            <tr class="bg-amber-50 font-extrabold border-t-[1.5px] border-amber-200">
+              <td colspan="4" class="p-2 text-[10px] text-amber-900">
                 <strong>TOTAL DINING &amp; EXTRA SERVICES: ${folio.room_service_orders.length} ORDER(S)</strong>
-                ${totalDirectPaid > 0 ? `<span style="margin-left: 10px; font-size: 9.5px; color: #15803d; font-weight: 800; background: #dcfce7; padding: 2px 6px; border-radius: 4px;"><i class="fa-solid fa-circle-check"></i> Direct Settled: ${formatINR(totalDirectPaid)}</span>` : ''}
+                ${totalDirectPaid > 0 ? `<span class="ml-2.5 text-[9.5px] text-emerald-700 font-extrabold bg-emerald-100 py-0.5 px-1.5 rounded"><i class="fa-solid fa-circle-check"></i> Direct Settled: ${formatINR(totalDirectPaid)}</span>` : ''}
               </td>
-              <td style="padding: 8px 10px; text-align: center; font-size: 10px; color: #9a3412; text-transform: uppercase;">
+              <td class="p-2 text-center text-[10px] text-amber-900 uppercase">
                 Folio Due:
               </td>
-              <td style="padding: 8px 10px; text-align: right; font-family: var(--font-mono, monospace); color: #c2410c; font-size: 11.5px; white-space: nowrap;">
+              <td class="p-2 text-right font-mono text-orange-700 text-[11.5px] whitespace-nowrap">
                 + ${formatINR(totalFolioCharged)}
               </td>
             </tr>
@@ -2696,26 +1729,26 @@
     if (folio.settlements_history && folio.settlements_history.length > 0) {
       historyBox.style.display = 'block';
       let hHtml = `
-        <table style="width: 100%; border-collapse: collapse; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
+        <table class="w-full border-collapse bg-white border border-slate-200 rounded-lg overflow-hidden text-xs">
           <thead>
-            <tr style="background: #f8fafc; border-bottom: 1px solid #e2e8f0; text-align: left;">
-              <th style="padding: 6px 10px; font-size: 10px; color: #64748b;">Receipt #</th>
-              <th style="padding: 6px 10px; font-size: 10px; color: #64748b;">Date &amp; Time</th>
-              <th style="padding: 6px 10px; font-size: 10px; color: #64748b;">Method</th>
-              <th style="padding: 6px 10px; font-size: 10px; color: #64748b; text-align: right;">Amount Paid</th>
-              <th style="padding: 6px 10px; font-size: 10px; color: #64748b;">Remarks</th>
+            <tr class="bg-slate-50 border-b border-slate-200 text-left">
+              <th class="py-1.5 px-2.5 text-[10px] text-slate-500 font-bold">Receipt #</th>
+              <th class="py-1.5 px-2.5 text-[10px] text-slate-500 font-bold">Date &amp; Time</th>
+              <th class="py-1.5 px-2.5 text-[10px] text-slate-500 font-bold">Method</th>
+              <th class="py-1.5 px-2.5 text-[10px] text-slate-500 text-right font-bold">Amount Paid</th>
+              <th class="py-1.5 px-2.5 text-[10px] text-slate-500 font-bold">Remarks</th>
             </tr>
           </thead>
           <tbody>
       `;
       folio.settlements_history.forEach(sh => {
         hHtml += `
-          <tr style="border-bottom: 1px solid #f1f5f9;">
-            <td style="padding: 6px 10px; font-family: var(--font-mono, monospace); font-weight: 700; color: #4f46e5;">${escapeHtml(sh.settlement_number)}</td>
-            <td style="padding: 6px 10px; color: #334155;">${escapeHtml(sh.date)} ${escapeHtml(sh.time)}</td>
-            <td style="padding: 6px 10px; font-weight: 700; color: #0f172a;">${escapeHtml(sh.payment_mode)}</td>
-            <td style="padding: 6px 10px; text-align: right; font-family: var(--font-mono, monospace); font-weight: 800; color: #059669;">${formatINR(sh.amount)}</td>
-            <td style="padding: 6px 10px; color: #64748b;">${escapeHtml(sh.remarks)}</td>
+          <tr class="border-b border-slate-100">
+            <td class="py-1.5 px-2.5 font-mono font-bold text-indigo-600">${escapeHtml(sh.settlement_number)}</td>
+            <td class="py-1.5 px-2.5 text-slate-700">${escapeHtml(sh.date)} ${escapeHtml(sh.time)}</td>
+            <td class="py-1.5 px-2.5 font-bold text-slate-900">${escapeHtml(sh.payment_mode)}</td>
+            <td class="py-1.5 px-2.5 text-right font-mono font-extrabold text-emerald-600">${formatINR(sh.amount)}</td>
+            <td class="py-1.5 px-2.5 text-slate-500">${escapeHtml(sh.remarks)}</td>
           </tr>
         `;
       });
@@ -2734,37 +1767,37 @@
       if (swipesBox) swipesBox.style.display = 'block';
       if (swipesCount) swipesCount.textContent = folio.room_transfers.length;
       let sHtml = `
-        <table style="width: 100%; border-collapse: collapse; background: #ffffff; border: 1px solid #c7d2fe; border-radius: 8px; overflow: hidden; margin-bottom: 4px;">
+        <table class="w-full border-collapse bg-white border border-indigo-200 rounded-lg overflow-hidden mb-1 text-xs">
           <thead>
-            <tr style="background: #eef2ff; border-bottom: 1px solid #c7d2fe; text-align: left;">
-              <th style="padding: 6px 10px; font-size: 10px; color: #4338ca;">Date &amp; Time</th>
-              <th style="padding: 6px 10px; font-size: 10px; color: #4338ca;">From Room</th>
-              <th style="padding: 6px 10px; font-size: 10px; color: #4338ca;">To Room</th>
-              <th style="padding: 6px 10px; font-size: 10px; color: #4338ca;">Guests Transferred</th>
-              <th style="padding: 6px 10px; font-size: 10px; color: #4338ca; text-align: right;">Daily Rates</th>
-              <th style="padding: 6px 10px; font-size: 10px; color: #4338ca; text-align: right;">Tariff Adjustment</th>
-              <th style="padding: 6px 10px; font-size: 10px; color: #4338ca;">Reason / Staff</th>
+            <tr class="bg-indigo-50 border-b border-indigo-200 text-left">
+              <th class="py-1.5 px-2.5 text-[10px] text-indigo-700 font-bold">Date &amp; Time</th>
+              <th class="py-1.5 px-2.5 text-[10px] text-indigo-700 font-bold">From Room</th>
+              <th class="py-1.5 px-2.5 text-[10px] text-indigo-700 font-bold">To Room</th>
+              <th class="py-1.5 px-2.5 text-[10px] text-indigo-700 font-bold">Guests Transferred</th>
+              <th class="py-1.5 px-2.5 text-[10px] text-indigo-700 text-right font-bold">Daily Rates</th>
+              <th class="py-1.5 px-2.5 text-[10px] text-indigo-700 text-right font-bold">Tariff Adjustment</th>
+              <th class="py-1.5 px-2.5 text-[10px] text-indigo-700 font-bold">Reason / Staff</th>
             </tr>
           </thead>
           <tbody>
       `;
       folio.room_transfers.forEach(st => {
         const diffPrefix = st.tariff_difference >= 0 ? '+' : '';
-        const diffColor = st.tariff_difference > 0 ? '#4338ca' : (st.tariff_difference < 0 ? '#059669' : '#64748b');
+        const diffColorClass = st.tariff_difference > 0 ? 'text-indigo-700' : (st.tariff_difference < 0 ? 'text-emerald-600' : 'text-slate-500');
         const gList = Array.isArray(st.guests) ? st.guests.join(', ') : (st.guests || 'Occupants');
         sHtml += `
-          <tr style="border-bottom: 1px solid #e0e7ff;">
-            <td style="padding: 6px 10px; color: #334155; white-space: nowrap;"><i class="fa-regular fa-calendar-days" style="font-size: 9px; color: #6366f1;"></i> ${escapeHtml(st.date)} ${escapeHtml(st.time)}</td>
-            <td style="padding: 6px 10px; font-weight: 700; color: #e11d48;"><i class="fa-solid fa-door-closed"></i> ${escapeHtml(st.from_room)}</td>
-            <td style="padding: 6px 10px; font-weight: 700; color: #059669;"><i class="fa-solid fa-door-open"></i> ${escapeHtml(st.to_room)}</td>
-            <td style="padding: 6px 10px; color: #0f172a; font-size: 10.5px;">${escapeHtml(gList)}</td>
-            <td style="padding: 6px 10px; text-align: right; font-family: var(--font-mono, monospace); font-size: 10px; color: #475569; white-space: nowrap;">
+          <tr class="border-b border-indigo-50">
+            <td class="py-1.5 px-2.5 text-slate-700 whitespace-nowrap"><i class="fa-regular fa-calendar-days text-[9px] text-indigo-500"></i> ${escapeHtml(st.date)} ${escapeHtml(st.time)}</td>
+            <td class="py-1.5 px-2.5 font-bold text-rose-600"><i class="fa-solid fa-door-closed"></i> ${escapeHtml(st.from_room)}</td>
+            <td class="py-1.5 px-2.5 font-bold text-emerald-600"><i class="fa-solid fa-door-open"></i> ${escapeHtml(st.to_room)}</td>
+            <td class="py-1.5 px-2.5 text-slate-900 text-[10.5px]">${escapeHtml(gList)}</td>
+            <td class="py-1.5 px-2.5 text-right font-mono text-[10px] text-slate-600 whitespace-nowrap">
               ${formatINR(st.old_rate)} &rarr; ${formatINR(st.new_rate)}
             </td>
-            <td style="padding: 6px 10px; text-align: right; font-family: var(--font-mono, monospace); font-weight: 800; color: ${diffColor}; white-space: nowrap;">
+            <td class="py-1.5 px-2.5 text-right font-mono font-extrabold ${diffColorClass} whitespace-nowrap">
               ${diffPrefix}${formatINR(st.tariff_difference)} (${st.remaining_nights}n)
             </td>
-            <td style="padding: 6px 10px; color: #64748b; font-size: 10px;">${escapeHtml(st.reason || 'Shift')} <span style="color: #94a3b8;">(${escapeHtml(st.staff)})</span></td>
+            <td class="py-1.5 px-2.5 text-slate-500 text-[10px]">${escapeHtml(st.reason || 'Shift')} <span class="text-slate-400">(${escapeHtml(st.staff)})</span></td>
           </tr>
         `;
       });
@@ -2790,7 +1823,7 @@
       btnSettle.style.display = 'none';
       btnCheckout.style.display = 'none';
       badgeLocked.style.display = 'inline-flex';
-      badgeLocked.innerHTML = '<i class="fa-solid fa-lock" style="color: #64748b;"></i> Stay Finalized &amp; Checked Out (Locked)';
+      badgeLocked.innerHTML = '<i class="fa-solid fa-lock text-slate-500"></i> Stay Finalized &amp; Checked Out (Locked)';
     } else if (folio.balance > 0.01) {
       // Balance Due: Show Settle Button, Hide Checkout
       btnSettle.style.display = 'inline-flex';
@@ -2816,36 +1849,36 @@
     const orders = folio.room_service_orders || [];
 
     let html = `
-      <div style="background: #f0fdf4; border: 1.5px solid #a7f3d0; border-radius: 8px; padding: 10px 14px; font-size: 11.5px;">
-        <div style="font-weight: 800; font-size: 11.5px; color: #065f46; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; display: flex; justify-content: space-between; align-items: center;">
+      <div class="bg-emerald-50 border border-emerald-300 rounded-lg p-3 text-xs">
+        <div class="font-extrabold text-xs text-emerald-800 mb-2 uppercase tracking-wider flex justify-between items-center">
           <span><i class="fa-solid fa-file-invoice-dollar"></i> Settlement Balance Breakdown</span>
-          <span style="font-size: 11px; font-weight: 800; color: #047857;">Total Due: ${formatINR(totalDue)}</span>
+          <span class="text-xs font-extrabold text-emerald-700">Total Due: ${formatINR(totalDue)}</span>
         </div>
-        <div style="display: flex; flex-direction: column; gap: 4px;">
-          <div style="display: flex; justify-content: space-between; padding: 3px 0; border-bottom: 1px dashed #bbf7d0; color: #1e293b;">
-            <span><i class="fa-solid fa-bed" style="color: #6366f1; width: 14px;"></i> Room Charges Outstanding Balance:</span>
-            <span style="font-family: var(--font-mono, monospace); font-weight: 700;">${formatINR(roomDue)}</span>
+        <div class="flex flex-col gap-1">
+          <div class="flex justify-between py-1 border-b border-dashed border-emerald-200 text-slate-800">
+            <span><i class="fa-solid fa-bed text-indigo-500 w-3.5"></i> Room Charges Outstanding Balance:</span>
+            <span class="font-mono font-bold">${formatINR(roomDue)}</span>
           </div>
     `;
 
     if (orders.length > 0) {
       html += `
-        <div style="margin-top: 4px;">
-          <div style="font-weight: 800; color: #d97706; font-size: 11px; margin-bottom: 4px;">
-            <i class="fa-solid fa-bell-concierge" style="width: 14px;"></i> In-Room Dining &amp; Extra Services (${orders.length} order${orders.length > 1 ? 's' : ''}):
+        <div class="mt-1">
+          <div class="font-extrabold text-amber-600 text-[11px] mb-1">
+            <i class="fa-solid fa-bell-concierge w-3.5"></i> In-Room Dining &amp; Extra Services (${orders.length} order${orders.length > 1 ? 's' : ''}):
           </div>
-          <div style="display: flex; flex-direction: column; gap: 4px; padding-left: 8px;">
+          <div class="flex flex-col gap-1 pl-2">
       `;
       orders.forEach((ord, i) => {
         let itemsTxt = (ord.items || []).map(it => `${it.quantity}x ${escapeHtml(it.item_name)}`).join(', ');
         html += `
-          <div style="display: flex; justify-content: space-between; align-items: center; background: #fffbeb; border: 1px solid #fef3c7; border-radius: 6px; padding: 4px 8px; font-size: 11px;">
+          <div class="flex justify-between items-center bg-amber-50/70 border border-amber-100 rounded-md py-1 px-2 text-[11px]">
             <div>
-              <span style="font-weight: 800; color: #b45309; font-family: var(--font-mono, monospace);">${escapeHtml(ord.order_number)}</span>
-              <span style="color: #64748b; font-size: 10px; margin-left: 4px;"><i class="fa-regular fa-calendar-days" style="font-size: 8px;"></i> ${escapeHtml(ord.date)}</span>
-              <div style="font-size: 10px; color: #475569;">${itemsTxt || escapeHtml(ord.items_summary) || 'Extra Service'}</div>
+              <span class="font-extrabold text-amber-700 font-mono">${escapeHtml(ord.order_number)}</span>
+              <span class="text-slate-500 text-[10px] ml-1"><i class="fa-regular fa-calendar-days text-[8px]"></i> ${escapeHtml(ord.date)}</span>
+              <div class="text-[10px] text-slate-600">${itemsTxt || escapeHtml(ord.items_summary) || 'Extra Service'}</div>
             </div>
-            <div style="font-family: var(--font-mono, monospace); font-weight: 800; color: #b45309; white-space: nowrap;">
+            <div class="font-mono font-extrabold text-amber-700 whitespace-nowrap">
               + ${formatINR(ord.total_amount)}
             </div>
           </div>
@@ -2853,18 +1886,18 @@
       });
       html += `
           </div>
-          <div style="display: flex; justify-content: space-between; padding: 4px 0 2px; font-weight: 700; color: #b45309; font-size: 11px;">
+          <div class="flex justify-between pt-1 pb-0.5 font-bold text-amber-700 text-[11px]">
             <span>Total Extra Services:</span>
-            <span style="font-family: var(--font-mono, monospace);">+ ${formatINR(serviceCost)}</span>
+            <span class="font-mono">+ ${formatINR(serviceCost)}</span>
           </div>
         </div>
       `;
     }
 
     html += `
-        <div style="display: flex; justify-content: space-between; padding: 6px 0 0; border-top: 1.5px solid #a7f3d0; margin-top: 4px; font-weight: 900; font-size: 12.5px; color: #065f46;">
-          <span><i class="fa-solid fa-cash-register" style="width: 14px;"></i> Net Outstanding Due to Settle:</span>
-          <span style="font-family: var(--font-mono, monospace); color: ${totalDue > 0.01 ? '#b91c1c' : '#059669'};">${formatINR(totalDue)}</span>
+        <div class="flex justify-between pt-1.5 border-t-[1.5px] border-emerald-300 mt-1 font-black text-[12.5px] text-emerald-800">
+          <span><i class="fa-solid fa-cash-register w-3.5"></i> Net Outstanding Due to Settle:</span>
+          <span class="font-mono ${totalDue > 0.01 ? 'text-rose-700' : 'text-emerald-600'}">${formatINR(totalDue)}</span>
         </div>
       </div>
     </div>
@@ -2989,7 +2022,7 @@
       Swal.fire({
         icon: 'warning',
         title: 'Outstanding Balance Due',
-        html: `Cannot check out reservation with outstanding balance of <strong style="color: #e11d48;">${formatINR(activeFolioData.balance)}</strong>.<br><br>Please complete settlement first before checking out.`,
+        html: `Cannot check out reservation with outstanding balance of <strong class="text-rose-600 font-black">${formatINR(activeFolioData.balance)}</strong>.<br><br>Please complete settlement first before checking out.`,
         confirmButtonColor: '#4f46e5',
         confirmButtonText: 'OK'
       });
@@ -2997,14 +2030,14 @@
     }
 
     const companyNote = (isCompanyFolio && activeFolioData.balance > 0.01)
-      ? `<div style="background: #fdf4ff; border: 1px solid #f0abfc; color: #86198f; padding: 6px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; margin-bottom: 10px; text-align: left;"><i class="fa-solid fa-building"></i> Company Billing Account: Outstanding balance of ${formatINR(activeFolioData.balance)} will remain on corporate ledger without pre-settlement.</div>`
+      ? `<div class="bg-fuchsia-50 border border-fuchsia-300 text-fuchsia-800 p-2 px-2.5 rounded-lg text-xs font-bold mb-2.5 text-left"><i class="fa-solid fa-building mr-1"></i> Company Billing Account: Outstanding balance of ${formatINR(activeFolioData.balance)} will remain on corporate ledger without pre-settlement.</div>`
       : '';
 
     Swal.fire({
       title: 'Confirm Room Check-Out',
       html: `
         ${companyNote}
-        Are you sure you want to Check Out Booking <strong>#${escapeHtml(activeFolioData.reserve_id)}</strong> for <strong>${escapeHtml(activeFolioData.primary_guest?.name || 'Guest')}</strong>?<br><br><span style="font-size: 12px; color: #64748b;">The room status will be automatically scheduled for Housekeeping.</span>
+        Are you sure you want to Check Out Booking <strong>#${escapeHtml(activeFolioData.reserve_id)}</strong> for <strong>${escapeHtml(activeFolioData.primary_guest?.name || 'Guest')}</strong>?<br><br><span class="text-xs text-slate-500">The room status will be automatically scheduled for Housekeeping.</span>
       `,
       icon: 'question',
       showCancelButton: true,
@@ -3267,11 +2300,11 @@
       const roomTotal = Number(r.rate || 0) * nights;
       roomRowsHtml += `
         <tr>
-          <td style="padding: 8px; border: 1px solid #e2e8f0; font-weight: bold;">${escapeHtml(r.room_number)} (Floor ${escapeHtml(r.floor)})</td>
-          <td style="padding: 8px; border: 1px solid #e2e8f0;">${escapeHtml(r.category)} &bull; ${escapeHtml(r.bedding)}</td>
-          <td style="padding: 8px; border: 1px solid #e2e8f0;">${escapeHtml(occupantNames || 'Primary Guest')}</td>
-          <td style="padding: 8px; border: 1px solid #e2e8f0; text-align: right; font-family: monospace;">${formatINR(r.rate)} &times; ${nights} night(s)</td>
-          <td style="padding: 8px; border: 1px solid #e2e8f0; text-align: right; font-family: monospace; font-weight:bold;">${formatINR(roomTotal)}</td>
+          <td class="p-2 border border-slate-200 font-bold">${escapeHtml(r.room_number)} (Floor ${escapeHtml(r.floor)})</td>
+          <td class="p-2 border border-slate-200">${escapeHtml(r.category)} &bull; ${escapeHtml(r.bedding)}</td>
+          <td class="p-2 border border-slate-200">${escapeHtml(occupantNames || 'Primary Guest')}</td>
+          <td class="p-2 border border-slate-200 text-right font-mono">${formatINR(r.rate)} &times; ${nights} night(s)</td>
+          <td class="p-2 border border-slate-200 text-right font-mono font-bold">${formatINR(roomTotal)}</td>
         </tr>
       `;
     });
@@ -3284,24 +2317,24 @@
         const itemsList = (ro.items || []).map(i => `${i.quantity}x ${escapeHtml(i.item_name)}`).join(', ');
         serviceRowsHtml += `
           <tr>
-            <td style="padding: 6px 8px; border: 1px solid #fed7aa; font-family: monospace; font-weight: bold; color: #c2410c;">${escapeHtml(ro.order_number)}</td>
-            <td style="padding: 6px 8px; border: 1px solid #fed7aa; color: #475569;">${escapeHtml(ro.date)}</td>
-            <td style="padding: 6px 8px; border: 1px solid #fed7aa; color: #1e293b;">${itemsList}</td>
-            <td style="padding: 6px 8px; border: 1px solid #fed7aa; text-align: right; font-family: monospace; font-weight: bold;">${formatINR(ro.total_amount)}</td>
+            <td class="p-1.5 px-2 border border-orange-200 font-mono font-bold text-orange-700">${escapeHtml(ro.order_number)}</td>
+            <td class="p-1.5 px-2 border border-orange-200 text-slate-600">${escapeHtml(ro.date)}</td>
+            <td class="p-1.5 px-2 border border-orange-200 text-slate-800">${itemsList}</td>
+            <td class="p-1.5 px-2 border border-orange-200 text-right font-mono font-bold">${formatINR(ro.total_amount)}</td>
           </tr>
         `;
       });
       serviceTableHtml = `
-        <div style="font-weight: bold; font-size: 13px; color: #d97706; margin: 16px 0 6px; text-transform: uppercase; border-left: 4px solid #f59e0b; padding-left: 8px;">
+        <div class="font-bold text-xs text-amber-600 my-4 mb-1.5 uppercase border-l-4 border-amber-500 pl-2">
           In-Room Dining &amp; Hospitality Services
         </div>
-        <table style="width: 100%; border-collapse: collapse; margin-bottom: 16px; font-size: 11px;">
+        <table class="w-full border-collapse mb-4 text-[11px]">
           <thead>
-            <tr style="background: #fff7ed; text-align: left;">
-              <th style="padding: 6px 8px; border: 1px solid #fed7aa; color: #9a3412;">Order #</th>
-              <th style="padding: 6px 8px; border: 1px solid #fed7aa; color: #9a3412;">Date &amp; Time</th>
-              <th style="padding: 6px 8px; border: 1px solid #fed7aa; color: #9a3412;">Items &amp; Service</th>
-              <th style="padding: 6px 8px; border: 1px solid #fed7aa; color: #9a3412; text-align: right;">Amount</th>
+            <tr class="bg-orange-50 text-left">
+              <th class="p-1.5 px-2 border border-orange-200 text-orange-800">Order #</th>
+              <th class="p-1.5 px-2 border border-orange-200 text-orange-800">Date &amp; Time</th>
+              <th class="p-1.5 px-2 border border-orange-200 text-orange-800">Items &amp; Service</th>
+              <th class="p-1.5 px-2 border border-orange-200 text-orange-800 text-right">Amount</th>
             </tr>
           </thead>
           <tbody>${serviceRowsHtml}</tbody>
@@ -3324,15 +2357,15 @@
     const balance      = Number(f.balance || 0);
 
     const serviceChrgRow = serviceChrg > 0 ? `
-      <tr style="color: #d97706;">
-        <td style="padding: 6px 10px; border-bottom: 1px solid #fed7aa;">In-Room Dining &amp; Services</td>
-        <td style="padding: 6px 10px; border-bottom: 1px solid #fed7aa; text-align: right; font-family: monospace;">+ ${formatINR(serviceChrg)}</td>
+      <tr class="text-amber-600">
+        <td class="p-1.5 px-2.5 border-b border-orange-200">In-Room Dining &amp; Services</td>
+        <td class="p-1.5 px-2.5 border-b border-orange-200 text-right font-mono">+ ${formatINR(serviceChrg)}</td>
       </tr>` : '';
 
     const discRow = discAmt > 0 ? `
-      <tr style="color: #059669;">
-        <td style="padding: 6px 10px; border-bottom: 1px solid #d1fae5;">Discount (${discPct}%)</td>
-        <td style="padding: 6px 10px; border-bottom: 1px solid #d1fae5; text-align: right; font-family: monospace;">- ${formatINR(discAmt)}</td>
+      <tr class="text-emerald-600">
+        <td class="p-1.5 px-2.5 border-b border-emerald-100">Discount (${discPct}%)</td>
+        <td class="p-1.5 px-2.5 border-b border-emerald-100 text-right font-mono">- ${formatINR(discAmt)}</td>
       </tr>` : '';
 
     // Build full invoice body HTML for print iframe
@@ -3382,8 +2415,8 @@
         <th>Room / Floor</th>
         <th>Category &amp; Bedding</th>
         <th>Occupants</th>
-        <th style="text-align:right;">Tariff &times; Nights</th>
-        <th style="text-align:right;">Room Total</th>
+        <th class="text-right">Tariff &times; Nights</th>
+        <th class="text-right">Room Total</th>
       </tr>
     </thead>
     <tbody class="bill-table">${roomRowsHtml}</tbody>
@@ -3399,33 +2432,33 @@
         <tr class="s-head"><td colspan="2">Bill Summary</td></tr>
         <tr>
           <td>Gross Room Charges</td>
-          <td style="text-align:right; font-family:monospace;">${formatINR(grossRoom)}</td>
+          <td class="text-right font-mono">${formatINR(grossRoom)}</td>
         </tr>
         ${serviceChrgRow}
         ${discRow}
-        <tr style="color: #6366f1;">
-          <td style="padding: 6px 10px; border-bottom: 1px solid #e0e7ff;">Tax (GST ${gstPct}%)</td>
-          <td style="padding: 6px 10px; border-bottom: 1px solid #e0e7ff; text-align: right; font-family: monospace;">+ ${formatINR(gstAmt)}</td>
+        <tr class="text-indigo-600">
+          <td class="p-1.5 px-2.5 border-b border-indigo-100">Tax (GST ${gstPct}%)</td>
+          <td class="p-1.5 px-2.5 border-b border-indigo-100 text-right font-mono">+ ${formatINR(gstAmt)}</td>
         </tr>
         <tr class="s-total">
-          <td style="padding: 7px 10px; border-bottom: 2px solid #cbd5e1;">Net Payable</td>
-          <td style="padding: 7px 10px; border-bottom: 2px solid #cbd5e1; text-align: right; font-family: monospace;">${formatINR(netPayable)}</td>
+          <td class="p-2 px-2.5 border-b-2 border-slate-300">Net Payable</td>
+          <td class="p-2 px-2.5 border-b-2 border-slate-300 text-right font-mono">${formatINR(netPayable)}</td>
         </tr>
         <tr class="s-paid">
-          <td style="padding: 6px 10px; border-bottom: 1px solid #d1fae5;">Advance Paid</td>
-          <td style="padding: 6px 10px; border-bottom: 1px solid #d1fae5; text-align: right; font-family: monospace;">- ${formatINR(advancePaid)}</td>
+          <td class="p-1.5 px-2.5 border-b border-emerald-100">Advance Paid</td>
+          <td class="p-1.5 px-2.5 border-b border-emerald-100 text-right font-mono">- ${formatINR(advancePaid)}</td>
         </tr>
         <tr class="s-paid">
-          <td style="padding: 6px 10px; border-bottom: 1px solid #d1fae5;">Settlements Paid</td>
-          <td style="padding: 6px 10px; border-bottom: 1px solid #d1fae5; text-align: right; font-family: monospace;">- ${formatINR(settlePaid)}</td>
+          <td class="p-1.5 px-2.5 border-b border-emerald-100">Settlements Paid</td>
+          <td class="p-1.5 px-2.5 border-b border-emerald-100 text-right font-mono">- ${formatINR(settlePaid)}</td>
         </tr>
         <tr class="s-paid">
-          <td style="padding: 6px 10px; border-bottom: 2px solid #6ee7b7; font-weight:700;">Total Paid</td>
-          <td style="padding: 6px 10px; border-bottom: 2px solid #6ee7b7; text-align: right; font-family: monospace; font-weight:700;">${formatINR(totalPaid)}</td>
+          <td class="p-1.5 px-2.5 border-b-2 border-emerald-300 font-bold">Total Paid</td>
+          <td class="p-1.5 px-2.5 border-b-2 border-emerald-300 text-right font-mono font-bold">${formatINR(totalPaid)}</td>
         </tr>
         <tr class="s-bal">
-          <td style="padding: 8px 10px;">Balance Due</td>
-          <td style="padding: 8px 10px; text-align: right; font-family: monospace;">${formatINR(balance)}</td>
+          <td class="p-2 px-2.5">Balance Due</td>
+          <td class="p-2 px-2.5 text-right font-mono">${formatINR(balance)}</td>
         </tr>
       </table>
     </div>
@@ -3433,7 +2466,7 @@
 
   <!-- Footer -->
   <div class="footer">
-    <div>Generated: ${new Date().toLocaleString('en-IN')} &bull; Status: <strong style="text-transform:uppercase;">${escapeHtml(f.status)}</strong></div>
+    <div>Generated: ${new Date().toLocaleString('en-IN')} &bull; Status: <strong class="uppercase">${escapeHtml(f.status)}</strong></div>
     <div>Authorized Front Desk Signature: ________________________</div>
   </div>
 
@@ -3567,19 +2600,19 @@
       (data.occupants || []).forEach(occ => {
         const isSelected = (!specificBookingId || Number(occ.booking_id) === Number(specificBookingId));
         occHtml += `
-          <label style="display: flex; align-items: center; justify-content: space-between; padding: 7px 12px; background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: all 0.15s ease;" class="swipe-occ-item">
-            <div style="display: flex; align-items: center; gap: 8px;">
-              <input type="checkbox" name="rswipe_occupants[]" value="${occ.booking_id}" class="rswipe-occ-chk" ${isSelected ? 'checked' : ''} onchange="calculateSwipePricing()" style="width: 15px; height: 15px; accent-color: #4338ca;">
-              <span style="font-weight: 700; color: #0f172a; font-size: 12px;">${escapeHtml(occ.guest_name)}</span>
-              ${occ.is_primary ? '<span style="background: #fef3c7; color: #b45309; font-size: 9px; font-weight: 800; padding: 1px 5px; border-radius: 4px;">Primary</span>' : ''}
+          <label class="swipe-occ-item flex items-center justify-between py-1.5 px-3 bg-white border border-slate-200 rounded-lg cursor-pointer transition-all duration-150 hover:border-indigo-300">
+            <div class="flex items-center gap-2">
+              <input type="checkbox" name="rswipe_occupants[]" value="${occ.booking_id}" class="rswipe-occ-chk w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500" ${isSelected ? 'checked' : ''} onchange="calculateSwipePricing()">
+              <span class="font-bold text-slate-900 text-xs">${escapeHtml(occ.guest_name)}</span>
+              ${occ.is_primary ? '<span class="bg-amber-100 text-amber-800 text-[9px] font-extrabold px-1.5 py-0.5 rounded">Primary</span>' : ''}
             </div>
-            <div style="font-size: 11px; color: #64748b; font-family: var(--font-mono, monospace);">
-              <i class="fa-solid fa-phone" style="font-size: 9px; color: #10b981;"></i> ${escapeHtml(occ.mobile)}
+            <div class="text-[11px] text-slate-500 font-mono">
+              <i class="fa-solid fa-phone text-[9px] text-emerald-500"></i> ${escapeHtml(occ.mobile)}
             </div>
           </label>
         `;
       });
-      occList.innerHTML = occHtml || '<div style="font-size: 11px; color: #94a3b8; padding: 6px;">No occupants found in this room.</div>';
+      occList.innerHTML = occHtml || '<div class="text-[11px] text-slate-400 p-1.5">No occupants found in this room.</div>';
 
       const selectAllChk = document.getElementById('rswipe-select-all-occ');
       if (selectAllChk) selectAllChk.checked = !specificBookingId;
@@ -3615,7 +2648,7 @@
     const availList = rooms || [];
     const availBadge = document.getElementById('rswipe-avail-count-badge');
     if (availBadge) {
-      availBadge.innerHTML = `<i class="fa-solid fa-circle-check" style="color: #10b981;"></i> ${availList.length} Available Rooms`;
+      availBadge.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-500"></i> ${availList.length} Available Rooms`;
     }
 
     if (availList.length === 0) {
@@ -3662,18 +2695,18 @@
     const bedding = elem.dataset.bedding || '';
 
     const container = document.createElement('div');
-    container.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 4px 2px;';
+    container.className = 'flex justify-between items-center py-1 px-0.5';
     container.innerHTML = `
-      <div style="display: flex; align-items: center; gap: 8px;">
-        <span style="font-weight: 800; font-family: monospace; font-size: 12px; color: #4338ca; background: #e0e7ff; padding: 2px 7px; border-radius: 6px;">
-          <i class="fa-solid fa-door-open" style="font-size: 9px;"></i> R${roomNum}
+      <div class="flex items-center gap-2">
+        <span class="font-extrabold font-mono text-xs text-indigo-700 bg-indigo-100 px-1.5 py-0.5 rounded">
+          <i class="fa-solid fa-door-open text-[9px]"></i> R${roomNum}
         </span>
-        <span style="font-weight: 700; color: #1e293b; font-size: 12px;">Floor ${floor} • ${cat}</span>
-        ${bedding ? `<span style="font-size: 10px; color: #64748b; background: #f1f5f9; padding: 1px 5px; border-radius: 4px;">${bedding}</span>` : ''}
+        <span class="font-bold text-slate-800 text-xs">Floor ${floor} • ${cat}</span>
+        ${bedding ? `<span class="text-[10px] text-slate-500 bg-slate-100 px-1 py-0.5 rounded">${bedding}</span>` : ''}
       </div>
-      <div style="display: flex; align-items: center; gap: 6px;">
-        <span style="font-weight: 800; font-family: monospace; color: #047857; font-size: 12px;">₹ ${rate.toLocaleString('en-IN')}/n</span>
-        <span style="background: #ecfdf5; color: #059669; font-size: 9px; font-weight: 800; padding: 1px 6px; border-radius: 10px; border: 1px solid #a7f3d0;">Vacant</span>
+      <div class="flex items-center gap-1.5">
+        <span class="font-extrabold font-mono text-emerald-700 text-xs">₹ ${rate.toLocaleString('en-IN')}/n</span>
+        <span class="bg-emerald-50 text-emerald-600 text-[9px] font-extrabold px-1.5 py-0.5 rounded-full border border-emerald-200">Vacant</span>
       </div>
     `;
     return $(container);

@@ -2,847 +2,303 @@
 
 @section('title', 'Room Management Master - Hotel Sagar Sonnet PMS')
 
-@push('styles')
-<style>
-  .admin-layout {
-    display: grid;
-    grid-template-columns: 280px 1fr;
-    gap: 20px;
-    min-height: calc(100vh - 165px);
-  }
-  .pms-page-header {
-    border-bottom: none !important;
-    background: transparent !important;
-  }
-  .admin-sidebar {
-    background: #ffffff;
-    border: 1px solid var(--border-medium);
-    border-radius: var(--radius-lg);
-    box-shadow: 0 4px 16px rgba(0,0,0,0.03);
-    padding: 14px;
-    height: fit-content;
-    position: sticky;
-    top: 10px;
-    max-height: calc(100vh - 180px);
-    overflow-y: auto;
-  }
-  .admin-nav-group { margin-bottom: 8px; }
-  .admin-nav-header {
-    font-size: 11px;
-    font-weight: 800;
-    /* color: var(--text-muted); */
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-    padding: 9px 12px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    border-radius: var(--radius-md);
-    cursor: pointer;
-    user-select: none;
-    transition: all 0.2s ease;
-    background: #f8fafc;
-    border: 1px solid #f1f5f9;
-  }
-  .admin-nav-header:hover { background: #f1f5f9; color: var(--accent-primary); }
-  .admin-nav-header.active {
-    color: var(--accent-primary);
-    font-weight: 900;
-    background: rgba(99, 102, 241, 0.08);
-    border-color: rgba(99, 102, 241, 0.2);
-  }
-  .admin-nav-flat {
-    font-size: 11px;
-    font-weight: 800;
-    color: var(--text-secondary);
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-    padding: 10px 12px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    border-radius: var(--radius-md);
-    cursor: pointer;
-    user-select: none;
-    transition: all 0.2s ease;
-    background: #ffffff;
-    border: 1px solid #f1f5f9;
-    margin-bottom: 6px;
-  }
-  .admin-nav-flat:hover { background: #f8fafc; color: var(--accent-primary); }
-  .admin-sub-list {
-    list-style: none;
-    padding: 4px 0 4px 8px;
-    margin: 4px 0 0 4px;
-    border-left: 2px solid var(--border-medium);
-  }
-  .admin-sub-item {
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--text-secondary);
-    padding: 7px 10px;
-    border-radius: 6px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    transition: all 0.2s ease;
-    margin-bottom: 2px;
-    text-decoration: none;
-  }
-  .admin-sub-item:hover {
-    background: rgba(99, 102, 241, 0.06);
-    color: var(--accent-primary);
-    transform: translateX(3px);
-  }
-  .admin-sub-item.active {
-    background: linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(168, 85, 247, 0.08));
-    color: var(--accent-primary);
-    font-weight: 800;
-    border-left: 3px solid var(--accent-primary);
-  }
-  .admin-content-pane {
-    background: #ffffff;
-    border: 1px solid var(--border-medium);
-    border-radius: var(--radius-lg);
-    box-shadow: 0 4px 16px rgba(0,0,0,0.03);
-    padding: 24px;
-  }
-  .crud-header-card {
-    background: #ffffff;
-    border: 1px solid var(--border-medium);
-    border-radius: var(--radius-md);
-    padding: 16px 20px;
-    margin-bottom: 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.02);
-  }
-
-  /* Specific styles for Room KPI & Cards */
-  .room-stats-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 16px;
-    margin-bottom: 20px;
-  }
-  @media (max-width: 1024px) {
-    .room-stats-grid {
-      grid-template-columns: repeat(2, 1fr);
-    }
-  }
-  @media (max-width: 576px) {
-    .room-stats-grid {
-      grid-template-columns: 1fr;
-    }
-  }
-  
-  .room-kpi-card {
-    background: #ffffff;
-    border: 1px solid var(--border-medium, #e2e8f0);
-    border-radius: var(--radius-lg, 12px);
-    padding: 16px 18px;
-    position: relative;
-    overflow: hidden;
-    box-shadow: 0 4px 14px rgba(0,0,0,0.02);
-    transition: all 0.3s ease;
-  }
-
-  .room-kpi-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 10px 25px rgba(0,0,0,0.06);
-    border-color: var(--accent-primary, #6366f1);
-  }
-
-  .room-kpi-bar {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-  }
-
-  .kpi-pills-wrap {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin-top: 6px;
-    flex-wrap: wrap;
-    max-height: 54px;
-    overflow-y: auto;
-  }
-  .kpi-pills-wrap::-webkit-scrollbar {
-    width: 3px;
-    height: 3px;
-  }
-  .kpi-pills-wrap::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
-    border-radius: 4px;
-  }
-
-  .control-toolbar {
-    background: #ffffff;
-    border: 1px solid var(--border-medium, #e2e8f0);
-    border-radius: var(--radius-md, 8px);
-    padding: 12px 16px;
-    margin-bottom: 16px;
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.02);
-  }
-
-  .filter-group {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-wrap: wrap;
-  }
-
-  .crud-search-wrap {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-  }
-  .crud-search-wrap i {
-    position: absolute;
-    left: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--text-muted, #94a3b8);
-    font-size: 13px;
-    pointer-events: none;
-    z-index: 2;
-  }
-  .crud-search-input {
-    height: 38px;
-    padding: 8px 14px 8px 34px;
-    font-size: 13px;
-    font-weight: 500;
-    border: 1px solid var(--border-medium, #cbd5e1);
-    border-radius: var(--radius-md, 8px);
-    background: #ffffff;
-    color: var(--text-primary, #0f172a);
-    transition: all 0.2s ease;
-  }
-  .crud-search-input:focus {
-    outline: none;
-    border-color: var(--accent-primary, #6366f1);
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
-  }
-
-  .toolbar-filter-select {
-    height: 38px;
-    padding: 6px 12px;
-    font-size: 12px;
-    font-weight: 600;
-    border: 1px solid var(--border-medium, #cbd5e1);
-    border-radius: var(--radius-md, 8px);
-    background: #ffffff;
-    color: var(--text-primary, #0f172a);
-    outline: none;
-    cursor: pointer;
-    display: inline-block;
-    transition: all 0.2s ease;
-  }
-  .toolbar-filter-select:focus {
-    border-color: var(--accent-primary, #6366f1);
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
-  }
-
-  .view-toggle-btn {
-    background: #f1f5f9;
-    border: 1px solid var(--border-medium, #cbd5e1);
-    color: var(--text-secondary, #64748b);
-    padding: 7px 12px;
-    border-radius: var(--radius-md, 8px);
-    cursor: pointer;
-    font-size: 12px;
-    font-weight: 700;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    transition: all 0.2s ease;
-  }
-
-  .view-toggle-btn.active {
-    background: #ffffff;
-    color: var(--accent-primary, #6366f1);
-    border-color: var(--accent-primary, #6366f1);
-    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
-  }
-
-  /* Table Card and Scrollable Wrapper */
-  .room-table-card {
-    background: #ffffff;
-    border: 1px solid var(--border-medium, #e2e8f0);
-    border-radius: var(--radius-md, 8px);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.02);
-    overflow: hidden;
-  }
-
-  .room-table-scroll {
-    overflow-x: auto;
-  }
-
-  .room-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 13px;
-    background: #ffffff;
-  }
-
-  .room-table th {
-    background: #f8fafc;
-    padding: 12px 14px;
-    font-size: 10px;
-    font-weight: 800;
-    color: var(--text-secondary, #64748b);
-    text-transform: uppercase;
-    letter-spacing: 0.6px;
-    border-bottom: 1px solid var(--border-medium, #e2e8f0);
-    text-align: left;
-  }
-
-  .room-table td {
-    padding: 12px 14px;
-    border-bottom: 1px solid var(--border-subtle, #f1f5f9);
-    color: var(--text-primary, #0f172a);
-    vertical-align: middle;
-  }
-
-  .room-table tbody tr:hover {
-    background: #f8fafc;
-  }
-
-  /* Grid cards layout for rooms */
-  .room-inventory-grid {
-    display: none;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 16px;
-  }
-
-  .room-inv-card {
-    background: #ffffff;
-    border: 1px solid var(--border-medium, #e2e8f0);
-    border-radius: var(--radius-lg, 12px);
-    padding: 16px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    gap: 12px;
-    transition: all 0.25s ease;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.02);
-    position: relative;
-    overflow: hidden;
-  }
-
-  .room-inv-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 10px 25px rgba(0,0,0,0.06);
-    border-color: var(--accent-primary, #6366f1);
-  }
-
-  .room-inv-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-  }
-
-  .room-inv-number {
-    font-family: var(--font-mono, monospace);
-    font-size: 20px;
-    font-weight: 900;
-    color: var(--text-primary, #0f172a);
-    display: flex;
-    align-items: baseline;
-    gap: 6px;
-  }
-
-  .room-inv-floor {
-    font-size: 11px;
-    font-weight: 700;
-    color: var(--text-muted, #94a3b8);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-
-  .room-amenity-tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
-    margin: 8px 0;
-  }
-
-  .amenity-chip {
-    background: #f1f5f9;
-    border: 1px solid #e2e8f0;
-    font-size: 10px;
-    font-weight: 600;
-    color: var(--text-secondary, #475569);
-    padding: 2px 7px;
-    border-radius: 12px;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-  }
-
-  .room-inv-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding-top: 10px;
-    border-top: 1px solid var(--border-subtle, #f1f5f9);
-  }
-
-  .room-inv-rate {
-    font-family: var(--font-mono, monospace);
-    font-weight: 900;
-    font-size: 15px;
-    color: var(--accent-primary, #6366f1);
-  }
-
-  .badge-tag {
-    display: inline-flex;
-    align-items: center;
-    padding: 3px 8px;
-    border-radius: 20px;
-    font-size: 11px;
-    font-weight: 700;
-    line-height: 1;
-    gap: 4px;
-  }
-  .badge-tag.green { background: rgba(16, 185, 129, 0.12); color: #059669; border: 1px solid rgba(16, 185, 129, 0.25); }
-  .badge-tag.red { background: rgba(239, 68, 68, 0.12); color: #dc2626; border: 1px solid rgba(239, 68, 68, 0.25); }
-  .badge-tag.yellow { background: rgba(245, 158, 11, 0.12); color: #d97706; border: 1px solid rgba(245, 158, 11, 0.25); }
-  .badge-tag.purple { background: rgba(168, 85, 247, 0.12); color: #7c3aed; border: 1px solid rgba(168, 85, 247, 0.25); }
-  .badge-tag.blue { background: rgba(59, 130, 246, 0.12); color: #2563eb; border: 1px solid rgba(59, 130, 246, 0.25); }
-
-  .amenity-checkbox-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--text-primary, #1e293b);
-    background: #ffffff;
-    padding: 10px 14px;
-    border-radius: 8px;
-    border: 1px solid var(--border-medium, #e2e8f0);
-    cursor: pointer;
-    transition: all 0.2s ease;
-    user-select: none;
-  }
-  .amenity-checkbox-item:hover {
-    border-color: var(--accent-primary, #6366f1);
-    background: rgba(99, 102, 241, 0.04);
-  }
-  .amenity-checkbox-item input[type="checkbox"] {
-    width: 16px;
-    height: 16px;
-    cursor: pointer;
-    accent-color: var(--accent-primary, #6366f1);
-  }
-
-  /* Table Pagination Styles */
-  .table-pagination-footer {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 12px 18px;
-    border-top: 1px solid var(--border-medium, #e2e8f0);
-    background: #f8fafc;
-    flex-wrap: wrap;
-    gap: 12px;
-  }
-  .pagination-controls-group {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-  .pms-page-btn {
-    min-width: 32px;
-    height: 32px;
-    padding: 0 6px;
-    border-radius: 6px;
-    border: 1px solid var(--border-medium, #cbd5e1);
-    background: #ffffff;
-    color: var(--text-secondary, #64748b);
-    font-size: 12px;
-    font-weight: 700;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s ease;
-  }
-  .pms-page-btn:hover:not(:disabled) {
-    border-color: var(--accent-primary, #6366f1);
-    color: var(--accent-primary, #6366f1);
-    background: rgba(99, 102, 241, 0.05);
-  }
-  .pms-page-btn.active {
-    background: var(--accent-primary, #6366f1);
-    color: #ffffff;
-    border-color: var(--accent-primary, #6366f1);
-    box-shadow: 0 2px 6px rgba(99, 102, 241, 0.35);
-  }
-  .pms-page-btn:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-  }
-  .pms-page-dots {
-    padding: 0 4px;
-    color: var(--text-muted, #94a3b8);
-    font-weight: 800;
-    font-size: 12px;
-  }
-
-  .btn-action-view {
-    background: rgba(59, 130, 246, 0.1);
-    color: #2563eb;
-    border: 1px solid rgba(59, 130, 246, 0.2);
-    border-radius: 6px;
-    padding: 6px 9px;
-    cursor: pointer;
-    font-size: 11px;
-    font-weight: 700;
-    transition: all 0.2s;
-  }
-  .btn-action-view:hover { background: #2563eb; color: #fff; }
-
-  .btn-action-edit {
-    background: rgba(99, 102, 241, 0.1);
-    color: var(--accent-primary, #6366f1);
-    border: 1px solid rgba(99, 102, 241, 0.2);
-    border-radius: 6px;
-    padding: 6px 9px;
-    cursor: pointer;
-    font-size: 11px;
-    font-weight: 700;
-    transition: all 0.2s;
-  }
-  .btn-action-edit:hover { background: var(--accent-primary, #6366f1); color: #fff; }
-
-  .btn-action-del {
-    background: rgba(239, 68, 68, 0.1);
-    color: #dc2626;
-    border: 1px solid rgba(239, 68, 68, 0.2);
-    border-radius: 6px;
-    padding: 6px 9px;
-    cursor: pointer;
-    font-size: 11px;
-    font-weight: 700;
-    transition: all 0.2s;
-  }
-  .btn-action-del:hover { background: #dc2626; color: #fff; }
-
-  .btn-action-maint {
-    background: rgba(245, 158, 11, 0.1);
-    color: #d97706;
-    border: 1px solid rgba(245, 158, 11, 0.2);
-    border-radius: 6px;
-    padding: 6px 9px;
-    cursor: pointer;
-    font-size: 11px;
-    font-weight: 700;
-    transition: all 0.2s;
-  }
-  .btn-action-maint:hover { background: #d97706; color: #fff; }
-</style>
-@endpush
-
 @section('content')
-<main class="pms-main-viewport">
-  <div class="pms-page-container">
+<main class="flex-1 p-4 lg:p-6 space-y-6">
+  <!-- Page Header -->
+  <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div class="flex items-center gap-3">
+      <div class="w-2.5 h-8 bg-indigo-600 rounded-full"></div>
+      <div>
+        <h1 class="text-xl lg:text-2xl font-black text-slate-800 tracking-tight">Administrator • Master Data Management</h1>
+        <p class="text-xs lg:text-sm text-slate-500 font-medium">Configure and manage live records for active hotel modules.</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-2.5">
+      <button type="button" onclick="exportRoomsCSV()" class="h-9.5 px-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold shadow-xs hover:border-slate-300 transition-all flex items-center gap-2 cursor-pointer">
+        <i class="fa-solid fa-file-csv text-slate-500"></i> Export CSV
+      </button>
+    </div>
+  </div>
 
-    <div class="pms-page-header">
-      <div class="pms-header-title-block">
-        <div class="pms-status-indicator"></div>
+  <div class="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6 items-start">
+    @include('admin.includes.sidebar')
+
+    <section class="min-w-0 space-y-6">
+      
+      <!-- Header Card -->
+      <div class="p-5 bg-white rounded-2xl border border-slate-200/80 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 class="pms-page-title">Administrator • Master Data Management</h1>
-          <div class="pms-page-subtitle">Configure and manage live records for active hotel modules.</div>
+          <div class="flex items-center gap-2.5">
+            <h2 class="text-base font-bold text-slate-800 tracking-tight">Room Assets & Master</h2>
+            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-purple-50 text-purple-700 border border-purple-200/60" id="view-count">{{ count($rooms) }} Records</span>
+          </div>
+          <p class="text-xs text-slate-500 mt-0.5">
+            Manage individual room numbers, bedding setups, pax capacities, tariffs, amenities, and room status.
+          </p>
+        </div>
+        <button type="button" class="h-9.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-xs shadow-indigo-200 transition-all flex items-center gap-2 self-start sm:self-auto cursor-pointer" onclick="openAddRoomModal()">
+          <i class="fa-solid fa-plus-circle text-xs"></i> Add Room Asset
+        </button>
+      </div>
+
+      <!-- Top 4 KPI Metrics Row -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+        <!-- Card 1: Total Rooms & Status -->
+        <div class="relative bg-white rounded-2xl p-4.5 border border-slate-200/80 shadow-xs overflow-hidden flex flex-col justify-between">
+          <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 to-purple-500"></div>
+          <div class="flex items-start justify-between gap-2">
+            <div class="min-w-0 flex-1">
+              <span class="text-[11px] font-black uppercase tracking-wider text-slate-400">Room Status & Assets</span>
+              <div class="text-2xl font-black text-slate-800 font-mono mt-1" id="stat-total-rooms">{{ $totalRooms }}</div>
+            </div>
+            <span class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0 text-base">
+              <i class="fa-solid fa-door-open"></i>
+            </span>
+          </div>
+          <div class="flex flex-wrap items-center gap-1.5 mt-3 pt-3 border-t border-slate-100" id="stat-status-pills">
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/60">
+              <i class="fa-solid fa-circle-check text-[8px]"></i> <span id="stat-active-rooms">{{ $activeRooms ?? 0 }}</span> Active
+            </span>
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200/60">
+              <i class="fa-solid fa-circle-xmark text-[8px]"></i> <span id="stat-inactive-rooms">{{ $inactiveRooms ?? 0 }}</span> Inactive
+            </span>
+          </div>
+        </div>
+
+        <!-- Card 2: Category Wise Rooms -->
+        <div class="relative bg-white rounded-2xl p-4.5 border border-slate-200/80 shadow-xs overflow-hidden flex flex-col justify-between">
+          <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-pink-500 to-rose-500"></div>
+          <div class="flex items-start justify-between gap-2">
+            <div class="min-w-0 flex-1">
+              <span class="text-[11px] font-black uppercase tracking-wider text-slate-400">Category Wise Rooms</span>
+              <div class="text-2xl font-black text-rose-600 font-mono mt-1">
+                <span id="stat-category-total-rooms">{{ $totalRooms }}</span>
+                <span class="text-xs font-bold text-slate-400 uppercase font-sans">Rooms</span>
+              </div>
+            </div>
+            <span class="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0 text-base">
+              <i class="fa-solid fa-tags"></i>
+            </span>
+          </div>
+          <div class="flex flex-wrap items-center gap-1.5 mt-3 pt-3 border-t border-slate-100 max-h-16 overflow-y-auto" id="stat-category-pills">
+            @if(isset($categoryWise) && count($categoryWise) > 0)
+              @foreach($categoryWise as $cat => $cnt)
+                <span class="inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200/60">
+                  {{ $cat }}: <strong class="ml-1 font-black">{{ $cnt }}</strong>
+                </span>
+              @endforeach
+            @else
+              <span class="text-[11px] text-slate-400">All categories</span>
+            @endif
+          </div>
+        </div>
+
+        <!-- Card 3: Floor Wise Rooms -->
+        <div class="relative bg-white rounded-2xl p-4.5 border border-slate-200/80 shadow-xs overflow-hidden flex flex-col justify-between">
+          <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-cyan-500"></div>
+          <div class="flex items-start justify-between gap-2">
+            <div class="min-w-0 flex-1">
+              <span class="text-[11px] font-black uppercase tracking-wider text-slate-400">Floor Wise Rooms</span>
+              <div class="text-2xl font-black text-sky-600 font-mono mt-1">
+                <span id="stat-floor-total-rooms">{{ $totalRooms }}</span>
+                <span class="text-xs font-bold text-slate-400 uppercase font-sans">Rooms</span>
+              </div>
+            </div>
+            <span class="w-10 h-10 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center shrink-0 text-base">
+              <i class="fa-solid fa-layer-group"></i>
+            </span>
+          </div>
+          <div class="flex flex-wrap items-center gap-1.5 mt-3 pt-3 border-t border-slate-100 max-h-16 overflow-y-auto" id="stat-floor-pills">
+            @if(isset($floorWise) && count($floorWise) > 0)
+              @foreach($floorWise as $fl => $cnt)
+                <span class="inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-sky-50 text-sky-700 border border-sky-200/60">
+                  Floor {{ $fl }}: <strong class="ml-1 font-black">{{ $cnt }}</strong>
+                </span>
+              @endforeach
+            @else
+              <span class="text-[11px] text-slate-400">All floors</span>
+            @endif
+          </div>
+        </div>
+
+        <!-- Card 4: Amenities Wise Rooms -->
+        <div class="relative bg-white rounded-2xl p-4.5 border border-slate-200/80 shadow-xs overflow-hidden flex flex-col justify-between">
+          <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-teal-500"></div>
+          <div class="flex items-start justify-between gap-2">
+            <div class="min-w-0 flex-1">
+              <span class="text-[11px] font-black uppercase tracking-wider text-slate-400">Amenities Wise Rooms</span>
+              <div class="text-2xl font-black text-emerald-600 font-mono mt-1">
+                <span id="stat-amenity-total-rooms">{{ $totalRooms }}</span>
+                <span class="text-xs font-bold text-slate-400 uppercase font-sans">Rooms</span>
+              </div>
+            </div>
+            <span class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 text-base">
+              <i class="fa-solid fa-wand-magic-sparkles"></i>
+            </span>
+          </div>
+          <div class="flex flex-wrap items-center gap-1.5 mt-3 pt-3 border-t border-slate-100 max-h-16 overflow-y-auto" id="stat-amenity-pills">
+            @if(isset($amenityWise) && count($amenityWise) > 0)
+              @foreach($amenityWise as $amn => $cnt)
+                <span class="inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/60">
+                  {{ $amn }}: <strong class="ml-1 font-black">{{ $cnt }}</strong>
+                </span>
+              @endforeach
+            @else
+              <span class="text-[11px] text-slate-400">All amenities</span>
+            @endif
+          </div>
         </div>
       </div>
-      <div style="display: flex; gap: 10px;">
-        <button class="btn-ui-secondary" onclick="exportRoomsCSV()"><i class="fa-solid fa-file-csv"></i> Export CSV</button>
+
+      <!-- Control & Filter Toolbar -->
+      <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-4 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+        <!-- Search & Filter Options -->
+        <div class="flex flex-wrap items-center gap-2.5 flex-1">
+          <div class="relative min-w-[180px] flex-1 max-w-xs">
+            <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+            <input type="text" id="room-search-input" class="w-full h-9.5 pl-9 pr-3.5 rounded-xl border border-slate-200 bg-white text-xs font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all" value="{{ request('search') }}" placeholder="Search room no..." oninput="handleSearch(this.value)">
+          </div>
+
+          <select id="category-filter" class="h-9.5 px-3 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all cursor-pointer" onchange="handleCategoryFilter(this.value)">
+            <option value="ALL">All Categories</option>
+            @foreach($categories as $cat)
+              <option value="{{ $cat->name }}" {{ request('category') == $cat->name ? 'selected' : '' }}>{{ $cat->name }}</option>
+            @endforeach
+          </select>
+
+          <select id="floor-filter" class="h-9.5 px-3 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all cursor-pointer" onchange="handleFloorFilter(this.value)">
+            <option value="all">All Floors</option>
+            @foreach($floors as $fl)
+              <option value="{{ $fl->floor }}" {{ request('floor') == $fl->floor ? 'selected' : '' }}>Floor {{ $fl->floor }}</option>
+            @endforeach
+          </select>
+
+          <select id="status-filter" class="h-9.5 px-3 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all cursor-pointer" onchange="handleStatusFilter(this.value)">
+            <option value="all" {{ request('status', 'all') == 'all' ? 'selected' : '' }}>All Status</option>
+            <option value="Active" {{ request('status') == 'Active' ? 'selected' : '' }}>Active</option>
+            <option value="Inactive" {{ request('status') == 'Inactive' ? 'selected' : '' }}>Inactive</option>
+          </select>
+
+          <select id="amenity-filter" class="h-9.5 px-3 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all cursor-pointer" onchange="handleAmenityFilter(this.value)">
+            <option value="all" {{ request('amenity', 'all') == 'all' ? 'selected' : '' }}>All Amenities</option>
+            @foreach($amenities as $amn)
+              <option value="{{ $amn->name }}" {{ request('amenity') == $amn->name ? 'selected' : '' }}>{{ $amn->name }}</option>
+            @endforeach
+          </select>
+        </div>
+
+        <!-- Action Tools -->
+        <div class="flex items-center gap-2 self-end lg:self-auto">
+          <!-- View Toggle -->
+          <div class="flex items-center p-1 bg-slate-100 rounded-xl">
+            <button type="button" class="h-7.5 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer bg-white text-indigo-600 shadow-xs" id="btn-view-table" onclick="setViewMode('table')" title="Table View">
+              <i class="fa-solid fa-table-list mr-1"></i> Table
+            </button>
+            <button type="button" class="h-7.5 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer text-slate-600 hover:text-slate-900" id="btn-view-grid" onclick="setViewMode('grid')" title="Cards Grid View">
+              <i class="fa-solid fa-border-all mr-1"></i> Grid
+            </button>
+          </div>
+
+          <!-- Page Size Selector -->
+          <div class="flex items-center gap-1.5">
+            <span class="text-[11px] font-bold text-slate-400 uppercase">Rows:</span>
+            <select id="page-size-select" class="h-9.5 px-2.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all cursor-pointer" onchange="handlePageSizeChange(this.value)">
+              <option value="10">10</option>
+              <option value="20" selected>20</option>
+              <option value="100">100</option>
+              <option value="all">All</option>
+            </select>
+          </div>
+
+          <button type="button" id="btn-bulk-delete-rooms" class="h-9.5 px-3.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-xs transition-all hidden items-center gap-2 cursor-pointer" onclick="handleBulkDeleteRooms()">
+            <i class="fa-solid fa-trash-can text-xs"></i> Delete Selected (<span id="bulk-selected-rooms-count">0</span>)
+          </button>
+
+          <button type="button" class="h-9.5 px-3.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all flex items-center gap-2 cursor-pointer" onclick="loadRoomsData()" title="Refresh Data">
+            <i class="fa-solid fa-rotate text-slate-500 text-xs"></i>
+          </button>
+        </div>
       </div>
-    </div>
 
-    <div class="admin-layout">
-      @include('admin.includes.sidebar')
-
-      <section class="admin-content-pane">
-        
-        <!-- Header Card -->
-        <div class="crud-header-card">
-          <div>
-            <div style="display: flex; align-items: center; gap: 8px;">
-              <h2 style="font-size: 16px; font-weight: 800; color: var(--text-primary); margin: 0;">Room Assets & Master</h2>
-              <span class="badge-tag purple" id="view-count">{{ count($rooms) }} Records</span>
-            </div>
-            <div style="font-size: 12px; color: var(--text-secondary); margin-top: 3px;">
-              Manage individual room numbers, bedding setups, pax capacities, tariffs, amenities, and room status.
-            </div>
-          </div>
-          <button class="btn-ui-primary" onclick="openAddRoomModal()"><i class="fa-solid fa-plus-circle"></i> Add Room Asset</button>
+      <!-- TABLE VIEW CONTAINER -->
+      <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden" id="rooms-table-container">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="border-b border-slate-200 bg-slate-50/80 text-[11px] font-black uppercase tracking-wider text-slate-500">
+                <th class="w-10 px-4 py-3.5 text-center">
+                  <input type="checkbox" id="select-all-rooms-check" onchange="toggleSelectAllRooms(this)" class="cursor-pointer w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 border-slate-300">
+                </th>
+                <th class="w-12 px-3 py-3.5 text-slate-400 font-mono">#</th>
+                <th class="px-4 py-3.5">Room</th>
+                <th class="px-4 py-3.5">Floor</th>
+                <th class="px-4 py-3.5">Category</th>
+                <th class="px-4 py-3.5">Bedding & Pax</th>
+                <th class="px-4 py-3.5">Base Tariff</th>
+                <th class="px-4 py-3.5">Status</th>
+                <th class="px-4 py-3.5">Amenities</th>
+                <th class="px-4 py-3.5 text-right w-36">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="rooms-tbody" class="divide-y divide-slate-100 text-xs font-medium text-slate-700">
+              <!-- Rendered via JavaScript -->
+            </tbody>
+          </table>
         </div>
 
-        <!-- Top 4 KPI Metrics Row (Filtered Dynamic Stats) -->
-        <div class="room-stats-grid">
-          <!-- Card 1: Total Rooms & Status (Active vs Inactive) -->
-          <div class="room-kpi-card">
-            <div class="room-kpi-bar" style="background: linear-gradient(90deg, #6366f1, #8b5cf6);"></div>
-            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-              <div style="flex: 1; min-width: 0;">
-                <div style="font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.6px;">Room Status & Assets</div>
-                <div style="font-family: var(--font-mono); font-size: 26px; font-weight: 900; color: var(--text-primary); margin-top: 4px;" id="stat-total-rooms">{{ $totalRooms }}</div>
-                <div class="kpi-pills-wrap" id="stat-status-pills">
-                  <span class="badge-tag green" style="font-size: 10px; padding: 2px 7px;">
-                    <i class="fa-solid fa-circle-check"></i> <span id="stat-active-rooms">{{ $activeRooms }}</span> Active
-                  </span>
-                  <span class="badge-tag red" style="font-size: 10px; padding: 2px 7px;">
-                    <i class="fa-solid fa-circle-xmark"></i> <span id="stat-inactive-rooms">{{ $inactiveRooms }}</span> Inactive
-                  </span>
-                </div>
-              </div>
-              <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(99, 102, 241, 0.1); display: flex; align-items: center; justify-content: center; color: var(--accent-primary); flex-shrink: 0;">
-                <i class="fa-solid fa-door-open" style="font-size: 18px;"></i>
-              </div>
-            </div>
+        <!-- Table Pagination Footer -->
+        <div class="p-4 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50/50">
+          <div class="text-xs text-slate-500 font-medium" id="pagination-info">
+            Showing 1 to 20 of {{ count($rooms) }} records
           </div>
-
-          <!-- Card 2: Category Wise Rooms -->
-          <div class="room-kpi-card">
-            <div class="room-kpi-bar" style="background: linear-gradient(90deg, #ec4899, #f43f5e);"></div>
-            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-              <div style="flex: 1; min-width: 0;">
-                <div style="font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.6px;">Category Wise Rooms</div>
-                <div style="font-family: var(--font-mono); font-size: 26px; font-weight: 900; color: #e11d48; margin-top: 4px;">
-                  <span id="stat-category-total-rooms">{{ $totalRooms }}</span>
-                  <span style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; font-family: inherit;">Rooms</span>
-                </div>
-                <div class="kpi-pills-wrap" id="stat-category-pills">
-                  @forelse($categoryWise as $cat => $cnt)
-                    <span class="badge-tag" style="background: rgba(244, 63, 94, 0.1); color: #e11d48; border: 1px solid rgba(244, 63, 94, 0.2); font-size: 10px; padding: 2px 7px; white-space: nowrap;">
-                      {{ $cat }}: <strong style="font-weight: 900; margin-left: 2px;">{{ $cnt }}</strong>
-                    </span>
-                  @empty
-                    <span style="font-size: 11px; color: var(--text-muted);">No categories</span>
-                  @endforelse
-                </div>
-              </div>
-              <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(244, 63, 94, 0.1); display: flex; align-items: center; justify-content: center; color: #e11d48; flex-shrink: 0;">
-                <i class="fa-solid fa-tags" style="font-size: 18px;"></i>
-              </div>
-            </div>
-          </div>
-
-          <!-- Card 3: Floor Wise Rooms -->
-          <div class="room-kpi-card">
-            <div class="room-kpi-bar" style="background: linear-gradient(90deg, #3b82f6, #06b6d4);"></div>
-            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-              <div style="flex: 1; min-width: 0;">
-                <div style="font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.6px;">Floor Wise Rooms</div>
-                <div style="font-family: var(--font-mono); font-size: 26px; font-weight: 900; color: #0284c7; margin-top: 4px;">
-                  <span id="stat-floor-total-rooms">{{ $totalRooms }}</span>
-                  <span style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; font-family: inherit;">Rooms</span>
-                </div>
-                <div class="kpi-pills-wrap" id="stat-floor-pills">
-                  @forelse($floorWise as $fl => $cnt)
-                    <span class="badge-tag" style="background: rgba(6, 182, 212, 0.1); color: #0284c7; border: 1px solid rgba(6, 182, 212, 0.2); font-size: 10px; padding: 2px 7px; white-space: nowrap;">
-                      Floor {{ $fl }}: <strong style="font-weight: 900; margin-left: 2px;">{{ $cnt }}</strong>
-                    </span>
-                  @empty
-                    <span style="font-size: 11px; color: var(--text-muted);">No floors</span>
-                  @endforelse
-                </div>
-              </div>
-              <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(6, 182, 212, 0.1); display: flex; align-items: center; justify-content: center; color: #0284c7; flex-shrink: 0;">
-                <i class="fa-solid fa-layer-group" style="font-size: 18px;"></i>
-              </div>
-            </div>
-          </div>
-
-          <!-- Card 4: Amenities Wise Rooms -->
-          <div class="room-kpi-card">
-            <div class="room-kpi-bar" style="background: linear-gradient(90deg, #10b981, #14b8a6);"></div>
-            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-              <div style="flex: 1; min-width: 0;">
-                <div style="font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.6px;">Amenities Wise Rooms</div>
-                <div style="font-family: var(--font-mono); font-size: 26px; font-weight: 900; color: #059669; margin-top: 4px;">
-                  <span id="stat-amenity-total-rooms">{{ $totalRooms }}</span>
-                  <span style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; font-family: inherit;">Rooms</span>
-                </div>
-                <div class="kpi-pills-wrap" id="stat-amenity-pills">
-                  @forelse($amenityWise as $amn => $cnt)
-                    <span class="badge-tag" style="background: rgba(16, 185, 129, 0.1); color: #059669; border: 1px solid rgba(16, 185, 129, 0.2); font-size: 10px; padding: 2px 7px; white-space: nowrap;">
-                      {{ $amn }}: <strong style="font-weight: 900; margin-left: 2px;">{{ $cnt }}</strong>
-                    </span>
-                  @empty
-                    <span style="font-size: 11px; color: var(--text-muted);">No amenities</span>
-                  @endforelse
-                </div>
-              </div>
-              <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(16, 185, 129, 0.1); display: flex; align-items: center; justify-content: center; color: #059669; flex-shrink: 0;">
-                <i class="fa-solid fa-wand-magic-sparkles" style="font-size: 18px;"></i>
-              </div>
-            </div>
+          <div class="flex items-center gap-1" id="pagination-nav">
+            <!-- Rendered dynamically -->
           </div>
         </div>
+      </div>
 
-        <!-- Control & Filter Toolbar -->
-        <div class="control-toolbar">
-          <!-- Search Bar & Filters -->
-          <div class="filter-group">
-            <!-- Search Input -->
-            <div class="crud-search-wrap" style="width: 190px;">
-              <i class="fa-solid fa-magnifying-glass"></i>
-              <input type="text" id="room-search-input" class="crud-search-input" style="width: 100%;" value="{{ request('search') }}" placeholder="Search room no..." oninput="handleSearch(this.value)">
-            </div>
+      <!-- GRID VIEW CONTAINER (Alternative View) -->
+      <div id="rooms-grid-container" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 hidden">
+        <!-- Dynamically rendered cards -->
+      </div>
 
-            <!-- Category Filter Dropdown -->
-            <select id="category-filter" class="toolbar-filter-select" style="width: 140px;" onchange="handleCategoryFilter(this.value)">
-              <option value="ALL">All Categories</option>
-              @foreach($categories as $cat)
-                <option value="{{ $cat->name }}" {{ request('category') == $cat->name ? 'selected' : '' }}>{{ $cat->name }}</option>
-              @endforeach
-            </select>
-
-            <!-- Floor Filter Dropdown -->
-            <select id="floor-filter" class="toolbar-filter-select" style="width: 130px;" onchange="handleFloorFilter(this.value)">
-              <option value="all">All Floors</option>
-              @foreach($floors as $fl)
-                <option value="{{ $fl->floor }}" {{ request('floor') == $fl->floor ? 'selected' : '' }}>Floor {{ $fl->floor }}</option>
-              @endforeach
-            </select>
-
-            <!-- Status Filter (Active / Inactive) -->
-            <select id="status-filter" class="toolbar-filter-select" style="width: 130px;" onchange="handleStatusFilter(this.value)">
-              <option value="all" {{ request('status', 'all') == 'all' ? 'selected' : '' }}>All Status</option>
-              <option value="Active" {{ request('status') == 'Active' ? 'selected' : '' }}>Active</option>
-              <option value="Inactive" {{ request('status') == 'Inactive' ? 'selected' : '' }}>Inactive</option>
-            </select>
-
-            <!-- Amenities Filter Dropdown -->
-            <select id="amenity-filter" class="toolbar-filter-select" style="width: 150px;" onchange="handleAmenityFilter(this.value)">
-              <option value="all" {{ request('amenity', 'all') == 'all' ? 'selected' : '' }}>All Amenities</option>
-              @foreach($amenities as $amn)
-                <option value="{{ $amn->name }}" {{ request('amenity') == $amn->name ? 'selected' : '' }}>{{ $amn->name }}</option>
-              @endforeach
-            </select>
-          </div>
-
-          <!-- Action Tools -->
-          <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-            <!-- View Toggle -->
-            <div style="display: flex; gap: 3px; background: #e2e8f0; padding: 3px; border-radius: var(--radius-md);">
-              <button class="view-toggle-btn active" id="btn-view-table" onclick="setViewMode('table')" title="Table View">
-                <i class="fa-solid fa-table-list"></i> Table
-              </button>
-              <button class="view-toggle-btn" id="btn-view-grid" onclick="setViewMode('grid')" title="Cards Grid View">
-                <i class="fa-solid fa-border-all"></i> Grid
-              </button>
-            </div>
-
-            <!-- Page Size Selector -->
-            <div style="display: flex; align-items: center; gap: 5px;">
-              <span style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Rows:</span>
-              <select id="page-size-select" class="toolbar-filter-select" style="height: 38px; width: 70px; font-size: 12px; padding: 6px 8px;" onchange="handlePageSizeChange(this.value)">
-                <option value="10">10</option>
-                <option value="20" selected>20</option>
-                <option value="100">100</option>
-                <option value="all">All</option>
-              </select>
-            </div>
-
-            <button id="btn-bulk-delete-rooms" class="btn-action-del" style="display: none; height: 38px; padding: 0 12px; font-size: 12px; align-items: center; gap: 6px;" onclick="handleBulkDeleteRooms()">
-              <i class="fa-solid fa-trash-can"></i> Delete Selected (<span id="bulk-selected-rooms-count">0</span>)
-            </button>
-
-            <button class="btn-ui-secondary" onclick="loadRoomsData()" title="Refresh Data" style="height: 38px;">
-              <i class="fa-solid fa-rotate"></i>
-            </button>
-          </div>
-        </div>
-
-        <!-- TABLE VIEW CONTAINER -->
-        <div class="room-table-card" id="rooms-table-container">
-          <div class="room-table-scroll">
-            <table class="room-table">
-              <thead>
-                <tr>
-                  <th style="width: 40px; text-align: center;"><input type="checkbox" id="select-all-rooms-check" onchange="toggleSelectAllRooms(this)" style="cursor: pointer; width: 16px; height: 16px; accent-color: var(--accent-primary);"></th>
-                  <th style="width: 45px;">#</th>
-                  <th>Room</th>
-                  <th>Floor</th>
-                  <th>Category</th>
-                  <th>Bedding & Pax</th>
-                  <th>Base Tariff</th>
-                  <th>Status</th>
-                  <th>Amenities</th>
-                  <th style="text-align: right; width: 150px;">Actions</th>
-                </tr>
-              </thead>
-              <tbody id="rooms-tbody">
-                <!-- Rendered via JavaScript -->
-              </tbody>
-            </table>
-          </div>
-
-          <!-- Table Pagination Footer -->
-          <div class="table-pagination-footer">
-            <div id="pagination-info" style="font-size: 12px; color: var(--text-secondary);">
-              Showing 1 to 20 of {{ count($rooms) }} records
-            </div>
-            <div class="pagination-controls-group" id="pagination-nav">
-              <!-- Rendered dynamically -->
-            </div>
-          </div>
-        </div>
-
-        <!-- GRID VIEW CONTAINER (Alternative View) -->
-        <div id="rooms-grid-container" class="room-inventory-grid">
-          <!-- Dynamically rendered cards -->
-        </div>
-
-      </section>
-    </div>
-
+    </section>
   </div>
 </main>
 
 <!-- MODAL 1: Add New Room Asset -->
-<div class="modal-backdrop" id="add-room-modal">
-  <div class="modal-window large" style="width: 820px; max-width: 95vw; max-height: 90vh; display: flex; flex-direction: column;">
-    <div class="modal-top">
-      <h3 style="margin: 0;"><i class="fa-solid fa-plus-circle"></i> Add New Room Asset • Hotel Sagar Sonnet</h3>
-      <button class="modal-close" onclick="closeModal('add-room-modal')">&times;</button>
+<div class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 hidden" id="add-room-modal">
+  <div class="w-full max-w-3xl bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden flex flex-col max-h-[92vh]">
+    <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+      <h3 class="text-base font-bold text-slate-800 flex items-center gap-2.5">
+        <span class="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-sm">
+          <i class="fa-solid fa-plus-circle"></i>
+        </span>
+        <span>Add New Room Asset • Hotel Sagar Sonnet</span>
+      </h3>
+      <button type="button" class="w-8 h-8 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors flex items-center justify-center cursor-pointer text-base" onclick="closeModal('add-room-modal')">&times;</button>
     </div>
-    <form id="add-room-form" onsubmit="handleAddRoom(event)" style="display: flex; flex-direction: column; flex: 1; min-height: 0; overflow: hidden;">
-      <div class="modal-content-area" style="overflow-y: auto !important; flex: 1 1 auto; min-height: 0; max-height: calc(88vh - 120px); padding: 24px; background: #f8fafc;">
+    <form id="add-room-form" onsubmit="handleAddRoom(event)" class="flex flex-col flex-1 overflow-hidden">
+      <div class="p-6 space-y-4 overflow-y-auto bg-slate-50/50">
         
         <!-- Section 1: Room Identification & Classification -->
-        <div style="display: flex; flex-direction: column; background: #fff; padding: 20px 22px; border: 1px solid var(--border-medium); border-radius: var(--radius-md); box-shadow: 0 4px 12px rgba(0,0,0,0.02); margin-bottom: 18px;">
-          <h4 style="font-size: 12px; color: var(--accent-primary); margin: 0 0 16px 0; text-transform: uppercase; font-weight: 900; letter-spacing: 1px; display: flex; align-items: center; gap: 8px;">
+        <div class="bg-white p-5 border border-slate-200 rounded-xl space-y-4 shadow-xs">
+          <h4 class="text-xs font-black uppercase tracking-wider text-indigo-600 flex items-center gap-2">
             <i class="fa-solid fa-hotel"></i> Room Asset & Classification
           </h4>
           
-          <div style="display: flex; gap: 16px; margin-bottom: 16px; flex-wrap: wrap;">
-            <div style="flex: 1; min-width: 220px;">
-              <label style="display:block; font-size: 11px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.6px;">
-                Room Number <span style="color: red;">*</span>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1.5">
+                Room Number <span class="text-rose-500">*</span>
               </label>
-              <input type="text" id="new-room-no" class="crud-search-input" placeholder="e.g. 501" required style="width:100%; height:40px; font-family: var(--font-mono); font-weight: 800; font-size: 14px;">
+              <input type="text" id="new-room-no" class="w-full h-9.5 px-3.5 rounded-xl border border-slate-200 bg-white font-mono font-bold text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all" placeholder="e.g. 501" required>
             </div>
-            <div style="flex: 1; min-width: 220px;">
-              <label style="display:block; font-size: 11px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.6px;">
-                Floor <span style="color: red;">*</span>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1.5">
+                Floor <span class="text-rose-500">*</span>
               </label>
-              <select id="new-room-floor" class="select2-field" style="width:100%;" required>
+              <select id="new-room-floor" class="w-full h-9.5 px-3.5 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all cursor-pointer" required>
                 <option value="">-- Select Floor --</option>
                 @foreach($floors as $fl)
                   <option value="{{ $fl->floor }}">Floor {{ $fl->floor }} ({{ $fl->name }})</option>
@@ -851,29 +307,29 @@
             </div>
           </div>
 
-          <div style="display: flex; gap: 16px; flex-wrap: wrap;">
-            <div style="flex: 1; min-width: 180px;">
-              <label style="display:block; font-size: 11px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.6px;">
-                Room Category <span style="color: red;">*</span>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1.5">
+                Room Category <span class="text-rose-500">*</span>
               </label>
-              <select id="new-room-cat" class="select2-field" style="width:100%;" required onchange="handleCategoryChange(this.value)">
+              <select id="new-room-cat" class="w-full h-9.5 px-3.5 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all cursor-pointer" required onchange="handleCategoryChange(this.value)">
                 <option value="">-- Select Category --</option>
                 @foreach($categories as $cat)
                   <option value="{{ $cat->name }}" data-bed="{{ $cat->bedding_config }}" data-pax="{{ $cat->pax_capacity }}">{{ $cat->name }}</option>
                 @endforeach
               </select>
             </div>
-            <div style="flex: 1; min-width: 180px;">
-              <label style="display:block; font-size: 11px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.6px;">
-                Base Tariff (₹ / Night) <span style="color: red;">*</span>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1.5">
+                Base Tariff (₹ / Night) <span class="text-rose-500">*</span>
               </label>
-              <input type="number" id="new-room-rate" class="crud-search-input" value="3500" required style="width:100%; height:40px; font-family: var(--font-mono); font-weight: 800; color: var(--accent-primary);">
+              <input type="number" id="new-room-rate" class="w-full h-9.5 px-3.5 rounded-xl border border-slate-200 bg-white font-mono font-bold text-sm text-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all" value="3500" required>
             </div>
-            <div style="flex: 1; min-width: 180px;">
-              <label style="display:block; font-size: 11px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.6px;">
-                Status <span style="color: red;">*</span>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1.5">
+                Status <span class="text-rose-500">*</span>
               </label>
-              <select id="new-room-status" class="select2-field" style="width:100%;">
+              <select id="new-room-status" class="w-full h-9.5 px-3.5 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all cursor-pointer">
                 <option value="Active" selected>Active</option>
                 <option value="Inactive">Inactive</option>
               </select>
@@ -882,40 +338,38 @@
         </div>
 
         <!-- Section 2: Bedding Setup & Capacity -->
-        <div style="display: flex; flex-direction: column; background: #fff; padding: 20px 22px; border: 1px solid var(--border-medium); border-radius: var(--radius-md); box-shadow: 0 4px 12px rgba(0,0,0,0.02); margin-bottom: 18px;">
-          <h4 style="font-size: 12px; color: var(--accent-primary); margin: 0 0 16px 0; text-transform: uppercase; font-weight: 900; letter-spacing: 1px; display: flex; align-items: center; gap: 8px;">
+        <div class="bg-white p-5 border border-slate-200 rounded-xl space-y-4 shadow-xs">
+          <h4 class="text-xs font-black uppercase tracking-wider text-indigo-600 flex items-center gap-2">
             <i class="fa-solid fa-bed"></i> Bedding Setup & Capacity
           </h4>
           
-          <div style="display: flex; gap: 16px; flex-wrap: wrap;">
-            <!-- Column 1: Bedding Configuration -->
-            <div style="flex: 1; min-width: 240px;">
-              <label style="display:block; font-size: 11px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.6px;">
-                Bedding Configuration <span style="color: red;">*</span>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1.5">
+                Bedding Configuration <span class="text-rose-500">*</span>
               </label>
-              <select id="new-room-bed" class="select2-field" style="width:100%;">
+              <select id="new-room-bed" class="w-full h-9.5 px-3.5 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all cursor-pointer">
                 @foreach($beddingConfigs as $bed)
                   <option value="{{ $bed->name }}">{{ $bed->name }}</option>
                 @endforeach
               </select>
             </div>
 
-            <!-- Column 2: Separate Pax Capacity (Auto Linked) -->
-            <div style="flex: 1; min-width: 240px;">
-              <label style="display:block; font-size: 11px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.6px;">
-                Pax Capacity <span style="font-size: 10px; color: var(--accent-primary); font-weight: 700; text-transform: none;">(Auto-linked)</span>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1.5">
+                Pax Capacity <span class="text-[11px] text-indigo-600 font-semibold">(Auto-linked)</span>
               </label>
-              <div style="height: 40px; padding: 6px 12px; background: #f8fafc; border: 1px solid var(--border-medium); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: space-between; gap: 8px;">
-                <div style="display: flex; align-items: center; gap: 6px;">
-                  <span class="badge-tag blue" style="font-size: 11px; font-weight: 700;">
-                    <i class="fa-solid fa-user"></i> <span id="new-pax-adults-text">2 Adults</span>
+              <div class="h-9.5 px-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between gap-2">
+                <div class="flex items-center gap-1.5">
+                  <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-sky-50 text-sky-700 border border-sky-200/60">
+                    <i class="fa-solid fa-user text-[9px]"></i> <span id="new-pax-adults-text">2 Adults</span>
                   </span>
-                  <span class="badge-tag yellow" style="font-size: 11px; font-weight: 700;">
-                    <i class="fa-solid fa-child"></i> <span id="new-pax-children-text">1 Child</span>
+                  <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200/60">
+                    <i class="fa-solid fa-child text-[9px]"></i> <span id="new-pax-children-text">1 Child</span>
                   </span>
                 </div>
-                <span class="badge-tag purple" style="font-size: 11px; font-weight: 800;">
-                  <i class="fa-solid fa-users"></i> <span id="new-pax-total-text">Total 3 Pax</span>
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-black bg-purple-50 text-purple-700 border border-purple-200/60">
+                  <i class="fa-solid fa-users text-[9px]"></i> <span id="new-pax-total-text">Total 3 Pax</span>
                 </span>
               </div>
             </div>
@@ -923,37 +377,35 @@
         </div>
 
         <!-- Section: Room Plan / Meal Package -->
-        <div style="display: flex; flex-direction: column; background: #fff; padding: 20px 22px; border: 1px solid var(--border-medium); border-radius: var(--radius-md); box-shadow: 0 4px 12px rgba(0,0,0,0.02); margin-bottom: 18px;">
-          <h4 style="font-size: 12px; color: var(--accent-primary); margin: 0 0 16px 0; text-transform: uppercase; font-weight: 900; letter-spacing: 1px; display: flex; align-items: center; gap: 8px;">
+        <div class="bg-white p-5 border border-slate-200 rounded-xl space-y-4 shadow-xs">
+          <h4 class="text-xs font-black uppercase tracking-wider text-indigo-600 flex items-center gap-2">
             <i class="fa-solid fa-utensils"></i> Meal Plan / Package
           </h4>
           <div>
-            <label style="display:block; font-size: 11px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.6px;">
-              Plan <span style="font-size: 10px; color: var(--text-muted); font-weight: 600; text-transform: none;">(Searchable Dropdown)</span>
+            <label class="block text-xs font-bold text-slate-700 mb-1.5">
+              Plan <span class="text-[11px] text-slate-400 font-normal">(Searchable Dropdown)</span>
             </label>
-            <select id="new-room-plan" class="select2-field" style="width:100%;">
+            <select id="new-room-plan" class="w-full h-9.5 px-3.5 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all cursor-pointer">
               <option value="">-- No Plan / Room Only (EP) --</option>
-              @if(isset($plans))
-                @foreach($plans as $plan)
-                  <option value="{{ $plan->id }}">{{ $plan->plan_name }} @if(!empty($plan->short_code))({{ $plan->short_code }})@endif @if($plan->price !== null && $plan->price > 0)- ₹{{ number_format($plan->price, 2) }}@endif</option>
-                @endforeach
-              @endif
+              @foreach($plans as $plan)
+                <option value="{{ $plan->id }}">{{ $plan->plan_name }} @if(!empty($plan->short_code))({{ $plan->short_code }})@endif @if($plan->price !== null && $plan->price > 0)- ₹{{ number_format($plan->price, 2) }}@endif</option>
+              @endforeach
             </select>
           </div>
         </div>
 
-        <!-- Section 3: Amenities & Features (Dynamic from Amenities Master) -->
-        <div style="display: flex; flex-direction: column; background: #fff; padding: 20px 22px; border: 1px solid var(--border-medium); border-radius: var(--radius-md); box-shadow: 0 4px 12px rgba(0,0,0,0.02);">
-          <h4 style="font-size: 12px; color: var(--accent-primary); margin: 0 0 16px 0; text-transform: uppercase; font-weight: 900; letter-spacing: 1px; display: flex; align-items: center; gap: 8px;">
+        <!-- Section 3: Amenities & Features -->
+        <div class="bg-white p-5 border border-slate-200 rounded-xl space-y-4 shadow-xs">
+          <h4 class="text-xs font-black uppercase tracking-wider text-indigo-600 flex items-center gap-2">
             <i class="fa-solid fa-wand-magic-sparkles"></i> Amenities & Features
           </h4>
           
-          <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px;" id="add-amenities-container">
+          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5" id="add-amenities-container">
             @foreach($amenities as $amn)
-              <label class="amenity-checkbox-item">
-                <input type="checkbox" name="add_amenities[]" value="{{ $amn->id }}" data-name="{{ $amn->name }}" {{ in_array($amn->name, ['Free Wi-Fi', 'Balcony', 'Smart 55" TV', 'AC']) ? 'checked' : '' }}>
-                <i class="fa-solid {{ $amn->icon ?: 'fa-check' }}" style="color: var(--accent-primary); font-size: 13px; width: 16px;"></i>
-                <span>{{ $amn->name }}</span>
+              <label class="flex items-center gap-2.5 p-2.5 bg-slate-50 border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-100 transition-all text-xs font-semibold text-slate-700">
+                <input type="checkbox" name="add_amenities[]" value="{{ $amn->id }}" data-name="{{ $amn->name }}" {{ in_array($amn->name, ['Free Wi-Fi', 'Balcony', 'Smart 55" TV', 'AC']) ? 'checked' : '' }} class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 border-slate-300 cursor-pointer">
+                <i class="fa-solid {{ $amn->icon ?: 'fa-check' }} text-indigo-600 text-xs w-4"></i>
+                <span class="truncate">{{ $amn->name }}</span>
               </label>
             @endforeach
           </div>
@@ -961,43 +413,50 @@
 
       </div>
 
-      <div class="modal-bot" style="padding: 14px 20px; background: #fff; border-top: 1px solid var(--border-medium); display: flex; justify-content: flex-end; gap: 10px;">
-        <button type="button" class="btn-ui-secondary" onclick="closeModal('add-room-modal')" style="height: 38px; padding: 0 18px;">Cancel</button>
-        <button type="submit" class="btn-ui-primary" style="height: 38px; padding: 0 22px;"><i class="fa-solid fa-check"></i> Register Room Asset</button>
+      <div class="px-6 py-3.5 bg-white border-t border-slate-100 flex justify-end items-center gap-2.5">
+        <button type="button" class="h-9.5 px-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all cursor-pointer" onclick="closeModal('add-room-modal')">Cancel</button>
+        <button type="submit" class="h-9.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-xs shadow-indigo-200 transition-all flex items-center gap-2 cursor-pointer">
+          <i class="fa-solid fa-check text-xs"></i> Register Room Asset
+        </button>
       </div>
     </form>
   </div>
 </div>
 
 <!-- MODAL 2: Edit Room Asset -->
-<div class="modal-backdrop" id="edit-room-modal">
-  <div class="modal-window large" style="width: 820px; max-width: 95vw; max-height: 90vh; display: flex; flex-direction: column;">
-    <div class="modal-top">
-      <h3 style="margin: 0;"><i class="fa-solid fa-pen-to-square"></i> Edit Room Asset: <span id="edit-modal-room-num" style="font-family: var(--font-mono); font-weight: 900;"></span></h3>
-      <button class="modal-close" onclick="closeModal('edit-room-modal')">&times;</button>
+<div class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 hidden" id="edit-room-modal">
+  <div class="w-full max-w-3xl bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden flex flex-col max-h-[92vh]">
+    <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+      <h3 class="text-base font-bold text-slate-800 flex items-center gap-2.5">
+        <span class="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-sm">
+          <i class="fa-solid fa-pen-to-square"></i>
+        </span>
+        <span>Edit Room Asset: <span id="edit-modal-room-num" class="font-mono font-black text-indigo-600"></span></span>
+      </h3>
+      <button type="button" class="w-8 h-8 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors flex items-center justify-center cursor-pointer text-base" onclick="closeModal('edit-room-modal')">&times;</button>
     </div>
-    <form id="edit-room-form" onsubmit="handleSaveEditRoom(event)" style="display: flex; flex-direction: column; flex: 1; min-height: 0; overflow: hidden;">
+    <form id="edit-room-form" onsubmit="handleSaveEditRoom(event)" class="flex flex-col flex-1 overflow-hidden">
       <input type="hidden" id="edit-room-id">
-      <div class="modal-content-area" style="overflow-y: auto !important; flex: 1 1 auto; min-height: 0; max-height: calc(88vh - 120px); padding: 24px; background: #f8fafc;">
+      <div class="p-6 space-y-4 overflow-y-auto bg-slate-50/50">
         
         <!-- Section 1: Room Identification & Classification -->
-        <div style="display: flex; flex-direction: column; background: #fff; padding: 20px 22px; border: 1px solid var(--border-medium); border-radius: var(--radius-md); box-shadow: 0 4px 12px rgba(0,0,0,0.02); margin-bottom: 18px;">
-          <h4 style="font-size: 12px; color: var(--accent-primary); margin: 0 0 16px 0; text-transform: uppercase; font-weight: 900; letter-spacing: 1px; display: flex; align-items: center; gap: 8px;">
+        <div class="bg-white p-5 border border-slate-200 rounded-xl space-y-4 shadow-xs">
+          <h4 class="text-xs font-black uppercase tracking-wider text-indigo-600 flex items-center gap-2">
             <i class="fa-solid fa-hotel"></i> Room Asset & Classification
           </h4>
           
-          <div style="display: flex; gap: 16px; margin-bottom: 16px; flex-wrap: wrap;">
-            <div style="flex: 1; min-width: 220px;">
-              <label style="display:block; font-size: 11px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.6px;">
-                Room Number <span style="color: red;">*</span>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1.5">
+                Room Number <span class="text-rose-500">*</span>
               </label>
-              <input type="text" id="edit-room-no" class="crud-search-input" required style="width:100%; height:40px; font-family: var(--font-mono); font-weight: 800; font-size: 14px;">
+              <input type="text" id="edit-room-no" class="w-full h-9.5 px-3.5 rounded-xl border border-slate-200 bg-white font-mono font-bold text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all" required>
             </div>
-            <div style="flex: 1; min-width: 220px;">
-              <label style="display:block; font-size: 11px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.6px;">
-                Floor <span style="color: red;">*</span>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1.5">
+                Floor <span class="text-rose-500">*</span>
               </label>
-              <select id="edit-room-floor" class="select2-field" style="width:100%;" required>
+              <select id="edit-room-floor" class="w-full h-9.5 px-3.5 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all cursor-pointer" required>
                 @foreach($floors as $fl)
                   <option value="{{ $fl->floor }}">Floor {{ $fl->floor }} ({{ $fl->name }})</option>
                 @endforeach
@@ -1005,28 +464,28 @@
             </div>
           </div>
 
-          <div style="display: flex; gap: 16px; flex-wrap: wrap;">
-            <div style="flex: 1; min-width: 180px;">
-              <label style="display:block; font-size: 11px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.6px;">
-                Room Category <span style="color: red;">*</span>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1.5">
+                Room Category <span class="text-rose-500">*</span>
               </label>
-              <select id="edit-room-cat" class="select2-field" style="width:100%;" required>
+              <select id="edit-room-cat" class="w-full h-9.5 px-3.5 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all cursor-pointer" required>
                 @foreach($categories as $cat)
                   <option value="{{ $cat->name }}" data-bed="{{ $cat->bedding_config }}" data-pax="{{ $cat->pax_capacity }}">{{ $cat->name }}</option>
                 @endforeach
               </select>
             </div>
-            <div style="flex: 1; min-width: 180px;">
-              <label style="display:block; font-size: 11px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.6px;">
-                Base Tariff (₹ / Night) <span style="color: red;">*</span>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1.5">
+                Base Tariff (₹ / Night) <span class="text-rose-500">*</span>
               </label>
-              <input type="number" id="edit-room-rate" class="crud-search-input" required style="width:100%; height:40px; font-family: var(--font-mono); font-weight: 800; color: var(--accent-primary);">
+              <input type="number" id="edit-room-rate" class="w-full h-9.5 px-3.5 rounded-xl border border-slate-200 bg-white font-mono font-bold text-sm text-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all" required>
             </div>
-            <div style="flex: 1; min-width: 180px;">
-              <label style="display:block; font-size: 11px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.6px;">
-                Status <span style="color: red;">*</span>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1.5">
+                Status <span class="text-rose-500">*</span>
               </label>
-              <select id="edit-room-status" class="select2-field" style="width:100%;">
+              <select id="edit-room-status" class="w-full h-9.5 px-3.5 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all cursor-pointer">
                 <option value="Active">Active</option>
                 <option value="Inactive">Inactive</option>
               </select>
@@ -1035,40 +494,38 @@
         </div>
 
         <!-- Section 2: Bedding Setup & Capacity -->
-        <div style="display: flex; flex-direction: column; background: #fff; padding: 20px 22px; border: 1px solid var(--border-medium); border-radius: var(--radius-md); box-shadow: 0 4px 12px rgba(0,0,0,0.02); margin-bottom: 18px;">
-          <h4 style="font-size: 12px; color: var(--accent-primary); margin: 0 0 16px 0; text-transform: uppercase; font-weight: 900; letter-spacing: 1px; display: flex; align-items: center; gap: 8px;">
+        <div class="bg-white p-5 border border-slate-200 rounded-xl space-y-4 shadow-xs">
+          <h4 class="text-xs font-black uppercase tracking-wider text-indigo-600 flex items-center gap-2">
             <i class="fa-solid fa-bed"></i> Bedding Setup & Capacity
           </h4>
           
-          <div style="display: flex; gap: 16px; flex-wrap: wrap;">
-            <!-- Column 1: Bedding Configuration -->
-            <div style="flex: 1; min-width: 240px;">
-              <label style="display:block; font-size: 11px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.6px;">
-                Bedding Configuration <span style="color: red;">*</span>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1.5">
+                Bedding Configuration <span class="text-rose-500">*</span>
               </label>
-              <select id="edit-room-bed" class="select2-field" style="width:100%;">
+              <select id="edit-room-bed" class="w-full h-9.5 px-3.5 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all cursor-pointer">
                 @foreach($beddingConfigs as $bed)
                   <option value="{{ $bed->name }}">{{ $bed->name }}</option>
                 @endforeach
               </select>
             </div>
 
-            <!-- Column 2: Separate Pax Capacity (Auto Linked) -->
-            <div style="flex: 1; min-width: 240px;">
-              <label style="display:block; font-size: 11px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.6px;">
-                Pax Capacity <span style="font-size: 10px; color: var(--accent-primary); font-weight: 700; text-transform: none;">(Auto-linked)</span>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1.5">
+                Pax Capacity <span class="text-[11px] text-indigo-600 font-semibold">(Auto-linked)</span>
               </label>
-              <div style="height: 40px; padding: 6px 12px; background: #f8fafc; border: 1px solid var(--border-medium); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: space-between; gap: 8px;">
-                <div style="display: flex; align-items: center; gap: 6px;">
-                  <span class="badge-tag blue" style="font-size: 11px; font-weight: 700;">
-                    <i class="fa-solid fa-user"></i> <span id="edit-pax-adults-text">2 Adults</span>
+              <div class="h-9.5 px-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between gap-2">
+                <div class="flex items-center gap-1.5">
+                  <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-sky-50 text-sky-700 border border-sky-200/60">
+                    <i class="fa-solid fa-user text-[9px]"></i> <span id="edit-pax-adults-text">2 Adults</span>
                   </span>
-                  <span class="badge-tag yellow" style="font-size: 11px; font-weight: 700;">
-                    <i class="fa-solid fa-child"></i> <span id="edit-pax-children-text">1 Child</span>
+                  <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200/60">
+                    <i class="fa-solid fa-child text-[9px]"></i> <span id="edit-pax-children-text">1 Child</span>
                   </span>
                 </div>
-                <span class="badge-tag purple" style="font-size: 11px; font-weight: 800;">
-                  <i class="fa-solid fa-users"></i> <span id="edit-pax-total-text">Total 3 Pax</span>
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-black bg-purple-50 text-purple-700 border border-purple-200/60">
+                  <i class="fa-solid fa-users text-[9px]"></i> <span id="edit-pax-total-text">Total 3 Pax</span>
                 </span>
               </div>
             </div>
@@ -1076,37 +533,35 @@
         </div>
 
         <!-- Section: Room Plan / Meal Package -->
-        <div style="display: flex; flex-direction: column; background: #fff; padding: 20px 22px; border: 1px solid var(--border-medium); border-radius: var(--radius-md); box-shadow: 0 4px 12px rgba(0,0,0,0.02); margin-bottom: 18px;">
-          <h4 style="font-size: 12px; color: var(--accent-primary); margin: 0 0 16px 0; text-transform: uppercase; font-weight: 900; letter-spacing: 1px; display: flex; align-items: center; gap: 8px;">
+        <div class="bg-white p-5 border border-slate-200 rounded-xl space-y-4 shadow-xs">
+          <h4 class="text-xs font-black uppercase tracking-wider text-indigo-600 flex items-center gap-2">
             <i class="fa-solid fa-utensils"></i> Meal Plan / Package
           </h4>
           <div>
-            <label style="display:block; font-size: 11px; font-weight: 800; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.6px;">
-              Plan <span style="font-size: 10px; color: var(--text-muted); font-weight: 600; text-transform: none;">(Searchable Dropdown)</span>
+            <label class="block text-xs font-bold text-slate-700 mb-1.5">
+              Plan <span class="text-[11px] text-slate-400 font-normal">(Searchable Dropdown)</span>
             </label>
-            <select id="edit-room-plan" class="select2-field" style="width:100%;">
+            <select id="edit-room-plan" class="w-full h-9.5 px-3.5 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all cursor-pointer">
               <option value="">-- No Plan / Room Only (EP) --</option>
-              @if(isset($plans))
-                @foreach($plans as $plan)
-                  <option value="{{ $plan->id }}">{{ $plan->plan_name }} @if(!empty($plan->short_code))({{ $plan->short_code }})@endif @if($plan->price !== null && $plan->price > 0)- ₹{{ number_format($plan->price, 2) }}@endif</option>
-                @endforeach
-              @endif
+              @foreach($plans as $plan)
+                <option value="{{ $plan->id }}">{{ $plan->plan_name }} @if(!empty($plan->short_code))({{ $plan->short_code }})@endif @if($plan->price !== null && $plan->price > 0)- ₹{{ number_format($plan->price, 2) }}@endif</option>
+              @endforeach
             </select>
           </div>
         </div>
 
-        <!-- Section 3: Amenities & Features (Dynamic from Amenities Master) -->
-        <div style="display: flex; flex-direction: column; background: #fff; padding: 20px 22px; border: 1px solid var(--border-medium); border-radius: var(--radius-md); box-shadow: 0 4px 12px rgba(0,0,0,0.02);">
-          <h4 style="font-size: 12px; color: var(--accent-primary); margin: 0 0 16px 0; text-transform: uppercase; font-weight: 900; letter-spacing: 1px; display: flex; align-items: center; gap: 8px;">
+        <!-- Section 3: Amenities & Features -->
+        <div class="bg-white p-5 border border-slate-200 rounded-xl space-y-4 shadow-xs">
+          <h4 class="text-xs font-black uppercase tracking-wider text-indigo-600 flex items-center gap-2">
             <i class="fa-solid fa-wand-magic-sparkles"></i> Amenities & Features
           </h4>
           
-          <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px;" id="edit-amenities-container">
+          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5" id="edit-amenities-container">
             @foreach($amenities as $amn)
-              <label class="amenity-checkbox-item">
-                <input type="checkbox" name="edit_amenities[]" value="{{ $amn->id }}" data-name="{{ $amn->name }}">
-                <i class="fa-solid {{ $amn->icon ?: 'fa-check' }}" style="color: var(--accent-primary); font-size: 13px; width: 16px;"></i>
-                <span>{{ $amn->name }}</span>
+              <label class="flex items-center gap-2.5 p-2.5 bg-slate-50 border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-100 transition-all text-xs font-semibold text-slate-700">
+                <input type="checkbox" name="edit_amenities[]" value="{{ $amn->id }}" data-name="{{ $amn->name }}" class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 border-slate-300 cursor-pointer">
+                <i class="fa-solid {{ $amn->icon ?: 'fa-check' }} text-indigo-600 text-xs w-4"></i>
+                <span class="truncate">{{ $amn->name }}</span>
               </label>
             @endforeach
           </div>
@@ -1114,112 +569,120 @@
 
       </div>
 
-      <div class="modal-bot" style="padding: 14px 20px; background: #fff; border-top: 1px solid var(--border-medium); display: flex; justify-content: flex-end; gap: 10px;">
-        <button type="button" class="btn-ui-secondary" onclick="closeModal('edit-room-modal')" style="height: 38px; padding: 0 18px;">Cancel</button>
-        <button type="submit" class="btn-ui-primary" style="height: 38px; padding: 0 22px;"><i class="fa-solid fa-check"></i> Save Changes</button>
+      <div class="px-6 py-3.5 bg-white border-t border-slate-100 flex justify-end items-center gap-2.5">
+        <button type="button" class="h-9.5 px-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all cursor-pointer" onclick="closeModal('edit-room-modal')">Cancel</button>
+        <button type="submit" class="h-9.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-xs shadow-indigo-200 transition-all flex items-center gap-2 cursor-pointer">
+          <i class="fa-solid fa-check text-xs"></i> Save Changes
+        </button>
       </div>
     </form>
   </div>
 </div>
 
 <!-- MODAL 3: View Room Details Modal -->
-<div class="modal-backdrop" id="view-room-modal">
-  <div class="modal-window large" style="width: 680px; max-width: 95vw; border-radius: 16px; overflow: hidden; box-shadow: 0 25px 60px rgba(0,0,0,0.2); border: none;">
-    <div class="modal-top" style="background: linear-gradient(135deg, #6366f1, #8b5cf6); padding: 16px 24px; color: #ffffff; display: flex; justify-content: space-between; align-items: center;">
-      <h3 style="margin: 0; font-size: 16px; font-weight: 800; color: #ffffff; display: flex; align-items: center; gap: 8px;">
-        <i class="fa-solid fa-door-open"></i> Room Asset Details
+<div class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 hidden" id="view-room-modal">
+  <div class="w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden flex flex-col max-h-[90vh]">
+    <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+      <h3 class="text-base font-bold text-slate-800 flex items-center gap-2.5">
+        <span class="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-sm">
+          <i class="fa-solid fa-door-open"></i>
+        </span>
+        <span>Room Asset Details</span>
       </h3>
-      <button class="modal-close" onclick="closeModal('view-room-modal')" style="background: rgba(255,255,255,0.2); color: #ffffff; border: none; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 16px;">&times;</button>
+      <button type="button" class="w-8 h-8 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors flex items-center justify-center cursor-pointer text-base" onclick="closeModal('view-room-modal')">&times;</button>
     </div>
-    <div id="view-room-body" style="padding: 22px 24px; max-height: 80vh; overflow-y: auto; background: #f8fafc;">
+    <div id="view-room-body" class="p-6 space-y-4 overflow-y-auto bg-slate-50/50">
       <!-- Populated dynamically via JavaScript -->
     </div>
-    <div class="modal-bot" style="padding: 14px 24px; background: #ffffff; border-top: 1px solid var(--border-medium); display: flex; justify-content: space-between; align-items: center;">
+    <div class="px-6 py-3.5 bg-white border-t border-slate-100 flex justify-between items-center">
       <div id="view-room-bot-left"></div>
-      <button type="button" class="btn-ui-secondary" onclick="closeModal('view-room-modal')" style="height: 38px; padding: 0 20px; font-weight: 700; border-radius: 8px;">Close</button>
+      <button type="button" class="h-9.5 px-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all cursor-pointer" onclick="closeModal('view-room-modal')">Close</button>
     </div>
   </div>
 </div>
 
 <!-- MODAL 4: Room Maintenance Work Order Modal -->
-<div class="modal-backdrop" id="maint-workorder-modal">
-  <div class="modal-window" style="width: 640px; max-width: 95vw; border-radius: 18px; overflow: hidden; box-shadow: 0 25px 60px rgba(0,0,0,0.3);">
-    <div class="modal-top" style="background: linear-gradient(135deg, #6366f1, #8b5cf6); padding: 18px 24px; color: #ffffff; display: flex; justify-content: space-between; align-items: center; border-bottom: none;">
-      <h3 style="margin: 0; font-size: 16px; font-weight: 800; display: flex; align-items: center; gap: 10px; color: #ffffff;">
-        <i class="fa-solid fa-wrench"></i> Room Maintenance Work Order
+<div class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 hidden" id="maint-workorder-modal">
+  <div class="w-full max-w-xl bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden flex flex-col">
+    <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+      <h3 class="text-base font-bold text-slate-800 flex items-center gap-2.5">
+        <span class="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-sm">
+          <i class="fa-solid fa-wrench"></i>
+        </span>
+        <span>Room Maintenance Work Order</span>
       </h3>
-      <button class="modal-close" onclick="closeModal('maint-workorder-modal')" style="background: rgba(255,255,255,0.2); color: #ffffff; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border: none; font-size: 18px; cursor: pointer;">&times;</button>
+      <button type="button" class="w-8 h-8 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors flex items-center justify-center cursor-pointer text-base" onclick="closeModal('maint-workorder-modal')">&times;</button>
     </div>
 
     <form id="maint-workorder-form" onsubmit="handleSaveMaintenanceWorkOrder(event)">
       <input type="hidden" id="maint-room-id">
-      <div class="modal-content-area" style="padding: 24px; background: #ffffff;">
-        <div style="font-size: 11px; font-weight: 800; color: #6366f1; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+      <div class="p-6 space-y-4 bg-slate-50/50">
+        <div class="text-[11px] font-black uppercase tracking-wider text-indigo-600 flex items-center gap-2">
           <i class="fa-solid fa-hotel"></i> WORK ORDER SPECIFICATIONS
         </div>
 
-        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px;">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div>
-            <label style="display:block; font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px;">
+            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">
               ROOM CATEGORY
             </label>
-            <input type="text" id="maint-room-cat" class="crud-search-input" readonly style="background: #f8fafc; font-weight: 700; color: var(--text-primary); cursor: not-allowed; height: 38px; width: 100%;">
+            <input type="text" id="maint-room-cat" class="w-full h-9 px-3 rounded-xl border border-slate-200 bg-slate-100 font-semibold text-xs text-slate-700 cursor-not-allowed" readonly>
           </div>
           <div>
-            <label style="display:block; font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px;">
+            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">
               FLOOR
             </label>
-            <input type="text" id="maint-room-floor" class="crud-search-input" readonly style="background: #f8fafc; font-weight: 700; color: var(--text-primary); cursor: not-allowed; height: 38px; width: 100%;">
+            <input type="text" id="maint-room-floor" class="w-full h-9 px-3 rounded-xl border border-slate-200 bg-slate-100 font-semibold text-xs text-slate-700 cursor-not-allowed" readonly>
           </div>
           <div>
-            <label style="display:block; font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px;">
+            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">
               ROOM NUMBER
             </label>
-            <input type="text" id="maint-room-no-display" class="crud-search-input" readonly style="background: #f8fafc; font-weight: 800; color: var(--accent-primary); cursor: not-allowed; height: 38px; width: 100%; font-family: var(--font-mono);">
+            <input type="text" id="maint-room-no-display" class="w-full h-9 px-3 rounded-xl border border-slate-200 bg-slate-100 font-mono font-black text-xs text-indigo-600 cursor-not-allowed" readonly>
           </div>
         </div>
 
-        <div style="margin-bottom: 16px;">
-          <label style="display:block; font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px;">
-            MAINTENANCE REASON / WORK DESCRIPTION <span style="color: red;">*</span>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1.5">
+            MAINTENANCE REASON / WORK DESCRIPTION <span class="text-rose-500">*</span>
           </label>
-          <input type="text" id="maint-reason" class="crud-search-input" placeholder="e.g. HVAC Air Conditioning & Compressor Service" required style="width: 100%; height: 38px; font-weight: 600; color: var(--text-primary);">
+          <input type="text" id="maint-reason" class="w-full h-9.5 px-3.5 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all" placeholder="e.g. HVAC Air Conditioning & Compressor Service" required>
         </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px;">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label style="display:block; font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px;">
+            <label class="block text-xs font-bold text-slate-700 mb-1.5">
               ASSIGNED PERSONNEL
             </label>
-            <input type="text" id="maint-engineer" class="crud-search-input" value="" placeholder="e.g. Maintenance Technician" style="width: 100%; height: 38px; font-weight: 600; color: var(--text-primary);">
+            <input type="text" id="maint-engineer" class="w-full h-9.5 px-3.5 rounded-xl border border-slate-200 bg-white text-xs font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all" placeholder="e.g. Maintenance Technician">
           </div>
           <div>
-            <label style="display:block; font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px;">
-              EXPECTED COMPLETION (DATE & TIME) <span style="color: red;">*</span>
+            <label class="block text-xs font-bold text-slate-700 mb-1.5">
+              EXPECTED COMPLETION (DATE & TIME) <span class="text-rose-500">*</span>
             </label>
-            <input type="datetime-local" id="maint-completion" class="crud-search-input" required style="width: 100%; height: 38px; font-weight: 600; color: var(--text-primary);">
+            <input type="datetime-local" id="maint-completion" class="w-full h-9.5 px-3.5 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all cursor-pointer" required>
           </div>
         </div>
 
-        <div style="margin-bottom: 18px;">
-          <label style="display:block; font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px;">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1.5">
             NOTE
           </label>
-          <textarea id="maint-note" class="crud-search-input" rows="3" placeholder="Enter special instructions or notes..." style="width: 100%; height: auto; padding: 10px 14px; font-weight: 500; color: var(--text-primary); border-radius: var(--radius-md); font-family: inherit; resize: vertical;"></textarea>
+          <textarea id="maint-note" rows="3" placeholder="Enter special instructions or notes..." class="w-full p-3 rounded-xl border border-slate-200 bg-white text-xs font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"></textarea>
         </div>
 
-        <div style="background: #fffbeb; border: 1px solid #fed7aa; border-radius: 10px; padding: 14px 18px; display: flex; align-items: center; gap: 12px;">
-          <i class="fa-solid fa-triangle-exclamation" style="color: #d97706; font-size: 18px; flex-shrink: 0;"></i>
-          <span style="color: #b45309; font-size: 12px; font-weight: 600; line-height: 1.4;">
+        <div class="bg-amber-50 border border-amber-200 rounded-xl p-3.5 flex items-center gap-3">
+          <i class="fa-solid fa-triangle-exclamation text-amber-600 text-base shrink-0"></i>
+          <p class="text-xs text-amber-800 font-medium">
             Setting this room into Maintenance will automatically prevent new guest check-ins from the Front Desk rack.
-          </span>
+          </p>
         </div>
       </div>
 
-      <div class="modal-bot" style="padding: 14px 20px; background: #fff; border-top: 1px solid var(--border-medium); display: flex; justify-content: flex-end; gap: 10px;">
-        <button type="button" class="btn-ui-secondary" onclick="closeModal('maint-workorder-modal')" style="height: 38px; padding: 0 18px; border-radius: 8px;">Cancel</button>
-        <button type="submit" class="btn-ui-primary" style="height: 38px; padding: 0 22px; border-radius: 8px; background: linear-gradient(135deg, #6366f1, #8b5cf6);">
-          <i class="fa-solid fa-lock"></i> Put in Maintenance
+      <div class="px-6 py-3.5 bg-white border-t border-slate-100 flex justify-end items-center gap-2.5">
+        <button type="button" class="h-9.5 px-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all cursor-pointer" onclick="closeModal('maint-workorder-modal')">Cancel</button>
+        <button type="submit" class="h-9.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-xs shadow-indigo-200 transition-all flex items-center gap-2 cursor-pointer">
+          <i class="fa-solid fa-lock text-xs"></i> Put in Maintenance
         </button>
       </div>
     </form>
@@ -1308,7 +771,6 @@
     window.history.replaceState(null, '', newUrl);
   }
 
-  // Initialize Select2 on Modals and Toolbar Filters
   function initSelect2() {
     if (typeof $ !== 'undefined' && $.fn.select2) {
       $('#category-filter').select2({ width: '140px' });
@@ -1316,24 +778,15 @@
       $('#status-filter').select2({ width: '130px' });
       $('#amenity-filter').select2({ width: '150px' });
 
-      // Apply initial values if present in URL
       if (categoryFilter && categoryFilter !== 'ALL') $('#category-filter').val(categoryFilter).trigger('change.select2');
       if (floorFilter && floorFilter !== 'all') $('#floor-filter').val(floorFilter).trigger('change.select2');
       if (statusFilter && statusFilter !== 'all') $('#status-filter').val(statusFilter).trigger('change.select2');
       if (amenityFilter && amenityFilter !== 'all') $('#amenity-filter').val(amenityFilter).trigger('change.select2');
 
-      $('#category-filter').on('change', function() {
-        handleCategoryFilter(this.value);
-      });
-      $('#floor-filter').on('change', function() {
-        handleFloorFilter(this.value);
-      });
-      $('#status-filter').on('change', function() {
-        handleStatusFilter(this.value);
-      });
-      $('#amenity-filter').on('change', function() {
-        handleAmenityFilter(this.value);
-      });
+      $('#category-filter').on('change', function() { handleCategoryFilter(this.value); });
+      $('#floor-filter').on('change', function() { handleFloorFilter(this.value); });
+      $('#status-filter').on('change', function() { handleStatusFilter(this.value); });
+      $('#amenity-filter').on('change', function() { handleAmenityFilter(this.value); });
 
       $('#new-room-floor, #new-room-cat, #new-room-bed, #new-room-status, #new-room-plan').select2({
         dropdownParent: $('#add-room-modal')
@@ -1342,13 +795,8 @@
         dropdownParent: $('#edit-room-modal')
       });
 
-      // Auto update pax capacity on bedding config change
-      $('#new-room-bed').on('change', function() {
-        updateNewRoomPaxCapacity(this.value);
-      });
-      $('#edit-room-bed').on('change', function() {
-        updateEditRoomPaxCapacity(this.value);
-      });
+      $('#new-room-bed').on('change', function() { updateNewRoomPaxCapacity(this.value); });
+      $('#edit-room-bed').on('change', function() { updateEditRoomPaxCapacity(this.value); });
     }
   }
 
@@ -1356,7 +804,6 @@
     document.getElementById('new-room-no').value = '';
     document.getElementById('new-room-rate').value = '3500';
     
-    // Reset Select2 fields
     if (typeof $ !== 'undefined' && $.fn.select2) {
       $('#new-room-floor').val($('#new-room-floor option:eq(1)').val()).trigger('change');
       $('#new-room-cat').val($('#new-room-cat option:eq(1)').val()).trigger('change');
@@ -1367,10 +814,9 @@
       $('#new-room-plan').val('').trigger('change');
     }
 
-    // Default checkboxes
     const defaultAmn = ['Free Wi-Fi', 'Balcony', 'Smart 55" TV', 'AC'];
     document.querySelectorAll('#add-amenities-container input[type="checkbox"]').forEach(cb => {
-      cb.checked = defaultAmn.includes(cb.value);
+      cb.checked = defaultAmn.includes(cb.value) || defaultAmn.includes(cb.dataset.name);
     });
 
     openModal('add-room-modal');
@@ -1379,7 +825,6 @@
   function handleCategoryChange(catName) {
     const selectedOption = $('#new-room-cat option:selected');
     const bed = selectedOption.data('bed');
-    const pax = selectedOption.data('pax');
 
     if (bed && $('#new-room-bed').length) {
       $('#new-room-bed').val(bed).trigger('change');
@@ -1408,7 +853,6 @@
     document.getElementById('edit-room-no').value = room.room_number;
     document.getElementById('edit-room-rate').value = room.rate;
 
-    // Set Select2 values directly from dynamic records
     if (typeof $ !== 'undefined' && $.fn.select2) {
       $('#edit-room-floor').val(room.floor).trigger('change');
       $('#edit-room-cat').val(room.category).trigger('change');
@@ -1418,7 +862,6 @@
       $('#edit-room-plan').val(room.plan_id ? String(room.plan_id) : '').trigger('change');
     }
 
-    // Check amenities
     const currentAmenities = Array.isArray(room.amenities) ? room.amenities : [];
     document.querySelectorAll('#edit-amenities-container input[type="checkbox"]').forEach(cb => {
       cb.checked = currentAmenities.some(a => String(a) === String(cb.value) || String(a) === String(cb.dataset.name));
@@ -1545,7 +988,13 @@
 
     if (btn && countSpan) {
       countSpan.textContent = selectedRoomIds.size;
-      btn.style.display = selectedRoomIds.size > 0 ? 'inline-flex' : 'none';
+      if (selectedRoomIds.size > 0) {
+        btn.classList.remove('hidden');
+        btn.classList.add('inline-flex');
+      } else {
+        btn.classList.add('hidden');
+        btn.classList.remove('inline-flex');
+      }
     }
 
     if (selectAllCheck) {
@@ -1644,7 +1093,7 @@
       PmsAlert.confirm(
         'Return to In-Service?',
         `Room #${room.room_number} is currently Under Maintenance. Complete work order and return room to Active In-Service?`,
-        '<i class="fa-solid fa-check" style="margin-right: 6px;"></i> Yes, Return to In-Service',
+        '<i class="fa-solid fa-check mr-1.5"></i> Yes, Return to In-Service',
         'question'
       ).then(async (result) => {
         if (result.isConfirmed) {
@@ -1673,7 +1122,6 @@
       return;
     }
 
-    // Open Maintenance Work Order Modal
     document.getElementById('maint-room-id').value = room.id;
     document.getElementById('maint-room-cat').value = room.category || 'Standard';
     document.getElementById('maint-room-floor').value = 'Floor ' + (room.floor || '1');
@@ -1795,23 +1243,35 @@
   function setViewMode(mode) {
     viewMode = mode;
     updateUrlParams();
-    document.getElementById('btn-view-table').classList.toggle('active', mode === 'table');
-    document.getElementById('btn-view-grid').classList.toggle('active', mode === 'grid');
-    document.getElementById('rooms-table-container').style.display = mode === 'table' ? 'block' : 'none';
-    document.getElementById('rooms-grid-container').style.display = mode === 'grid' ? 'grid' : 'none';
+    const btnTable = document.getElementById('btn-view-table');
+    const btnGrid = document.getElementById('btn-view-grid');
+    const tableContainer = document.getElementById('rooms-table-container');
+    const gridContainer = document.getElementById('rooms-grid-container');
+
+    if (mode === 'table') {
+      btnTable.className = 'h-7.5 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer bg-white text-indigo-600 shadow-xs';
+      btnGrid.className = 'h-7.5 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer text-slate-600 hover:text-slate-900';
+      tableContainer.classList.remove('hidden');
+      gridContainer.classList.add('hidden');
+    } else {
+      btnGrid.className = 'h-7.5 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer bg-white text-indigo-600 shadow-xs';
+      btnTable.className = 'h-7.5 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer text-slate-600 hover:text-slate-900';
+      tableContainer.classList.add('hidden');
+      gridContainer.classList.remove('hidden');
+    }
     renderView();
   }
 
   function getFilteredRooms() {
     return roomsData.filter(room => {
       const matchSearch = !searchQuery ||
-        (room.room_number && room.room_number.toLowerCase().includes(searchQuery)) ||
-        (room.floor && room.floor.toString().toLowerCase().includes(searchQuery)) ||
-        (room.category && room.category.toLowerCase().includes(searchQuery)) ||
-        (room.bedding_config && room.bedding_config.toLowerCase().includes(searchQuery)) ||
-        (room.pax_capacity && room.pax_capacity.toLowerCase().includes(searchQuery)) ||
-        (room.status && room.status.toLowerCase().includes(searchQuery)) ||
-        (room.guest_name && room.guest_name.toLowerCase().includes(searchQuery));
+        (room.room_number && room.room_number.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (room.floor && room.floor.toString().toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (room.category && room.category.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (room.bedding_config && room.bedding_config.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (room.pax_capacity && room.pax_capacity.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (room.status && room.status.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (room.guest_name && room.guest_name.toLowerCase().includes(searchQuery.toLowerCase()));
 
       const matchCat = categoryFilter === 'ALL' || (room.category && room.category.toUpperCase() === categoryFilter.toUpperCase());
       const matchFloor = floorFilter === 'all' || (room.floor && room.floor.toString() === floorFilter.toString());
@@ -1829,7 +1289,6 @@
     const active = filteredRooms.filter(r => (r.status || 'Active').toLowerCase() === 'active').length;
     const inactive = filteredRooms.filter(r => (r.status || '').toLowerCase() === 'inactive').length;
 
-    // Categories breakdown - initialize all active master categories
     const catMap = {};
     masterCategories.forEach(c => { catMap[c.name] = 0; });
     filteredRooms.forEach(r => {
@@ -1837,7 +1296,6 @@
       catMap[cat] = (catMap[cat] || 0) + 1;
     });
 
-    // Floors breakdown - initialize all active master floors
     const floorMap = {};
     masterFloors.forEach(f => { floorMap[f.floor] = 0; });
     filteredRooms.forEach(r => {
@@ -1845,7 +1303,6 @@
       floorMap[fl] = (floorMap[fl] || 0) + 1;
     });
 
-    // Amenities breakdown - initialize all active master amenities
     const amnMap = {};
     masterAmenities.forEach(a => { amnMap[a.name] = 0; });
     filteredRooms.forEach(r => {
@@ -1856,7 +1313,6 @@
       }
     });
 
-    // Update DOM Top Numbers
     const totalEl = document.getElementById('stat-total-rooms');
     const activeEl = document.getElementById('stat-active-rooms');
     const inactiveEl = document.getElementById('stat-inactive-rooms');
@@ -1871,59 +1327,55 @@
     if (floorTotalEl) floorTotalEl.textContent = total;
     if (amnTotalEl) amnTotalEl.textContent = total;
 
-    // Render Status Pills
     const statusPillsEl = document.getElementById('stat-status-pills');
     if (statusPillsEl) {
       statusPillsEl.innerHTML = `
-        <span class="badge-tag green" style="font-size: 10px; padding: 2px 7px;">
-          <i class="fa-solid fa-circle-check"></i> <span id="stat-active-rooms">${active}</span> Active
+        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/60">
+          <i class="fa-solid fa-circle-check text-[8px]"></i> <span id="stat-active-rooms">${active}</span> Active
         </span>
-        <span class="badge-tag red" style="font-size: 10px; padding: 2px 7px;">
-          <i class="fa-solid fa-circle-xmark"></i> <span id="stat-inactive-rooms">${inactive}</span> Inactive
+        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200/60">
+          <i class="fa-solid fa-circle-xmark text-[8px]"></i> <span id="stat-inactive-rooms">${inactive}</span> Inactive
         </span>
       `;
     }
 
-    // Render Category Pills
     const catPillsEl = document.getElementById('stat-category-pills');
     if (catPillsEl) {
       const entries = Object.entries(catMap);
       if (entries.length === 0) {
-        catPillsEl.innerHTML = '<span style="font-size: 11px; color: var(--text-muted);">No categories</span>';
+        catPillsEl.innerHTML = '<span class="text-[11px] text-slate-400">No categories</span>';
       } else {
         catPillsEl.innerHTML = entries.map(([cat, cnt]) => `
-          <span class="badge-tag" style="background: rgba(244, 63, 94, 0.1); color: #e11d48; border: 1px solid rgba(244, 63, 94, 0.2); font-size: 10px; padding: 2px 7px; white-space: nowrap;">
-            ${cat}: <strong style="font-weight: 900; margin-left: 2px;">${cnt}</strong>
+          <span class="inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200/60 whitespace-nowrap">
+            ${cat}: <strong class="ml-1 font-black">${cnt}</strong>
           </span>
         `).join('');
       }
     }
 
-    // Render Floor Pills
     const floorPillsEl = document.getElementById('stat-floor-pills');
     if (floorPillsEl) {
       const entries = Object.entries(floorMap);
       if (entries.length === 0) {
-        floorPillsEl.innerHTML = '<span style="font-size: 11px; color: var(--text-muted);">No floors</span>';
+        floorPillsEl.innerHTML = '<span class="text-[11px] text-slate-400">No floors</span>';
       } else {
         floorPillsEl.innerHTML = entries.map(([fl, cnt]) => `
-          <span class="badge-tag" style="background: rgba(6, 182, 212, 0.1); color: #0284c7; border: 1px solid rgba(6, 182, 212, 0.2); font-size: 10px; padding: 2px 7px; white-space: nowrap;">
-            Floor ${fl}: <strong style="font-weight: 900; margin-left: 2px;">${cnt}</strong>
+          <span class="inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-sky-50 text-sky-700 border border-sky-200/60 whitespace-nowrap">
+            Floor ${fl}: <strong class="ml-1 font-black">${cnt}</strong>
           </span>
         `).join('');
       }
     }
 
-    // Render Amenity Pills
     const amnPillsEl = document.getElementById('stat-amenity-pills');
     if (amnPillsEl) {
       const entries = Object.entries(amnMap);
       if (entries.length === 0) {
-        amnPillsEl.innerHTML = '<span style="font-size: 11px; color: var(--text-muted);">No amenities</span>';
+        amnPillsEl.innerHTML = '<span class="text-[11px] text-slate-400">No amenities</span>';
       } else {
         amnPillsEl.innerHTML = entries.map(([amn, cnt]) => `
-          <span class="badge-tag" style="background: rgba(16, 185, 129, 0.1); color: #059669; border: 1px solid rgba(16, 185, 129, 0.2); font-size: 10px; padding: 2px 7px; white-space: nowrap;">
-            ${amn}: <strong style="font-weight: 900; margin-left: 2px;">${cnt}</strong>
+          <span class="inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/60 whitespace-nowrap">
+            ${amn}: <strong class="ml-1 font-black">${cnt}</strong>
           </span>
         `).join('');
       }
@@ -1942,71 +1394,80 @@
     const endIdx = pageSize === 'all' ? totalCount : Math.min(startIdx + pageSize, totalCount);
     const pageItems = filtered.slice(startIdx, endIdx);
 
-    // Update Live KPI Cards based on filtered records
     updateKPIStats(filtered);
 
-    // Update Record Count in Header Badge
     const viewCountBadge = document.getElementById('view-count');
     if (viewCountBadge) {
       viewCountBadge.textContent = `${totalCount} Records`;
     }
 
-    // Render Table
     const tbody = document.getElementById('rooms-tbody');
     if (!pageItems.length) {
-      tbody.innerHTML = `<tr><td colspan="10" style="text-align: center; padding: 40px; color: var(--text-muted);"><i class="fa-solid fa-inbox" style="font-size: 28px; margin-bottom: 10px; display: block;"></i>No matching room assets found.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="10" class="px-6 py-12 text-center text-slate-400"><i class="fa-solid fa-inbox text-3xl mb-2 text-slate-300 block"></i>No matching room assets found.</td></tr>`;
     } else {
       let tableHtml = '';
       pageItems.forEach((room, idx) => {
         const isSelected = selectedRoomIds.has(room.id);
-        let catBadgeClass = 'blue';
-        if (room.category && room.category.includes('SUPER')) catBadgeClass = 'purple';
-        else if (room.category && room.category.includes('SUITE')) catBadgeClass = 'yellow';
-        else if (room.category && room.category.includes('EXEC')) catBadgeClass = 'green';
+        let catBadgeClass = 'bg-sky-50 text-sky-700 border-sky-200/60';
+        if (room.category && room.category.includes('SUPER')) catBadgeClass = 'bg-purple-50 text-purple-700 border-purple-200/60';
+        else if (room.category && room.category.includes('SUITE')) catBadgeClass = 'bg-amber-50 text-amber-700 border-amber-200/60';
+        else if (room.category && room.category.includes('EXEC')) catBadgeClass = 'bg-emerald-50 text-emerald-700 border-emerald-200/60';
 
         const isInactive = room.status && room.status.toLowerCase() === 'inactive';
-        let statusBadgeClass = isInactive ? 'red' : 'green';
-        let statusLabel = isInactive ? 'Inactive' : 'Active';
+        let statusBadge = isInactive
+          ? '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-50 text-rose-700 border border-rose-200/60"><span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span> Inactive</span>'
+          : '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/60"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Active</span>';
 
         const amenitiesList = Array.isArray(room.amenities) ? room.amenities : [];
-        const amenitiesHtml = amenitiesList.slice(0, 3).map(a => `<span class="amenity-chip">${getAmenityName(a)}</span>`).join('') +
-          (amenitiesList.length > 3 ? `<span class="amenity-chip">+${amenitiesList.length - 3}</span>` : '');
+        const amenitiesHtml = amenitiesList.slice(0, 3).map(a => `<span class="inline-flex items-center px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 text-[10px] font-medium">${getAmenityName(a)}</span>`).join(' ') +
+          (amenitiesList.length > 3 ? `<span class="inline-flex items-center px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 text-[10px] font-bold">+${amenitiesList.length - 3}</span>` : '');
 
         tableHtml += `
-          <tr data-id="${room.id}">
-            <td style="text-align: center;">
-              <input type="checkbox" class="row-select-check" value="${room.id}" ${isSelected ? 'checked' : ''} onchange="handleRoomSelect(this, ${room.id})" style="cursor: pointer; width: 16px; height: 16px; accent-color: var(--accent-primary);">
+          <tr class="hover:bg-slate-50/70 transition-colors" data-id="${room.id}">
+            <td class="px-4 py-3 text-center">
+              <input type="checkbox" class="row-select-check cursor-pointer w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 border-slate-300" value="${room.id}" ${isSelected ? 'checked' : ''} onchange="handleRoomSelect(this, ${room.id})">
             </td>
-            <td style="font-family: var(--font-mono); font-weight: 700; color: var(--text-muted); font-size: 11px;">${startIdx + idx + 1}</td>
-            <td>
-              <span style="font-family: var(--font-mono); font-size: 14px; font-weight: 900; color: var(--text-primary);">#${room.room_number}</span>
-            </td>
-            <td>
-              <span class="badge-tag" style="background: #f1f5f9; color: var(--text-secondary); font-weight: 700; font-size: 11px;">Floor ${room.floor}</span>
-            </td>
-            <td><span class="badge-tag ${catBadgeClass}">${room.category}</span></td>
-            <td>
-              <div style="font-size: 12px; font-weight: 700; color: var(--text-primary);">${room.bedding_config || 'Standard Bed'}</div>
-              <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;"><i class="fa-solid fa-user-group" style="font-size: 10px; margin-right: 4px;"></i>${room.pax_capacity || '2 Adults'}</div>
-            </td>
-            <td>
-              <div style="font-family: var(--font-mono); font-weight: 900; font-size: 13px; color: var(--accent-primary);">₹ ${Number(room.rate).toLocaleString()}</div>
-            </td>
-            <td>
-              <span class="badge-tag ${statusBadgeClass}">
-                <i class="fa-solid fa-circle" style="font-size: 6px; margin-right: 4px;"></i>${statusLabel}
+            <td class="px-3 py-3 font-mono font-bold text-slate-400 text-[11px]">${startIdx + idx + 1}</td>
+            <td class="px-4 py-3">
+              <span class="inline-flex items-center px-2 py-0.5 rounded-md font-mono text-xs font-black bg-indigo-50 text-indigo-700 border border-indigo-200/60">
+                #${room.room_number}
               </span>
             </td>
-            <td>
-              <div style="display: flex; flex-wrap: wrap; gap: 4px; max-width: 200px;">
-                ${amenitiesHtml || '<span style="color: var(--text-muted); font-size: 11px;">None</span>'}
+            <td class="px-4 py-3">
+              <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold bg-slate-100 text-slate-700">Floor ${room.floor}</span>
+            </td>
+            <td class="px-4 py-3">
+              <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold border ${catBadgeClass}">${room.category}</span>
+            </td>
+            <td class="px-4 py-3">
+              <div class="text-xs font-bold text-slate-800">${room.bedding_config || 'Standard Bed'}</div>
+              <div class="text-[11px] text-slate-400 mt-0.5 flex items-center gap-1.5">
+                <i class="fa-solid fa-user-group text-[9px]"></i> ${room.pax_capacity || '2 Adults'}
+              </div>
+              ${(room.plan_relation || room.planRelation) ? `<div class="text-[11px] text-indigo-600 font-bold mt-0.5 flex items-center gap-1"><i class="fa-solid fa-utensils text-[9px]"></i> ${(room.plan_relation || room.planRelation).plan_name}</div>` : ''}
+            </td>
+            <td class="px-4 py-3">
+              <div class="font-mono font-black text-xs text-indigo-600">₹ ${Number(room.rate).toLocaleString()}</div>
+            </td>
+            <td class="px-4 py-3">
+              ${statusBadge}
+            </td>
+            <td class="px-4 py-3">
+              <div class="flex flex-wrap gap-1 max-w-[200px]">
+                ${amenitiesHtml || '<span class="text-slate-400 text-[11px]">None</span>'}
               </div>
             </td>
-            <td style="text-align: right;">
-              <div style="display: flex; align-items: center; justify-content: flex-end; gap: 4px;">
-                <button class="btn-action-view" onclick="openViewRoomModal(${room.id})" title="View Details"><i class="fa-solid fa-eye"></i></button>
-                <button class="btn-action-edit" onclick="openEditRoomModal(${room.id})" title="Edit Room Asset"><i class="fa-solid fa-pen"></i></button>
-                <button class="btn-action-del" onclick="deleteRoom(${room.id})" title="Delete Room"><i class="fa-solid fa-trash"></i></button>
+            <td class="px-4 py-3 text-right">
+              <div class="inline-flex items-center gap-1 justify-end">
+                <button type="button" class="w-7 h-7 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 border border-slate-200 transition-all flex items-center justify-center cursor-pointer" onclick="openViewRoomModal(${room.id})" title="View Details">
+                  <i class="fa-solid fa-eye text-xs"></i>
+                </button>
+                <button type="button" class="w-7 h-7 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 border border-slate-200 transition-all flex items-center justify-center cursor-pointer" onclick="openEditRoomModal(${room.id})" title="Edit Room Asset">
+                  <i class="fa-solid fa-pen text-xs"></i>
+                </button>
+                <button type="button" class="w-7 h-7 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 border border-slate-200 transition-all flex items-center justify-center cursor-pointer" onclick="deleteRoom(${room.id})" title="Delete Room">
+                  <i class="fa-solid fa-trash text-xs"></i>
+                </button>
               </div>
             </td>
           </tr>
@@ -2015,57 +1476,70 @@
       tbody.innerHTML = tableHtml;
     }
 
-    // Render Grid
+    // Render Grid View
     const gridContainer = document.getElementById('rooms-grid-container');
     if (!pageItems.length) {
-      gridContainer.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--text-muted);"><i class="fa-solid fa-inbox" style="font-size: 28px; margin-bottom: 10px; display: block;"></i>No matching room assets found.</div>`;
+      gridContainer.innerHTML = `<div class="col-span-full px-6 py-12 text-center text-slate-400"><i class="fa-solid fa-inbox text-3xl mb-2 text-slate-300 block"></i>No matching room assets found.</div>`;
     } else {
       let gridHtml = '';
       pageItems.forEach(room => {
-        let catBadgeClass = 'blue';
-        if (room.category && room.category.includes('SUPER')) catBadgeClass = 'purple';
-        else if (room.category && room.category.includes('SUITE')) catBadgeClass = 'yellow';
-        else if (room.category && room.category.includes('EXEC')) catBadgeClass = 'green';
+        let catBadgeClass = 'bg-sky-50 text-sky-700 border-sky-200/60';
+        if (room.category && room.category.includes('SUPER')) catBadgeClass = 'bg-purple-50 text-purple-700 border-purple-200/60';
+        else if (room.category && room.category.includes('SUITE')) catBadgeClass = 'bg-amber-50 text-amber-700 border-amber-200/60';
+        else if (room.category && room.category.includes('EXEC')) catBadgeClass = 'bg-emerald-50 text-emerald-700 border-emerald-200/60';
 
         const isInactive = room.status && room.status.toLowerCase() === 'inactive';
-        let statusBadgeClass = isInactive ? 'red' : 'green';
-        let statusLabel = isInactive ? 'Inactive' : 'Active';
-        let borderTopColor = isInactive ? '#ef4444' : '#10b981';
+        let statusBadge = isInactive
+          ? '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-50 text-rose-700 border border-rose-200/60"><span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span> Inactive</span>'
+          : '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/60"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Active</span>';
 
         const amenitiesList = Array.isArray(room.amenities) ? room.amenities : [];
-        const amenitiesHtml = amenitiesList.slice(0, 3).map(a => `<span class="amenity-chip">${getAmenityName(a)}</span>`).join('') +
-          (amenitiesList.length > 3 ? `<span class="amenity-chip">+${amenitiesList.length - 3}</span>` : '');
+        const amenitiesHtml = amenitiesList.slice(0, 3).map(a => `<span class="inline-flex items-center px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 text-[10px] font-medium">${getAmenityName(a)}</span>`).join(' ') +
+          (amenitiesList.length > 3 ? `<span class="inline-flex items-center px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 text-[10px] font-bold">+${amenitiesList.length - 3}</span>` : '');
 
         gridHtml += `
-          <div class="room-inv-card" style="border-top: 4px solid ${borderTopColor};">
-            <div>
-              <div class="room-inv-header">
-                <div class="room-inv-number">
-                  <span>Room ${room.room_number}</span>
-                  <span class="room-inv-floor">Floor ${room.floor}</span>
+          <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden flex flex-col justify-between p-4.5 border-t-4 ${isInactive ? 'border-t-rose-500' : 'border-t-emerald-500'}">
+            <div class="space-y-3">
+              <div class="flex items-center justify-between gap-2">
+                <div class="flex items-center gap-2">
+                  <span class="font-mono font-black text-sm text-slate-800">Room ${room.room_number}</span>
+                  <span class="text-[11px] font-bold text-slate-400">Floor ${room.floor}</span>
                 </div>
-                <span class="badge-tag ${catBadgeClass}">${room.category}</span>
+                <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold border ${catBadgeClass}">${room.category}</span>
               </div>
 
-              <div style="font-size: 12px; font-weight: 700; color: var(--text-secondary); margin-top: 8px;">
-                <i class="fa-solid fa-bed" style="margin-right: 4px; color: var(--accent-primary);"></i> ${room.bedding_config || 'Standard'} • ${room.pax_capacity || '2 Adults'}
+              <div class="text-xs font-semibold text-slate-600 flex items-center gap-1.5">
+                <i class="fa-solid fa-bed text-indigo-600 text-[11px]"></i> ${room.bedding_config || 'Standard'} • ${room.pax_capacity || '2 Adults'}
               </div>
 
-              <div class="room-amenity-tags">
-                ${amenitiesHtml || '<span style="color: var(--text-muted); font-size: 10px;">No amenities</span>'}
+              ${(room.plan_relation || room.planRelation) ? `
+              <div class="text-[11px] font-bold text-indigo-600 flex items-center gap-1.5">
+                <i class="fa-solid fa-utensils text-[10px]"></i> ${(room.plan_relation || room.planRelation).plan_name}
+              </div>` : ''}
+
+              <div class="flex flex-wrap gap-1">
+                ${amenitiesHtml || '<span class="text-slate-400 text-[11px]">No amenities</span>'}
               </div>
 
-              <div style="display: flex; gap: 6px; margin-top: 10px;">
-                <span class="badge-tag ${statusBadgeClass}"><i class="fa-solid fa-circle" style="font-size: 6px; margin-right: 4px;"></i>${statusLabel}</span>
+              <div>
+                ${statusBadge}
               </div>
             </div>
 
-            <div class="room-inv-footer">
-              <div class="room-inv-rate">₹ ${Number(room.rate).toLocaleString()} <span style="font-size: 10px; color: var(--text-muted); font-weight: 500;">/ night</span></div>
-              <div style="display: flex; gap: 4px;">
-                <button class="btn-action-view" onclick="openViewRoomModal(${room.id})" title="View Details"><i class="fa-solid fa-eye"></i></button>
-                <button class="btn-action-edit" onclick="openEditRoomModal(${room.id})" title="Edit"><i class="fa-solid fa-pen"></i></button>
-                <button class="btn-action-del" onclick="deleteRoom(${room.id})" title="Delete"><i class="fa-solid fa-trash"></i></button>
+            <div class="pt-3.5 mt-3.5 border-t border-slate-100 flex items-center justify-between">
+              <div class="font-mono font-black text-sm text-slate-800">
+                ₹ ${Number(room.rate).toLocaleString()} <span class="text-[10px] text-slate-400 font-sans font-normal">/ night</span>
+              </div>
+              <div class="inline-flex items-center gap-1">
+                <button type="button" class="w-7 h-7 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 border border-slate-200 transition-all flex items-center justify-center cursor-pointer" onclick="openViewRoomModal(${room.id})" title="View Details">
+                  <i class="fa-solid fa-eye text-xs"></i>
+                </button>
+                <button type="button" class="w-7 h-7 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 border border-slate-200 transition-all flex items-center justify-center cursor-pointer" onclick="openEditRoomModal(${room.id})" title="Edit">
+                  <i class="fa-solid fa-pen text-xs"></i>
+                </button>
+                <button type="button" class="w-7 h-7 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 border border-slate-200 transition-all flex items-center justify-center cursor-pointer" onclick="deleteRoom(${room.id})" title="Delete">
+                  <i class="fa-solid fa-trash text-xs"></i>
+                </button>
               </div>
             </div>
           </div>
@@ -2074,12 +1548,11 @@
       gridContainer.innerHTML = gridHtml;
     }
 
-    // Pagination info
     const infoEl = document.getElementById('pagination-info');
     if (totalCount === 0) {
       infoEl.textContent = 'Showing 0 to 0 of 0 records';
     } else {
-      infoEl.innerHTML = `Showing <strong style="color: var(--text-primary);">${startIdx + 1}</strong> to <strong style="color: var(--text-primary);">${endIdx}</strong> of <strong style="color: var(--text-primary);">${totalCount}</strong> records${totalCount !== roomsData.length ? ' (filtered from ' + roomsData.length + ' total)' : ''}`;
+      infoEl.innerHTML = `Showing <strong class="text-slate-800">${startIdx + 1}</strong> to <strong class="text-slate-800">${endIdx}</strong> of <strong class="text-slate-800">${totalCount}</strong> records${totalCount !== roomsData.length ? ' (filtered from ' + roomsData.length + ' total)' : ''}`;
     }
 
     renderPaginationNav(totalPages);
@@ -2092,15 +1565,15 @@
 
     if (totalPages <= 1) {
       nav.innerHTML = `
-        <button class="pms-page-btn" disabled><i class="fa-solid fa-chevron-left"></i></button>
-        <button class="pms-page-btn active">1</button>
-        <button class="pms-page-btn" disabled><i class="fa-solid fa-chevron-right"></i></button>
+        <button class="w-8 h-8 rounded-lg border border-slate-200 bg-white text-slate-300 text-xs flex items-center justify-center cursor-not-allowed" disabled><i class="fa-solid fa-chevron-left text-[10px]"></i></button>
+        <button class="w-8 h-8 rounded-lg bg-indigo-600 text-white text-xs font-bold flex items-center justify-center shadow-xs">1</button>
+        <button class="w-8 h-8 rounded-lg border border-slate-200 bg-white text-slate-300 text-xs flex items-center justify-center cursor-not-allowed" disabled><i class="fa-solid fa-chevron-right text-[10px]"></i></button>
       `;
       return;
     }
 
     let html = '';
-    html += `<button class="pms-page-btn" onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''} title="Previous Page"><i class="fa-solid fa-chevron-left"></i></button>`;
+    html += `<button class="w-8 h-8 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 text-xs flex items-center justify-center transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer" onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''} title="Previous Page"><i class="fa-solid fa-chevron-left text-[10px]"></i></button>`;
 
     const delta = 1;
     const range = [];
@@ -2127,13 +1600,14 @@
 
     rangeWithDots.forEach(page => {
       if (page === '...') {
-        html += `<span class="pms-page-dots">...</span>`;
+        html += `<span class="w-8 h-8 text-slate-400 text-xs flex items-center justify-center font-bold">...</span>`;
       } else {
-        html += `<button class="pms-page-btn ${page === currentPage ? 'active' : ''}" onclick="goToPage(${page})">${page}</button>`;
+        const isActive = page === currentPage;
+        html += `<button class="w-8 h-8 rounded-lg text-xs font-bold flex items-center justify-center transition-all cursor-pointer ${isActive ? 'bg-indigo-600 text-white shadow-xs' : 'border border-slate-200 bg-white text-slate-700 hover:bg-slate-50'}" onclick="goToPage(${page})">${page}</button>`;
       }
     });
 
-    html += `<button class="pms-page-btn" onclick="goToPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''} title="Next Page"><i class="fa-solid fa-chevron-right"></i></button>`;
+    html += `<button class="w-8 h-8 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 text-xs flex items-center justify-center transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer" onclick="goToPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''} title="Next Page"><i class="fa-solid fa-chevron-right text-[10px]"></i></button>`;
 
     nav.innerHTML = html;
   }
@@ -2149,23 +1623,10 @@
     const beddingName = room.bedding_config || (room.beddingConfigRelation ? room.beddingConfigRelation.name : 'Standard Configuration');
     const paxCapacityText = room.pax_capacity || (room.beddingConfigRelation ? 'Max ' + (room.beddingConfigRelation.max_adults || 2) + ' Adults' : 'Max 2 Adults (3 Pax)');
 
-    let catBadgeBg = '#eff6ff';
-    let catBadgeColor = '#2563eb';
-    let catBadgeBorder = '#bfdbfe';
-    if (catName && catName.toUpperCase().includes('SUPER')) {
-      catBadgeBg = '#faf5ff'; catBadgeColor = '#7c3aed'; catBadgeBorder = '#e9d5ff';
-    } else if (catName && (catName.toUpperCase().includes('SUITE') || catName.toUpperCase().includes('DELUXE'))) {
-      catBadgeBg = '#f0fdf4'; catBadgeColor = '#16a34a'; catBadgeBorder = '#bbf7d0';
-    } else if (catName && catName.toUpperCase().includes('EXEC')) {
-      catBadgeBg = '#fff7ed'; catBadgeColor = '#ea580c'; catBadgeBorder = '#fed7aa';
-    }
-
     const isInactive = room.status && room.status.toLowerCase() === 'inactive';
-    const statusBg = isInactive ? '#fef2f2' : '#ecfdf5';
-    const statusColor = isInactive ? '#dc2626' : '#059669';
-    const statusBorder = isInactive ? '#fecaca' : '#a7f3d0';
-    const statusDot = isInactive ? '#ef4444' : '#10b981';
-    const statusText = isInactive ? 'Inactive' : 'Active';
+    const statusBadge = isInactive
+      ? '<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200/60"><span class="w-2 h-2 rounded-full bg-rose-500"></span> Inactive</span>'
+      : '<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/60"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> Active</span>';
 
     const rawAmenitiesList = Array.isArray(room.amenities_names) && room.amenities_names.length > 0
       ? room.amenities_names
@@ -2173,103 +1634,103 @@
 
     const amenitiesHtml = rawAmenitiesList.length > 0
       ? rawAmenitiesList.map(a => `
-          <div style="display: inline-flex; align-items: center; gap: 7px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 7px 12px; font-size: 12px; font-weight: 600; color: #334155; box-shadow: 0 1px 2px rgba(0,0,0,0.03);">
-            <i class="fa-solid fa-circle-check" style="color: #10b981; font-size: 13px;"></i>
+          <div class="inline-flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 shadow-xs">
+            <i class="fa-solid fa-circle-check text-emerald-600 text-xs"></i>
             <span>${a}</span>
           </div>
         `).join('')
-      : `<div style="font-size: 12px; color: #94a3b8; font-style: italic; padding: 6px 0;">No amenities assigned to this room.</div>`;
+      : `<div class="text-xs text-slate-400 italic">No amenities assigned to this room.</div>`;
 
     const content = `
-      <!-- Top 2 Equal-Size Boxes Grid -->
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px;">
-        
-        <!-- Left Box: Floor, Room Number & Category -->
-        <div style="background: #ffffff; border-radius: 14px; border: 1px solid #e2e8f0; padding: 14px 18px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); display: flex; flex-direction: column; justify-content: center; gap: 8px;">
-          
-          <!-- Item 1: Floor -->
-          <div style="display: flex; align-items: center; justify-content: space-between; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 6px 12px;">
-            <span style="font-size: 11px; font-weight: 700; color: #64748b; display: flex; align-items: center; gap: 6px;">
-              <i class="fa-solid fa-layer-group" style="color: #6366f1; font-size: 12px; width: 14px;"></i> Floor
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="bg-white rounded-2xl border border-slate-200 p-4 space-y-2.5 shadow-xs">
+          <div class="flex items-center justify-between bg-slate-50 border border-slate-200/80 rounded-xl p-2.5">
+            <span class="text-xs font-bold text-slate-500 flex items-center gap-2">
+              <i class="fa-solid fa-layer-group text-indigo-600 w-4"></i> Floor
             </span>
-            <span style="font-size: 12px; font-weight: 800; color: #1e293b;">${floorName}</span>
+            <span class="text-xs font-black text-slate-800">${floorName}</span>
           </div>
 
-          <!-- Item 2: Room Number -->
-          <div style="display: flex; align-items: center; justify-content: space-between; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 6px 12px;">
-            <span style="font-size: 11px; font-weight: 700; color: #64748b; display: flex; align-items: center; gap: 6px;">
-              <i class="fa-solid fa-door-closed" style="color: #6366f1; font-size: 12px; width: 14px;"></i> Room Number
+          <div class="flex items-center justify-between bg-slate-50 border border-slate-200/80 rounded-xl p-2.5">
+            <span class="text-xs font-bold text-slate-500 flex items-center gap-2">
+              <i class="fa-solid fa-door-closed text-indigo-600 w-4"></i> Room Number
             </span>
-            <span style="font-family: var(--font-mono, monospace); font-size: 13px; font-weight: 900; color: #0f172a;">Room #${room.room_number}</span>
+            <span class="font-mono text-xs font-black text-slate-800">Room #${room.room_number}</span>
           </div>
 
-          <!-- Item 3: Category -->
-          <div style="display: flex; align-items: center; justify-content: space-between; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 6px 12px;">
-            <span style="font-size: 11px; font-weight: 700; color: #64748b; display: flex; align-items: center; gap: 6px;">
-              <i class="fa-solid fa-crown" style="color: #6366f1; font-size: 12px; width: 14px;"></i> Category
+          <div class="flex items-center justify-between bg-slate-50 border border-slate-200/80 rounded-xl p-2.5">
+            <span class="text-xs font-bold text-slate-500 flex items-center gap-2">
+              <i class="fa-solid fa-crown text-indigo-600 w-4"></i> Category
             </span>
-            <span style="font-size: 12px; font-weight: 800; color: #1e293b;">${catName}</span>
+            <span class="text-xs font-black text-slate-800">${catName}</span>
           </div>
-
         </div>
 
-        <!-- Right Box: Base Tariff & Status -->
-        <div style="background: #ffffff; border-radius: 14px; border: 1px solid #e2e8f0; padding: 14px 18px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); display: flex; flex-direction: column; justify-content: center; align-items: flex-end; gap: 6px;">
-          <div style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">
-            Base Tariff
-          </div>
-          <div style="font-family: var(--font-mono, monospace); font-size: 22px; font-weight: 900; color: #4f46e5; margin: 2px 0;">
+        <div class="bg-white rounded-2xl border border-slate-200 p-4 flex flex-col justify-center items-end gap-1.5 shadow-xs">
+          <span class="text-[11px] font-black uppercase tracking-wider text-slate-400">Base Tariff</span>
+          <div class="font-mono text-2xl font-black text-indigo-600">
             ₹ ${Number(room.rate).toLocaleString()}
-            <span style="font-size: 12px; font-weight: 600; color: #94a3b8;">/ night</span>
+            <span class="text-xs font-semibold text-slate-400 font-sans">/ night</span>
           </div>
-          <div style="display: inline-flex; align-items: center; gap: 6px; background: ${statusBg}; color: ${statusColor}; border: 1px solid ${statusBorder}; padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: 700;">
-            <span style="width: 6px; height: 6px; border-radius: 50%; background: ${statusDot}; display: inline-block;"></span>
-            ${statusText}
+          <div>
+            ${statusBadge}
           </div>
         </div>
-
       </div>
 
-      <!-- Quick Info Tiles -->
-      <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 16px;">
-        <!-- Bedding Tile -->
-        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px 16px; box-shadow: 0 2px 6px rgba(0,0,0,0.02); display: flex; align-items: center; gap: 14px;">
-          <div style="width: 40px; height: 40px; border-radius: 10px; background: #eff6ff; color: #3b82f6; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0;">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div class="bg-white border border-slate-200 rounded-xl p-3.5 shadow-xs flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center text-base shrink-0">
             <i class="fa-solid fa-bed"></i>
           </div>
           <div>
-            <div style="font-size: 11px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">Bedding Configuration</div>
-            <div style="font-size: 13px; font-weight: 700; color: #1e293b; margin-top: 2px;">
-              ${beddingName}
-            </div>
+            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Bedding Configuration</div>
+            <div class="text-xs font-bold text-slate-800 mt-0.5">${beddingName}</div>
           </div>
         </div>
 
-        <!-- Pax Capacity Tile -->
-        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px 16px; box-shadow: 0 2px 6px rgba(0,0,0,0.02); display: flex; align-items: center; gap: 14px;">
-          <div style="width: 40px; height: 40px; border-radius: 10px; background: #fdf4ff; color: #c026d3; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0;">
+        <div class="bg-white border border-slate-200 rounded-xl p-3.5 shadow-xs flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center text-base shrink-0">
             <i class="fa-solid fa-users"></i>
           </div>
           <div>
-            <div style="font-size: 11px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">Pax / Guest Capacity</div>
-            <div style="font-size: 13px; font-weight: 700; color: #1e293b; margin-top: 2px;">
-              ${paxCapacityText}
-            </div>
+            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Pax / Guest Capacity</div>
+            <div class="text-xs font-bold text-slate-800 mt-0.5">${paxCapacityText}</div>
           </div>
         </div>
+
+        ${(room.plan_relation || room.planRelation) ? `
+        <div class="sm:col-span-2 bg-white border border-slate-200 rounded-xl p-3 shadow-xs flex items-center justify-between gap-3">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-sm shrink-0">
+              <i class="fa-solid fa-utensils"></i>
+            </div>
+            <div>
+              <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Meal Plan / Package</div>
+              <div class="text-xs font-bold text-slate-800">
+                ${(room.plan_relation || room.planRelation).plan_name} ${(room.plan_relation || room.planRelation).short_code ? '(' + (room.plan_relation || room.planRelation).short_code + ')' : ''}
+              </div>
+            </div>
+          </div>
+          ${(room.plan_relation || room.planRelation).price ? `
+            <span class="font-mono text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-200/60">
+              ₹${Number((room.plan_relation || room.planRelation).price).toLocaleString()}
+            </span>
+          ` : ''}
+        </div>
+        ` : ''}
       </div>
 
-      <!-- Configured Amenities Card -->
-      <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px 18px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-          <div style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px;">
-            <i class="fa-solid fa-wand-magic-sparkles" style="color: #6366f1;"></i> Configured Amenities
-          </div>
-          <span style="font-size: 11px; font-weight: 700; background: #f1f5f9; color: #475569; padding: 2px 8px; border-radius: 10px;">
+      <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-xs font-bold text-slate-700 flex items-center gap-2">
+            <i class="fa-solid fa-wand-magic-sparkles text-indigo-600"></i> Configured Amenities
+          </span>
+          <span class="text-[11px] font-bold bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">
             ${rawAmenitiesList.length} Total
           </span>
         </div>
-        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+        <div class="flex flex-wrap gap-2">
           ${amenitiesHtml}
         </div>
       </div>
@@ -2280,8 +1741,8 @@
     const botLeft = document.getElementById('view-room-bot-left');
     if (botLeft) {
       botLeft.innerHTML = `
-        <button type="button" class="btn-ui-primary" onclick="closeModal('view-room-modal'); openEditRoomModal(${room.id});" style="height: 38px; padding: 0 16px; border-radius: 8px; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
-          <i class="fa-solid fa-pen-to-square"></i> Edit Room Asset
+        <button type="button" class="h-9 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-xs transition-all flex items-center gap-2 cursor-pointer" onclick="closeModal('view-room-modal'); openEditRoomModal(${room.id});">
+          <i class="fa-solid fa-pen-to-square text-xs"></i> Edit Room Asset
         </button>
       `;
     }
@@ -2309,7 +1770,6 @@
     PmsAlert.toast('Rooms inventory exported to CSV!');
   }
 
-  // Initialize on load
   window.addEventListener('DOMContentLoaded', () => {
     initSelect2();
     renderView();

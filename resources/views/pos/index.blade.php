@@ -2,882 +2,100 @@
 
 @section('title', 'POS Sales - Dining & In-Room Dining - Hotel Sagar Sonnet')
 
-@push('styles')
-<style>
-  :root {
-    --pos-emerald: #10b981;
-    --pos-emerald-dark: #059669;
-    --pos-cyan: #06b6d4;
-    --pos-amber: #f59e0b;
-    --pos-rose: #f43f5e;
-    --pos-indigo: #6366f1;
-  }
-
-  .pos-wrapper {
-    padding: 16px 20px;
-    background: #f1f5f9;
-    min-height: calc(100vh - 110px);
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }
-
-  /* POS KPI Summary Strip */
-  .pos-kpi-bar {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 12px;
-  }
-
-  .pos-kpi-pill {
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 10px;
-    padding: 10px 16px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.03);
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
-  }
-
-  .pos-kpi-pill:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-  }
-
-  .pos-kpi-icon {
-    width: 38px;
-    height: 38px;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 16px;
-    flex-shrink: 0;
-  }
-
-  .pos-kpi-info h5 {
-    font-size: 10.5px;
-    font-weight: 700;
-    color: #64748b;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin: 0;
-  }
-
-  .pos-kpi-info p {
-    font-size: 17px;
-    font-weight: 900;
-    font-family: var(--font-mono, monospace);
-    color: #0f172a;
-    margin: 2px 0 0;
-  }
-
-  /* Main POS Grid Card */
-  .pos-main-card {
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.04);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-  }
-
-  .pos-header-custom {
-    padding: 14px 20px;
-    background: #ffffff;
-    border-bottom: 1px solid #e2e8f0;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 14px;
-  }
-
-  .pos-header-title {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-
-  .pos-header-title h2 {
-    font-size: 17px;
-    font-weight: 800;
-    color: #0f172a;
-    margin: 0;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .pos-header-controls {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
-  }
-
-  .pos-order-type-tabs {
-    display: flex;
-    background: #f1f5f9;
-    padding: 3px;
-    border-radius: 8px;
-    border: 1px solid #e2e8f0;
-  }
-
-  .pos-order-type-btn {
-    border: none;
-    background: transparent;
-    padding: 5px 12px;
-    font-size: 11px;
-    font-weight: 700;
-    color: #64748b;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: all 0.15s ease;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-
-  .pos-order-type-btn.active {
-    background: #ffffff;
-    color: #10b981;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-  }
-
-  /* Body 2-Column POS Area */
-  .pos-work-body {
-    padding: 18px 20px;
-    display: flex;
-    gap: 20px;
-    min-height: 580px;
-  }
-
-  @media (max-width: 1024px) {
-    .pos-work-body {
-      flex-direction: column;
-    }
-  }
-
-  .pos-left-catalog {
-    flex: 2.2;
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-  }
-
-  .pos-category-nav {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    align-items: center;
-  }
-
-  .pos-cat-pill {
-    padding: 7px 14px;
-    border-radius: 8px;
-    font-size: 11.5px;
-    font-weight: 700;
-    cursor: pointer;
-    border: 1px solid #e2e8f0;
-    background: #f8fafc;
-    color: #475569;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  .pos-cat-pill:hover {
-    background: #f1f5f9;
-    border-color: #cbd5e1;
-    color: #0f172a;
-  }
-
-  .pos-cat-pill.active {
-    background: #10b981;
-    border-color: #10b981;
-    color: #ffffff;
-    box-shadow: 0 2px 6px rgba(16, 185, 129, 0.25);
-  }
-
-  .pos-search-box {
-    position: relative;
-    max-width: 380px;
-  }
-
-  .pos-search-box input {
-    width: 100%;
-    height: 36px;
-    padding: 0 14px 0 34px;
-    border-radius: 8px;
-    border: 1px solid #cbd5e1;
-    font-size: 12px;
-    font-weight: 600;
-    outline: none;
-    transition: all 0.15s ease;
-  }
-
-  .pos-search-box input:focus {
-    border-color: #10b981;
-    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.12);
-  }
-
-  .pos-search-box i {
-    position: absolute;
-    left: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #94a3b8;
-    font-size: 12px;
-  }
-
-  /* Food Cards Grid */
-  .pos-food-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
-    gap: 14px;
-    max-height: 520px;
-    overflow-y: auto;
-    padding-right: 4px;
-  }
-
-  .pos-dish-card {
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    padding: 14px 12px;
-    cursor: pointer;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    text-align: center;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 1px 3px rgba(0,0,0,0.03);
-    position: relative;
-    user-select: none;
-  }
-
-  .pos-dish-card:hover {
-    transform: translateY(-4px);
-    border-color: #10b981;
-    box-shadow: 0 8px 20px rgba(16, 185, 129, 0.15);
-    background: #f0fdf4;
-  }
-
-  .pos-dish-card:active {
-    transform: scale(0.97);
-  }
-
-  .pos-dish-emoji {
-    font-size: 34px;
-    line-height: 1;
-    margin-bottom: 8px;
-    transition: transform 0.2s ease;
-  }
-
-  .pos-dish-card:hover .pos-dish-emoji {
-    transform: scale(1.15) rotate(4deg);
-  }
-
-  .pos-dish-title {
-    font-size: 12px;
-    font-weight: 700;
-    color: #0f172a;
-    line-height: 1.35;
-    margin-bottom: 6px;
-    min-height: 32px;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-
-  .pos-dish-price {
-    font-size: 14px;
-    font-weight: 900;
-    color: #059669;
-    font-family: var(--font-mono, monospace);
-  }
-
-  .pos-dish-cat-tag {
-    font-size: 9px;
-    font-weight: 800;
-    text-transform: uppercase;
-    color: #64748b;
-    background: #f1f5f9;
-    padding: 2px 6px;
-    border-radius: 4px;
-    align-self: center;
-    margin-top: 6px;
-  }
-
-  /* Right Side: Cart */
-  .pos-right-cart {
-    flex: 1.3;
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    padding: 16px;
-    display: flex;
-    flex-direction: column;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
-  }
-
-  .cart-head-bar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding-bottom: 12px;
-    border-bottom: 1px solid #e2e8f0;
-    margin-bottom: 12px;
-  }
-
-  .cart-title-text {
-    font-size: 13px;
-    font-weight: 800;
-    color: #0f172a;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .cart-items-scroll {
-    flex: 1;
-    max-height: 280px;
-    overflow-y: auto;
-    padding-right: 4px;
-  }
-
-  .cart-row {
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    padding: 10px 12px;
-    margin-bottom: 8px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    transition: all 0.15s ease;
-  }
-
-  .cart-row:hover {
-    border-color: #cbd5e1;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.04);
-  }
-
-  .cart-item-info strong {
-    font-size: 12px;
-    font-weight: 700;
-    color: #0f172a;
-    display: block;
-    line-height: 1.25;
-  }
-
-  .cart-item-info small {
-    font-size: 11px;
-    color: #64748b;
-    font-family: var(--font-mono, monospace);
-  }
-
-  .cart-qty-ctrl {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    background: #f1f5f9;
-    border-radius: 6px;
-    padding: 2px 4px;
-  }
-
-  .cart-btn-qty {
-    width: 22px;
-    height: 22px;
-    border-radius: 4px;
-    border: 1px solid #cbd5e1;
-    background: #ffffff;
-    color: #0f172a;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 12px;
-    font-weight: 800;
-    cursor: pointer;
-    transition: all 0.1s ease;
-  }
-
-  .cart-btn-qty:hover {
-    background: #e2e8f0;
-  }
-
-  .cart-qty-val {
-    font-size: 12px;
-    font-weight: 800;
-    min-width: 16px;
-    text-align: center;
-    font-family: var(--font-mono, monospace);
-  }
-
-  .cart-total-box {
-    border-top: 1px solid #e2e8f0;
-    padding-top: 12px;
-    margin-top: 12px;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-
-  .cart-calc-line {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 11.5px;
-    color: #475569;
-    font-weight: 600;
-  }
-
-  .cart-grand-total {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 17px;
-    font-weight: 900;
-    color: #059669;
-    font-family: var(--font-mono, monospace);
-    border-top: 1px dashed #cbd5e1;
-    padding-top: 8px;
-    margin-top: 4px;
-  }
-
-  /* Payment Pill Selector */
-  .billing-method-group {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    margin: 10px 0;
-  }
-
-  .billing-method-group label {
-    font-size: 11px;
-    font-weight: 700;
-    color: #475569;
-    text-transform: uppercase;
-    letter-spacing: 0.3px;
-  }
-
-  .billing-pills-row {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 6px;
-  }
-
-  .billing-pill {
-    border: 1px solid #cbd5e1;
-    background: #ffffff;
-    border-radius: 6px;
-    padding: 6px 8px;
-    font-size: 10.5px;
-    font-weight: 700;
-    color: #334155;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.15s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 5px;
-  }
-
-  .billing-pill:hover {
-    border-color: #94a3b8;
-  }
-
-  .billing-pill.active {
-    background: #10b981;
-    border-color: #10b981;
-    color: #ffffff;
-    box-shadow: 0 1px 4px rgba(16, 185, 129, 0.25);
-  }
-
-  /* Thermal Print Layout Preview */
-  .thermal-ticket-card {
-    background: #ffffff;
-    border: 1px solid #000000;
-    padding: 16px;
-    font-family: 'Courier New', Courier, monospace;
-    color: #000000;
-    max-width: 360px;
-    margin: 0 auto;
-    font-size: 12px;
-    line-height: 1.4;
-  }
-
-  .thermal-ticket-card h3 {
-    text-align: center;
-    margin: 0 0 4px;
-    font-size: 15px;
-    font-weight: 900;
-  }
-
-  .thermal-ticket-card .center-sub {
-    text-align: center;
-    font-size: 10.5px;
-    margin-bottom: 8px;
-  }
-
-  .thermal-ticket-card .divider-line {
-    border-bottom: 1px dashed #000000;
-    margin: 6px 0;
-  }
-
-  /* Select2 Searchable Dropdown Luxury Theme */
-  .pos-wrapper .select2-container--default .select2-selection--single {
-    height: 34px !important;
-    border-radius: 8px !important;
-    border: 1px solid #cbd5e1 !important;
-    background: #ffffff !important;
-    font-size: 11.5px !important;
-    font-weight: 700 !important;
-    color: #1e293b !important;
-    display: flex !important;
-    align-items: center !important;
-    box-sizing: border-box !important;
-  }
-  .pos-wrapper .select2-container--default .select2-selection--single .select2-selection__arrow {
-    height: 32px !important;
-  }
-  .pos-wrapper .select2-container--default .select2-selection--single .select2-selection__rendered {
-    color: #1e293b !important;
-    font-weight: 700 !important;
-    line-height: normal !important;
-    font-size: 11.5px !important;
-  }
-  #pos-room-select + .select2-container {
-    width: 280px !important;
-  }
-  #pos-table-select + .select2-container {
-    width: 220px !important;
-  }
-  #room-folio-picker-box .select2-container {
-    width: 100% !important;
-  }
-  #room-folio-picker-box .select2-container--default .select2-selection--single {
-    height: 36px !important;
-    border: 1.5px solid #10b981 !important;
-    background: #ffffff !important;
-    border-radius: 8px !important;
-  }
-  #room-folio-picker-box .select2-container--default .select2-selection--single:focus,
-  #room-folio-picker-box .select2-container--default.select2-container--open .select2-selection--single {
-    border-color: #059669 !important;
-    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2) !important;
-  }
-
-  /* Modals */
-  .pos-modal-backdrop {
-    position: fixed;
-    inset: 0;
-    background: rgba(15, 23, 42, 0.5);
-    backdrop-filter: blur(4px);
-    display: none;
-    align-items: center;
-    justify-content: center;
-    z-index: 9999;
-    padding: 20px;
-  }
-
-  .pos-modal-window {
-    background: #ffffff;
-    border-radius: 12px;
-    width: 600px;
-    max-width: 95vw;
-    max-height: 90vh;
-    overflow-y: auto;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.2);
-    display: flex;
-    flex-direction: column;
-  }
-
-  .pos-modal-head {
-    padding: 14px 20px;
-    background: #f8fafc;
-    border-bottom: 1px solid #e2e8f0;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-
-  .pos-modal-head h3 {
-    margin: 0;
-    font-size: 15px;
-    font-weight: 800;
-    color: #0f172a;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .pos-modal-body {
-    padding: 20px;
-  }
-
-  .pos-modal-foot {
-    padding: 14px 20px;
-    background: #f8fafc;
-    border-top: 1px solid #e2e8f0;
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-  }
-
-  /* ==========================================================================
-     RESPONSIVE MEDIA QUERIES FOR POS
-     ========================================================================== */
-
-  /* Tablet & Medium Screens (< 1024px) */
-  @media (max-width: 1024px) {
-    .pos-wrapper {
-      padding: 12px 14px;
-      gap: 12px;
-    }
-    .pos-work-body {
-      flex-direction: column;
-      padding: 14px;
-      min-height: auto;
-    }
-    .pos-left-catalog {
-      flex: 1;
-      width: 100%;
-    }
-    .pos-right-cart {
-      flex: 1;
-      width: 100%;
-      margin-top: 10px;
-    }
-    .pos-food-grid {
-      max-height: 480px;
-    }
-    .cart-items-scroll {
-      max-height: 250px;
-    }
-  }
-
-  /* Small Tablet & Mobile Screens (< 768px) */
-  @media (max-width: 768px) {
-    .pos-wrapper {
-      padding: 8px 10px;
-      gap: 10px;
-    }
-    .pos-kpi-bar {
-      grid-template-columns: repeat(2, 1fr);
-      gap: 8px;
-    }
-    .pos-kpi-pill {
-      padding: 8px 10px;
-      gap: 8px;
-    }
-    .pos-kpi-icon {
-      width: 32px;
-      height: 32px;
-      font-size: 14px;
-    }
-    .pos-kpi-info h5 {
-      font-size: 9px;
-    }
-    .pos-kpi-info p {
-      font-size: 14px;
-    }
-
-    .pos-header-custom {
-      padding: 10px 12px;
-      flex-direction: column;
-      align-items: stretch;
-      gap: 10px;
-    }
-    .pos-header-title {
-      justify-content: space-between;
-      width: 100%;
-    }
-    .pos-header-title h2 {
-      font-size: 15px;
-    }
-    .pos-header-controls {
-      flex-direction: column;
-      align-items: stretch;
-      width: 100%;
-      gap: 8px;
-    }
-    .pos-order-type-tabs {
-      width: 100%;
-      display: flex;
-    }
-    .pos-order-type-btn {
-      flex: 1;
-      justify-content: center;
-      padding: 6px 4px;
-      font-size: 10.5px;
-    }
-    #room-select-group, #table-select-group, #takeaway-name-group {
-      width: 100%;
-      display: flex;
-      flex-direction: column;
-      align-items: stretch !important;
-      gap: 4px !important;
-    }
-    #pos-room-select, #pos-table-select, #pos-takeaway-name {
-      width: 100% !important;
-      min-width: 0 !important;
-    }
-    .pos-header-controls .btn-ui-secondary {
-      width: 100%;
-      justify-content: center;
-    }
-
-    .pos-work-body {
-      padding: 10px;
-      gap: 12px;
-    }
-    .pos-category-nav {
-      overflow-x: auto;
-      flex-wrap: nowrap;
-      -webkit-overflow-scrolling: touch;
-      padding-bottom: 4px;
-      width: 100%;
-    }
-    .pos-cat-pill {
-      flex-shrink: 0;
-      white-space: nowrap;
-      padding: 6px 10px;
-      font-size: 11px;
-    }
-    .pos-search-box {
-      width: 100%;
-      max-width: 100%;
-    }
-    .pos-food-grid {
-      grid-template-columns: repeat(2, 1fr);
-      gap: 8px;
-      max-height: 420px;
-    }
-    .pos-dish-card {
-      padding: 10px 8px;
-    }
-    .pos-dish-emoji {
-      font-size: 26px;
-      margin-bottom: 4px;
-    }
-    .pos-dish-title {
-      font-size: 11px;
-      min-height: 28px;
-    }
-    .pos-dish-price {
-      font-size: 13px;
-    }
-    .pos-modal-window {
-      width: 95vw !important;
-      margin: 10px auto;
-      padding: 0;
-    }
-    .pos-modal-body {
-      padding: 12px;
-    }
-    .billing-method-group {
-      grid-template-columns: 1fr !important;
-      gap: 6px !important;
-    }
-  }
-
-  /* Extra Small Mobile (< 480px) */
-  @media (max-width: 480px) {
-    .pos-kpi-bar {
-      grid-template-columns: 1fr 1fr;
-    }
-    .pos-dish-price {
-      font-size: 12px;
-    }
-    .pos-dish-cat-tag {
-      font-size: 8.5px;
-      padding: 2px 4px;
-    }
-  }
-</style>
-@endpush
 
 @section('content')
-<div class="pos-wrapper">
+<main class="flex-1 w-full p-3 sm:p-4 lg:p-5 flex flex-col gap-4 pms-main-viewport">
+  <div class="w-full flex flex-col gap-4 pms-page-container">
 
   <!-- 1. Top KPI Summary Cards -->
-  <div class="pos-kpi-bar">
-    <div class="pos-kpi-pill">
-      <div class="pos-kpi-icon" style="background: rgba(16, 185, 129, 0.12); color: #10b981;">
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <!-- Today's Orders -->
+    <div class="bg-white p-4.5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between gap-3 hover:shadow-md transition-all">
+      <div>
+        <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Today's Orders</span>
+        <div class="text-2xl font-black font-mono text-emerald-600 mt-1">{{ $todayOrdersCount }}</div>
+        <div class="text-[11px] font-semibold text-slate-500 flex items-center gap-1.5 mt-1">
+          <i class="fa-solid fa-receipt text-emerald-500 text-[10px]"></i> Total Kitchen Orders
+        </div>
+      </div>
+      <div class="w-12 h-12 rounded-xl bg-emerald-50 border border-emerald-200/80 text-emerald-600 flex items-center justify-center text-lg shrink-0">
         <i class="fa-solid fa-receipt"></i>
       </div>
-      <div class="pos-kpi-info">
-        <h5>Today's Orders</h5>
-        <p>{{ $todayOrdersCount }}</p>
-      </div>
     </div>
 
-    <div class="pos-kpi-pill">
-      <div class="pos-kpi-icon" style="background: rgba(6, 182, 212, 0.12); color: #06b6d4;">
+    <!-- Today's POS Sales -->
+    <div class="bg-white p-4.5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between gap-3 hover:shadow-md transition-all">
+      <div>
+        <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Today's POS Sales</span>
+        <div class="text-2xl font-black font-mono text-cyan-600 mt-1">₹ {{ number_format($todaySalesTotal, 2) }}</div>
+        <div class="text-[11px] font-semibold text-slate-500 flex items-center gap-1.5 mt-1">
+          <i class="fa-solid fa-indian-rupee-sign text-cyan-500 text-[10px]"></i> Total Dining Revenue
+        </div>
+      </div>
+      <div class="w-12 h-12 rounded-xl bg-cyan-50 border border-cyan-200/80 text-cyan-600 flex items-center justify-center text-lg shrink-0">
         <i class="fa-solid fa-indian-rupee-sign"></i>
       </div>
-      <div class="pos-kpi-info">
-        <h5>Today's POS Sales</h5>
-        <p>₹ {{ number_format($todaySalesTotal, 2) }}</p>
-      </div>
     </div>
 
-    <div class="pos-kpi-pill">
-      <div class="pos-kpi-icon" style="background: rgba(245, 158, 11, 0.12); color: #f59e0b;">
+    <!-- KOTs in Kitchen -->
+    <div class="bg-white p-4.5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between gap-3 hover:shadow-md transition-all">
+      <div>
+        <span class="text-xs font-bold uppercase tracking-wider text-slate-400">KOTs in Kitchen</span>
+        <div class="text-2xl font-black font-mono text-amber-600 mt-1">{{ $activeKotCount }}</div>
+        <div class="text-[11px] font-semibold text-slate-500 flex items-center gap-1.5 mt-1">
+          <i class="fa-solid fa-fire-burner text-amber-500 text-[10px]"></i> Active Live Prep
+        </div>
+      </div>
+      <div class="w-12 h-12 rounded-xl bg-amber-50 border border-amber-200/80 text-amber-600 flex items-center justify-center text-lg shrink-0">
         <i class="fa-solid fa-fire-burner"></i>
       </div>
-      <div class="pos-kpi-info">
-        <h5>KOTs in Kitchen</h5>
-        <p>{{ $activeKotCount }}</p>
-      </div>
     </div>
 
-    <div class="pos-kpi-pill">
-      <div class="pos-kpi-icon" style="background: rgba(99, 102, 241, 0.12); color: #6366f1;">
-        <i class="fa-solid fa-door-open"></i>
+    <!-- Room Folio Bills -->
+    <div class="bg-white p-4.5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between gap-3 hover:shadow-md transition-all">
+      <div>
+        <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Room Folio Bills</span>
+        <div class="text-2xl font-black font-mono text-indigo-600 mt-1">{{ $chargedToRoomCount }}</div>
+        <div class="text-[11px] font-semibold text-slate-500 flex items-center gap-1.5 mt-1">
+          <i class="fa-solid fa-door-open text-indigo-500 text-[10px]"></i> Charged to Room Ledger
+        </div>
       </div>
-      <div class="pos-kpi-info">
-        <h5>Room Folio Bills</h5>
-        <p>{{ $chargedToRoomCount }}</p>
+      <div class="w-12 h-12 rounded-xl bg-indigo-50 border border-indigo-200/80 text-indigo-600 flex items-center justify-center text-lg shrink-0">
+        <i class="fa-solid fa-door-open"></i>
       </div>
     </div>
   </div>
 
   <!-- 2. Main POS Workspace Card -->
-  <div class="pos-main-card">
+  <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
     
     <!-- Top Header Bar -->
-    <div class="pos-header-custom">
-      <div class="pos-header-title">
-        <h2><i class="fa-solid fa-utensils" style="color: #10b981;"></i> Sea Breeze Dining &amp; In-Room Dining POS</h2>
+    <div class="bg-slate-50/80 px-5 py-4 border-b border-slate-200/80 flex flex-col xl:flex-row xl:items-center justify-between gap-4">
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center text-base shrink-0">
+          <i class="fa-solid fa-utensils"></i>
+        </div>
+        <h2 class="text-base font-extrabold text-slate-900">Sea Breeze Dining &amp; In-Room Dining POS</h2>
       </div>
 
-      <div class="pos-header-controls">
+      <div class="flex items-center gap-3 flex-wrap">
         <!-- Order Type Switcher -->
-        <div class="pos-order-type-tabs">
-          <button type="button" class="pos-order-type-btn active" id="type-room" onclick="selectOrderType('Room Dining')">
-            <i class="fa-solid fa-bell-concierge"></i> Room Dining
+        <div class="inline-flex items-center p-1 bg-slate-200/70 rounded-xl gap-1">
+          <button type="button" class="pos-order-type-btn px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-white text-emerald-700 shadow-xs cursor-pointer" id="type-room" onclick="selectOrderType('Room Dining')">
+            <i class="fa-solid fa-bell-concierge mr-1 text-[11px]"></i> Room Dining
           </button>
-          <button type="button" class="pos-order-type-btn" id="type-dinein" onclick="selectOrderType('Table Dine-in')">
-            <i class="fa-solid fa-chair"></i> Table Dine-in
+          <button type="button" class="pos-order-type-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 transition-all cursor-pointer" id="type-dinein" onclick="selectOrderType('Table Dine-in')">
+            <i class="fa-solid fa-chair mr-1 text-[11px]"></i> Table Dine-in
           </button>
-          <button type="button" class="pos-order-type-btn" id="type-takeaway" onclick="selectOrderType('Takeaway')">
-            <i class="fa-solid fa-bag-shopping"></i> Takeaway
+          <button type="button" class="pos-order-type-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 transition-all cursor-pointer" id="type-takeaway" onclick="selectOrderType('Takeaway')">
+            <i class="fa-solid fa-bag-shopping mr-1 text-[11px]"></i> Takeaway
           </button>
         </div>
 
-        <!-- Room Selector (Visible for Room Dining or when Room Folio is chosen) -->
-        <div id="room-select-group" style="display: flex; gap: 8px; align-items: center;">
-          <span style="font-weight: 700; font-size: 11px; color: #64748b; white-space: nowrap;">Bill To Room:</span>
-          <select class="pms-select" id="pos-room-select" style="min-width: 260px;">
+        <!-- Room Selector (Hidden in top bar as room is selected in the Billing section) -->
+        <div id="room-select-group" class="hidden" style="display: none !important;">
+          <span class="font-bold text-xs text-slate-500 whitespace-nowrap">Bill To Room:</span>
+          <select class="h-9.5 text-xs font-medium rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-indigo-500 min-w-[240px]" id="pos-room-select">
             @forelse($selectableRooms as $rm)
               <option value="{{ $rm->id }}" data-room="{{ $rm->room_number }}" data-guest="{{ $rm->guest_name }}">
                 Room {{ $rm->room_number }} - {{ $rm->guest_name }}
@@ -889,9 +107,9 @@
         </div>
 
         <!-- Table Selector (Visible for Table Dine-in) -->
-        <div id="table-select-group" style="display: none; gap: 8px; align-items: center;">
-          <span style="font-weight: 700; font-size: 11px; color: #64748b; white-space: nowrap;">Table / Host:</span>
-          <select class="pms-select" id="pos-table-select" style="min-width: 220px;">
+        <div id="table-select-group" class="items-center gap-2 hidden">
+          <span class="font-bold text-xs text-slate-500 whitespace-nowrap">Table / Host:</span>
+          <select class="h-9.5 text-xs font-medium rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-indigo-500 min-w-[200px]" id="pos-table-select">
             <option value="Table 1 (Sea Breeze Deck)">Table 1 (Sea Breeze Deck)</option>
             <option value="Table 2 (Lawn View)">Table 2 (Lawn View)</option>
             <option value="Table 3 (Poolside)">Table 3 (Poolside)</option>
@@ -902,233 +120,248 @@
         </div>
 
         <!-- Customer Name for Takeaway -->
-        <div id="takeaway-name-group" style="display: none; gap: 8px; align-items: center;">
-          <span style="font-weight: 700; font-size: 11px; color: #64748b;">Customer:</span>
-          <input type="text" id="pos-takeaway-name" class="pms-input" placeholder="Guest Name / Phone" style="height: 34px; width: 180px;">
+        <div id="takeaway-name-group" class="items-center gap-2 hidden">
+          <span class="font-bold text-xs text-slate-500 whitespace-nowrap">Customer:</span>
+          <input type="text" id="pos-takeaway-name" class="h-9.5 px-3 text-xs font-medium rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-indigo-500 w-44" placeholder="Guest Name / Phone">
         </div>
 
         <!-- Quick Modals Buttons -->
-        <a href="{{ route('stores.index') }}" class="btn-ui-secondary" style="height: 34px; font-size: 11.5px; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
-          <i class="fa-solid fa-boxes-stacked" style="color: #10b981;"></i> Manage Store & Menus
+        <a href="{{ route('stores.index') }}" class="inline-flex items-center gap-1.5 h-9.5 px-3.5 text-xs font-bold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200/80 rounded-xl transition-all shadow-xs" title="Manage Store & Menus">
+          <i class="fa-solid fa-boxes-stacked text-emerald-600"></i> Manage Store
         </a>
-        <button type="button" class="btn-ui-secondary" onclick="openRecentOrdersModal()" style="height: 34px; font-size: 11.5px; font-weight: 700;">
-          <i class="fa-solid fa-clock-rotate-left"></i> KOT History
+        <button type="button" class="inline-flex items-center gap-1.5 h-9.5 px-3.5 text-xs font-bold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200/80 rounded-xl transition-all shadow-xs cursor-pointer" onclick="openRecentOrdersModal()">
+          <i class="fa-solid fa-clock-rotate-left text-slate-500"></i> KOT History
         </button>
       </div>
     </div>
 
     <!-- 2-Column POS Body -->
-    <div class="pos-work-body">
+    <div class="grid grid-cols-1 lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x divide-slate-200/80">
       
       <!-- Left Column: Menu Catalog -->
-      <div class="pos-left-catalog">
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+      <div class="lg:col-span-7 xl:col-span-8 p-5 space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <!-- Category Pills -->
-          <div class="pos-category-nav">
-            <button class="pos-cat-pill active" onclick="filterMenu('all', this)"><i class="fa-solid fa-grip"></i> All Menu</button>
+          <div class="flex items-center gap-1.5 overflow-x-auto pb-1 max-w-full">
+            <button class="pos-cat-pill inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap bg-emerald-600 text-white shadow-xs" onclick="filterMenu('all', this)">
+              <i class="fa-solid fa-grip text-[10px]"></i> All Menu
+            </button>
             @foreach($menuCategories as $cat)
-              <button class="pos-cat-pill" onclick="filterMenu('{{ $cat }}', this)">{{ $cat }}</button>
+              <button class="pos-cat-pill inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-all cursor-pointer whitespace-nowrap" onclick="filterMenu('{{ $cat }}', this)">
+                {{ $cat }}
+              </button>
             @endforeach
           </div>
 
           <!-- Instant Search Input -->
-          <div class="pos-search-box">
-            <i class="fa-solid fa-magnifying-glass"></i>
-            <input type="text" id="menu-search-input" placeholder="Search dish, mocktail, beverage..." onkeyup="searchMenu(this.value)">
+          <div class="relative w-full sm:w-64 shrink-0">
+            <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+            <input type="text" id="menu-search-input" placeholder="Search dish, beverage..." onkeyup="searchMenu(this.value)" class="h-9 pl-8 pr-3 text-xs font-medium rounded-xl border border-slate-200 bg-slate-50/70 focus:bg-white focus:border-indigo-500 focus:outline-none transition-all w-full">
           </div>
         </div>
 
         <!-- Food Grid -->
-        <div class="pos-food-grid" id="pos-menu-grid">
+        <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3.5" id="pos-menu-grid">
           @forelse($menuItems as $dish)
             @php
               $plates = $dish->available_plates;
               $isSoldOut = ($plates <= 0);
               $isLow = ($plates > 0 && $plates <= ($dish->min_alert_plates ?: 10));
             @endphp
-            <div class="pos-dish-card {{ $isSoldOut ? 'pos-dish-soldout' : '' }}" 
+            <div class="pos-dish-card bg-white rounded-xl border border-slate-200 hover:border-emerald-500 hover:shadow-md transition-all p-3.5 flex flex-col justify-between cursor-pointer group {{ $isSoldOut ? 'opacity-55 border-rose-200 bg-rose-50/20' : '' }}" 
                  data-cat="{{ $dish->category }}" 
                  data-name="{{ strtolower($dish->name) }}"
-                 style="{{ $isSoldOut ? 'opacity: 0.55; border-color: #fecdd3;' : '' }}"
                  onclick="{{ $isSoldOut ? 'PmsAlert.toast(\'This dish is OUT OF STOCK in kitchen store!\', \'warning\')' : 'addToCart(' . $dish->id . ', \'' . addslashes($dish->name) . '\', ' . $dish->price . ', ' . $plates . ')' }}">
-              <div class="pos-dish-emoji">{{ $dish->emoji ?: '🍽️' }}</div>
-              <div class="pos-dish-title" title="{{ $dish->name }}">{{ $dish->name }}</div>
-              <div class="pos-dish-price">₹ {{ number_format($dish->price, 0) }}</div>
-              @if($dish->ingredient_name)
-                <div style="font-size: 10px; color: #64748b; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ $dish->ingredient_display }}">
-                  <i class="fa-solid fa-mortar-pestle" style="color: #94a3b8; font-size: 9px;"></i> {{ $dish->ingredient_display }}
-                </div>
-              @endif
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px; gap: 4px;">
-                <span class="pos-dish-cat-tag" style="margin-top: 0;">{{ $dish->category }}</span>
+              <div>
+                <div class="text-3xl text-center py-1 group-hover:scale-110 transition-transform">{{ $dish->emoji ?: '🍽️' }}</div>
+                <div class="font-bold text-xs text-slate-800 truncate group-hover:text-emerald-700 transition-colors mt-1" title="{{ $dish->name }}">{{ $dish->name }}</div>
+                <div class="text-sm font-black font-mono text-slate-900 mt-0.5">₹ {{ number_format($dish->price, 0) }}</div>
+                @if($dish->ingredient_name)
+                  <div class="text-[10px] text-slate-400 truncate mt-1 flex items-center gap-1" title="{{ $dish->ingredient_display }}">
+                    <i class="fa-solid fa-mortar-pestle text-slate-300 text-[9px]"></i> {{ $dish->ingredient_display }}
+                  </div>
+                @endif
+              </div>
+              <div class="flex items-center justify-between gap-1.5 mt-2.5 pt-2 border-t border-slate-100">
+                <span class="text-[10px] font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">{{ $dish->category }}</span>
                 @if($isSoldOut)
-                  <span style="font-size: 9.5px; font-weight: 800; font-family: var(--font-mono, monospace); color: #e11d48; background: #fff1f2; padding: 2px 6px; border-radius: 4px; white-space: nowrap;">
+                  <span class="text-[10px] font-bold font-mono text-rose-700 bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200 whitespace-nowrap">
                     <i class="fa-solid fa-circle-xmark"></i> Sold Out
                   </span>
                 @elseif($isLow)
-                  <span style="font-size: 9.5px; font-weight: 800; font-family: var(--font-mono, monospace); color: #d97706; background: #fef3c7; padding: 2px 6px; border-radius: 4px; white-space: nowrap;">
+                  <span class="text-[10px] font-bold font-mono text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200 whitespace-nowrap">
                     <i class="fa-solid fa-triangle-exclamation"></i> Low: {{ $plates }}
                   </span>
                 @else
-                  <span style="font-size: 9.5px; font-weight: 800; font-family: var(--font-mono, monospace); color: #059669; background: #ecfdf5; padding: 2px 6px; border-radius: 4px; white-space: nowrap;">
+                  <span class="text-[10px] font-bold font-mono text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 whitespace-nowrap">
                     <i class="fa-solid fa-circle-check"></i> {{ $plates }} Plates
                   </span>
                 @endif
               </div>
             </div>
           @empty
-            <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #94a3b8;">
-              <i class="fa-solid fa-utensils" style="font-size: 36px; margin-bottom: 12px; display: block;"></i>
-              No dishes found in menu catalog. Please create items in <a href="{{ route('stores.index') }}" style="color: #10b981; font-weight: 700;">Kitchen Store</a>.
+            <div class="col-span-full text-center py-12 text-slate-400">
+              <i class="fa-solid fa-utensils text-4xl mb-3 text-slate-300 block"></i>
+              <div class="text-sm font-bold text-slate-600">No dishes found in menu catalog.</div>
+              <div class="text-xs text-slate-400 mt-1">Please create items in <a href="{{ route('stores.index') }}" class="text-emerald-600 font-bold hover:underline">Kitchen Store</a>.</div>
             </div>
           @endforelse
         </div>
       </div>
 
       <!-- Right Column: Active Cart / KOT Ticket -->
-      <div class="pos-right-cart">
-        <div class="cart-head-bar">
-          <div class="cart-title-text">
-            <i class="fa-solid fa-cart-shopping" style="color: #10b981;"></i>
-            <span>Active Order / KOT Ticket</span>
-            <span id="cart-count-badge" style="background: #10b981; color: #ffffff; font-size: 10px; padding: 2px 7px; border-radius: 10px; font-weight: 800;">0</span>
+      <div class="lg:col-span-5 xl:col-span-4 p-5 bg-slate-50/50 flex flex-col justify-between">
+        <div>
+          <!-- Cart Header -->
+          <div class="flex items-center justify-between pb-3 border-b border-slate-200">
+            <div class="flex items-center gap-2">
+              <i class="fa-solid fa-cart-shopping text-emerald-600"></i>
+              <span class="font-extrabold text-xs text-slate-900">Active Order / KOT Ticket</span>
+              <span id="cart-count-badge" class="bg-emerald-600 text-white text-[10px] font-black px-2 py-0.5 rounded-full">0</span>
+            </div>
+            <button type="button" class="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200/80 rounded-lg transition-all cursor-pointer" onclick="clearCart()">
+              <i class="fa-solid fa-trash-can text-[10px]"></i> Clear
+            </button>
           </div>
-          <button type="button" class="btn-ui-secondary" style="padding: 4px 8px; font-size: 11px; height: 26px;" onclick="clearCart()">
-            <i class="fa-solid fa-trash-can"></i> Clear
+
+          <!-- Scrollable Cart Line Items -->
+          <div id="cart-items" class="h-64 overflow-y-auto divide-y divide-slate-100 pr-1 my-2">
+            <div class="text-center text-slate-400 py-12 text-xs">
+              <i class="fa-solid fa-basket-shopping text-3xl block mb-2 text-slate-300"></i>
+              Cart is empty.<br>Click any food card on the left to add items.
+            </div>
+          </div>
+
+          <!-- Special Instructions / Notes -->
+          <div class="mt-2">
+            <input type="text" id="order-instructions" class="h-9 px-3 text-xs font-medium rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-indigo-500 w-full placeholder:text-slate-400" placeholder="Kitchen instructions (e.g., Less spicy, no onion)...">
+          </div>
+
+          <!-- Billing Mode Selector -->
+          <div class="mt-4">
+            <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Billing &amp; Payment Mode</label>
+            <div class="grid grid-cols-3 gap-2">
+              <div class="billing-pill active px-3 py-2 rounded-xl text-xs font-bold text-center cursor-pointer transition-all border border-emerald-300 bg-emerald-50 text-emerald-700 shadow-xs" id="bill-folio" onclick="setBillingType('Charged to Room Folio')">
+                <i class="fa-solid fa-door-closed mr-1"></i> Room Folio
+              </div>
+              <div class="billing-pill px-3 py-2 rounded-xl text-xs font-semibold text-slate-600 text-center cursor-pointer transition-all border border-slate-200 bg-white hover:bg-slate-50" id="bill-cash" onclick="setBillingType('Cash Paid')">
+                <i class="fa-solid fa-money-bill-wave mr-1"></i> Cash Paid
+              </div>
+              <div class="billing-pill px-3 py-2 rounded-xl text-xs font-semibold text-slate-600 text-center cursor-pointer transition-all border border-slate-200 bg-white hover:bg-slate-50" id="bill-digital" onclick="setBillingType('Digital UPI / Card Paid')">
+                <i class="fa-solid fa-qrcode mr-1"></i> UPI / Card
+              </div>
+            </div>
+
+            <!-- Room Folio Picker (Visible for Room Folio [Required] or Cash/UPI [Optional]) -->
+            <div id="room-folio-picker-box" class="mt-3 bg-emerald-50/70 border border-emerald-200 rounded-xl p-3 space-y-2">
+              <label id="room-picker-label" class="text-xs font-bold text-emerald-800 flex items-center justify-between">
+                <span id="room-picker-title" class="flex items-center gap-1.5"><i class="fa-solid fa-door-open text-emerald-600"></i> Select Room to Charge Folio: *</span>
+                <span id="room-picker-badge" class="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-bold">In-House Folio</span>
+              </label>
+              <select class="w-full h-9 text-xs font-medium rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-indigo-500" id="cart-room-folio-select">
+                <option value="">-- Direct Walk-in / No Room --</option>
+                @forelse($selectableRooms as $rm)
+                  <option value="{{ $rm->id }}" data-room="{{ $rm->room_number }}" data-guest="{{ $rm->guest_name }}">
+                    Room {{ $rm->room_number }} - {{ $rm->guest_name }}
+                  </option>
+                @empty
+                  <option value="">No Checked In Guests Found</option>
+                @endforelse
+              </select>
+              <div id="room-picker-info-note" class="text-[11px] text-slate-500 mt-1"></div>
+            </div>
+
+            <!-- Takeaway Customer Form (Visible ONLY for Takeaway) -->
+            <div id="takeaway-customer-box" class="mt-3 bg-amber-50/70 border border-amber-200 rounded-xl p-3 space-y-2 hidden">
+              <label class="text-xs font-bold text-amber-800 flex items-center justify-between">
+                <span class="flex items-center gap-1.5"><i class="fa-solid fa-user-tag text-amber-600"></i> Walk-in Takeaway Guest Details: *</span>
+                <span class="text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full font-bold">Takeaway Customer</span>
+              </label>
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <input type="text" id="takeaway-customer-name" class="w-full h-8.5 px-3 text-xs font-medium rounded-lg border border-amber-300 bg-white focus:outline-none focus:border-amber-500" placeholder="Customer Name *">
+                </div>
+                <div>
+                  <input type="text" id="takeaway-customer-phone" class="w-full h-8.5 px-3 text-xs font-medium rounded-lg border border-amber-300 bg-white focus:outline-none focus:border-amber-500" placeholder="Phone Number">
+                </div>
+              </div>
+              <div class="text-[10px] text-amber-700 font-medium flex items-center gap-1 mt-1">
+                <i class="fa-solid fa-circle-info"></i> Direct restaurant walk-in order. Recorded in Night Audit payments with direct Cash/UPI settlement.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <!-- Cart Calculation Breakdown -->
+          <div class="bg-white rounded-xl border border-slate-200 p-3 mt-4 space-y-1.5 text-xs">
+            <div class="flex items-center justify-between text-slate-500 font-medium">
+              <span>Subtotal:</span>
+              <span id="sub-val" class="font-mono font-bold text-slate-800">₹ 0</span>
+            </div>
+            <div class="flex items-center justify-between text-slate-500 font-medium">
+              <span>GST (12%):</span>
+              <span id="tax-val" class="font-mono text-slate-500">₹ 0</span>
+            </div>
+            <div class="flex items-center justify-between pt-2 border-t border-slate-100 text-sm font-black text-slate-900">
+              <span>Total Bill:</span>
+              <span id="tot-val" class="font-mono text-emerald-600">₹ 0</span>
+            </div>
+          </div>
+
+          <!-- Main Submission Button -->
+          <button type="button" class="w-full h-11 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer mt-3" id="btn-post-order" onclick="postOrder()">
+            <i class="fa-solid fa-check"></i> <span id="btn-order-label">Post Bill to Room Folio</span>
           </button>
         </div>
-
-        <!-- Scrollable Cart Line Items -->
-        <div id="cart-items" class="cart-items-scroll">
-          <div style="text-align: center; color: #94a3b8; padding: 40px 10px; font-size: 12px;">
-            <i class="fa-solid fa-basket-shopping" style="font-size: 32px; display: block; margin-bottom: 12px; color: #cbd5e1;"></i>
-            Cart is empty.<br>Click any food card on the left to add items.
-          </div>
-        </div>
-
-        <!-- Special Instructions / Notes -->
-        <div style="margin-top: 10px;">
-          <input type="text" id="order-instructions" class="pms-input" placeholder="Kitchen instructions (e.g., Less spicy, no onion)..." style="height: 32px; font-size: 11.5px; width: 100%;">
-        </div>
-
-        <!-- Billing Mode Selector -->
-        <div class="billing-method-group">
-          <label>Billing &amp; Payment Mode</label>
-          <div class="billing-pills-row">
-            <div class="billing-pill active" id="bill-folio" onclick="setBillingType('Charged to Room Folio')">
-              <i class="fa-solid fa-door-closed"></i> Room Folio
-            </div>
-            <div class="billing-pill" id="bill-cash" onclick="setBillingType('Cash Paid')">
-              <i class="fa-solid fa-money-bill-wave"></i> Cash Paid
-            </div>
-            <div class="billing-pill" id="bill-digital" onclick="setBillingType('Digital UPI / Card Paid')">
-              <i class="fa-solid fa-qrcode"></i> UPI / Card
-            </div>
-          </div>
-
-          <!-- Room Folio Picker (Visible for Room Folio [Required] or Cash/UPI [Optional]) -->
-          <div id="room-folio-picker-box" style="margin-top: 10px; background: #ecfdf5; border: 1.5px solid #86efac; border-radius: 8px; padding: 10px; display: block; transition: all 0.2s ease;">
-            <label id="room-picker-label" style="font-size: 11px; font-weight: 800; color: #166534; display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
-              <span id="room-picker-title"><i class="fa-solid fa-door-open" style="color: #10b981;"></i> Select Room to Charge Folio: *</span>
-              <span id="room-picker-badge" style="font-size: 9.5px; background: #dcfce7; color: #15803d; padding: 1px 6px; border-radius: 4px; font-weight: 700;">In-House Folio</span>
-            </label>
-            <select class="pms-select" id="cart-room-folio-select" style="width: 100%;">
-              <option value="">-- Direct Walk-in / No Room --</option>
-              @forelse($selectableRooms as $rm)
-                <option value="{{ $rm->id }}" data-room="{{ $rm->room_number }}" data-guest="{{ $rm->guest_name }}">
-                  Room {{ $rm->room_number }} - {{ $rm->guest_name }}
-                </option>
-              @empty
-                <option value="">No Checked In Guests Found</option>
-              @endforelse
-            </select>
-          </div>
-
-          <!-- Takeaway Customer Form (Visible ONLY for Takeaway) -->
-          <div id="takeaway-customer-box" style="display: none; margin-top: 10px; background: #fffbeb; border: 1.5px solid #fde68a; border-radius: 8px; padding: 10px;">
-            <label style="font-size: 11px; font-weight: 800; color: #92400e; display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
-              <span><i class="fa-solid fa-user-tag" style="color: #d97706;"></i> Walk-in Takeaway Guest Details: *</span>
-              <span style="font-size: 9.5px; background: #fef3c7; color: #b45309; padding: 1px 6px; border-radius: 4px; font-weight: 700;">Takeaway Customer</span>
-            </label>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-              <div>
-                <input type="text" id="takeaway-customer-name" class="pms-input" placeholder="Customer Name *" style="width: 100%; height: 32px; font-size: 11.5px;">
-              </div>
-              <div>
-                <input type="text" id="takeaway-customer-phone" class="pms-input" placeholder="Phone Number (e.g. 9876543210)" style="width: 100%; height: 32px; font-size: 11.5px;">
-              </div>
-            </div>
-            <div style="margin-top: 5px; font-size: 10px; color: #b45309; font-weight: 600;">
-              <i class="fa-solid fa-circle-info"></i> Direct restaurant walk-in order. Recorded in Night Audit payments with direct Cash/UPI settlement.
-            </div>
-          </div>
-        </div>
-
-        <!-- Cart Calculation Breakdown -->
-        <div class="cart-total-box">
-          <div class="cart-calc-line">
-            <span>Subtotal:</span>
-            <span id="sub-val" style="font-family: var(--font-mono, monospace); color: #0f172a; font-weight: 700;">₹ 0</span>
-          </div>
-          <div class="cart-calc-line">
-            <span>GST (12%):</span>
-            <span id="tax-val" style="font-family: var(--font-mono, monospace); color: #64748b;">₹ 0</span>
-          </div>
-          <div class="cart-grand-total">
-            <span>Total Bill:</span>
-            <span id="tot-val">₹ 0</span>
-          </div>
-        </div>
-
-        <!-- Main Submission Button -->
-        <button type="button" class="btn-ui-primary" id="btn-post-order" style="width: 100%; height: 44px; font-weight: 800; font-size: 13px; justify-content: center; margin-top: 12px;" onclick="postOrder()">
-          <i class="fa-solid fa-check"></i> <span id="btn-order-label">Post Bill to Room Folio</span>
-        </button>
       </div>
 
     </div>
 
     <!-- Footer Bar matching static -->
-    <div style="padding: 10px 20px; background: #f8fafc; border-top: 1px solid #e2e8f0; font-size: 11px; font-weight: 700; color: #64748b; display: flex; align-items: center; justify-content: space-between;">
-      <div style="display: flex; align-items: center; gap: 6px;">
-        <span style="width: 7px; height: 7px; background: #10b981; border-radius: 50%; display: inline-block; box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);"></span>
+    <div class="px-5 py-3 bg-slate-50/80 border-t border-slate-200/80 text-xs font-semibold text-slate-500 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+      <div class="flex items-center gap-2">
+        <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
         <span>Hotel Sagar Sonnet Kitchen Order Routing: KOT Active &amp; Ready</span>
       </div>
       <div>
-        <span>Cashier: <strong>Debashis Roy</strong> | Terminal: POS-01 (Sea Breeze Dining)</span>
+        <span>Cashier: <strong class="text-slate-700">Debashis Roy</strong> | Terminal: POS-01 (Sea Breeze Dining)</span>
       </div>
     </div>
 
   </div>
 
-</div>
+  </div>
+</main>
 
 <!-- MODAL 1: KOT / Thermal Invoice Slip Modal -->
-<div class="pos-modal-backdrop" id="kot-modal">
-  <div class="pos-modal-window" style="width: 420px;">
-    <div class="pos-modal-head" style="background: #0f172a; color: #ffffff;">
-      <h3 style="color: #ffffff;"><i class="fa-solid fa-print"></i> Kitchen Order Ticket (KOT)</h3>
-      <button type="button" onclick="closeKotModal()" style="border: none; background: transparent; color: #ffffff; font-size: 18px; cursor: pointer;">&times;</button>
+<div class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 hidden" id="kot-modal">
+  <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col">
+    <div class="bg-slate-900 text-white px-5 py-3.5 flex items-center justify-between">
+      <h3 class="text-sm font-extrabold text-white flex items-center gap-2">
+        <i class="fa-solid fa-print text-indigo-400"></i> Kitchen Order Ticket (KOT)
+      </h3>
+      <button type="button" onclick="closeKotModal()" class="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center text-base cursor-pointer transition-colors">&times;</button>
     </div>
-    <div class="pos-modal-body" style="background: #f8fafc;">
+    <div class="p-5 bg-slate-50 overflow-y-auto max-h-[70vh]">
       <div class="thermal-ticket-card" id="printable-kot-area">
         <h3>HOTEL SAGAR SONNET</h3>
         <div class="center-sub">Sea Breeze Dining &amp; Room Dining<br>*** KITCHEN ORDER TICKET (KOT) ***</div>
         <div class="divider-line"></div>
-        <div style="display: flex; justify-content: space-between;">
+        <div class="flex justify-between">
           <span id="kot-order-num"><strong>KOT: POS-2026-0001</strong></span>
           <span id="kot-time">Time: --:--</span>
         </div>
         <div><strong>Type:</strong> <span id="kot-dest">Room 102</span></div>
         <div><strong>Guest / Host:</strong> <span id="kot-guest">In-House Guest</span></div>
-        <div><strong>Billing Mode:</strong> <span id="kot-billing" style="font-weight: 700; color: #0284c7;">Charged to Room Folio</span></div>
+        <div><strong>Billing Mode:</strong> <span id="kot-billing" class="font-bold text-sky-600">Charged to Room Folio</span></div>
         <div class="divider-line"></div>
-        <table style="width: 100%; border-collapse: collapse; text-align: left;">
+        <table class="w-full border-collapse text-left">
           <thead>
-            <tr style="border-bottom: 1px solid #000;">
+            <tr class="border-b border-black">
               <th>Item</th>
-              <th style="text-align: center; width: 40px;">Qty</th>
-              <th style="text-align: right; width: 60px;">Amount</th>
+              <th class="text-center w-10">Qty</th>
+              <th class="text-right w-16">Amount</th>
             </tr>
           </thead>
           <tbody id="kot-items-table">
@@ -1136,109 +369,111 @@
           </tbody>
         </table>
         <div class="divider-line"></div>
-        <div style="display: flex; justify-content: space-between; font-weight: 700;">
+        <div class="flex justify-between font-bold">
           <span>Total Qty: <span id="kot-total-qty">0</span></span>
           <span>Grand Total: ₹ <span id="kot-grand-total">0</span></span>
         </div>
         <div class="divider-line"></div>
-        <div id="kot-notes-line" style="font-style: italic; font-size: 11px;">
+        <div id="kot-notes-line" class="italic text-[11px]">
           Instructions: None
         </div>
         <div class="divider-line"></div>
-        <div class="center-sub" style="margin-top: 6px;">Served by: Debashis Roy | System Printed</div>
+        <div class="center-sub mt-1.5">Served by: Debashis Roy | System Printed</div>
       </div>
     </div>
-    <div class="pos-modal-foot">
-      <button type="button" class="btn-ui-secondary" onclick="closeKotModal()">Close</button>
-      <button type="button" class="btn-ui-primary" onclick="printThermalTicket()">
-        <i class="fa-solid fa-print"></i> Print KOT Ticket
+    <div class="px-5 py-3.5 bg-white border-t border-slate-200 flex justify-end items-center gap-2">
+      <button type="button" class="inline-flex items-center h-9 px-4 text-xs font-bold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200/80 rounded-xl transition-all shadow-xs cursor-pointer" onclick="closeKotModal()">Close</button>
+      <button type="button" class="inline-flex items-center gap-1.5 h-9 px-4 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-all shadow-xs cursor-pointer" onclick="printThermalTicket()">
+        <i class="fa-solid fa-print text-[11px]"></i> Print KOT Ticket
       </button>
     </div>
   </div>
 </div>
 
 <!-- MODAL 2: Recent Orders & KOT History -->
-<div class="pos-modal-backdrop" id="orders-history-modal">
-  <div class="pos-modal-window" style="width: 800px;">
-    <div class="pos-modal-head">
-      <h3><i class="fa-solid fa-clock-rotate-left" style="color: #10b981;"></i> Recent POS Orders &amp; KOT Tickets</h3>
-      <button type="button" onclick="closeOrdersModal()" style="border: none; background: transparent; font-size: 18px; cursor: pointer;">&times;</button>
+<div class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 hidden" id="orders-history-modal">
+  <div class="bg-white w-full max-w-4xl rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[85vh]">
+    <div class="bg-slate-50/80 px-6 py-4 border-b border-slate-200/80 flex items-center justify-between">
+      <h3 class="text-sm font-extrabold text-slate-900 flex items-center gap-2">
+        <i class="fa-solid fa-clock-rotate-left text-emerald-600"></i> Recent POS Orders &amp; KOT Tickets
+      </h3>
+      <button type="button" onclick="closeOrdersModal()" class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center text-base cursor-pointer transition-colors">&times;</button>
     </div>
-    <div class="pos-modal-body" style="padding: 0;">
-      <table class="pms-table" style="width: 100%; margin: 0;">
+    <div class="p-0 overflow-y-auto flex-1">
+      <table class="w-full text-left border-collapse text-xs">
         <thead>
-          <tr>
-            <th>Order #</th>
-            <th>Type / Destination</th>
-            <th>Guest / Customer</th>
-            <th>Items</th>
-            <th>Total Bill</th>
-            <th>Billing Mode</th>
-            <th>Status</th>
-            <th>Action</th>
+          <tr class="bg-slate-50/80 text-slate-500 uppercase tracking-wider text-[11px] font-bold border-b border-slate-200/80">
+            <th class="px-3.5 py-3">Order #</th>
+            <th class="px-3.5 py-3">Type / Destination</th>
+            <th class="px-3.5 py-3">Guest / Customer</th>
+            <th class="px-3.5 py-3">Items</th>
+            <th class="px-3.5 py-3 text-right">Total Bill</th>
+            <th class="px-3.5 py-3">Billing Mode</th>
+            <th class="px-3.5 py-3 text-center">Status</th>
+            <th class="px-3.5 py-3 text-center">Action</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody class="divide-y divide-slate-100">
           @forelse($recentOrders as $ro)
-            <tr>
-              <td style="font-family: var(--font-mono, monospace); font-weight: 700; color: #0284c7;">
+            <tr class="hover:bg-slate-50/80 transition-colors">
+              <td class="px-3.5 py-2.5 font-mono font-bold text-sky-700">
                 {{ $ro->order_number }}
               </td>
-              <td>
+              <td class="px-3.5 py-2.5">
                 @if($ro->order_type === 'Room Dining')
-                  <span class="badge-tag blue"><i class="fa-solid fa-door-open"></i> Room {{ $ro->room_number }}</span>
+                  <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200/80"><i class="fa-solid fa-door-open text-[9px]"></i> Room {{ $ro->room_number }}</span>
                 @elseif($ro->order_type === 'Table Dine-in')
-                  <span class="badge-tag green"><i class="fa-solid fa-chair"></i> {{ $ro->table_number ?: 'Table' }}</span>
+                  <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/80"><i class="fa-solid fa-chair text-[9px]"></i> {{ $ro->table_number ?: 'Table' }}</span>
                   @if($ro->room_number)
-                    <div style="font-size: 9.5px; color: #0284c7; margin-top: 2px;">
+                    <div class="text-[10px] text-indigo-600 font-bold mt-0.5">
                       <i class="fa-solid fa-door-open"></i> Room {{ $ro->room_number }}
                     </div>
                   @endif
                 @else
-                  <span class="badge-tag yellow"><i class="fa-solid fa-bag-shopping"></i> Takeaway</span>
+                  <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200/80"><i class="fa-solid fa-bag-shopping text-[9px]"></i> Takeaway</span>
                 @endif
               </td>
-              <td>
-                <strong>{{ $ro->customer_name ?: 'Guest' }}</strong>
+              <td class="px-3.5 py-2.5">
+                <strong class="text-slate-800">{{ $ro->customer_name ?: 'Guest' }}</strong>
                 @if($ro->customer_phone)
-                  <div style="font-size: 10px; color: #64748b; margin-top: 2px;">
-                    <i class="fa-solid fa-phone"></i> {{ $ro->customer_phone }}
+                  <div class="text-[11px] text-slate-400 font-mono mt-0.5">
+                    <i class="fa-solid fa-phone text-[9px]"></i> {{ $ro->customer_phone }}
                   </div>
                 @endif
               </td>
-              <td style="font-size: 11px;">
+              <td class="px-3.5 py-2.5 text-slate-600 max-w-[200px] truncate" title="{{ $ro->items->pluck('item_name')->join(', ') }}">
                 {{ $ro->items->pluck('item_name')->join(', ') }}
               </td>
-              <td style="font-family: var(--font-mono, monospace); font-weight: 800; color: #059669;">
+              <td class="px-3.5 py-2.5 text-right font-mono font-bold text-emerald-600">
                 ₹ {{ number_format($ro->total_amount, 2) }}
               </td>
-              <td>
-                <span class="badge-tag {{ $ro->billing_type === 'Charged to Room Folio' ? 'blue' : 'green' }}">
+              <td class="px-3.5 py-2.5">
+                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold {{ $ro->billing_type === 'Charged to Room Folio' ? 'bg-indigo-50 text-indigo-700 border border-indigo-200/80' : 'bg-emerald-50 text-emerald-700 border border-emerald-200/80' }}">
                   {{ $ro->billing_type }}
                 </span>
                 @if($ro->room_number)
-                  <div style="font-size: 9.5px; font-weight: 700; margin-top: 3px; color: {{ $ro->billing_type === 'Charged to Room Folio' ? '#0284c7' : '#15803d' }};">
+                  <div class="text-[10px] font-bold mt-1 {{ $ro->billing_type === 'Charged to Room Folio' ? 'text-indigo-600' : 'text-emerald-700' }}">
                     <i class="fa-solid fa-door-open"></i> Room {{ $ro->room_number }} ({{ $ro->billing_type === 'Charged to Room Folio' ? 'Folio Due' : 'Paid Direct' }})
                   </div>
                 @endif
               </td>
-              <td>
-                <select class="pms-select" style="height: 26px; font-size: 10px; padding: 2px 4px;" onchange="updateOrderStatus({{ $ro->id }}, this.value)">
+              <td class="px-3.5 py-2.5 text-center">
+                <select class="h-7 text-[11px] font-semibold rounded-lg border border-slate-200 bg-white px-2 focus:outline-none focus:border-indigo-500" onchange="updateOrderStatus({{ $ro->id }}, this.value)">
                   <option value="Received" {{ $ro->status === 'Received' ? 'selected' : '' }}>Received</option>
                   <option value="In Kitchen" {{ $ro->status === 'In Kitchen' ? 'selected' : '' }}>In Kitchen</option>
                   <option value="Completed" {{ $ro->status === 'Completed' ? 'selected' : '' }}>Completed</option>
                   <option value="Cancelled" {{ $ro->status === 'Cancelled' ? 'selected' : '' }}>Cancelled</option>
                 </select>
               </td>
-              <td>
-                <button type="button" class="btn-ui-secondary" style="height: 26px; font-size: 10.5px; padding: 2px 6px;" onclick="reprintOrderKot({{ $ro->id }})">
-                  <i class="fa-solid fa-print"></i> KOT
+              <td class="px-3.5 py-2.5 text-center">
+                <button type="button" class="inline-flex items-center gap-1 h-7 px-2.5 text-[11px] font-bold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200/80 rounded-lg transition-all shadow-2xs cursor-pointer" onclick="reprintOrderKot({{ $ro->id }})">
+                  <i class="fa-solid fa-print text-[10px]"></i> KOT
                 </button>
               </td>
             </tr>
           @empty
             <tr>
-              <td colspan="8" style="text-align: center; color: #94a3b8; padding: 30px;">
+              <td colspan="8" class="text-center text-slate-400 py-10 text-xs">
                 No orders recorded yet today.
               </td>
             </tr>
@@ -1246,8 +481,8 @@
         </tbody>
       </table>
     </div>
-    <div class="pos-modal-foot">
-      <button type="button" class="btn-ui-secondary" onclick="closeOrdersModal()">Close</button>
+    <div class="px-6 py-3.5 bg-slate-50/80 border-t border-slate-200/80 flex justify-end">
+      <button type="button" class="inline-flex items-center h-9 px-4 text-xs font-bold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200/80 rounded-xl transition-all shadow-xs cursor-pointer" onclick="closeOrdersModal()">Close</button>
     </div>
   </div>
 </div>
@@ -1315,22 +550,20 @@
     if (currentBillingType === 'Charged to Room Folio') {
       if (box) {
         box.style.display = 'block';
-        box.style.background = '#ecfdf5';
-        box.style.borderColor = '#86efac';
+        box.className = 'mt-3 bg-emerald-50/70 border border-emerald-200 rounded-xl p-3 space-y-2 block transition-all';
       }
-      if (title) title.innerHTML = '<i class="fa-solid fa-door-open" style="color: #10b981;"></i> Select Room to Charge Folio: *';
+      if (title) title.innerHTML = '<span class="flex items-center gap-1.5"><i class="fa-solid fa-door-open text-emerald-600"></i> Select Room to Charge Folio: *</span>';
       if (badge) {
         badge.textContent = 'In-House Folio (Adds to Balance)';
-        badge.style.background = '#dcfce7';
-        badge.style.color = '#15803d';
+        badge.className = 'text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-bold';
       }
       if (btnLabel) btnLabel.textContent = `Post Bill to Room Folio (${grandFmt})`;
 
       if (note) {
         if (roomId && roomNo) {
-          note.innerHTML = `<span style="color: #166534; font-weight: 700;"><i class="fa-solid fa-file-invoice-dollar" style="color: #10b981;"></i> Total ${grandFmt} will be added to <strong>Room ${roomNo} (${guestName})</strong> Folio remaining balance and settled at checkout.</span>`;
+          note.innerHTML = `<span class="text-emerald-800 font-semibold text-xs flex items-center gap-1.5"><i class="fa-solid fa-file-invoice-dollar text-emerald-600"></i> Total ${grandFmt} will be added to <strong>Room ${roomNo} (${guestName})</strong> Folio remaining balance and settled at checkout.</span>`;
         } else {
-          note.innerHTML = `<span style="color: #dc2626; font-weight: 700;"><i class="fa-solid fa-circle-exclamation"></i> Please select a Room to link this bill to the residing guest folio.</span>`;
+          note.innerHTML = `<span class="text-rose-600 font-semibold text-xs flex items-center gap-1.5"><i class="fa-solid fa-circle-exclamation"></i> Please select a Room to link this bill to the residing guest folio.</span>`;
         }
       }
     } else {
@@ -1340,25 +573,23 @@
 
       if (box) {
         box.style.display = 'block';
-        box.style.background = '#f8fafc';
-        box.style.borderColor = '#cbd5e1';
+        box.className = 'mt-3 bg-slate-50/70 border border-slate-200 rounded-xl p-3 space-y-2 block transition-all';
       }
-      if (title) title.innerHTML = `<i class="fa-solid fa-link" style="color: #64748b;"></i> Link to Room Bill (Optional):`;
+      if (title) title.innerHTML = `<span class="flex items-center gap-1.5"><i class="fa-solid fa-link text-slate-500"></i> Link to Room Bill (Optional):</span>`;
       if (badge) {
         badge.textContent = `Optional (${modeName} Paid)`;
-        badge.style.background = '#e2e8f0';
-        badge.style.color = '#334155';
+        badge.className = 'text-[10px] bg-slate-200 text-slate-700 px-2 py-0.5 rounded-full font-bold';
       }
       if (btnLabel) btnLabel.textContent = `Settle ${modeName} (${grandFmt}) & Print KOT`;
 
       if (note) {
         if (roomId && roomNo) {
-          note.innerHTML = `<div style="background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 6px; padding: 6px 10px; color: #166534;">
-            <i class="fa-solid fa-circle-check" style="color: #10b981;"></i> <strong>Linked to Room ${roomNo} (${guestName})</strong><br>
-            <span style="font-size: 10.5px; opacity: 0.9;">Bill of <strong>${grandFmt}</strong> will be marked as <strong style="color: #059669;">PAID (${modeName})</strong> under this booking in Settlement. Does NOT increase remaining balance.</span>
+          note.innerHTML = `<div class="bg-emerald-50 border border-emerald-200 rounded-lg p-2 text-emerald-800 text-[11px]">
+            <i class="fa-solid fa-circle-check text-emerald-600"></i> <strong>Linked to Room ${roomNo} (${guestName})</strong><br>
+            <span class="opacity-90">Bill of <strong>${grandFmt}</strong> will be marked as <strong class="text-emerald-700">PAID (${modeName})</strong> under this booking in Settlement. Does NOT increase remaining balance.</span>
           </div>`;
         } else {
-          note.innerHTML = `<span style="color: #64748b; font-size: 10.5px;"><i class="fa-solid fa-circle-info"></i> Direct Walk-in settlement. Select a room above if this is an in-house guest paying on the spot.</span>`;
+          note.innerHTML = `<span class="text-slate-500 text-[11px]"><i class="fa-solid fa-circle-info"></i> Direct Walk-in settlement. Select a room above if this is an in-house guest paying on the spot.</span>`;
         }
       }
     }
@@ -1403,7 +634,9 @@
   // 1. Order Type Switching
   function selectOrderType(type) {
     currentOrderType = type;
-    document.querySelectorAll('.pos-order-type-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.pos-order-type-btn').forEach(b => {
+      b.className = 'pos-order-type-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 transition-all cursor-pointer';
+    });
     
     const roomGrp = document.getElementById('room-select-group');
     const tableGrp = document.getElementById('table-select-group');
@@ -1413,31 +646,33 @@
     const takeawayCustBox = document.getElementById('takeaway-customer-box');
 
     if (type === 'Room Dining') {
-      document.getElementById('type-room').classList.add('active');
-      roomGrp.style.display = 'flex';
+      const btn = document.getElementById('type-room');
+      if (btn) btn.className = 'pos-order-type-btn px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-white text-emerald-700 shadow-xs cursor-pointer';
+      if (roomGrp) roomGrp.style.display = 'none';
       tableGrp.style.display = 'none';
       if (takeawayGrp) takeawayGrp.style.display = 'none';
-      if (folioPill) folioPill.style.display = 'flex';
+      if (folioPill) folioPill.style.display = 'block';
       if (takeawayCustBox) takeawayCustBox.style.display = 'none';
       if (folioBox) folioBox.style.display = 'block';
       setBillingType('Charged to Room Folio');
     } else if (type === 'Table Dine-in') {
-      document.getElementById('type-dinein').classList.add('active');
+      const btn = document.getElementById('type-dinein');
+      if (btn) btn.className = 'pos-order-type-btn px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-white text-emerald-700 shadow-xs cursor-pointer';
       tableGrp.style.display = 'flex';
       if (takeawayGrp) takeawayGrp.style.display = 'none';
-      if (folioPill) folioPill.style.display = 'flex';
+      if (folioPill) folioPill.style.display = 'block';
       if (takeawayCustBox) takeawayCustBox.style.display = 'none';
       if (folioBox) folioBox.style.display = 'block';
+      if (roomGrp) roomGrp.style.display = 'none';
       if (currentBillingType === 'Charged to Room Folio') {
-        roomGrp.style.display = 'flex';
         setBillingType('Charged to Room Folio');
       } else {
-        roomGrp.style.display = 'none';
         setBillingType(currentBillingType || 'Cash Paid');
       }
     } else if (type === 'Takeaway') {
-      document.getElementById('type-takeaway').classList.add('active');
-      roomGrp.style.display = 'none';
+      const btn = document.getElementById('type-takeaway');
+      if (btn) btn.className = 'pos-order-type-btn px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-white text-emerald-700 shadow-xs cursor-pointer';
+      if (roomGrp) roomGrp.style.display = 'none';
       tableGrp.style.display = 'none';
       if (takeawayGrp) takeawayGrp.style.display = 'none';
       if (folioPill) folioPill.style.display = 'none';
@@ -1454,38 +689,38 @@
   // 2. Billing Type Switching
   function setBillingType(bType) {
     currentBillingType = bType;
-    document.querySelectorAll('.billing-pill').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.billing-pill').forEach(p => {
+      p.className = 'billing-pill px-3 py-2 rounded-xl text-xs font-semibold text-slate-600 text-center cursor-pointer transition-all border border-slate-200 bg-white hover:bg-slate-50';
+    });
     
     const headerRoomGrp = document.getElementById('room-select-group');
     const folioBox = document.getElementById('room-folio-picker-box');
     const takeawayCustBox = document.getElementById('takeaway-customer-box');
+
+    const activePillClass = 'billing-pill active px-3 py-2 rounded-xl text-xs font-bold text-center cursor-pointer transition-all border border-emerald-300 bg-emerald-50 text-emerald-700 shadow-xs';
 
     if (currentOrderType === 'Takeaway') {
       if (folioBox) folioBox.style.display = 'none';
       if (headerRoomGrp) headerRoomGrp.style.display = 'none';
       if (takeawayCustBox) takeawayCustBox.style.display = 'block';
       if (bType === 'Cash Paid') {
-        document.getElementById('bill-cash').classList.add('active');
+        document.getElementById('bill-cash').className = activePillClass;
       } else {
-        document.getElementById('bill-digital').classList.add('active');
+        document.getElementById('bill-digital').className = activePillClass;
       }
     } else {
       if (takeawayCustBox) takeawayCustBox.style.display = 'none';
       if (folioBox) folioBox.style.display = 'block';
 
       if (bType === 'Charged to Room Folio') {
-        document.getElementById('bill-folio').classList.add('active');
-        if (headerRoomGrp) headerRoomGrp.style.display = 'flex';
+        document.getElementById('bill-folio').className = activePillClass;
+        if (headerRoomGrp) headerRoomGrp.style.display = 'none';
       } else if (bType === 'Cash Paid') {
-        document.getElementById('bill-cash').classList.add('active');
-        if (headerRoomGrp && currentOrderType !== 'Room Dining') {
-          headerRoomGrp.style.display = 'none';
-        }
+        document.getElementById('bill-cash').className = activePillClass;
+        if (headerRoomGrp) headerRoomGrp.style.display = 'none';
       } else if (bType === 'Digital UPI / Card Paid') {
-        document.getElementById('bill-digital').classList.add('active');
-        if (headerRoomGrp && currentOrderType !== 'Room Dining') {
-          headerRoomGrp.style.display = 'none';
-        }
+        document.getElementById('bill-digital').className = activePillClass;
+        if (headerRoomGrp) headerRoomGrp.style.display = 'none';
       }
     }
     updateRoomPickerNote();
@@ -1558,8 +793,8 @@
     if (cart.length === 0) {
       badge.textContent = '0';
       elem.innerHTML = `
-        <div style="text-align: center; color: #94a3b8; padding: 40px 10px; font-size: 12px;">
-          <i class="fa-solid fa-basket-shopping" style="font-size: 32px; display: block; margin-bottom: 12px; color: #cbd5e1;"></i>
+        <div class="text-center text-slate-400 py-12 text-xs">
+          <i class="fa-solid fa-basket-shopping text-3xl block mb-2 text-slate-300"></i>
           Cart is empty.<br>Click any food card on the left to add items.
         </div>
       `;
@@ -1579,21 +814,21 @@
       subtotal += lineTot;
 
       html += `
-        <div class="cart-row">
-          <div class="cart-item-info">
-            <strong>${i.name}</strong>
-            <small>₹ ${i.price.toLocaleString()} × ${i.qty}</small>
+        <div class="py-2.5 flex items-center justify-between gap-2 border-b border-slate-100 last:border-b-0">
+          <div class="min-w-0 flex-1">
+            <div class="font-bold text-xs text-slate-800 truncate">${i.name}</div>
+            <div class="text-[11px] text-slate-400 font-mono mt-0.5">₹ ${i.price.toLocaleString()} × ${i.qty}</div>
           </div>
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <div class="cart-qty-ctrl">
-              <button type="button" class="cart-btn-qty" onclick="changeCartQty(${idx}, -1)">&minus;</button>
-              <span class="cart-qty-val">${i.qty}</span>
-              <button type="button" class="cart-btn-qty" onclick="changeCartQty(${idx}, 1)">&plus;</button>
+          <div class="flex items-center gap-2 shrink-0">
+            <div class="inline-flex items-center border border-slate-200 rounded-lg bg-white overflow-hidden shadow-2xs">
+              <button type="button" class="w-6 h-6 flex items-center justify-center text-slate-500 hover:bg-slate-100 text-xs font-bold cursor-pointer" onclick="changeCartQty(${idx}, -1)">&minus;</button>
+              <span class="w-7 text-center font-mono font-bold text-xs text-slate-800">${i.qty}</span>
+              <button type="button" class="w-6 h-6 flex items-center justify-center text-slate-500 hover:bg-slate-100 text-xs font-bold cursor-pointer" onclick="changeCartQty(${idx}, 1)">&plus;</button>
             </div>
-            <strong style="color: #059669; font-family: var(--font-mono, monospace); font-size: 12px; min-width: 50px; text-align: right;">
+            <strong class="font-bold font-mono text-xs text-emerald-600 w-16 text-right">
               ₹ ${lineTot.toLocaleString()}
             </strong>
-            <button type="button" style="background: rgba(244, 63, 94, 0.1); color: #f43f5e; border: 1px solid rgba(244, 63, 94, 0.2); border-radius: 50%; width: 22px; height: 22px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700;" onclick="removeFromCart(${idx})">&times;</button>
+            <button type="button" class="w-6 h-6 rounded-md bg-rose-50 hover:bg-rose-100 text-rose-600 flex items-center justify-center text-xs font-bold cursor-pointer transition-colors" onclick="removeFromCart(${idx})">&times;</button>
           </div>
         </div>
       `;
@@ -1614,8 +849,12 @@
 
   // 4. Menu Filter by Category
   function filterMenu(cat, btn) {
-    document.querySelectorAll('.pos-cat-pill').forEach(b => b.classList.remove('active'));
-    if (btn) btn.classList.add('active');
+    document.querySelectorAll('.pos-cat-pill').forEach(b => {
+      b.className = 'pos-cat-pill inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-all cursor-pointer whitespace-nowrap';
+    });
+    if (btn) {
+      btn.className = 'pos-cat-pill inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap bg-emerald-600 text-white shadow-xs';
+    }
 
     const cards = document.querySelectorAll('.pos-dish-card');
     cards.forEach(card => {
@@ -1782,8 +1021,8 @@
       tbodyHtml += `
         <tr>
           <td>${it.item_name}</td>
-          <td style="text-align: center;">${it.quantity}</td>
-          <td style="text-align: right;">₹ ${Number(it.line_total).toLocaleString()}</td>
+          <td class="text-center">${it.quantity}</td>
+          <td class="text-right">₹ ${Number(it.line_total).toLocaleString()}</td>
         </tr>
       `;
     });

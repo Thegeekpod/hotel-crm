@@ -3,76 +3,72 @@
 <!-- Real-Time Conflict Detection, Alternative Room Referral & Tariff Updates  -->
 <!-- ========================================================================= -->
 
-<div class="modal-backdrop" id="extend-stay-modal" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(4px); z-index: 99999; align-items: center; justify-content: center; padding: 20px;">
-  <div class="modal-window" style="width: 720px; max-width: 95vw; max-height: 90vh; display: flex; flex-direction: column; border-radius: 18px; overflow: hidden; box-shadow: 0 25px 65px -12px rgba(0, 0, 0, 0.5); border: none; background: #ffffff; animation: modalPop 0.2s cubic-bezier(0.16, 1, 0.3, 1);">
+<div class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 hidden" id="extend-stay-modal">
+  <div class="bg-white rounded-2xl shadow-2xl border border-slate-100 w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150">
     
     <!-- Modal Header -->
-    <div style="background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; color: #ffffff; flex-shrink: 0;">
-      <div style="display: flex; align-items: center; gap: 12px;">
-        <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(255, 255, 255, 0.2); display: flex; align-items: center; justify-content: center; font-size: 18px; color: #ffffff; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.25);">
-          <i class="fa-solid fa-calendar-plus"></i>
+    <div class="bg-linear-to-r from-indigo-600 to-indigo-700 text-white px-6 py-4 flex justify-between items-center shrink-0">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-lg text-white shadow-xs">
+          <i class="fa-solid fa-calendar-plus text-amber-300"></i>
         </div>
         <div>
-          <h4 style="margin: 0; font-size: 16px; font-weight: 800; color: #ffffff; letter-spacing: -0.2px;">Extend Guest Stay</h4>
-          <div style="font-size: 11px; opacity: 0.9; color: #ede9fe; margin-top: 1px;">
-            Booking Dossier &amp; Real-Time Room Availability Check
-          </div>
+          <h4 class="text-base font-black text-white tracking-tight">Extend Guest Stay</h4>
+          <p class="text-xs text-indigo-100 font-medium mt-0.5">Booking Dossier &amp; Real-Time Room Availability Check</p>
         </div>
       </div>
-      <button type="button" onclick="closeExtendStayModal()" style="background: rgba(255, 255, 255, 0.2); border: none; color: #ffffff; width: 32px; height: 32px; border-radius: 50%; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease;">
-        &times;
-      </button>
+      <button type="button" onclick="closeExtendStayModal()" class="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center text-xl transition-all cursor-pointer leading-none">&times;</button>
     </div>
 
     <!-- Modal Body (Scrollable) -->
-    <div style="padding: 20px 24px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 16px; background: #f8fafc;">
+    <div class="p-6 overflow-y-auto flex-1 flex flex-col gap-4 bg-slate-50">
       
       <!-- Card 1: Current Booking & Stay Summary -->
-      <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px 18px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px;">
+      <div class="bg-white border border-slate-200/80 rounded-xl p-4.5 shadow-xs">
+        <div class="flex justify-between items-start mb-3 border-b border-slate-100 pb-2.5">
           <div>
-            <div style="font-size: 14px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+            <div class="text-sm font-extrabold text-slate-800 flex items-center gap-2">
               <span id="esm-guest-name">Loading...</span>
-              <span id="esm-status-badge" style="font-size: 9px; font-weight: 800; padding: 2px 8px; border-radius: 12px; background: #e0e7ff; color: #4338ca;">Active</span>
+              <span id="esm-status-badge" class="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">Active</span>
             </div>
-            <div style="font-size: 11px; color: #64748b; margin-top: 2px; display: flex; align-items: center; gap: 8px;">
-              <span><i class="fa-solid fa-phone" style="color: #10b981; font-size: 10px;"></i> <span id="esm-guest-phone">-</span></span>
-              <span>•</span>
-              <span style="font-family: var(--font-mono, monospace); font-weight: 700; color: #4f46e5;"><i class="fa-solid fa-receipt" style="font-size: 10px;"></i> <span id="esm-reserve-id">-</span></span>
+            <div class="text-xs text-slate-500 mt-1 flex items-center gap-2">
+              <span class="inline-flex items-center gap-1.5"><i class="fa-solid fa-phone text-emerald-600 text-[10px]"></i> <span id="esm-guest-phone">-</span></span>
+              <span class="text-slate-300">•</span>
+              <span class="inline-flex items-center gap-1.5 font-mono font-bold text-indigo-600"><i class="fa-solid fa-receipt text-[10px]"></i> <span id="esm-reserve-id">-</span></span>
             </div>
           </div>
-          <div style="text-align: right;">
-            <div style="font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase;">Current Stay Duration</div>
-            <div style="font-size: 12px; font-weight: 800; color: #1e293b; margin-top: 2px;">
-              <span id="esm-current-nights" style="color: #4f46e5;">1</span> Night(s)
+          <div class="text-right">
+            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Current Stay Duration</div>
+            <div class="text-xs font-black text-slate-800 mt-0.5">
+              <span id="esm-current-nights" class="text-indigo-600">1</span> Night(s)
             </div>
           </div>
         </div>
 
         <!-- Room(s) & Stay Dates Grid -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 12px;">
-          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 12px;">
-            <div style="font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 4px;">
-              <i class="fa-solid fa-door-open" style="color: #6366f1;"></i> Allocated Room(s)
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+          <div class="bg-slate-50 border border-slate-200/80 rounded-xl p-3">
+            <div class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 flex items-center gap-1.5">
+              <i class="fa-solid fa-door-open text-indigo-500"></i> Allocated Room(s)
             </div>
-            <div id="esm-rooms-list" style="font-weight: 800; color: #0f172a; font-size: 13px;">
+            <div id="esm-rooms-list" class="font-extrabold text-slate-800 text-sm">
               -
             </div>
-            <div id="esm-rooms-tariff" style="font-size: 11px; color: #4338ca; font-weight: 700; margin-top: 2px;">
+            <div id="esm-rooms-tariff" class="text-xs text-indigo-600 font-bold mt-0.5">
               ₹ 0.00 / night
             </div>
           </div>
 
-          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 12px;">
-            <div style="font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 4px;">
-              <i class="fa-regular fa-calendar-days" style="color: #6366f1;"></i> Current Stay Dates
+          <div class="bg-slate-50 border border-slate-200/80 rounded-xl p-3">
+            <div class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 flex items-center gap-1.5">
+              <i class="fa-regular fa-calendar-days text-indigo-500"></i> Current Stay Dates
             </div>
-            <div style="font-weight: 800; color: #0f172a; font-size: 12px; display: flex; align-items: center; gap: 6px;">
+            <div class="font-extrabold text-slate-800 text-xs flex items-center gap-1.5">
               <span id="esm-current-checkin">-</span>
-              <span style="color: #94a3b8;">&rarr;</span>
-              <span id="esm-current-checkout" style="color: #b91c1c; text-decoration: underline;">-</span>
+              <span class="text-slate-400">&rarr;</span>
+              <span id="esm-current-checkout" class="text-rose-600 underline">-</span>
             </div>
-            <div style="font-size: 10px; color: #64748b; margin-top: 2px;">
+            <div class="text-[10px] font-semibold text-slate-400 mt-0.5">
               Standard Checkout: 11:00 AM
             </div>
           </div>
@@ -80,75 +76,74 @@
       </div>
 
       <!-- Card 2: Date Selector & Quick Pills -->
-      <div style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 12px; padding: 16px 18px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
-        <label style="display: block; font-size: 12px; font-weight: 800; color: #1e293b; margin-bottom: 8px;">
-          <i class="fa-solid fa-calendar-check" style="color: #4f46e5; margin-right: 4px;"></i> Select New Check-Out Date:
+      <div class="bg-white border border-slate-200/80 rounded-xl p-4.5 shadow-xs">
+        <label class="block text-xs font-bold text-slate-700 mb-2">
+          <i class="fa-solid fa-calendar-check text-indigo-600 mr-1"></i> Select New Check-Out Date:
         </label>
         
-        <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+        <div class="flex gap-3 items-center flex-wrap">
           <input type="date" 
                  id="esm-new-checkout-input" 
-                 class="pms-filter-date" 
-                 style="height: 42px; font-size: 14px; font-weight: 800; padding: 0 14px; border: 1.5px solid #6366f1; border-radius: 10px; color: #0f172a; background: #ffffff; flex: 1; min-width: 200px;" 
+                 class="h-10 text-xs font-bold px-3.5 border border-indigo-400 rounded-xl text-slate-800 bg-white flex-1 min-w-[200px] focus:outline-none focus:ring-2 focus:ring-indigo-500/20" 
                  onchange="onExtendStayDateChanged(this.value)">
 
           <!-- Quick Extension Pills -->
-          <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
-            <button type="button" class="btn-quick-pill" onclick="quickSetExtendNights(1)" style="padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1; background: #f8fafc; font-size: 11px; font-weight: 700; color: #334155; cursor: pointer; transition: all 0.15s;">
+          <div class="flex gap-1.5 items-center flex-wrap">
+            <button type="button" class="px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 hover:border-slate-300 text-xs font-bold text-slate-700 cursor-pointer transition-all" onclick="quickSetExtendNights(1)">
               +1 Night
             </button>
-            <button type="button" class="btn-quick-pill" onclick="quickSetExtendNights(2)" style="padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1; background: #f8fafc; font-size: 11px; font-weight: 700; color: #334155; cursor: pointer; transition: all 0.15s;">
+            <button type="button" class="px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 hover:border-slate-300 text-xs font-bold text-slate-700 cursor-pointer transition-all" onclick="quickSetExtendNights(2)">
               +2 Nights
             </button>
-            <button type="button" class="btn-quick-pill" onclick="quickSetExtendNights(3)" style="padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1; background: #f8fafc; font-size: 11px; font-weight: 700; color: #334155; cursor: pointer; transition: all 0.15s;">
+            <button type="button" class="px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 hover:border-slate-300 text-xs font-bold text-slate-700 cursor-pointer transition-all" onclick="quickSetExtendNights(3)">
               +3 Nights
             </button>
-            <button type="button" class="btn-quick-pill" onclick="quickSetExtendNights(5)" style="padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1; background: #f8fafc; font-size: 11px; font-weight: 700; color: #334155; cursor: pointer; transition: all 0.15s;">
+            <button type="button" class="px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 hover:border-slate-300 text-xs font-bold text-slate-700 cursor-pointer transition-all" onclick="quickSetExtendNights(5)">
               +5 Nights
             </button>
           </div>
         </div>
 
-        <div style="font-size: 11px; color: #64748b; margin-top: 6px;">
+        <div class="text-[11px] text-slate-400 mt-1.5">
           Choose the extended date to check live room availability and financial adjustments.
         </div>
       </div>
 
       <!-- Card 3: Live Availability & Conflict Box -->
-      <div id="esm-availability-container" style="display: none;">
+      <div id="esm-availability-container" class="hidden">
         
         <!-- State 1: Available (Green) -->
-        <div id="esm-available-box" style="display: none; background: #ecfdf5; border: 1.5px solid #10b981; border-radius: 12px; padding: 14px 16px; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.08);">
-          <div style="display: flex; align-items: flex-start; gap: 12px;">
-            <div style="width: 36px; height: 36px; border-radius: 50%; background: #d1fae5; color: #059669; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0;">
+        <div id="esm-available-box" class="hidden bg-emerald-50/80 border border-emerald-300 rounded-xl p-4 shadow-xs">
+          <div class="flex items-start gap-3">
+            <div class="w-9 h-9 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-base shrink-0">
               <i class="fa-solid fa-circle-check"></i>
             </div>
-            <div style="flex: 1;">
-              <div style="font-size: 13px; font-weight: 800; color: #065f46; display: flex; align-items: center; gap: 6px;">
+            <div class="flex-1">
+              <div class="text-xs font-black text-emerald-900 flex items-center gap-2">
                 <span>Room Available For Stay Extension!</span>
-                <span id="esm-avail-nights-badge" style="background: #059669; color: #ffffff; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 10px;">+1 Night</span>
+                <span id="esm-avail-nights-badge" class="bg-emerald-600 text-white text-[10px] font-extrabold px-2 py-0.5 rounded-full">+1 Night</span>
               </div>
-              <div id="esm-available-msg" style="font-size: 11px; color: #047857; margin-top: 3px; line-height: 1.4;">
+              <div id="esm-available-msg" class="text-xs text-emerald-700 mt-1 leading-relaxed">
                 Room is completely available for the extended stay dates.
               </div>
 
               <!-- Financial Breakdown Preview -->
-              <div style="margin-top: 12px; background: #ffffff; border: 1px solid #a7f3d0; border-radius: 8px; padding: 10px 14px;">
-                <div style="font-size: 10px; font-weight: 800; color: #047857; text-transform: uppercase; margin-bottom: 6px;">
+              <div class="mt-3 bg-white border border-emerald-200 rounded-xl p-3">
+                <div class="text-[10px] font-black text-emerald-700 uppercase tracking-wider mb-1.5">
                   Billing Adjustment Preview:
                 </div>
-                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; font-size: 11px;">
+                <div class="grid grid-cols-3 gap-3 text-xs">
                   <div>
-                    <span style="color: #64748b;">Additional Tariff:</span>
-                    <div id="esm-prev-add-tariff" style="font-family: var(--font-mono, monospace); font-weight: 800; color: #059669; font-size: 13px;">+ ₹ 0.00</div>
+                    <span class="text-slate-400 text-[10px] block">Additional Tariff:</span>
+                    <div id="esm-prev-add-tariff" class="font-mono font-black text-emerald-600 text-xs sm:text-sm">+ ₹ 0.00</div>
                   </div>
                   <div>
-                    <span style="color: #64748b;">New Total Gross:</span>
-                    <div id="esm-prev-new-gross" style="font-family: var(--font-mono, monospace); font-weight: 800; color: #1e293b; font-size: 13px;">₹ 0.00</div>
+                    <span class="text-slate-400 text-[10px] block">New Total Gross:</span>
+                    <div id="esm-prev-new-gross" class="font-mono font-black text-slate-800 text-xs sm:text-sm">₹ 0.00</div>
                   </div>
                   <div>
-                    <span style="color: #64748b;">Estimated Balance Due:</span>
-                    <div id="esm-prev-new-balance" style="font-family: var(--font-mono, monospace); font-weight: 800; color: #dc2626; font-size: 13px;">₹ 0.00</div>
+                    <span class="text-slate-400 text-[10px] block">Estimated Balance Due:</span>
+                    <div id="esm-prev-new-balance" class="font-mono font-black text-rose-600 text-xs sm:text-sm">₹ 0.00</div>
                   </div>
                 </div>
               </div>
@@ -158,37 +153,37 @@
         </div>
 
         <!-- State 2: Conflict Detected (Red/Orange) -->
-        <div id="esm-conflict-box" style="display: none; background: #fff5f5; border: 1.5px solid #f87171; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 14px rgba(239, 68, 68, 0.08);">
-          <div style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: #ffffff; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between;">
-            <div style="display: flex; align-items: center; gap: 8px;">
-              <i class="fa-solid fa-triangle-exclamation" style="font-size: 15px;"></i>
-              <span style="font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">Current Room Conflict / Already Booked!</span>
+        <div id="esm-conflict-box" class="hidden bg-rose-50/70 border border-rose-300 rounded-xl overflow-hidden shadow-xs">
+          <div class="bg-linear-to-r from-rose-500 to-rose-600 text-white px-4 py-2.5 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <i class="fa-solid fa-triangle-exclamation text-sm"></i>
+              <span class="text-xs font-black uppercase tracking-wider">Current Room Conflict / Already Booked!</span>
             </div>
-            <span style="background: rgba(255,255,255,0.25); font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 4px; text-transform: uppercase;">Not Available</span>
+            <span class="bg-white/20 text-white text-[10px] font-extrabold px-2 py-0.5 rounded-full uppercase">Not Available</span>
           </div>
 
-          <div style="padding: 12px 14px; color: #991b1b; font-size: 12px; line-height: 1.5;">
-            <div id="esm-conflict-msg" style="font-weight: 700; margin-bottom: 4px;">
+          <div class="p-3.5 text-rose-800 text-xs leading-relaxed">
+            <div id="esm-conflict-msg" class="font-bold mb-1">
               Room is already booked for these dates.
             </div>
-            <div style="font-size: 11px; color: #b91c1c; opacity: 0.9;">
+            <div class="text-[11px] text-rose-700">
               The current room cannot be extended further. Please select one of the available alternative rooms below for the extended stay:
             </div>
           </div>
 
           <!-- Alternative Rooms List -->
-          <div style="background: #ffffff; border-top: 1px solid #fecaca; padding: 12px 14px;">
-            <div style="font-size: 11px; font-weight: 800; color: #1e293b; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
-              <div style="display: flex; align-items: center; gap: 6px;">
-                <i class="fa-solid fa-wand-magic-sparkles" style="color: #6366f1;"></i>
+          <div class="bg-white border-t border-rose-200 p-3.5">
+            <div class="text-[11px] font-black text-slate-800 uppercase tracking-wider flex items-center justify-between mb-2">
+              <div class="flex items-center gap-1.5">
+                <i class="fa-solid fa-wand-magic-sparkles text-indigo-600"></i>
                 <span>Available Alternative Rooms for this Extended Period:</span>
               </div>
-              <span id="esm-alt-count-badge" style="font-size: 10px; font-weight: 700; color: #059669; background: #ecfdf5; border: 1px solid #a7f3d0; padding: 1px 8px; border-radius: 12px;">
+              <span id="esm-alt-count-badge" class="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
                 0 Available
               </span>
             </div>
 
-            <div id="esm-alt-rooms-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 8px; max-height: 180px; overflow-y: auto; padding-right: 2px;">
+            <div id="esm-alt-rooms-list" class="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-48 overflow-y-auto pr-1">
               <!-- Injected dynamically -->
             </div>
           </div>
@@ -196,19 +191,19 @@
         </div>
 
         <!-- Selected Alternative Room Display -->
-        <div id="esm-selected-alt-display" style="display: none; margin-top: 10px; background: #f0fdf4; border: 1.5px solid #22c55e; border-radius: 10px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center;">
-          <div style="display: flex; align-items: center; gap: 10px;">
-            <i class="fa-solid fa-circle-check" style="color: #16a34a; font-size: 16px;"></i>
+        <div id="esm-selected-alt-display" class="hidden mt-2.5 bg-emerald-50 border border-emerald-300 rounded-xl p-3 flex justify-between items-center">
+          <div class="flex items-center gap-2.5">
+            <i class="fa-solid fa-circle-check text-emerald-600 text-base"></i>
             <div>
-              <div style="font-size: 12px; font-weight: 800; color: #15803d;">
+              <div class="text-xs font-extrabold text-emerald-800">
                 Alternative Room Selected: <span id="esm-selected-alt-text">Room #-</span>
               </div>
-              <div style="font-size: 10px; color: #166534;" id="esm-selected-alt-sub">
+              <div class="text-[10px] font-medium text-emerald-700" id="esm-selected-alt-sub">
                 Guest will shift to this room for the extended period.
               </div>
             </div>
           </div>
-          <button type="button" onclick="clearSelectedAltRoom()" style="padding: 4px 8px; font-size: 10px; font-weight: 700; border-radius: 6px; border: 1px solid #bbf7d0; background: #ffffff; color: #15803d; cursor: pointer;">
+          <button type="button" onclick="clearSelectedAltRoom()" class="px-2.5 py-1 text-[10px] font-bold rounded-lg border border-emerald-300 bg-white text-emerald-700 hover:bg-emerald-50 cursor-pointer transition-all">
             Change
           </button>
         </div>
@@ -216,33 +211,32 @@
       </div>
 
       <!-- Remarks / Extension Reason -->
-      <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px 16px;">
-        <label style="display: block; font-size: 11px; font-weight: 700; color: #475569; margin-bottom: 4px;">
+      <div class="bg-white border border-slate-200/80 rounded-xl p-3.5 shadow-xs">
+        <label class="block text-xs font-bold text-slate-700 mb-1.5">
           Extension Remarks / Special Notes (Optional):
         </label>
         <input type="text" 
                id="esm-remarks-input" 
-               class="pms-input" 
-               placeholder="e.g. Guest requested 2 additional nights stay..." 
-               style="height: 36px; font-size: 12px; width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0 10px;">
+               class="w-full px-3 py-2 text-xs font-medium text-slate-700 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 placeholder:text-slate-400" 
+               placeholder="e.g. Guest requested 2 additional nights stay...">
       </div>
 
     </div>
 
     <!-- Modal Footer -->
-    <div style="padding: 14px 24px; background: #ffffff; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;">
-      <div style="font-size: 11px; color: #64748b;">
-        <i class="fa-solid fa-shield-halved" style="color: #6366f1;"></i> Master Ledger &amp; Housekeeping updated automatically.
+    <div class="px-6 py-4 bg-white border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0">
+      <div class="text-[11px] text-slate-500 flex items-center gap-1.5">
+        <i class="fa-solid fa-shield-halved text-indigo-500"></i> Master Ledger &amp; Housekeeping updated automatically.
       </div>
 
-      <div style="display: flex; gap: 10px; align-items: center;">
-        <button type="button" onclick="closeExtendStayModal()" style="padding: 8px 18px; border-radius: 8px; border: 1px solid #cbd5e1; background: #ffffff; color: #475569; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.15s;">
+      <div class="flex items-center gap-2.5 w-full sm:w-auto justify-end">
+        <button type="button" onclick="closeExtendStayModal()" class="px-4 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-bold text-slate-600 transition-all cursor-pointer">
           Cancel
         </button>
         <button type="button" 
                 id="esm-btn-confirm" 
                 onclick="submitExtendStay()" 
-                style="padding: 8px 22px; border-radius: 8px; border: none; background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); color: #ffffff; font-size: 12px; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 14px rgba(99, 102, 241, 0.3); transition: all 0.15s;" 
+                class="inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-sm transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed" 
                 disabled>
           <i class="fa-solid fa-check"></i> Confirm &amp; Extend Stay
         </button>
@@ -281,9 +275,9 @@
     document.getElementById('esm-remarks-input').value = '';
 
     const availContainer = document.getElementById('esm-availability-container');
-    if (availContainer) availContainer.style.display = 'none';
+    if (availContainer) availContainer.classList.add('hidden');
     const selAltDisplay = document.getElementById('esm-selected-alt-display');
-    if (selAltDisplay) selAltDisplay.style.display = 'none';
+    if (selAltDisplay) selAltDisplay.classList.add('hidden');
 
     const confirmBtn = document.getElementById('esm-btn-confirm');
     if (confirmBtn) {
@@ -291,7 +285,7 @@
       confirmBtn.innerHTML = '<i class="fa-solid fa-check"></i> Confirm &amp; Extend Stay';
     }
 
-    modal.style.display = 'flex';
+    modal.classList.remove('hidden');
 
     // Fetch initial dossier
     const url = `{{ route('frontoffice.extend-stay.info') }}?booking_id=${bookingId}`;
@@ -342,7 +336,7 @@
 
   function closeExtendStayModal() {
     const modal = document.getElementById('extend-stay-modal');
-    if (modal) modal.style.display = 'none';
+    if (modal) modal.classList.add('hidden');
     if (extendStayAbortController) {
       extendStayAbortController.abort();
     }
@@ -378,7 +372,7 @@
 
     selectedAlternativeRoomId = null;
     const selAltDisplay = document.getElementById('esm-selected-alt-display');
-    if (selAltDisplay) selAltDisplay.style.display = 'none';
+    if (selAltDisplay) selAltDisplay.classList.add('hidden');
 
     if (extendStayAbortController) {
       extendStayAbortController.abort();
@@ -406,12 +400,12 @@
       if (!data) return;
       activeExtendStayAvailability = data;
 
-      if (availContainer) availContainer.style.display = 'block';
+      if (availContainer) availContainer.classList.remove('hidden');
 
       if (data.available) {
         // Available!
-        if (availBox) availBox.style.display = 'block';
-        if (confBox) confBox.style.display = 'none';
+        if (availBox) availBox.classList.remove('hidden');
+        if (confBox) confBox.classList.add('hidden');
 
         const nightBadge = document.getElementById('esm-avail-nights-badge');
         if (nightBadge) nightBadge.textContent = `+${data.additional_nights} Night${data.additional_nights > 1 ? 's' : ''}`;
@@ -432,8 +426,8 @@
 
       } else {
         // Conflict!
-        if (availBox) availBox.style.display = 'none';
-        if (confBox) confBox.style.display = 'block';
+        if (availBox) availBox.classList.add('hidden');
+        if (confBox) confBox.classList.remove('hidden');
 
         const confMsgEl = document.getElementById('esm-conflict-msg');
         if (confMsgEl) confMsgEl.textContent = data.message;
@@ -445,20 +439,19 @@
         if (altListEl) {
           if (data.available_rooms && data.available_rooms.length > 0) {
             altListEl.innerHTML = data.available_rooms.map(r => `
-              <div style="display: flex; align-items: center; justify-content: space-between; background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 8px 10px;">
+              <div class="flex items-center justify-between bg-slate-50 border border-slate-200 rounded-xl p-2.5">
                 <div>
-                  <div style="font-weight: 800; color: #0f172a; font-size: 12px; display: flex; align-items: center; gap: 6px;">
-                    <i class="fa-solid fa-door-open" style="color: #10b981; font-size: 11px;"></i>
+                  <div class="font-extrabold text-slate-800 text-xs flex items-center gap-1.5">
+                    <i class="fa-solid fa-door-open text-emerald-600 text-[11px]"></i>
                     <span>Room #${r.room_number}</span>
-                    <span style="font-size: 9px; font-weight: 700; background: #e0e7ff; color: #4338ca; padding: 1px 6px; border-radius: 4px;">${r.category}</span>
+                    <span class="text-[9px] font-extrabold bg-indigo-50 text-indigo-700 border border-indigo-200 px-1.5 py-0.5 rounded">${r.category}</span>
                   </div>
-                  <div style="font-size: 10px; color: #64748b; margin-top: 2px;">
+                  <div class="text-[10px] text-slate-500 mt-0.5">
                     Floor ${r.floor} • ₹${Number(r.rate).toLocaleString()}/night
                   </div>
                 </div>
                 <button type="button" 
-                        class="btn-ui-primary" 
-                        style="height: 28px; padding: 0 10px; font-size: 10px; font-weight: 800; border-radius: 6px; white-space: nowrap; cursor: pointer; background: #4f46e5; color: #ffffff; border: none;"
+                        class="h-7 px-2.5 text-[10px] font-extrabold rounded-lg whitespace-nowrap cursor-pointer bg-indigo-600 hover:bg-indigo-700 text-white transition-all shadow-xs"
                         onclick="selectAlternativeExtendRoom(${r.id}, '${r.room_number}', '${r.category}', ${r.rate})">
                   <i class="fa-solid fa-check"></i> Select
                 </button>
@@ -466,8 +459,8 @@
             `).join('');
           } else {
             altListEl.innerHTML = `
-              <div style="grid-column: 1 / -1; padding: 14px; font-size: 11px; font-weight: 700; color: #94a3b8; text-align: center; background: #ffffff; border-radius: 8px; border: 1px dashed #cbd5e1;">
-                <i class="fa-solid fa-circle-exclamation"></i> No alternative rooms are completely free for this extended window.
+              <div class="col-span-full p-4 text-xs font-bold text-slate-400 text-center bg-white rounded-xl border border-dashed border-slate-200">
+                <i class="fa-solid fa-circle-exclamation mr-1"></i> No alternative rooms are completely free for this extended window.
               </div>
             `;
           }
@@ -493,7 +486,7 @@
 
     if (selText) selText.textContent = `Room #${roomNo} (${category} • ₹${Number(rate).toLocaleString()}/night)`;
     if (selSub) selSub.textContent = `Guest will shift to Room #${roomNo} for the extended period.`;
-    if (selDisplay) selDisplay.style.display = 'flex';
+    if (selDisplay) selDisplay.classList.remove('hidden');
 
     if (confirmBtn) confirmBtn.disabled = false;
 
@@ -505,7 +498,7 @@
   function clearSelectedAltRoom() {
     selectedAlternativeRoomId = null;
     const selDisplay = document.getElementById('esm-selected-alt-display');
-    if (selDisplay) selDisplay.style.display = 'none';
+    if (selDisplay) selDisplay.classList.add('hidden');
 
     const confirmBtn = document.getElementById('esm-btn-confirm');
     if (confirmBtn && activeExtendStayAvailability && !activeExtendStayAvailability.available) {
@@ -568,7 +561,7 @@
         }
 
         // Refresh active views / modals
-        if (typeof openFolioModalById === 'function' && document.getElementById('folio-modal')?.style.display !== 'none') {
+        if (typeof openFolioModalById === 'function' && document.getElementById('folio-modal')?.classList.contains('hidden') === false) {
           openFolioModalById(activeExtendStayData.master_booking_id || activeExtendStayData.booking_id);
         }
 

@@ -2,431 +2,138 @@
 
 @section('title', 'Administrator Master - Hotel Sagar Sonnet PMS')
 
-@push('styles')
-<style>
-  /* Administrator Split-Layout Styles */
-  .admin-layout {
-    display: grid;
-    grid-template-columns: 280px 1fr;
-    gap: 20px;
-    min-height: calc(100vh - 165px);
-  }
-
-  .pms-page-header {
-    border-bottom: none !important;
-    background: transparent !important;
-  }
-
-  .admin-sidebar {
-    background: #ffffff;
-    border: 1px solid var(--border-medium);
-    border-radius: var(--radius-lg);
-    box-shadow: 0 4px 16px rgba(0,0,0,0.03);
-    padding: 14px;
-    height: fit-content;
-    position: sticky;
-    top: 10px;
-    max-height: calc(100vh - 180px);
-    overflow-y: auto;
-  }
-
-  .admin-nav-group {
-    margin-bottom: 8px;
-  }
-
-  .admin-nav-header {
-    font-size: 11px;
-    font-weight: 800;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-    padding: 9px 12px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    border-radius: var(--radius-md);
-    cursor: pointer;
-    user-select: none;
-    transition: all 0.2s ease;
-    background: #f8fafc;
-    border: 1px solid #f1f5f9;
-  }
-
-  .admin-nav-header:hover {
-    background: #f1f5f9;
-    color: var(--accent-primary);
-  }
-
-  .admin-nav-header.active {
-    color: var(--accent-primary);
-    font-weight: 900;
-    background: rgba(99, 102, 241, 0.08);
-    border-color: rgba(99, 102, 241, 0.2);
-  }
-
-  /* Flat Non-collapsible Nav Items */
-  .admin-nav-flat {
-    font-size: 11px;
-    font-weight: 800;
-    color: var(--text-secondary);
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-    padding: 10px 12px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    border-radius: var(--radius-md);
-    cursor: pointer;
-    user-select: none;
-    transition: all 0.2s ease;
-    background: #ffffff;
-    border: 1px solid #f1f5f9;
-    margin-bottom: 6px;
-  }
-
-  .admin-nav-flat:hover {
-    background: #f8fafc;
-    color: var(--accent-primary);
-    border-color: var(--border-medium);
-  }
-
-  .admin-nav-flat.active {
-    background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(168, 85, 247, 0.05));
-    color: var(--accent-primary);
-    border-color: var(--accent-primary);
-    font-weight: 900;
-  }
-
-  .admin-sub-list {
-    list-style: none;
-    padding: 4px 0 4px 8px;
-    margin: 4px 0 0 4px;
-    border-left: 2px solid var(--border-medium);
-  }
-
-  .admin-sub-item {
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--text-secondary);
-    padding: 7px 10px;
-    border-radius: 6px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    transition: all 0.2s ease;
-    margin-bottom: 2px;
-  }
-
-  .admin-sub-item:hover {
-    background: rgba(99, 102, 241, 0.06);
-    color: var(--accent-primary);
-    transform: translateX(3px);
-  }
-
-  .admin-sub-item.active {
-    background: linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(168, 85, 247, 0.08));
-    color: var(--accent-primary);
-    font-weight: 800;
-    border-left: 3px solid var(--accent-primary);
-  }
-
-  .admin-content-pane {
-    background: #ffffff;
-    border: 1px solid var(--border-medium);
-    border-radius: var(--radius-lg);
-    box-shadow: 0 4px 16px rgba(0,0,0,0.03);
-    padding: 24px;
-  }
-
-  .crud-header-card {
-    background: #ffffff;
-    border: 1px solid var(--border-medium);
-    border-radius: var(--radius-md);
-    padding: 16px 20px;
-    margin-bottom: 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.02);
-  }
-
-  .crud-toolbar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 16px;
-  }
-
-  .crud-search-input {
-    height: 38px;
-    padding: 8px 14px;
-    font-size: 13px;
-    border: 1px solid var(--border-medium);
-    border-radius: var(--radius-md);
-    background: #fff;
-    color: var(--text-primary);
-    width: 280px;
-    max-width: 100%;
-  }
-
-  .crud-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 13px;
-    background: #ffffff;
-    border-radius: var(--radius-md);
-    overflow: hidden;
-    border: 1px solid var(--border-medium);
-  }
-
-  .crud-table th {
-    background: #f8fafc;
-    padding: 12px 16px;
-    font-size: 10px;
-    font-weight: 800;
-    color: var(--text-secondary);
-    text-transform: uppercase;
-    letter-spacing: 0.6px;
-    border-bottom: 1px solid var(--border-medium);
-    text-align: left;
-  }
-
-  .crud-table td {
-    padding: 12px 16px;
-    border-bottom: 1px solid #f1f5f9;
-    color: var(--text-primary);
-    vertical-align: middle;
-  }
-
-  .crud-table tr:hover td {
-    background: rgba(99, 102, 241, 0.02);
-  }
-
-  .crud-actions {
-    display: flex;
-    gap: 8px;
-    justify-content: flex-end;
-  }
-
-  .btn-action-edit {
-    padding: 5px 10px;
-    font-size: 11px;
-    font-weight: 700;
-    border: 1px solid var(--border-medium);
-    border-radius: var(--radius-sm);
-    background: #fff;
-    color: var(--accent-primary);
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .btn-action-edit:hover {
-    background: var(--accent-primary);
-    color: #fff;
-  }
-
-  .btn-action-del {
-    padding: 5px 10px;
-    font-size: 11px;
-    font-weight: 700;
-    border: 1px solid #fecaca;
-    border-radius: var(--radius-sm);
-    background: #fff;
-    color: var(--accent-rose);
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .btn-action-del:hover {
-    background: var(--accent-rose);
-    color: #fff;
-  }
-
-  .admin-form-group {
-    margin-bottom: 16px;
-  }
-
-  .admin-form-label {
-    display: block;
-    font-size: 10px;
-    font-weight: 800;
-    color: var(--text-secondary);
-    text-transform: uppercase;
-    letter-spacing: 0.6px;
-    margin-bottom: 6px;
-  }
-
-  .admin-form-input {
-    width: 100%;
-    height: 40px;
-    padding: 8px 14px;
-    font-size: 13px;
-    border: 1px solid var(--border-medium);
-    border-radius: var(--radius-md);
-    background: #fff;
-    color: var(--text-primary);
-    box-sizing: border-box;
-  }
-
-  .admin-form-input:focus {
-    outline: none;
-    border-color: var(--accent-primary);
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
-  }
-
-  .toast-popup {
-    position: fixed;
-    bottom: 24px;
-    right: 24px;
-    background: #0f172a;
-    color: #ffffff;
-    padding: 12px 20px;
-    border-radius: var(--radius-md);
-    font-size: 12px;
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-    z-index: 99999;
-    transform: translateY(100px);
-    opacity: 0;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    pointer-events: none;
-  }
-
-  .toast-popup.show {
-    transform: translateY(0);
-    opacity: 1;
-    pointer-events: auto;
-  }
-</style>
-@endpush
-
 @section('content')
-<main class="pms-main-viewport">
-  <div class="pms-page-container">
+<main class="flex-1 p-4 lg:p-6 space-y-6">
 
-    <!-- Page Title Header -->
-    <div class="pms-page-header">
-      <div class="pms-header-title-block">
-        <div class="pms-status-indicator"></div>
-        <div>
-          <h1 class="pms-page-title">Enterprise System Administrator</h1>
-          <div class="pms-page-subtitle">Configure Core Master Datasets, Front Office Channels, Room Masters & Entity Workflows</div>
-        </div>
-      </div>
-      <div style="display: flex; gap: 10px;">
-        <button class="btn-ui-secondary" onclick="exportDatabaseJSON()"><i class="fa-solid fa-download"></i> Export Master JSON</button>
+  <!-- Page Title Header -->
+  <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs">
+    <div class="flex items-center gap-3">
+      <div class="w-2.5 h-8 bg-indigo-600 rounded-full"></div>
+      <div>
+        <h1 class="text-xl font-black text-slate-800 tracking-tight">Enterprise System Administrator</h1>
+        <p class="text-xs font-semibold text-slate-400 mt-0.5">Configure Core Master Datasets, Front Office Channels, Room Masters & Entity Workflows</p>
       </div>
     </div>
-
-    <!-- Admin Split Layout: Sidebar + Dynamic Content -->
-    <div class="admin-layout">
-
-      <!-- Include Sidebar -->
-      @include('admin.includes.sidebar')
-
-      <!-- Dynamic Content Pane -->
-      <section class="admin-content-pane">
-
-        <!-- Active CRUD View Container -->
-        <div id="crud-view-container">
-          <!-- Header Card -->
-          <div class="crud-header-card">
-            <div>
-              <div style="display: flex; align-items: center; gap: 8px;">
-                <h2 style="font-size: 16px; font-weight: 800; color: var(--text-primary); margin: 0;" id="view-title">Mode of Reserve</h2>
-                <span class="badge-tag blue" id="view-count">4 Records</span>
-              </div>
-              <div style="font-size: 12px; color: var(--text-secondary); margin-top: 3px;" id="view-desc">
-                Manage reservation booking modes (Phone Call, Physical, Website, Online).
-              </div>
-            </div>
-            <button class="btn-ui-primary" onclick="openCurrentAddModal()"><i class="fa-solid fa-plus"></i> <span id="btn-add-label">Add Entry</span></button>
-          </div>
-
-          <!-- Toolbar -->
-          <div class="crud-toolbar">
-            <div class="crud-toolbar-left">
-              <div class="crud-search-wrap">
-                <i class="fa-solid fa-magnifying-glass"></i>
-                <input type="text" id="table-search" class="crud-search-input" placeholder="Search active records..." oninput="handleSearch(this.value)">
-              </div>
-            </div>
-            <div class="crud-toolbar-right">
-              <button class="btn-ui-secondary" onclick="exportCurrentTableCSV()"><i class="fa-solid fa-file-csv"></i> Export CSV</button>
-              <button class="btn-ui-secondary" onclick="renderCurrentTable()"><i class="fa-solid fa-rotate"></i> Refresh</button>
-            </div>
-          </div>
-
-          <!-- Table -->
-          <div style="overflow-x: auto;">
-            <table class="crud-table" id="main-crud-table">
-              <!-- Dynamically rendered -->
-            </table>
-          </div>
-
-          <!-- Pagination & Rows Controls -->
-          <div class="pms-pagination-bar" id="table-pagination-bar">
-            <div class="pms-pagination-info" id="pagination-info">
-              Showing 0 to 0 of 0 records
-            </div>
-            <div class="pms-pagination-controls">
-              <div class="pms-per-page-wrap">
-                <span>Rows:</span>
-                <select id="rows-per-page" class="pms-per-page-select" onchange="handlePageSizeChange(this.value)">
-                  <option value="10" selected>10</option>
-                  <option value="20">20</option>
-                  <option value="100">100</option>
-                  <option value="all">All</option>
-                </select>
-              </div>
-              <div class="pms-page-nav" id="pagination-nav">
-                <!-- Injected via JavaScript -->
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Pending / Under Review Container -->
-        <div id="pending-view-container" style="display: none; text-align: center; padding: 60px 20px;">
-          <div style="width: 70px; height: 70px; border-radius: 50%; background: #f8fafc; border: 1px solid var(--border-medium); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px auto; font-size: 28px;">
-            <i id="pending-icon" class="fa-solid fa-utensils" style="color: #10b981;"></i>
-          </div>
-          <h3 id="pending-title" style="font-size: 18px; font-weight: 800; color: var(--text-primary); margin: 0 0 8px 0;">POS Sales</h3>
-          <div style="display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 800; background: rgba(245, 158, 11, 0.1); color: #b45309; margin-bottom: 14px;">
-            <i class="fa-solid fa-clock"></i> Module Settings Queued for Client Review
-          </div>
-          <p style="font-size: 13px; color: var(--text-secondary); max-width: 480px; margin: 0 auto; line-height: 1.6;">
-            This module's configuration parameters and workflow schemas will be integrated after discussion and sign-off with the client.
-          </p>
-        </div>
-
-      </section>
+    <div class="flex items-center gap-2.5">
+      <button type="button" class="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-bold text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 hover:text-indigo-600 rounded-xl shadow-xs transition-all cursor-pointer" onclick="exportDatabaseJSON()">
+        <i class="fa-solid fa-download text-indigo-500"></i> Export Master JSON
+      </button>
     </div>
+  </div>
 
+  <!-- Admin Split Layout: Sidebar + Dynamic Content -->
+  <div class="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6 items-start">
+
+    <!-- Include Sidebar -->
+    @include('admin.includes.sidebar')
+
+    <!-- Dynamic Content Pane -->
+    <section class="min-w-0 space-y-6">
+
+      <!-- Active CRUD View Container -->
+      <div id="crud-view-container" class="bg-white border border-slate-200/80 rounded-2xl shadow-xs overflow-hidden">
+        <!-- Header Card -->
+        <div class="p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <div class="flex items-center gap-2.5">
+              <h2 class="text-base font-extrabold text-slate-800" id="view-title">Mode of Reserve</h2>
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200" id="view-count">4 Records</span>
+            </div>
+            <p class="text-xs text-slate-500 mt-1" id="view-desc">
+              Manage reservation booking modes (Phone Call, Physical, Website, Online).
+            </p>
+          </div>
+          <button type="button" class="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-sm transition-all cursor-pointer" onclick="openCurrentAddModal()">
+            <i class="fa-solid fa-plus"></i> <span id="btn-add-label">Add Entry</span>
+          </button>
+        </div>
+
+        <!-- Toolbar -->
+        <div class="p-4 bg-slate-50/50 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div class="flex-1 max-w-md">
+            <div class="relative">
+              <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+              <input type="text" id="table-search" class="w-full pl-9 pr-3.5 py-2 text-xs font-medium text-slate-700 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all placeholder:text-slate-400" placeholder="Search active records..." oninput="handleSearch(this.value)">
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <button type="button" class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 hover:text-indigo-600 rounded-xl shadow-xs transition-all cursor-pointer" onclick="exportCurrentTableCSV()">
+              <i class="fa-solid fa-file-csv text-emerald-600"></i> Export CSV
+            </button>
+            <button type="button" class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 hover:text-indigo-600 rounded-xl shadow-xs transition-all cursor-pointer" onclick="renderCurrentTable()">
+              <i class="fa-solid fa-rotate text-indigo-500"></i> Refresh
+            </button>
+          </div>
+        </div>
+
+        <!-- Table Container -->
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse" id="main-crud-table">
+            <!-- Dynamically rendered -->
+          </table>
+        </div>
+
+        <!-- Pagination & Rows Controls -->
+        <div class="p-4 border-t border-slate-100 bg-slate-50/30 flex flex-col sm:flex-row items-center justify-between gap-4" id="table-pagination-bar">
+          <div class="text-xs font-semibold text-slate-500" id="pagination-info">
+            Showing 0 to 0 of 0 records
+          </div>
+          <div class="flex items-center gap-4">
+            <div class="flex items-center gap-2 text-xs font-bold text-slate-500">
+              <span>Rows:</span>
+              <select id="rows-per-page" class="px-2.5 py-1 text-xs font-bold text-slate-700 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 cursor-pointer" onchange="handlePageSizeChange(this.value)">
+                <option value="10" selected>10</option>
+                <option value="20">20</option>
+                <option value="100">100</option>
+                <option value="all">All</option>
+              </select>
+            </div>
+            <div class="flex items-center gap-1" id="pagination-nav">
+              <!-- Injected via JavaScript -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pending / Under Review Container -->
+      <div id="pending-view-container" class="hidden bg-white border border-slate-200/80 rounded-2xl shadow-xs text-center py-16 px-6">
+        <div class="w-16 h-16 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center mx-auto mb-4 text-2xl text-emerald-600">
+          <i id="pending-icon" class="fa-solid fa-utensils"></i>
+        </div>
+        <h3 id="pending-title" class="text-lg font-black text-slate-800 mb-2">POS Sales</h3>
+        <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200 mb-3">
+          <i class="fa-solid fa-clock"></i> Module Settings Queued for Client Review
+        </div>
+        <p class="text-xs text-slate-500 max-w-md mx-auto leading-relaxed">
+          This module's configuration parameters and workflow schemas will be integrated after discussion and sign-off with the client.
+        </p>
+      </div>
+
+    </section>
   </div>
 </main>
 
 <!-- UNIVERSAL CRUD MODAL -->
-<div class="modal-backdrop" id="admin-crud-modal">
-  <div class="modal-window" style="width: 580px; max-width: 95vw;">
-    <div class="modal-top" style="display: flex; justify-content: space-between; align-items: center;">
-      <h3 style="margin: 0;"><i class="fa-solid fa-pen-to-square"></i> <span id="modal-title">Add Record</span></h3>
-      <button class="modal-close" onclick="closeModal('admin-crud-modal')">&times;</button>
+<div class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 hidden" id="admin-crud-modal">
+  <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-[580px] overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+    <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+      <h3 class="text-sm font-extrabold text-slate-800 flex items-center gap-2">
+        <i class="fa-solid fa-pen-to-square text-indigo-600"></i>
+        <span id="modal-title">Add Record</span>
+      </h3>
+      <button type="button" class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-all cursor-pointer text-lg leading-none" onclick="closeModal('admin-crud-modal')">&times;</button>
     </div>
     <form onsubmit="handleSaveCrud(event)">
       <input type="hidden" id="crud-id">
       <input type="hidden" id="crud-entity">
-      <div class="modal-content-area" id="modal-form-fields" style="padding: 20px; background: #f8fafc; max-height: 70vh; overflow-y: auto;">
+      <div class="p-6 bg-slate-50/30 max-h-[70vh] overflow-y-auto space-y-4" id="modal-form-fields">
         <!-- Dynamically generated fields based on active entity -->
       </div>
-      <div class="modal-bot" style="padding: 14px 20px; background: #fff; border-top: 1px solid var(--border-medium); display: flex; justify-content: flex-end; gap: 10px;">
-        <button type="button" class="btn-ui-secondary" onclick="closeModal('admin-crud-modal')">Cancel</button>
-        <button type="submit" class="btn-ui-primary"><i class="fa-solid fa-floppy-disk"></i> Save Entry</button>
+      <div class="px-6 py-4 bg-white border-t border-slate-100 flex justify-end gap-2.5">
+        <button type="button" class="px-4 py-2 text-xs font-bold text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl transition-all cursor-pointer" onclick="closeModal('admin-crud-modal')">Cancel</button>
+        <button type="submit" class="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-sm transition-all cursor-pointer">
+          <i class="fa-solid fa-floppy-disk"></i> Save Entry
+        </button>
       </div>
     </form>
   </div>
@@ -583,11 +290,15 @@
   function toggleNavGroup(headerElem) {
     const subList = headerElem.nextElementSibling;
     if (subList && subList.tagName === 'UL') {
-      const isHidden = subList.style.display === 'none';
-      subList.style.display = isHidden ? 'block' : 'none';
+      const isHidden = subList.classList.contains('hidden');
+      if (isHidden) {
+        subList.classList.remove('hidden');
+      } else {
+        subList.classList.add('hidden');
+      }
       const icon = headerElem.querySelector('.fa-chevron-down, .fa-chevron-right');
       if (icon) {
-        icon.className = isHidden ? 'fa-solid fa-chevron-down' : 'fa-solid fa-chevron-right';
+        icon.className = isHidden ? 'fa-solid fa-chevron-down text-[10px] text-slate-400' : 'fa-solid fa-chevron-right text-[10px] text-slate-400';
       }
     }
   }
@@ -600,12 +311,14 @@
     document.querySelectorAll('.admin-sub-item, .admin-nav-flat').forEach(el => el.classList.remove('active'));
     if (clickedItem) clickedItem.classList.add('active');
 
-    document.getElementById('pending-view-container').style.display = 'none';
-    document.getElementById('crud-view-container').style.display = 'block';
+    const pendingCont = document.getElementById('pending-view-container');
+    const crudCont = document.getElementById('crud-view-container');
+    if (pendingCont) pendingCont.classList.add('hidden');
+    if (crudCont) crudCont.classList.remove('hidden');
 
     document.getElementById('view-title').textContent = title;
     document.getElementById('view-desc').textContent = entityDescriptions[entityKey] || 'Configure and manage master records.';
-    document.getElementById('btn-add-label').textContent = `Add Entry`;
+    document.getElementById('btn-add-label').textContent = 'Add Entry';
 
     document.getElementById('table-search').value = '';
     searchQuery = '';
@@ -617,11 +330,13 @@
     document.querySelectorAll('.admin-sub-item, .admin-nav-flat').forEach(el => el.classList.remove('active'));
     if (clickedItem) clickedItem.classList.add('active');
 
-    document.getElementById('crud-view-container').style.display = 'none';
-    document.getElementById('pending-view-container').style.display = 'block';
+    const pendingCont = document.getElementById('pending-view-container');
+    const crudCont = document.getElementById('crud-view-container');
+    if (crudCont) crudCont.classList.add('hidden');
+    if (pendingCont) pendingCont.classList.remove('hidden');
 
-    document.getElementById('pending-icon').className = `fa-solid ${iconClass}`;
-    document.getElementById('pending-icon').style.color = iconColor;
+    const pendingIcon = document.getElementById('pending-icon');
+    if (pendingIcon) pendingIcon.className = `fa-solid ${iconClass}`;
     document.getElementById('pending-title').textContent = moduleTitle;
   }
 
@@ -667,48 +382,52 @@
     document.getElementById('view-count').textContent = `${records.length} Record${records.length === 1 ? '' : 's'}`;
 
     if (schema.length === 0 || (records.length === 0 && !searchQuery)) {
-      table.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 40px; color: var(--text-muted);"><i class="fa-solid fa-inbox" style="font-size: 28px; margin-bottom: 10px; display: block;"></i>No records found. Click "+ Add Entry" to create one.</td></tr>`;
+      table.innerHTML = `<tr><td colspan="6" class="text-center py-12 px-4 text-xs font-semibold text-slate-400"><i class="fa-solid fa-inbox text-3xl mb-2.5 block text-slate-300"></i>No records found. Click "+ Add Entry" to create one.</td></tr>`;
       document.getElementById('pagination-info').textContent = 'Showing 0 to 0 of 0 records';
       renderPaginationNav(1);
       return;
     }
 
-    let thead = '<thead><tr>';
-    thead += '<th style="width: 50px;">#</th>';
+    let thead = '<thead><tr class="bg-slate-50/80 border-b border-slate-200/80">';
+    thead += '<th class="w-12 px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">#</th>';
     schema.forEach(col => {
-      let thStyle = col.key === 'icon' ? 'style="width: 70px;"' : '';
-      thead += `<th ${thStyle}>${col.label}</th>`;
+      let thClass = col.key === 'icon' ? 'w-20 ' : '';
+      thead += `<th class="${thClass}px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">${col.label}</th>`;
     });
-    thead += '<th style="text-align: right; width: 120px;">Actions</th>';
+    thead += '<th class="w-28 px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Actions</th>';
     thead += '</tr></thead>';
 
     let tbody = '<tbody>';
     if (filtered.length === 0) {
-      tbody += `<tr><td colspan="${schema.length + 2}" style="text-align: center; padding: 30px; color: var(--text-muted);">No records match your search query "${searchQuery}".</td></tr>`;
+      tbody += `<tr><td colspan="${schema.length + 2}" class="text-center py-8 px-4 text-xs font-semibold text-slate-400">No records match your search query "${searchQuery}".</td></tr>`;
     } else {
       pageItems.forEach((row, idx) => {
         const rowNumber = startIdx + idx + 1;
-        tbody += '<tr>';
-        tbody += `<td style="font-family: var(--font-mono); font-weight: 700; color: var(--text-muted); font-size: 11px;">${rowNumber}</td>`;
+        tbody += '<tr class="border-b border-slate-100 hover:bg-slate-50/60 transition-colors">';
+        tbody += `<td class="px-4 py-3 font-mono text-[11px] font-bold text-slate-400">${rowNumber}</td>`;
         schema.forEach(col => {
           let val = row[col.key] || '-';
           let formattedVal = val;
           if (col.key === 'status') {
-            let badgeClass = (val === 'Active' || val === 'Online' || val === 'Available') ? 'green' : 'yellow';
-            formattedVal = `<span class="badge-tag ${badgeClass}"><i class="fa-solid fa-circle-check" style="font-size: 6px; margin-right: 4px;"></i>${val}</span>`;
+            let isAct = (val === 'Active' || val === 'Online' || val === 'Available');
+            formattedVal = isAct 
+              ? `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200"><i class="fa-solid fa-circle-check text-[8px]"></i>${val}</span>`
+              : `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200">${val}</span>`;
           } else if (col.key === 'priority') {
-            let badgeClass = (val === 'Immediate' || val === 'High') ? 'red' : 'blue';
-            formattedVal = `<span class="badge-tag ${badgeClass}">${val}</span>`;
+            let isCrit = (val === 'Immediate' || val === 'High');
+            formattedVal = isCrit
+              ? `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-rose-50 text-rose-700 border border-rose-200">${val}</span>`
+              : `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-indigo-50 text-indigo-700 border border-indigo-200">${val}</span>`;
           } else if (col.key === 'icon') {
-            formattedVal = `<div style="width: 34px; height: 34px; border-radius: 8px; background: rgba(99, 102, 241, 0.08); display: flex; align-items: center; justify-content: center;"><i class="fa-solid ${val}" style="font-size: 15px; color: var(--accent-primary);"></i></div>`;
+            formattedVal = `<div class="w-8 h-8 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 text-sm"><i class="fa-solid ${val}"></i></div>`;
           }
-          tbody += `<td>${formattedVal}</td>`;
+          tbody += `<td class="px-4 py-3 text-xs font-medium text-slate-700">${formattedVal}</td>`;
         });
         tbody += `
-          <td style="text-align: right;">
-            <div class="crud-actions">
-              <button class="btn-action-edit" onclick="openEditModal('${row.id}')" title="Edit Record"><i class="fa-solid fa-pen"></i></button>
-              <button class="btn-action-del" onclick="deleteCrudItem('${row.id}')" title="Delete Record"><i class="fa-solid fa-trash"></i></button>
+          <td class="px-4 py-3 text-right">
+            <div class="inline-flex items-center gap-1 justify-end">
+              <button type="button" class="w-7 h-7 rounded-lg flex items-center justify-center text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-all cursor-pointer" onclick="openEditModal('${row.id}')" title="Edit Record"><i class="fa-solid fa-pen text-xs"></i></button>
+              <button type="button" class="w-7 h-7 rounded-lg flex items-center justify-center text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition-all cursor-pointer" onclick="deleteCrudItem('${row.id}')" title="Delete Record"><i class="fa-solid fa-trash text-xs"></i></button>
             </div>
           </td>
         `;
@@ -723,7 +442,7 @@
     if (totalCount === 0) {
       infoEl.textContent = 'Showing 0 to 0 of 0 records';
     } else {
-      infoEl.innerHTML = `Showing <strong style="color: var(--text-primary);">${startIdx + 1}</strong> to <strong style="color: var(--text-primary);">${endIdx}</strong> of <strong style="color: var(--text-primary);">${totalCount}</strong> records${totalCount !== records.length ? ' (filtered from ' + records.length + ' total)' : ''}`;
+      infoEl.innerHTML = `Showing <strong class="text-slate-800">${startIdx + 1}</strong> to <strong class="text-slate-800">${endIdx}</strong> of <strong class="text-slate-800">${totalCount}</strong> records${totalCount !== records.length ? ' (filtered from ' + records.length + ' total)' : ''}`;
     }
 
     renderPaginationNav(totalPages);
@@ -735,15 +454,15 @@
 
     if (totalPages <= 1) {
       nav.innerHTML = `
-        <button class="pms-page-btn" disabled><i class="fa-solid fa-chevron-left"></i></button>
-        <button class="pms-page-btn active">1</button>
-        <button class="pms-page-btn" disabled><i class="fa-solid fa-chevron-right"></i></button>
+        <button class="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold transition-all text-slate-400 opacity-40 cursor-not-allowed" disabled><i class="fa-solid fa-chevron-left"></i></button>
+        <button class="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-extrabold transition-all bg-indigo-600 text-white shadow-xs">1</button>
+        <button class="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold transition-all text-slate-400 opacity-40 cursor-not-allowed" disabled><i class="fa-solid fa-chevron-right"></i></button>
       `;
       return;
     }
 
     let html = '';
-    html += `<button class="pms-page-btn" onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''} title="Previous Page"><i class="fa-solid fa-chevron-left"></i></button>`;
+    html += `<button class="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold transition-all text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer" onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''} title="Previous Page"><i class="fa-solid fa-chevron-left"></i></button>`;
 
     const delta = 1;
     const range = [];
@@ -770,13 +489,17 @@
 
     rangeWithDots.forEach(page => {
       if (page === '...') {
-        html += `<span class="pms-page-dots">...</span>`;
+        html += `<span class="w-8 h-8 flex items-center justify-center text-xs font-bold text-slate-400">...</span>`;
       } else {
-        html += `<button class="pms-page-btn ${page === currentPage ? 'active' : ''}" onclick="goToPage(${page})">${page}</button>`;
+        const isActive = page === currentPage;
+        const btnClass = isActive 
+          ? 'bg-indigo-600 text-white shadow-xs font-extrabold' 
+          : 'text-slate-600 hover:bg-slate-100 font-bold';
+        html += `<button class="w-8 h-8 rounded-lg flex items-center justify-center text-xs transition-all cursor-pointer ${btnClass}" onclick="goToPage(${page})">${page}</button>`;
       }
     });
 
-    html += `<button class="pms-page-btn" onclick="goToPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''} title="Next Page"><i class="fa-solid fa-chevron-right"></i></button>`;
+    html += `<button class="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold transition-all text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer" onclick="goToPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''} title="Next Page"><i class="fa-solid fa-chevron-right"></i></button>`;
 
     nav.innerHTML = html;
   }
@@ -789,16 +512,16 @@
 
     let formHtml = '';
     schema.forEach(field => {
-      formHtml += `<div class="admin-form-group">`;
-      formHtml += `<label class="admin-form-label">${field.label}</label>`;
+      formHtml += `<div>`;
+      formHtml += `<label class="block text-xs font-bold text-slate-700 mb-1.5">${field.label}</label>`;
       if (field.type === 'select') {
-        formHtml += `<select id="f_${field.key}" class="admin-form-input">`;
+        formHtml += `<select id="f_${field.key}" class="w-full px-3 py-2 text-xs font-medium text-slate-700 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">`;
         field.options.forEach(opt => {
           formHtml += `<option value="${opt}">${opt}</option>`;
         });
         formHtml += `</select>`;
       } else {
-        formHtml += `<input type="${field.type || 'text'}" id="f_${field.key}" class="admin-form-input" placeholder="${field.placeholder || ''}" required>`;
+        formHtml += `<input type="${field.type || 'text'}" id="f_${field.key}" class="w-full px-3 py-2 text-xs font-medium text-slate-700 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 placeholder:text-slate-400" placeholder="${field.placeholder || ''}" required>`;
       }
       formHtml += `</div>`;
     });
@@ -821,10 +544,10 @@
 
     let formHtml = '';
     schema.forEach(field => {
-      formHtml += `<div class="admin-form-group">`;
-      formHtml += `<label class="admin-form-label">${field.label}</label>`;
+      formHtml += `<div>`;
+      formHtml += `<label class="block text-xs font-bold text-slate-700 mb-1.5">${field.label}</label>`;
       if (field.type === 'select') {
-        formHtml += `<select id="f_${field.key}" class="admin-form-input">`;
+        formHtml += `<select id="f_${field.key}" class="w-full px-3 py-2 text-xs font-medium text-slate-700 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">`;
         field.options.forEach(opt => {
           const isSel = (String(record[field.key]) === String(opt)) ? 'selected' : '';
           formHtml += `<option value="${opt}" ${isSel}>${opt}</option>`;
@@ -832,7 +555,7 @@
         formHtml += `</select>`;
       } else {
         const val = record[field.key] || '';
-        formHtml += `<input type="${field.type || 'text'}" id="f_${field.key}" class="admin-form-input" value="${val}" required>`;
+        formHtml += `<input type="${field.type || 'text'}" id="f_${field.key}" class="w-full px-3 py-2 text-xs font-medium text-slate-700 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500" value="${val}" required>`;
       }
       formHtml += `</div>`;
     });
@@ -860,11 +583,11 @@
       const index = records.findIndex(r => String(r.id) === String(id));
       if (index !== -1) {
         records[index] = newRecord;
-        PmsAlert.toast(`Record updated successfully in ${currentEntityTitle}!`);
+        if (window.PmsAlert) PmsAlert.toast(`Record updated successfully in ${currentEntityTitle}!`);
       }
     } else {
       records.unshift(newRecord);
-      PmsAlert.toast(`New record created in ${currentEntityTitle}!`);
+      if (window.PmsAlert) PmsAlert.toast(`New record created in ${currentEntityTitle}!`);
     }
 
     closeModal('admin-crud-modal');
@@ -876,20 +599,27 @@
     const record = records.find(r => String(r.id) === String(id));
     if (!record) return;
 
-    PmsAlert.confirmDelete(`Delete Entry?`, `Are you sure you want to delete this entry from ${currentEntityTitle}?`).then(result => {
-      if (result.isConfirmed) {
+    if (window.PmsAlert && PmsAlert.confirmDelete) {
+      PmsAlert.confirmDelete(`Delete Entry?`, `Are you sure you want to delete this entry from ${currentEntityTitle}?`).then(result => {
+        if (result.isConfirmed) {
+          adminDB[currentEntity] = records.filter(r => String(r.id) !== String(id));
+          PmsAlert.toast(`Record deleted from ${currentEntityTitle}.`);
+          renderCurrentTable();
+        }
+      });
+    } else {
+      if (confirm(`Are you sure you want to delete this entry from ${currentEntityTitle}?`)) {
         adminDB[currentEntity] = records.filter(r => String(r.id) !== String(id));
-        PmsAlert.toast(`Record deleted from ${currentEntityTitle}.`);
         renderCurrentTable();
       }
-    });
+    }
   }
 
   function exportCurrentTableCSV() {
     const records = adminDB[currentEntity] || [];
     const schema = entitySchemas[currentEntity] || [];
     if (records.length === 0) {
-      PmsAlert.toast('No records available to export.', 'info');
+      if (window.PmsAlert) PmsAlert.toast('No records available to export.', 'info');
       return;
     }
 
@@ -904,7 +634,7 @@
     a.setAttribute('href', url);
     a.setAttribute('download', `${currentEntity}_Master_Data.csv`);
     a.click();
-    PmsAlert.toast(`Exported ${currentEntityTitle} as CSV!`);
+    if (window.PmsAlert) PmsAlert.toast(`Exported ${currentEntityTitle} as CSV!`);
   }
 
   function exportDatabaseJSON() {
@@ -914,26 +644,22 @@
     a.setAttribute('href', url);
     a.setAttribute('download', 'Hotel_Sagar_Sonnet_Administrator_Master_DB.json');
     a.click();
-    PmsAlert.toast('Master Database exported as JSON!');
+    if (window.PmsAlert) PmsAlert.toast('Master Database exported as JSON!');
   }
 
   function openModal(id) {
     const m = document.getElementById(id);
     if (m) {
-      m.classList.add('open');
-      m.classList.add('active');
-      m.classList.add('show');
-      m.style.display = 'flex';
+      m.classList.remove('hidden');
+      m.classList.add('flex');
     }
   }
 
   function closeModal(id) {
     const m = document.getElementById(id);
     if (m) {
-      m.classList.remove('open');
-      m.classList.remove('active');
-      m.classList.remove('show');
-      m.style.display = 'none';
+      m.classList.add('hidden');
+      m.classList.remove('flex');
     }
   }
 

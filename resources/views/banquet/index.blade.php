@@ -2,575 +2,101 @@
 
 @section('title', 'Banquet & Event Services, Room Dining & Amenities - Hotel Sagar Sonnet')
 
-@push('styles')
-<style>
-  :root {
-    --bnq-gold: #f59e0b;
-    --bnq-gold-dark: #d97706;
-    --bnq-gold-light: #fffbeb;
-    --bnq-rose: #f43f5e;
-    --bnq-emerald: #10b981;
-    --bnq-indigo: #6366f1;
-    --bnq-cyan: #06b6d4;
-  }
-
-  .banquet-container {
-    padding: 16px 20px;
-    background: #f1f5f9;
-    min-height: calc(100vh - 110px);
-  }
-
-  /* Metric KPI Cards */
-  .banquet-kpi-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 14px;
-    margin-bottom: 16px;
-  }
-
-  .kpi-card-bnq {
-    background: #ffffff;
-    border-radius: 12px;
-    padding: 14px 18px;
-    border: 1px solid #e2e8f0;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.03);
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
-  }
-
-  .kpi-card-bnq:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
-  }
-
-  .kpi-icon-bnq {
-    width: 44px;
-    height: 44px;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 20px;
-    flex-shrink: 0;
-  }
-
-  .kpi-meta-bnq h4 {
-    font-size: 11px;
-    text-transform: uppercase;
-    font-weight: 700;
-    color: #64748b;
-    margin: 0 0 2px 0;
-    letter-spacing: 0.5px;
-  }
-
-  .kpi-meta-bnq .kpi-num {
-    font-size: 20px;
-    font-weight: 800;
-    color: #0f172a;
-    font-family: var(--font-mono, monospace);
-  }
-
-  /* Header Banner */
-  .bnq-header-banner {
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    padding: 14px 20px;
-    margin-bottom: 16px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 12px;
-  }
-
-  .bnq-header-left {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-
-  .bnq-header-badge {
-    width: 42px;
-    height: 42px;
-    border-radius: 10px;
-    background: linear-gradient(135deg, #f59e0b, #d97706);
-    color: #ffffff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 20px;
-    box-shadow: 0 4px 10px rgba(245, 158, 11, 0.3);
-  }
-
-  .bnq-header-left h2 {
-    font-size: 17px;
-    font-weight: 800;
-    color: #0f172a;
-    margin: 0;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .bnq-header-left p {
-    margin: 2px 0 0 0;
-    font-size: 12px;
-    color: #64748b;
-  }
-
-  .bnq-header-actions {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-wrap: wrap;
-  }
-
-  /* Segmented Nav Tabs */
-  .bnq-nav-tabs {
-    display: flex;
-    gap: 6px;
-    background: #e2e8f0;
-    padding: 4px;
-    border-radius: 10px;
-    margin-bottom: 16px;
-    width: fit-content;
-  }
-
-  .bnq-tab-btn {
-    border: none;
-    background: transparent;
-    padding: 8px 16px;
-    font-size: 12px;
-    font-weight: 700;
-    color: #475569;
-    border-radius: 8px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    transition: all 0.15s ease;
-  }
-
-  .bnq-tab-btn:hover {
-    color: #0f172a;
-  }
-
-  .bnq-tab-btn.active {
-    background: #ffffff;
-    color: #0f172a;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-  }
-
-  .bnq-tab-btn .badge-pill {
-    padding: 2px 6px;
-    font-size: 10px;
-    border-radius: 12px;
-    font-weight: 800;
-  }
-
-  /* Filter Toolbar */
-  .bnq-filter-toolbar {
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 10px;
-    padding: 10px 14px;
-    margin-bottom: 14px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 10px;
-  }
-
-  .bnq-search-box {
-    min-width: 260px;
-    position: relative;
-    display: flex;
-    align-items: center;
-  }
-
-  .bnq-search-box i {
-    position: absolute;
-    left: 12px;
-    color: #94a3b8;
-    font-size: 13px;
-  }
-
-  .bnq-search-box input {
-    width: 100%;
-    padding: 7px 12px 7px 34px;
-    border: 1px solid #cbd5e1;
-    border-radius: 8px;
-    font-size: 12px;
-    font-weight: 600;
-    color: #0f172a;
-    background: #f8fafc;
-    outline: none;
-  }
-
-  .bnq-search-box input:focus {
-    border-color: var(--bnq-gold);
-    background: #ffffff;
-    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15);
-  }
-
-  /* Table styling */
-  .bnq-table-card {
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    overflow: hidden;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
-  }
-
-  .bnq-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 12px;
-  }
-
-  .bnq-table th {
-    background: #f8fafc;
-    padding: 10px 14px;
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    color: #475569;
-    letter-spacing: 0.5px;
-    border-bottom: 1px solid #e2e8f0;
-    text-align: left;
-    white-space: nowrap;
-  }
-
-  .bnq-table td {
-    padding: 12px 14px;
-    border-bottom: 1px solid #f1f5f9;
-    color: #1e293b;
-    vertical-align: middle;
-  }
-
-  .bnq-table tr:hover td {
-    background: #f8fafc;
-  }
-
-  .room-tag-pill {
-    background: #eef2ff;
-    color: #4338ca;
-    padding: 3px 8px;
-    border-radius: 6px;
-    font-family: var(--font-mono, monospace);
-    font-weight: 800;
-    font-size: 12px;
-    border: 1px solid #c7d2fe;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-  }
-
-  .order-status-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 3px 8px;
-    border-radius: 9999px;
-    font-size: 11px;
-    font-weight: 700;
-  }
-
-  .order-status-badge.received { background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; }
-  .order-status-badge.preparing { background: #fffbeb; color: #d97706; border: 1px solid #fde68a; }
-  .order-status-badge.out { background: #fdf4ff; color: #c026d3; border: 1px solid #f5d0fe; }
-  .order-status-badge.delivered { background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; }
-  .order-status-badge.cancelled { background: #fff1f2; color: #e11d48; border: 1px solid #fecdd3; }
-
-  /* Hall Card Grid for Venues */
-  .halls-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
-    gap: 16px;
-    margin-bottom: 20px;
-  }
-
-  .hall-venue-card {
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    padding: 16px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    transition: transform 0.15s, box-shadow 0.15s;
-  }
-
-  .hall-venue-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(0,0,0,0.06);
-  }
-
-  .hall-card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 10px;
-  }
-
-  .hall-card-header h3 {
-    margin: 0;
-    font-size: 14px;
-    font-weight: 800;
-    color: #0f172a;
-    line-height: 1.3;
-  }
-
-  .hall-meta-row {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    font-size: 12px;
-    color: #64748b;
-    margin: 8px 0;
-  }
-
-  .hall-amenities-text {
-    font-size: 11px;
-    color: #475569;
-    background: #f8fafc;
-    padding: 8px 10px;
-    border-radius: 8px;
-    border: 1px solid #f1f5f9;
-    margin: 10px 0;
-    line-height: 1.4;
-  }
-
-  .hall-card-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding-top: 10px;
-    border-top: 1px solid #f1f5f9;
-  }
-
-  /* Modals */
-  .bnq-modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(15, 23, 42, 0.6);
-    backdrop-filter: blur(4px);
-    z-index: 99999;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-  }
-
-  .bnq-modal-window {
-    background: #ffffff;
-    border-radius: 14px;
-    width: 680px;
-    max-width: 95vw;
-    box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
-    overflow: hidden;
-    animation: bnqModalPop 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  }
-
-  @keyframes bnqModalPop {
-    from { opacity: 0; transform: scale(0.96); }
-    to { opacity: 1; transform: scale(1); }
-  }
-
-  .bnq-modal-header {
-    background: linear-gradient(135deg, #d97706, #b45309);
-    color: #ffffff;
-    padding: 14px 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-
-  .bnq-modal-header h3 {
-    margin: 0;
-    font-size: 15px;
-    font-weight: 800;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .bnq-modal-close {
-    background: rgba(255,255,255,0.2);
-    border: none;
-    color: #ffffff;
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    cursor: pointer;
-    font-size: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .bnq-modal-body {
-    padding: 20px;
-    max-height: calc(85vh - 120px);
-    overflow-y: auto;
-  }
-
-  .bnq-modal-footer {
-    padding: 12px 20px;
-    background: #f8fafc;
-    border-top: 1px solid #e2e8f0;
-    display: flex;
-    justify-content: flex-end;
-    gap: 8px;
-  }
-
-  .form-grid-2 {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 14px;
-  }
-
-  .form-group-bnq {
-    margin-bottom: 12px;
-  }
-
-  .form-group-bnq label {
-    display: block;
-    font-size: 11px;
-    font-weight: 700;
-    color: #475569;
-    text-transform: uppercase;
-    margin-bottom: 5px;
-  }
-
-  .form-group-bnq input,
-  .form-group-bnq select,
-  .form-group-bnq textarea {
-    width: 100%;
-    padding: 8px 12px;
-    border: 1px solid #cbd5e1;
-    border-radius: 8px;
-    font-size: 12px;
-    font-weight: 600;
-    color: #0f172a;
-    background: #ffffff;
-    box-sizing: border-box;
-  }
-
-  .order-item-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 8px;
-    background: #f8fafc;
-    padding: 8px 10px;
-    border-radius: 8px;
-    border: 1px solid #e2e8f0;
-  }
-</style>
-@endpush
 
 @section('content')
-<main class="banquet-container">
+<main class="flex-1 w-full p-3 sm:p-4 lg:p-5 flex flex-col gap-4 pms-main-viewport">
+  <div class="w-full flex flex-col gap-4 pms-page-container">
 
   <!-- KPI Overview Cards -->
-  <div class="banquet-kpi-grid">
-    <div class="kpi-card-bnq">
-      <div class="kpi-icon-bnq" style="background: #fffbeb; color: #d97706;">
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="bg-white p-4.5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center gap-3.5 hover:shadow-md transition-all">
+      <div class="w-12 h-12 rounded-xl bg-amber-50 border border-amber-200/80 text-amber-600 flex items-center justify-center text-lg shrink-0">
         <i class="fa-solid fa-champagne-glasses"></i>
       </div>
-      <div class="kpi-meta-bnq">
-        <h4>Banquet Halls &amp; Lawns</h4>
-        <div class="kpi-num">{{ $totalHalls }} <span style="font-size: 11px; color: #64748b; font-weight: 500;">Venues</span></div>
+      <div class="min-w-0">
+        <h4 class="text-xs font-semibold text-slate-500 uppercase tracking-wider truncate">Banquet Halls &amp; Lawns</h4>
+        <div class="text-xl font-bold font-mono text-slate-900 mt-0.5">{{ $totalHalls }} <span class="text-xs text-slate-500 font-sans font-medium">Venues</span></div>
       </div>
     </div>
 
-    <div class="kpi-card-bnq">
-      <div class="kpi-icon-bnq" style="background: #eff6ff; color: #2563eb;">
+    <div class="bg-white p-4.5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center gap-3.5 hover:shadow-md transition-all">
+      <div class="w-12 h-12 rounded-xl bg-blue-50 border border-blue-200/80 text-blue-600 flex items-center justify-center text-lg shrink-0">
         <i class="fa-solid fa-bell-concierge"></i>
       </div>
-      <div class="kpi-meta-bnq">
-        <h4>Active Room Orders</h4>
-        <div class="kpi-num">{{ $activeRoomOrdersCount }} <span style="font-size: 11px; color: #64748b; font-weight: 500;">In Progress</span></div>
+      <div class="min-w-0">
+        <h4 class="text-xs font-semibold text-slate-500 uppercase tracking-wider truncate">Active Room Orders</h4>
+        <div class="text-xl font-bold font-mono text-slate-900 mt-0.5">{{ $activeRoomOrdersCount }} <span class="text-xs text-slate-500 font-sans font-medium">In Progress</span></div>
       </div>
     </div>
 
-    <div class="kpi-card-bnq">
-      <div class="kpi-icon-bnq" style="background: #fdf2f8; color: #db2777;">
+    <div class="bg-white p-4.5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center gap-3.5 hover:shadow-md transition-all">
+      <div class="w-12 h-12 rounded-xl bg-pink-50 border border-pink-200/80 text-pink-600 flex items-center justify-center text-lg shrink-0">
         <i class="fa-solid fa-calendar-check"></i>
       </div>
-      <div class="kpi-meta-bnq">
-        <h4>Confirmed Events</h4>
-        <div class="kpi-num">{{ $totalEventsBooked }} <span style="font-size: 11px; color: #64748b; font-weight: 500;">Bookings</span></div>
+      <div class="min-w-0">
+        <h4 class="text-xs font-semibold text-slate-500 uppercase tracking-wider truncate">Confirmed Events</h4>
+        <div class="text-xl font-bold font-mono text-slate-900 mt-0.5">{{ $totalEventsBooked }} <span class="text-xs text-slate-500 font-sans font-medium">Bookings</span></div>
       </div>
     </div>
 
-    <div class="kpi-card-bnq">
-      <div class="kpi-icon-bnq" style="background: #ecfdf5; color: #059669;">
+    <div class="bg-white p-4.5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center gap-3.5 hover:shadow-md transition-all">
+      <div class="w-12 h-12 rounded-xl bg-emerald-50 border border-emerald-200/80 text-emerald-600 flex items-center justify-center text-lg shrink-0">
         <i class="fa-solid fa-indian-rupee-sign"></i>
       </div>
-      <div class="kpi-meta-bnq">
-        <h4>Services Revenue</h4>
-        <div class="kpi-num" style="color: #059669;">₹ {{ number_format($totalServicesRevenue, 2) }}</div>
+      <div class="min-w-0">
+        <h4 class="text-xs font-semibold text-slate-500 uppercase tracking-wider truncate">Services Revenue</h4>
+        <div class="text-xl font-bold font-mono text-emerald-600 mt-0.5">₹ {{ number_format($totalServicesRevenue, 2) }}</div>
       </div>
     </div>
   </div>
 
   <!-- Header Action Banner -->
-  <div class="bnq-header-banner">
-    <div class="bnq-header-left">
-      <div class="bnq-header-badge">
+  <div class="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div class="flex items-center gap-4">
+      <div class="w-12 h-12 rounded-xl bg-amber-500/10 text-amber-600 border border-amber-200/60 flex items-center justify-center text-xl shrink-0 shadow-xs">
         <i class="fa-solid fa-bell-concierge"></i>
       </div>
       <div>
-        <h2>Banquet Halls, Event Catering &amp; In-Room Dining</h2>
-        <p>Manage guest room service orders, kitchen dispatch, event halls &amp; function sheets</p>
+        <h2 class="text-lg font-bold text-slate-900 tracking-tight">Banquet Halls, Event Catering &amp; In-Room Dining</h2>
+        <p class="text-xs text-slate-500 mt-0.5">Manage guest room service orders, kitchen dispatch, event halls &amp; function sheets</p>
       </div>
     </div>
-    <div class="bnq-header-actions">
-      <button type="button" class="btn-ui-primary" onclick="openNewRoomOrderModal()" style="background: #10b981; border-color: #10b981;">
+    <div class="flex items-center gap-2.5 flex-wrap">
+      <button type="button" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs transition-all shadow-xs cursor-pointer" onclick="openNewRoomOrderModal()">
         <i class="fa-solid fa-utensils"></i> New Room Order
       </button>
-      <button type="button" class="btn-ui-primary" onclick="openNewBanquetModal()" style="background: #d97706; border-color: #d97706;">
+      <button type="button" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs transition-all shadow-xs cursor-pointer" onclick="openNewBanquetModal()">
         <i class="fa-solid fa-calendar-plus"></i> Book Event Hall
       </button>
     </div>
   </div>
 
   <!-- Segmented Tabs Navigation -->
-  <div class="bnq-nav-tabs">
-    <button type="button" class="bnq-tab-btn active" id="tab-btn-orders" onclick="switchBanquetTab('orders')">
+  <div class="flex items-center gap-2 border-b border-slate-200/80 pb-3 overflow-x-auto scrollbar-none">
+    <button type="button" class="bnq-tab-btn active inline-flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-xs font-bold transition-all bg-slate-900 text-white shadow-sm cursor-pointer" id="tab-btn-orders" onclick="switchBanquetTab('orders')">
       <i class="fa-solid fa-receipt"></i> Room Service Orders
-      <span class="badge-pill" style="background: #ecfdf5; color: #059669;">{{ $roomOrders->count() }}</span>
+      <span class="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/20 text-emerald-200">{{ $roomOrders->count() }}</span>
     </button>
-    <button type="button" class="bnq-tab-btn" id="tab-btn-halls" onclick="switchBanquetTab('halls')">
+    <button type="button" class="bnq-tab-btn inline-flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-xs font-bold transition-all bg-white border border-slate-200/80 text-slate-600 hover:text-slate-900 hover:bg-slate-50 cursor-pointer" id="tab-btn-halls" onclick="switchBanquetTab('halls')">
       <i class="fa-solid fa-champagne-glasses"></i> Banquet Halls &amp; Events
-      <span class="badge-pill" style="background: #fffbeb; color: #d97706;">{{ $banquetBookings->count() }} Booked</span>
+      <span class="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200">{{ $banquetBookings->count() }} Booked</span>
     </button>
-    <button type="button" class="bnq-tab-btn" id="tab-btn-menu" onclick="switchBanquetTab('menu')">
+    <button type="button" class="bnq-tab-btn inline-flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-xs font-bold transition-all bg-white border border-slate-200/80 text-slate-600 hover:text-slate-900 hover:bg-slate-50 cursor-pointer" id="tab-btn-menu" onclick="switchBanquetTab('menu')">
       <i class="fa-solid fa-book-open"></i> In-Room Menu &amp; Services Catalog
-      <span class="badge-pill" style="background: #f1f5f9; color: #64748b;">{{ $services->count() }}</span>
+      <span class="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-slate-100 text-slate-600 border border-slate-200">{{ $services->count() }}</span>
     </button>
   </div>
 
   <!-- TAB 1: ROOM SERVICE & AMENITY ORDERS -->
-  <div id="bnq-tab-orders" class="bnq-tab-pane">
-    <div class="bnq-filter-toolbar">
-      <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; flex: 1;">
-        <div class="bnq-search-box">
-          <i class="fa-solid fa-magnifying-glass"></i>
-          <input type="text" id="order-search-box" placeholder="Search Room #, Guest, Order ID..." onkeyup="filterOrdersTable()">
+  <div id="bnq-tab-orders" class="bnq-tab-pane space-y-4">
+    <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-3">
+      <div class="flex items-center gap-3 flex-wrap flex-1">
+        <div class="relative flex-1 min-w-[240px] max-w-md">
+          <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+          <input type="text" id="order-search-box" placeholder="Search Room #, Guest, Order ID..." onkeyup="filterOrdersTable()" class="w-full pl-9 pr-4 py-2 border border-slate-300 rounded-xl text-xs placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all">
         </div>
 
-        <select id="filter-order-status" style="padding: 7px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 12px; font-weight: 600; color: #334155; background: #f8fafc;" onchange="filterOrdersTable()">
+        <select id="filter-order-status" class="px-3 py-2 border border-slate-300 rounded-xl text-xs font-semibold text-slate-700 bg-slate-50/50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500" onchange="filterOrdersTable()">
           <option value="all">All Order Statuses</option>
           <option value="Received">Received / New</option>
           <option value="Preparing">Preparing in Kitchen</option>
@@ -580,282 +106,323 @@
         </select>
       </div>
 
-      <button type="button" class="btn-ui-primary" onclick="openNewRoomOrderModal()" style="background: #10b981; border-color: #10b981;">
+      <button type="button" class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs transition-all shadow-xs shrink-0 cursor-pointer" onclick="openNewRoomOrderModal()">
         <i class="fa-solid fa-plus"></i> Place Room Order
       </button>
     </div>
 
     <!-- Orders Table -->
-    <div class="bnq-table-card">
-      <table class="bnq-table">
-        <thead>
-          <tr>
-            <th>Order #</th>
-            <th>Room</th>
-            <th>Guest Name</th>
-            <th>Order Items &amp; Qty</th>
-            <th style="text-align: right;">Total Bill</th>
-            <th>Billing Mode</th>
-            <th style="text-align: center;">Delivery Status</th>
-            <th>Order Time</th>
-            <th style="text-align: right;">Actions</th>
-          </tr>
-        </thead>
-        <tbody id="orders-table-body">
-          @forelse($roomOrders as $ord)
-            <tr data-order="{{ strtolower($ord->order_number) }}"
-                data-room="{{ strtolower($ord->room_number ?? '') }}"
-                data-guest="{{ strtolower($ord->guest_name ?? '') }}"
-                data-status="{{ $ord->order_status }}">
-              <td>
-                <span style="font-family: var(--font-mono, monospace); font-weight: 700; color: #2563eb;">{{ $ord->order_number }}</span>
-              </td>
-              <td>
-                <span class="room-tag-pill">
-                  <i class="fa-solid fa-door-open" style="font-size: 10px;"></i>
-                  Room {{ $ord->room_number }}
-                </span>
-              </td>
-              <td>
-                <div style="font-weight: 700; color: #0f172a;">{{ $ord->guest_name ?? 'In-House Guest' }}</div>
-                @if($ord->booking?->settle_number)
-                  <div style="font-size: 10px; color: #64748b;">Folio: {{ $ord->booking->settle_number }}</div>
-                @endif
-              </td>
-              <td>
-                <div style="font-size: 11px; color: #334155; line-height: 1.4;">
-                  @foreach($ord->items as $it)
-                    <div>&bull; <strong>{{ $it->quantity }}x</strong> {{ $it->item_name }}</div>
-                  @endforeach
-                </div>
-              </td>
-              <td style="text-align: right; font-family: var(--font-mono, monospace); font-weight: 700; color: #0f172a;">
-                ₹ {{ number_format($ord->total_amount, 2) }}
-              </td>
-              <td>
-                <span style="font-size: 11px; font-weight: 600; color: {{ $ord->payment_status === 'Charged to Room Folio' ? '#6366f1' : '#059669' }};">
-                  <i class="fa-solid {{ $ord->payment_status === 'Charged to Room Folio' ? 'fa-file-invoice-dollar' : 'fa-check' }}"></i>
-                  {{ $ord->payment_status }}
-                </span>
-              </td>
-              <td style="text-align: center;">
-                @if($ord->order_status === 'Received')
-                  <span class="order-status-badge received"><i class="fa-solid fa-bell"></i> Received</span>
-                @elseif($ord->order_status === 'Preparing')
-                  <span class="order-status-badge preparing"><i class="fa-solid fa-fire"></i> Preparing</span>
-                @elseif($ord->order_status === 'Out for Delivery')
-                  <span class="order-status-badge out"><i class="fa-solid fa-person-walking-luggage"></i> Out for Delivery</span>
-                @elseif($ord->order_status === 'Delivered')
-                  <span class="order-status-badge delivered"><i class="fa-solid fa-circle-check"></i> Delivered</span>
-                @else
-                  <span class="order-status-badge cancelled">Cancelled</span>
-                @endif
-              </td>
-              <td style="font-size: 11px; color: #64748b; font-family: var(--font-mono, monospace);">
-                {{ $ord->created_at->format('h:i A') }}
-              </td>
-              <td style="text-align: right;">
-                <div style="display: flex; align-items: center; justify-content: flex-end; gap: 6px;">
-                  <button type="button" class="btn-ui-secondary" style="padding: 4px 8px; font-size: 11px;" onclick="viewOrderDossier({{ $ord->id }})">
-                    <i class="fa-solid fa-eye"></i> Details
-                  </button>
-                  @if($ord->order_status === 'Received')
-                    <button type="button" class="btn-ui-primary" style="padding: 4px 8px; font-size: 11px; background: #f59e0b; border-color: #f59e0b;" onclick="updateOrderStatusAjax({{ $ord->id }}, 'Preparing')">
-                      Prep
-                    </button>
-                  @elseif($ord->order_status === 'Preparing')
-                    <button type="button" class="btn-ui-primary" style="padding: 4px 8px; font-size: 11px; background: #c026d3; border-color: #c026d3;" onclick="updateOrderStatusAjax({{ $ord->id }}, 'Out for Delivery')">
-                      Dispatch
-                    </button>
-                  @elseif($ord->order_status === 'Out for Delivery')
-                    <button type="button" class="btn-ui-primary" style="padding: 4px 8px; font-size: 11px; background: #10b981; border-color: #10b981;" onclick="updateOrderStatusAjax({{ $ord->id }}, 'Delivered')">
-                      Delivered
-                    </button>
+    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-slate-200/70 text-xs">
+          <thead>
+            <tr class="bg-slate-50/75 border-b border-slate-200/70">
+              <th class="py-3 px-4 text-left font-bold text-slate-500 uppercase tracking-wider">Order #</th>
+              <th class="py-3 px-4 text-left font-bold text-slate-500 uppercase tracking-wider">Room</th>
+              <th class="py-3 px-4 text-left font-bold text-slate-500 uppercase tracking-wider">Guest Name</th>
+              <th class="py-3 px-4 text-left font-bold text-slate-500 uppercase tracking-wider">Order Items &amp; Qty</th>
+              <th class="py-3 px-4 text-right font-bold text-slate-500 uppercase tracking-wider">Total Bill</th>
+              <th class="py-3 px-4 text-left font-bold text-slate-500 uppercase tracking-wider">Billing Mode</th>
+              <th class="py-3 px-4 text-center font-bold text-slate-500 uppercase tracking-wider">Delivery Status</th>
+              <th class="py-3 px-4 text-left font-bold text-slate-500 uppercase tracking-wider">Order Time</th>
+              <th class="py-3 px-4 text-right font-bold text-slate-500 uppercase tracking-wider">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="orders-table-body" class="divide-y divide-slate-100 bg-white">
+            @forelse($roomOrders as $ord)
+              <tr data-order="{{ strtolower($ord->order_number) }}"
+                  data-room="{{ strtolower($ord->room_number ?? '') }}"
+                  data-guest="{{ strtolower($ord->guest_name ?? '') }}"
+                  data-status="{{ $ord->order_status }}"
+                  class="hover:bg-slate-50/80 transition-colors">
+                <td class="py-3 px-4 font-mono font-bold text-indigo-600 whitespace-nowrap">
+                  {{ $ord->order_number }}
+                </td>
+                <td class="py-3 px-4 whitespace-nowrap">
+                  <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-indigo-50 border border-indigo-100 text-indigo-700 font-bold text-[11px]">
+                    <i class="fa-solid fa-door-open text-[10px]"></i>
+                    Room {{ $ord->room_number }}
+                  </span>
+                </td>
+                <td class="py-3 px-4">
+                  <div class="font-bold text-slate-900">{{ $ord->guest_name ?? 'In-House Guest' }}</div>
+                  @if($ord->booking?->settle_number)
+                    <div class="text-[10px] text-slate-500 font-mono">Folio: {{ $ord->booking->settle_number }}</div>
                   @endif
-                </div>
-              </td>
-            </tr>
-          @empty
-            <tr>
-              <td colspan="9" style="text-align: center; padding: 30px; color: #64748b;">
-                <i class="fa-solid fa-bell-concierge" style="font-size: 24px; margin-bottom: 8px; color: #cbd5e1; display: block;"></i>
-                No room service orders placed today. Click <strong>"New Room Order"</strong> above to send food, beverages, or amenities directly to an in-house room.
-              </td>
-            </tr>
-          @endforelse
-        </tbody>
-      </table>
+                </td>
+                <td class="py-3 px-4">
+                  <div class="text-xs text-slate-700 space-y-0.5">
+                    @foreach($ord->items as $it)
+                      <div>&bull; <strong class="font-bold text-slate-900">{{ $it->quantity }}x</strong> {{ $it->item_name }}</div>
+                    @endforeach
+                  </div>
+                </td>
+                <td class="py-3 px-4 text-right font-mono font-bold text-slate-900 whitespace-nowrap">
+                  ₹ {{ number_format($ord->total_amount, 2) }}
+                </td>
+                <td class="py-3 px-4 whitespace-nowrap">
+                  <span class="inline-flex items-center gap-1.5 text-xs font-semibold {{ $ord->payment_status === 'Charged to Room Folio' ? 'text-indigo-600' : 'text-emerald-600' }}">
+                    <i class="fa-solid {{ $ord->payment_status === 'Charged to Room Folio' ? 'fa-file-invoice-dollar' : 'fa-check' }}"></i>
+                    {{ $ord->payment_status }}
+                  </span>
+                </td>
+                <td class="py-3 px-4 text-center whitespace-nowrap">
+                  @if($ord->order_status === 'Received')
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                      <i class="fa-solid fa-bell text-[10px]"></i> Received
+                    </span>
+                  @elseif($ord->order_status === 'Preparing')
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-purple-50 text-purple-700 border border-purple-200">
+                      <i class="fa-solid fa-fire text-[10px]"></i> Preparing
+                    </span>
+                  @elseif($ord->order_status === 'Out for Delivery')
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                      <i class="fa-solid fa-person-walking-luggage text-[10px]"></i> Out for Delivery
+                    </span>
+                  @elseif($ord->order_status === 'Delivered')
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                      <i class="fa-solid fa-circle-check text-[10px]"></i> Delivered
+                    </span>
+                  @else
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                      Cancelled
+                    </span>
+                  @endif
+                </td>
+                <td class="py-3 px-4 text-slate-500 font-mono text-[11px] whitespace-nowrap">
+                  {{ $ord->created_at->format('h:i A') }}
+                </td>
+                <td class="py-3 px-4 text-right whitespace-nowrap">
+                  <div class="flex items-center justify-end gap-1.5">
+                    <button type="button" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold shadow-2xs transition-all cursor-pointer" onclick="viewOrderDossier({{ $ord->id }})">
+                      <i class="fa-solid fa-eye text-[11px]"></i> Details
+                    </button>
+                    @if($ord->order_status === 'Received')
+                      <button type="button" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold shadow-2xs transition-all cursor-pointer" onclick="updateOrderStatusAjax({{ $ord->id }}, 'Preparing')">
+                        Prep
+                      </button>
+                    @elseif($ord->order_status === 'Preparing')
+                      <button type="button" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-fuchsia-600 hover:bg-fuchsia-700 text-white text-xs font-semibold shadow-2xs transition-all cursor-pointer" onclick="updateOrderStatusAjax({{ $ord->id }}, 'Out for Delivery')">
+                        Dispatch
+                      </button>
+                    @elseif($ord->order_status === 'Out for Delivery')
+                      <button type="button" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-2xs transition-all cursor-pointer" onclick="updateOrderStatusAjax({{ $ord->id }}, 'Delivered')">
+                        Delivered
+                      </button>
+                    @endif
+                  </div>
+                </td>
+              </tr>
+            @empty
+              <tr>
+                <td colspan="9" class="py-12 px-4 text-center text-slate-500">
+                  <div class="flex flex-col items-center justify-center">
+                    <i class="fa-solid fa-bell-concierge text-3xl text-slate-300 mb-2"></i>
+                    <p class="font-medium text-slate-600">No room service orders placed today.</p>
+                    <p class="text-xs text-slate-400 mt-1">Click <strong class="font-semibold text-slate-700">"New Room Order"</strong> above to send food, beverages, or amenities directly to an in-house room.</p>
+                  </div>
+                </td>
+              </tr>
+            @endforelse
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 
   <!-- TAB 2: BANQUET HALLS & EVENT BOOKINGS -->
-  <div id="bnq-tab-halls" class="bnq-tab-pane" style="display: none;">
-    <!-- Available Venues Grid -->
-    <div style="font-size: 13px; font-weight: 800; color: #0f172a; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
-      <i class="fa-solid fa-building-columns" style="color: #d97706;"></i> Banquet Venues &amp; Conference Facilities
-    </div>
+  <div id="bnq-tab-halls" class="bnq-tab-pane space-y-6 hidden">
+    <!-- Available Venues Section -->
+    <div>
+      <div class="text-xs font-bold text-slate-900 mb-3 flex items-center gap-2 uppercase tracking-wider">
+        <i class="fa-solid fa-building-columns text-amber-600"></i> Banquet Venues &amp; Conference Facilities
+      </div>
 
-    <div class="halls-grid">
-      @foreach($halls as $hall)
-        <div class="hall-venue-card">
-          <div>
-            <div class="hall-card-header">
-              <h3>{{ $hall->name }}</h3>
-              <span class="badge-tag {{ $hall->status === 'Available' ? 'green' : 'amber' }}">
-                {{ $hall->status }}
-              </span>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        @foreach($halls as $hall)
+          <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md transition-all p-5 flex flex-col justify-between">
+            <div class="space-y-3">
+              <div class="flex items-start justify-between gap-3">
+                <h3 class="text-sm font-bold text-slate-900">{{ $hall->name }}</h3>
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold {{ $hall->status === 'Available' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-amber-50 text-amber-700 border border-amber-200' }}">
+                  {{ $hall->status }}
+                </span>
+              </div>
+              <div class="flex items-center gap-3 text-xs text-slate-600 flex-wrap">
+                <span class="inline-flex items-center gap-1.5"><i class="fa-solid fa-users text-indigo-500"></i> Up to <strong class="font-bold text-slate-800">{{ $hall->capacity_pax }} Pax</strong></span>
+                <span class="inline-flex items-center gap-1.5"><i class="fa-solid fa-layer-group text-cyan-600"></i> {{ $hall->type }}</span>
+              </div>
+              <div class="text-xs text-slate-600 flex items-start gap-1.5 leading-relaxed bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                <i class="fa-solid fa-circle-check text-emerald-600 mt-0.5 shrink-0 text-xs"></i>
+                <span>{{ $hall->amenities }}</span>
+              </div>
             </div>
-            <div class="hall-meta-row">
-              <span><i class="fa-solid fa-users" style="color: #6366f1;"></i> Up to <strong>{{ $hall->capacity_pax }} Pax</strong></span>
-              <span><i class="fa-solid fa-layer-group" style="color: #06b6d4;"></i> {{ $hall->type }}</span>
-            </div>
-            <div class="hall-amenities-text">
-              <i class="fa-solid fa-circle-check" style="color: #10b981;"></i> {{ $hall->amenities }}
+            <div class="flex items-center justify-between pt-4 mt-4 border-t border-slate-100">
+              <div>
+                <div class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Base Rental</div>
+                <div class="font-mono font-bold text-slate-900 text-sm">₹ {{ number_format($hall->base_tariff, 2) }}</div>
+              </div>
+              <button type="button" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs transition-all shadow-xs cursor-pointer" onclick="openBookSpecificHallModal({{ $hall->id }}, '{{ addslashes($hall->name) }}', {{ $hall->base_tariff }})">
+                <i class="fa-solid fa-calendar-plus text-[11px]"></i> Reserve Hall
+              </button>
             </div>
           </div>
-          <div class="hall-card-footer">
-            <div>
-              <div style="font-size: 10px; color: #64748b; text-transform: uppercase; font-weight: 700;">Base Rental</div>
-              <div style="font-family: var(--font-mono, monospace); font-weight: 800; color: #0f172a; font-size: 14px;">₹ {{ number_format($hall->base_tariff, 2) }}</div>
-            </div>
-            <button type="button" class="btn-ui-primary" style="background: #d97706; border-color: #d97706; padding: 6px 12px; font-size: 11px;" onclick="openBookSpecificHallModal({{ $hall->id }}, '{{ addslashes($hall->name) }}', {{ $hall->base_tariff }})">
-              <i class="fa-solid fa-calendar-plus"></i> Reserve Hall
-            </button>
-          </div>
-        </div>
-      @endforeach
+        @endforeach
+      </div>
     </div>
 
     <!-- Active Event Bookings Table -->
-    <div class="bnq-filter-toolbar">
-      <div style="font-weight: 800; color: #0f172a; font-size: 13px; display: flex; align-items: center; gap: 8px;">
-        <i class="fa-solid fa-calendar-days" style="color: #d97706;"></i> Confirmed Event Reservations &amp; Function Sheets
+    <div class="space-y-4">
+      <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div class="font-bold text-slate-900 text-xs flex items-center gap-2 uppercase tracking-wider">
+          <i class="fa-solid fa-calendar-days text-amber-600"></i> Confirmed Event Reservations &amp; Function Sheets
+        </div>
+        <button type="button" class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs transition-all shadow-xs shrink-0 cursor-pointer" onclick="openNewBanquetModal()">
+          <i class="fa-solid fa-plus"></i> Book Event Hall
+        </button>
       </div>
-      <button type="button" class="btn-ui-primary" onclick="openNewBanquetModal()" style="background: #d97706; border-color: #d97706;">
-        <i class="fa-solid fa-plus"></i> Book Event Hall
-      </button>
-    </div>
 
-    <div class="bnq-table-card">
-      <table class="bnq-table">
-        <thead>
-          <tr>
-            <th>Ref. No</th>
-            <th>Hall Name</th>
-            <th>Event Name</th>
-            <th>Client &amp; Contact</th>
-            <th>Event Date &amp; Slot</th>
-            <th style="text-align: center;">Pax</th>
-            <th style="text-align: right;">Total Tariff</th>
-            <th style="text-align: right;">Advance Paid</th>
-            <th style="text-align: center;">Status</th>
-            <th style="text-align: right;">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          @forelse($banquetBookings as $bk)
-            <tr>
-              <td><span style="font-family: var(--font-mono, monospace); font-weight: 700; color: #d97706;">{{ $bk->booking_reference }}</span></td>
-              <td><strong>{{ $bk->hall?->name ?? 'Grand Ballroom' }}</strong></td>
-              <td>
-                <div style="font-weight: 700; color: #0f172a;">{{ $bk->event_name }}</div>
-                <div style="font-size: 10px; color: #64748b;">{{ $bk->company_name ?? '' }}</div>
-              </td>
-              <td>
-                <div style="font-weight: 600;">{{ $bk->client_name }}</div>
-                <div style="font-size: 10px; color: #64748b;">{{ $bk->phone }}</div>
-              </td>
-              <td>
-                <div style="font-weight: 700;">{{ $bk->event_date->format('d M Y') }}</div>
-                <div style="font-size: 10px; color: #64748b;">{{ $bk->time_slot }}</div>
-              </td>
-              <td style="text-align: center; font-family: var(--font-mono, monospace); font-weight: 700;">{{ $bk->guaranteed_pax }}</td>
-              <td style="text-align: right; font-family: var(--font-mono, monospace); font-weight: 700; color: #0f172a;">₹ {{ number_format($bk->total_amount, 2) }}</td>
-              <td style="text-align: right; font-family: var(--font-mono, monospace); font-weight: 700; color: #059669;">₹ {{ number_format($bk->advance_paid, 2) }}</td>
-              <td style="text-align: center;">
-                <span class="badge-tag green"><i class="fa-solid fa-circle-check"></i> {{ $bk->status }}</span>
-              </td>
-              <td style="text-align: right;">
-                <button type="button" class="btn-ui-secondary" style="padding: 5px 10px; font-size: 11px;" onclick="viewFunctionSheet({{ $bk->id }})">
-                  <i class="fa-solid fa-file-lines"></i> Function Sheet
-                </button>
-              </td>
-            </tr>
-          @empty
-            <tr>
-              <td colspan="10" style="text-align: center; padding: 25px; color: #64748b;">
-                No banquet event bookings recorded.
-              </td>
-            </tr>
-          @endforelse
-        </tbody>
-      </table>
+      <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-slate-200/70 text-xs">
+            <thead>
+              <tr class="bg-slate-50/75 border-b border-slate-200/70">
+                <th class="py-3 px-4 text-left font-bold text-slate-500 uppercase tracking-wider">Ref. No</th>
+                <th class="py-3 px-4 text-left font-bold text-slate-500 uppercase tracking-wider">Hall Name</th>
+                <th class="py-3 px-4 text-left font-bold text-slate-500 uppercase tracking-wider">Event Name</th>
+                <th class="py-3 px-4 text-left font-bold text-slate-500 uppercase tracking-wider">Client &amp; Contact</th>
+                <th class="py-3 px-4 text-left font-bold text-slate-500 uppercase tracking-wider">Event Date &amp; Slot</th>
+                <th class="py-3 px-4 text-center font-bold text-slate-500 uppercase tracking-wider">Pax</th>
+                <th class="py-3 px-4 text-right font-bold text-slate-500 uppercase tracking-wider">Total Tariff</th>
+                <th class="py-3 px-4 text-right font-bold text-slate-500 uppercase tracking-wider">Advance Paid</th>
+                <th class="py-3 px-4 text-center font-bold text-slate-500 uppercase tracking-wider">Status</th>
+                <th class="py-3 px-4 text-right font-bold text-slate-500 uppercase tracking-wider">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 bg-white">
+              @forelse($banquetBookings as $bk)
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 font-mono font-bold text-amber-600 whitespace-nowrap">{{ $bk->booking_reference }}</td>
+                  <td class="py-3 px-4 font-bold text-slate-900 whitespace-nowrap">{{ $bk->hall?->name ?? 'Grand Ballroom' }}</td>
+                  <td class="py-3 px-4">
+                    <div class="font-bold text-slate-900">{{ $bk->event_name }}</div>
+                    @if($bk->company_name)
+                      <div class="text-[10px] text-slate-500">{{ $bk->company_name }}</div>
+                    @endif
+                  </td>
+                  <td class="py-3 px-4">
+                    <div class="font-semibold text-slate-800">{{ $bk->client_name }}</div>
+                    <div class="text-[10px] text-slate-500 font-mono">{{ $bk->phone }}</div>
+                  </td>
+                  <td class="py-3 px-4 whitespace-nowrap">
+                    <div class="font-bold text-slate-900">{{ $bk->event_date->format('d M Y') }}</div>
+                    <div class="text-[10px] text-slate-500">{{ $bk->time_slot }}</div>
+                  </td>
+                  <td class="py-3 px-4 text-center font-mono font-bold text-slate-800">{{ $bk->guaranteed_pax }}</td>
+                  <td class="py-3 px-4 text-right font-mono font-bold text-slate-900 whitespace-nowrap">₹ {{ number_format($bk->total_amount, 2) }}</td>
+                  <td class="py-3 px-4 text-right font-mono font-bold text-emerald-600 whitespace-nowrap">₹ {{ number_format($bk->advance_paid, 2) }}</td>
+                  <td class="py-3 px-4 text-center whitespace-nowrap">
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                      <i class="fa-solid fa-circle-check text-[10px]"></i> {{ $bk->status }}
+                    </span>
+                  </td>
+                  <td class="py-3 px-4 text-right whitespace-nowrap">
+                    <button type="button" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold shadow-2xs transition-all cursor-pointer" onclick="viewFunctionSheet({{ $bk->id }})">
+                      <i class="fa-solid fa-file-lines text-[11px]"></i> Function Sheet
+                    </button>
+                  </td>
+                </tr>
+              @empty
+                <tr>
+                  <td colspan="10" class="py-12 px-4 text-center text-slate-500">
+                    <div class="flex flex-col items-center justify-center">
+                      <i class="fa-solid fa-calendar-xmark text-3xl text-slate-300 mb-2"></i>
+                      <p class="font-medium text-slate-600">No banquet event bookings recorded.</p>
+                      <p class="text-xs text-slate-400 mt-1">Click "Book Event Hall" above to schedule an upcoming banquet reservation.</p>
+                    </div>
+                  </td>
+                </tr>
+              @endforelse
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   </div>
-
   <!-- TAB 3: IN-ROOM MENU & SERVICES CATALOG -->
-  <div id="bnq-tab-menu" class="bnq-tab-pane" style="display: none;">
-    <div class="bnq-filter-toolbar">
-      <div style="font-weight: 800; color: #0f172a; font-size: 13px; display: flex; align-items: center; gap: 8px;">
-        <i class="fa-solid fa-book-open" style="color: #0891b2;"></i> Available Room Dining Dishes &amp; Guest Amenities
+  <div id="bnq-tab-menu" class="bnq-tab-pane space-y-4 hidden">
+    <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div class="text-xs font-bold text-slate-900 flex items-center gap-2 uppercase tracking-wider">
+        <i class="fa-solid fa-book-open text-cyan-600"></i> Available Room Dining Dishes &amp; Guest Amenities
       </div>
-      <div style="font-size: 11px; color: #64748b;">
+      <div class="text-xs text-slate-500">
         Synchronized with Front Desk, Housekeeping and Room Service Kitchen
       </div>
     </div>
 
-    <div class="bnq-table-card">
-      <table class="bnq-table">
-        <thead>
-          <tr>
-            <th style="width: 80px;">Code</th>
-            <th>Service / Dish Name</th>
-            <th>Category</th>
-            <th>Unit / Serving</th>
-            <th style="text-align: right;">Tariff / Price</th>
-            <th>Description</th>
-            <th style="text-align: center;">Status</th>
-            <th style="text-align: right;">Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          @foreach($services as $srv)
-            <tr>
-              <td><span style="font-family: var(--font-mono, monospace); font-weight: 700; color: #0891b2; background: #ecfeff; padding: 2px 6px; border-radius: 4px;">{{ $srv->code }}</span></td>
-              <td><strong>{{ $srv->name }}</strong></td>
-              <td><span class="badge-tag blue">{{ $srv->category }}</span></td>
-              <td style="color: #64748b;">{{ $srv->unit }}</td>
-              <td style="text-align: right; font-family: var(--font-mono, monospace); font-weight: 800; color: #0f172a;">₹ {{ number_format($srv->price, 2) }}</td>
-              <td style="font-size: 11px; color: #475569; max-width: 300px;">{{ $srv->description }}</td>
-              <td style="text-align: center;"><span class="badge-tag green">Available</span></td>
-              <td style="text-align: right;">
-                <button type="button" class="btn-ui-primary" style="padding: 4px 10px; font-size: 11px; background: #10b981; border-color: #10b981;" onclick="quickOrderThisService({{ $srv->id }}, '{{ addslashes($srv->name) }}', {{ $srv->price }})">
-                  <i class="fa-solid fa-plus"></i> Order to Room
-                </button>
-              </td>
+    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-slate-200/70 text-xs">
+          <thead>
+            <tr class="bg-slate-50/75 border-b border-slate-200/70">
+              <th class="py-3 px-4 text-left font-bold text-slate-500 uppercase tracking-wider w-20">Code</th>
+              <th class="py-3 px-4 text-left font-bold text-slate-500 uppercase tracking-wider">Service / Dish Name</th>
+              <th class="py-3 px-4 text-left font-bold text-slate-500 uppercase tracking-wider">Category</th>
+              <th class="py-3 px-4 text-left font-bold text-slate-500 uppercase tracking-wider">Unit / Serving</th>
+              <th class="py-3 px-4 text-right font-bold text-slate-500 uppercase tracking-wider">Tariff / Price</th>
+              <th class="py-3 px-4 text-left font-bold text-slate-500 uppercase tracking-wider">Description</th>
+              <th class="py-3 px-4 text-center font-bold text-slate-500 uppercase tracking-wider">Status</th>
+              <th class="py-3 px-4 text-right font-bold text-slate-500 uppercase tracking-wider">Action</th>
             </tr>
-          @endforeach
-        </tbody>
-      </table>
+          </thead>
+          <tbody class="divide-y divide-slate-100 bg-white">
+            @foreach($services as $srv)
+              <tr class="hover:bg-slate-50/80 transition-colors">
+                <td class="py-3 px-4 whitespace-nowrap">
+                  <span class="font-mono font-bold text-cyan-700 bg-cyan-50 border border-cyan-200 px-2 py-0.5 rounded-md text-[11px]">{{ $srv->code }}</span>
+                </td>
+                <td class="py-3 px-4 font-bold text-slate-900">{{ $srv->name }}</td>
+                <td class="py-3 px-4 whitespace-nowrap">
+                  <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-blue-50 text-blue-700 border border-blue-200">{{ $srv->category }}</span>
+                </td>
+                <td class="py-3 px-4 text-slate-500 whitespace-nowrap">{{ $srv->unit }}</td>
+                <td class="py-3 px-4 text-right font-mono font-bold text-slate-900 whitespace-nowrap">₹ {{ number_format($srv->price, 2) }}</td>
+                <td class="py-3 px-4 text-slate-600 max-w-xs truncate">{{ $srv->description }}</td>
+                <td class="py-3 px-4 text-center whitespace-nowrap">
+                  <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">Available</span>
+                </td>
+                <td class="py-3 px-4 text-right whitespace-nowrap">
+                  <button type="button" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs transition-all shadow-xs cursor-pointer" onclick="quickOrderThisService({{ $srv->id }}, '{{ addslashes($srv->name) }}', {{ $srv->price }})">
+                    <i class="fa-solid fa-plus text-[10px]"></i> Order to Room
+                  </button>
+                </td>
+              </tr>
+            @endforeach
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 
+  </div>
 </main>
 
 <!-- MODAL 1: NEW ROOM SERVICE ORDER -->
-<div class="bnq-modal-overlay" id="modal-new-room-order">
-  <div class="bnq-modal-window" style="width: 720px;">
-    <div class="bnq-modal-header" style="background: linear-gradient(135deg, #10b981, #059669);">
-      <h3><i class="fa-solid fa-utensils"></i> In-Room Dining &amp; Service Order</h3>
-      <button type="button" class="bnq-modal-close" onclick="closeBnqModal('modal-new-room-order')">&times;</button>
+<div class="bnq-modal-overlay hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto" id="modal-new-room-order">
+  <div class="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-slate-200/80 overflow-hidden my-8">
+    <div class="bg-linear-to-r from-emerald-600 to-teal-700 px-6 py-4 flex items-center justify-between text-white">
+      <h3 class="text-base font-bold flex items-center gap-2 text-white">
+        <i class="fa-solid fa-utensils"></i> In-Room Dining &amp; Service Order
+      </h3>
+      <button type="button" class="w-8 h-8 rounded-lg flex items-center justify-center text-white/80 hover:text-white hover:bg-white/10 transition-colors text-xl leading-none cursor-pointer" onclick="closeBnqModal('modal-new-room-order')">&times;</button>
     </div>
     <form id="form-room-order" onsubmit="submitRoomOrder(event)">
       @csrf
-      <div class="bnq-modal-body">
-        <div class="form-grid-2">
-          <div class="form-group-bnq">
-            <label>Select In-House Room *</label>
-            <select name="room_id" id="ro-room-select" required onchange="updateRoomOrderGuest()">
+      <div class="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Select In-House Room *</label>
+            <select name="room_id" id="ro-room-select" required onchange="updateRoomOrderGuest()" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
               <option value="">Choose Occupied Room</option>
               @foreach($activeRooms as $rm)
                 @php
@@ -868,59 +435,61 @@
               @endforeach
             </select>
           </div>
-          <div class="form-group-bnq">
-            <label>Guest Name</label>
-            <input type="text" id="ro-guest-display" readonly placeholder="Guest name will load here" style="background: #f8fafc;">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Guest Name</label>
+            <input type="text" id="ro-guest-display" readonly placeholder="Guest name will load here" class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs font-medium text-slate-700 bg-slate-50 focus:outline-none cursor-not-allowed">
           </div>
         </div>
 
-        <div style="font-size: 12px; font-weight: 800; color: #0f172a; margin: 12px 0 8px 0; display: flex; justify-content: space-between; align-items: center;">
-          <span><i class="fa-solid fa-bowl-food" style="color: #10b981;"></i> Order Line Items</span>
-          <button type="button" class="btn-ui-secondary" style="font-size: 11px; padding: 3px 8px;" onclick="addOrderLineItem()">
-            <i class="fa-solid fa-plus"></i> Add Item
+        <div class="flex items-center justify-between pt-2">
+          <span class="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+            <i class="fa-solid fa-bowl-food text-emerald-600"></i> Order Line Items
+          </span>
+          <button type="button" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold shadow-2xs transition-all cursor-pointer" onclick="addOrderLineItem()">
+            <i class="fa-solid fa-plus text-[10px]"></i> Add Item
           </button>
         </div>
 
         <!-- Dynamic Order Line Items -->
-        <div id="order-line-items-container">
+        <div id="order-line-items-container" class="space-y-2.5">
           <!-- Populated by JS -->
         </div>
 
-        <div class="form-grid-2" style="margin-top: 14px;">
-          <div class="form-group-bnq">
-            <label>Billing &amp; Settlement *</label>
-            <select name="payment_status" required>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Billing &amp; Settlement *</label>
+            <select name="payment_status" required class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
               <option value="Charged to Room Folio">Charged to Room Folio (Bill at Checkout)</option>
               <option value="Paid Cash">Cash Paid upon Delivery</option>
               <option value="Paid UPI/Card">Digital UPI / POS Card Paid</option>
               <option value="Pending">Pending Collection</option>
             </select>
           </div>
-          <div class="form-group-bnq">
-            <label>Delivery Staff / Order Taker</label>
-            <input type="text" name="served_by" placeholder="Server Name" value="Room Service Desk">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Delivery Staff / Order Taker</label>
+            <input type="text" name="served_by" placeholder="Server Name" value="Room Service Desk" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-xs text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
           </div>
         </div>
 
-        <div class="form-group-bnq">
-          <label>Kitchen / Preparation Instructions</label>
-          <textarea name="special_instructions" rows="2" placeholder="e.g. Less spicy, send extra napkins & cutlery, deliver at 8:30 PM"></textarea>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Kitchen / Preparation Instructions</label>
+          <textarea name="special_instructions" rows="2" placeholder="e.g. Less spicy, send extra napkins & cutlery, deliver at 8:30 PM" class="w-full px-3.5 py-2 border border-slate-300 rounded-xl text-xs text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"></textarea>
         </div>
 
         <!-- Order Total Summary -->
-        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center;">
+        <div class="bg-slate-50 border border-slate-200/80 rounded-xl p-4 flex items-center justify-between">
           <div>
-            <div style="font-size: 11px; color: #64748b;">Subtotal + 5% F&amp;B Tax:</div>
-            <div style="font-size: 16px; font-weight: 800; font-family: var(--font-mono, monospace); color: #0f172a;" id="ro-total-display">₹ 0.00</div>
+            <div class="text-[11px] text-slate-500 font-medium">Subtotal + 5% F&amp;B Tax:</div>
+            <div class="text-lg font-bold font-mono text-slate-900" id="ro-total-display">₹ 0.00</div>
           </div>
-          <div style="font-size: 11px; font-weight: 700; color: #10b981;">
+          <div class="text-xs font-bold text-emerald-600 flex items-center gap-1.5">
             <i class="fa-solid fa-clock"></i> Est. Delivery: 30-40 Mins
           </div>
         </div>
       </div>
-      <div class="bnq-modal-footer">
-        <button type="button" class="btn-ui-secondary" onclick="closeBnqModal('modal-new-room-order')">Cancel</button>
-        <button type="submit" class="btn-ui-primary" style="background: #10b981; border-color: #10b981;">
+      <div class="px-6 py-4 bg-slate-50 border-t border-slate-200/80 flex items-center justify-end gap-3">
+        <button type="button" class="px-4 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold shadow-2xs transition-all cursor-pointer" onclick="closeBnqModal('modal-new-room-order')">Cancel</button>
+        <button type="submit" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-xs transition-all cursor-pointer">
           <i class="fa-solid fa-check"></i> Place Room Order
         </button>
       </div>
@@ -929,19 +498,21 @@
 </div>
 
 <!-- MODAL 2: BOOK BANQUET HALL / EVENT -->
-<div class="bnq-modal-overlay" id="modal-new-banquet">
-  <div class="bnq-modal-window">
-    <div class="bnq-modal-header">
-      <h3><i class="fa-solid fa-calendar-plus"></i> Reserve Banquet Hall or Lawn</h3>
-      <button type="button" class="bnq-modal-close" onclick="closeBnqModal('modal-new-banquet')">&times;</button>
+<div class="bnq-modal-overlay hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto" id="modal-new-banquet">
+  <div class="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-slate-200/80 overflow-hidden my-8">
+    <div class="bg-linear-to-r from-amber-600 to-amber-700 px-6 py-4 flex items-center justify-between text-white">
+      <h3 class="text-base font-bold flex items-center gap-2 text-white">
+        <i class="fa-solid fa-calendar-plus"></i> Reserve Banquet Hall or Lawn
+      </h3>
+      <button type="button" class="w-8 h-8 rounded-lg flex items-center justify-center text-white/80 hover:text-white hover:bg-white/10 transition-colors text-xl leading-none cursor-pointer" onclick="closeBnqModal('modal-new-banquet')">&times;</button>
     </div>
     <form id="form-banquet-booking" onsubmit="submitBanquetBooking(event)">
       @csrf
-      <div class="bnq-modal-body">
-        <div class="form-grid-2">
-          <div class="form-group-bnq">
-            <label>Select Banquet Hall / Venue *</label>
-            <select name="banquet_hall_id" id="bq-hall-select" required onchange="calculateBanquetTariff()">
+      <div class="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Select Banquet Hall / Venue *</label>
+            <select name="banquet_hall_id" id="bq-hall-select" required onchange="calculateBanquetTariff()" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500">
               <option value="">Select Venue</option>
               @foreach($halls as $hl)
                 <option value="{{ $hl->id }}" data-tariff="{{ $hl->base_tariff }}">
@@ -950,42 +521,42 @@
               @endforeach
             </select>
           </div>
-          <div class="form-group-bnq">
-            <label>Event Name / Occasion *</label>
-            <input type="text" name="event_name" required placeholder="e.g. Annual Gala, Wedding, Conference">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Event Name / Occasion *</label>
+            <input type="text" name="event_name" required placeholder="e.g. Annual Gala, Wedding, Conference" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-xs text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500">
           </div>
         </div>
 
-        <div class="form-grid-2">
-          <div class="form-group-bnq">
-            <label>Client / Host Name *</label>
-            <input type="text" name="client_name" required placeholder="Full Name">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Client / Host Name *</label>
+            <input type="text" name="client_name" required placeholder="Full Name" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-xs text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500">
           </div>
-          <div class="form-group-bnq">
-            <label>Company / Organization</label>
-            <input type="text" name="company_name" placeholder="Optional Company Name">
-          </div>
-        </div>
-
-        <div class="form-grid-2">
-          <div class="form-group-bnq">
-            <label>Contact Phone *</label>
-            <input type="text" name="phone" required placeholder="+91 XXXXX XXXXX">
-          </div>
-          <div class="form-group-bnq">
-            <label>Contact Email</label>
-            <input type="email" name="email" placeholder="client@example.com">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Company / Organization</label>
+            <input type="text" name="company_name" placeholder="Optional Company Name" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-xs text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500">
           </div>
         </div>
 
-        <div class="form-grid-2">
-          <div class="form-group-bnq">
-            <label>Event Date *</label>
-            <input type="date" name="event_date" required value="{{ date('Y-m-d', strtotime('+3 days')) }}">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Contact Phone *</label>
+            <input type="text" name="phone" required placeholder="+91 XXXXX XXXXX" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-xs font-mono text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500">
           </div>
-          <div class="form-group-bnq">
-            <label>Time Slot *</label>
-            <select name="time_slot" required>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Contact Email</label>
+            <input type="email" name="email" placeholder="client@example.com" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-xs text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Event Date *</label>
+            <input type="date" name="event_date" required value="{{ date('Y-m-d', strtotime('+3 days')) }}" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-xs text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Time Slot *</label>
+            <select name="time_slot" required class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500">
               <option value="Evening (6:30 PM - 11:30 PM)">Evening (6:30 PM - 11:30 PM)</option>
               <option value="Morning (9:00 AM - 2:00 PM)">Morning (9:00 AM - 2:00 PM)</option>
               <option value="Afternoon (1:00 PM - 5:00 PM)">Afternoon (1:00 PM - 5:00 PM)</option>
@@ -994,64 +565,68 @@
           </div>
         </div>
 
-        <div class="form-grid-2">
-          <div class="form-group-bnq">
-            <label>Guaranteed Guest Count (Pax) *</label>
-            <input type="number" name="guaranteed_pax" id="bq-pax" required min="10" value="100" onkeyup="calculateBanquetTariff()" onchange="calculateBanquetTariff()">
-          </div>
-          <div class="form-group-bnq">
-            <label>Catering Plate Rate (₹)</label>
-            <input type="number" name="catering_per_plate" id="bq-plate" placeholder="e.g. 1200" value="1000" onkeyup="calculateBanquetTariff()" onchange="calculateBanquetTariff()">
-          </div>
-        </div>
-
-        <div class="form-grid-2">
-          <div class="form-group-bnq">
-            <label>Base Hall Rental (₹) *</label>
-            <input type="number" name="hall_rental" id="bq-rental" required value="50000" onkeyup="calculateBanquetTariff()" onchange="calculateBanquetTariff()">
-          </div>
-          <div class="form-group-bnq">
-            <label>Advance Payment Paid (₹)</label>
-            <input type="number" name="advance_paid" id="bq-advance" value="25000" onkeyup="calculateBanquetTariff()" onchange="calculateBanquetTariff()">
-          </div>
-        </div>
-
-        <div class="form-group-bnq">
-          <label>Function Sheet &amp; Audio-Visual Notes</label>
-          <textarea name="function_sheet_notes" rows="2" placeholder="Stage setup, buffet menu, projectors, welcome drinks..."></textarea>
-        </div>
-
-        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center;">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <div style="font-size: 11px; color: #64748b;">Calculated Total Event Estimate:</div>
-            <div style="font-size: 16px; font-weight: 800; font-family: var(--font-mono, monospace); color: #d97706;" id="bq-total-display">₹ 0.00</div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Guaranteed Guest Count (Pax) *</label>
+            <input type="number" name="guaranteed_pax" id="bq-pax" required min="10" value="100" onkeyup="calculateBanquetTariff()" onchange="calculateBanquetTariff()" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-xs font-mono font-bold text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500">
           </div>
-          <div style="text-align: right;">
-            <div style="font-size: 11px; color: #64748b;">Balance Due at Event:</div>
-            <div style="font-size: 13px; font-weight: 700; font-family: var(--font-mono, monospace); color: #0f172a;" id="bq-balance-display">₹ 0.00</div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Catering Plate Rate (₹)</label>
+            <input type="number" name="catering_per_plate" id="bq-plate" placeholder="e.g. 1200" value="1000" onkeyup="calculateBanquetTariff()" onchange="calculateBanquetTariff()" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-xs font-mono font-bold text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Base Hall Rental (₹) *</label>
+            <input type="number" name="hall_rental" id="bq-rental" required value="50000" onkeyup="calculateBanquetTariff()" onchange="calculateBanquetTariff()" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-xs font-mono font-bold text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Advance Payment Paid (₹)</label>
+            <input type="number" name="advance_paid" id="bq-advance" value="25000" onkeyup="calculateBanquetTariff()" onchange="calculateBanquetTariff()" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-xs font-mono font-bold text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Function Sheet &amp; Audio-Visual Notes</label>
+          <textarea name="function_sheet_notes" rows="2" placeholder="Stage setup, buffet menu, projectors, welcome drinks..." class="w-full px-3.5 py-2 border border-slate-300 rounded-xl text-xs text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500"></textarea>
+        </div>
+
+        <div class="bg-slate-50 border border-slate-200/80 rounded-xl p-4 flex items-center justify-between">
+          <div>
+            <div class="text-[11px] text-slate-500 font-medium">Calculated Total Event Estimate:</div>
+            <div class="text-lg font-bold font-mono text-amber-600" id="bq-total-display">₹ 0.00</div>
+          </div>
+          <div class="text-right">
+            <div class="text-[11px] text-slate-500 font-medium">Balance Due at Event:</div>
+            <div class="text-sm font-bold font-mono text-slate-900" id="bq-balance-display">₹ 0.00</div>
           </div>
         </div>
       </div>
-      <div class="bnq-modal-footer">
-        <button type="button" class="btn-ui-secondary" onclick="closeBnqModal('modal-new-banquet')">Cancel</button>
-        <button type="submit" class="btn-ui-primary" style="background: #d97706; border-color: #d97706;">Confirm Reservation</button>
+      <div class="px-6 py-4 bg-slate-50 border-t border-slate-200/80 flex items-center justify-end gap-3">
+        <button type="button" class="px-4 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold shadow-2xs transition-all cursor-pointer" onclick="closeBnqModal('modal-new-banquet')">Cancel</button>
+        <button type="submit" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold shadow-xs transition-all cursor-pointer">
+          <i class="fa-solid fa-calendar-check"></i> Confirm Reservation
+        </button>
       </div>
     </form>
   </div>
 </div>
 
 <!-- MODAL 3: VIEW ORDER DOSSIER -->
-<div class="bnq-modal-overlay" id="modal-order-dossier">
-  <div class="bnq-modal-window">
-    <div class="bnq-modal-header" style="background: linear-gradient(135deg, #2563eb, #1d4ed8);">
-      <h3 id="dossier-order-title"><i class="fa-solid fa-receipt"></i> Room Order Dossier</h3>
-      <button type="button" class="bnq-modal-close" onclick="closeBnqModal('modal-order-dossier')">&times;</button>
+<div class="bnq-modal-overlay hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto" id="modal-order-dossier">
+  <div class="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-slate-200/80 overflow-hidden my-8">
+    <div class="bg-linear-to-r from-blue-600 to-indigo-700 px-6 py-4 flex items-center justify-between text-white">
+      <h3 class="text-base font-bold flex items-center gap-2 text-white" id="dossier-order-title">
+        <i class="fa-solid fa-receipt"></i> Room Order Dossier
+      </h3>
+      <button type="button" class="w-8 h-8 rounded-lg flex items-center justify-center text-white/80 hover:text-white hover:bg-white/10 transition-colors text-xl leading-none cursor-pointer" onclick="closeBnqModal('modal-order-dossier')">&times;</button>
     </div>
-    <div class="bnq-modal-body" id="dossier-order-content">
+    <div class="p-6 max-h-[75vh] overflow-y-auto space-y-3" id="dossier-order-content">
       <!-- Loaded dynamically -->
     </div>
-    <div class="bnq-modal-footer">
-      <button type="button" class="btn-ui-secondary" onclick="closeBnqModal('modal-order-dossier')">Close</button>
+    <div class="px-6 py-3.5 bg-slate-50 border-t border-slate-200/80 flex justify-end">
+      <button type="button" class="px-4 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold shadow-2xs transition-all cursor-pointer" onclick="closeBnqModal('modal-order-dossier')">Close</button>
     </div>
   </div>
 </div>
@@ -1064,25 +639,57 @@
 
   // Tab switching
   function switchBanquetTab(tabName) {
-    document.querySelectorAll('.bnq-tab-pane').forEach(el => el.style.display = 'none');
-    document.querySelectorAll('.bnq-tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.bnq-tab-pane').forEach(el => {
+      el.classList.add('hidden');
+      el.style.display = 'none';
+    });
+    document.querySelectorAll('.bnq-tab-btn').forEach(btn => {
+      btn.classList.remove('active', 'bg-slate-900', 'text-white', 'shadow-sm');
+      btn.classList.add('bg-white', 'border', 'border-slate-200/80', 'text-slate-600', 'hover:text-slate-900', 'hover:bg-slate-50');
+      const badge = btn.querySelector('span');
+      if (badge) {
+        if (btn.id === 'tab-btn-orders') {
+          badge.className = 'inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200';
+        } else if (btn.id === 'tab-btn-halls') {
+          badge.className = 'inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200';
+        } else {
+          badge.className = 'inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-slate-100 text-slate-600 border border-slate-200';
+        }
+      }
+    });
 
     const targetPane = document.getElementById('bnq-tab-' + tabName);
     const targetBtn = document.getElementById('tab-btn-' + tabName);
 
-    if (targetPane) targetPane.style.display = 'block';
-    if (targetBtn) targetBtn.classList.add('active');
+    if (targetPane) {
+      targetPane.classList.remove('hidden');
+      targetPane.style.display = 'block';
+    }
+    if (targetBtn) {
+      targetBtn.classList.add('active', 'bg-slate-900', 'text-white', 'shadow-sm');
+      targetBtn.classList.remove('bg-white', 'border', 'border-slate-200/80', 'text-slate-600', 'hover:text-slate-900', 'hover:bg-slate-50');
+      const badge = targetBtn.querySelector('span');
+      if (badge) {
+        badge.className = 'inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-white/20 text-white';
+      }
+    }
   }
 
   // Modal handlers
   function openBnqModal(id) {
     const el = document.getElementById(id);
-    if (el) el.style.display = 'flex';
+    if (el) {
+      el.classList.remove('hidden');
+      el.style.display = 'flex';
+    }
   }
 
   function closeBnqModal(id) {
     const el = document.getElementById(id);
-    if (el) el.style.display = 'none';
+    if (el) {
+      el.classList.add('hidden');
+      el.style.display = 'none';
+    }
   }
 
   function openNewRoomOrderModal() {
@@ -1133,31 +740,31 @@
     itemCounter++;
     const container = document.getElementById('order-line-items-container');
     const row = document.createElement('div');
-    row.className = 'order-item-row';
+    row.className = 'order-item-row flex items-center gap-2.5 bg-slate-50/80 p-2.5 rounded-xl border border-slate-200/80 transition-colors hover:border-slate-300';
     row.id = `item-row-${itemCounter}`;
 
-    let optionsHtml = '<option value="">Custom Food / Amenity Item</option>';
+    let optionsHtml = '<option value="">-- Custom Food / Amenity Item --</option>';
     servicesCatalog.forEach(s => {
       const isSelected = selectedServiceId && s.id == selectedServiceId ? 'selected' : '';
       optionsHtml += `<option value="${s.id}" data-price="${s.price}" data-name="${s.name}" ${isSelected}>[${s.code}] ${s.name} (₹ ${s.price})</option>`;
     });
 
     row.innerHTML = `
-      <div style="flex: 2;">
-        <select class="item-service-select" onchange="onServiceSelectChange(${itemCounter})" style="padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 11px; width: 100%;">
+      <div class="flex-[2] min-w-0">
+        <select class="item-service-select w-full px-3 py-2 border border-slate-300 rounded-xl text-xs bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500" onchange="onServiceSelectChange(${itemCounter})">
           ${optionsHtml}
         </select>
         <input type="hidden" name="items[${itemCounter}][service_id]" id="input-service-id-${itemCounter}" value="${selectedServiceId || ''}">
-        <input type="text" name="items[${itemCounter}][name]" id="input-item-name-${itemCounter}" placeholder="Item description" style="padding: 5px 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 11px; width: 100%; margin-top: 4px; display: none;">
+        <input type="text" name="items[${itemCounter}][name]" id="input-item-name-${itemCounter}" placeholder="Custom item description" class="hidden w-full mt-1.5 px-3 py-1.5 border border-slate-300 rounded-lg text-xs bg-white text-slate-800 focus:outline-none focus:ring-1 focus:ring-emerald-500">
       </div>
-      <div style="width: 80px;">
-        <input type="number" step="0.01" name="items[${itemCounter}][price]" id="input-item-price-${itemCounter}" placeholder="Price" value="0.00" onkeyup="calculateRoomOrderTotal()" onchange="calculateRoomOrderTotal()" style="padding: 6px 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 11px; width: 100%; font-family: var(--font-mono, monospace); font-weight: 700;">
+      <div class="w-24 shrink-0">
+        <input type="number" step="0.01" name="items[${itemCounter}][price]" id="input-item-price-${itemCounter}" placeholder="Price" value="0.00" onkeyup="calculateRoomOrderTotal()" onchange="calculateRoomOrderTotal()" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs font-mono font-bold text-slate-800 text-right bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
       </div>
-      <div style="width: 60px;">
-        <input type="number" name="items[${itemCounter}][quantity]" id="input-item-qty-${itemCounter}" value="1" min="1" onkeyup="calculateRoomOrderTotal()" onchange="calculateRoomOrderTotal()" style="padding: 6px 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 11px; width: 100%; font-family: var(--font-mono, monospace); font-weight: 700;">
+      <div class="w-16 shrink-0">
+        <input type="number" name="items[${itemCounter}][quantity]" id="input-item-qty-${itemCounter}" value="1" min="1" onkeyup="calculateRoomOrderTotal()" onchange="calculateRoomOrderTotal()" class="w-full px-2 py-2 border border-slate-300 rounded-xl text-xs font-mono font-bold text-slate-800 text-center bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
       </div>
-      <button type="button" onclick="removeOrderLineItem(${itemCounter})" style="background: #fff1f2; border: 1px solid #fecdd3; color: #e11d48; width: 28px; height: 28px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center;">
-        <i class="fa-solid fa-trash-can" style="font-size: 11px;"></i>
+      <button type="button" onclick="removeOrderLineItem(${itemCounter})" class="w-8.5 h-8.5 rounded-lg bg-rose-50 border border-rose-200 text-rose-600 hover:bg-rose-100 hover:text-rose-700 flex items-center justify-center shrink-0 transition-colors shadow-xs cursor-pointer" title="Remove Item">
+        <i class="fa-solid fa-trash-can text-xs"></i>
       </button>
     `;
 
@@ -1176,7 +783,9 @@
 
   function onServiceSelectChange(index) {
     const row = document.getElementById(`item-row-${index}`);
+    if (!row) return;
     const select = row.querySelector('.item-service-select');
+    if (!select || select.selectedIndex < 0) return;
     const selectedOpt = select.options[select.selectedIndex];
     const nameInput = document.getElementById(`input-item-name-${index}`);
     const priceInput = document.getElementById(`input-item-price-${index}`);
@@ -1187,8 +796,10 @@
       priceInput.value = selectedOpt.getAttribute('data-price');
       serviceIdInput.value = selectedOpt.value;
       nameInput.style.display = 'none';
+      nameInput.classList.add('hidden');
     } else {
       nameInput.style.display = 'block';
+      nameInput.classList.remove('hidden');
       serviceIdInput.value = '';
     }
 
@@ -1365,27 +976,27 @@
         let itemsHtml = '';
         o.items.forEach(it => {
           itemsHtml += `
-            <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f1f5f9; font-size: 12px;">
-              <div><strong>${it.quantity}x</strong> ${it.item_name}</div>
-              <div style="font-family: var(--font-mono, monospace); font-weight: 700;">₹ ${parseFloat(it.line_total).toFixed(2)}</div>
+            <div class="flex items-center justify-between py-2 border-b border-slate-100 last:border-b-0 text-xs">
+              <div class="text-slate-800 font-medium"><strong class="font-bold text-slate-900 mr-1">${it.quantity}x</strong> ${it.item_name}</div>
+              <div class="font-mono font-bold text-slate-800">₹ ${parseFloat(it.line_total).toFixed(2)}</div>
             </div>
           `;
         });
 
         document.getElementById('dossier-order-content').innerHTML = `
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: #f8fafc; padding: 12px; border-radius: 8px; margin-bottom: 14px; font-size: 12px;">
-            <div><strong>Guest:</strong> ${o.guest_name}</div>
-            <div><strong>Room #:</strong> ${o.room_number}</div>
-            <div><strong>Billing:</strong> ${o.payment_status}</div>
-            <div><strong>Status:</strong> ${o.order_status}</div>
-            <div style="grid-column: 1 / -1;"><strong>Special Instructions:</strong> ${o.special_instructions || 'None'}</div>
+          <div class="grid grid-cols-2 gap-2.5 bg-slate-50 border border-slate-200/80 p-3.5 rounded-xl text-xs">
+            <div class="text-slate-600"><span class="font-semibold text-slate-800">Guest:</span> ${o.guest_name}</div>
+            <div class="text-slate-600"><span class="font-semibold text-slate-800">Room #:</span> ${o.room_number}</div>
+            <div class="text-slate-600"><span class="font-semibold text-slate-800">Billing:</span> <span class="capitalize font-semibold text-slate-800">${o.payment_status}</span></div>
+            <div class="text-slate-600"><span class="font-semibold text-slate-800">Status:</span> <span class="capitalize font-semibold text-indigo-700">${o.order_status}</span></div>
+            <div class="col-span-2 text-slate-600"><span class="font-semibold text-slate-800">Special Instructions:</span> ${o.special_instructions || 'None'}</div>
           </div>
-          <div style="font-weight: 800; font-size: 12px; margin-bottom: 8px; color: #0f172a;">Order Items</div>
-          <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 14px; margin-bottom: 12px;">
+          <div class="font-bold text-xs text-slate-800 uppercase tracking-wider pt-2">Order Items</div>
+          <div class="bg-white border border-slate-200/80 rounded-xl p-3.5 shadow-xs">
             ${itemsHtml}
-            <div style="display: flex; justify-content: space-between; padding-top: 8px; font-weight: 800; font-size: 13px; color: #0f172a;">
+            <div class="flex items-center justify-between pt-3 font-bold text-sm text-slate-900 border-t border-slate-200/80 mt-1">
               <div>Total (inc. taxes):</div>
-              <div style="font-family: var(--font-mono, monospace); color: #059669;">₹ ${parseFloat(o.total_amount).toFixed(2)}</div>
+              <div class="font-mono text-emerald-600 text-base font-extrabold">₹ ${parseFloat(o.total_amount).toFixed(2)}</div>
             </div>
           </div>
         `;
@@ -1407,22 +1018,22 @@
         document.getElementById('dossier-order-title').innerHTML = `<i class="fa-solid fa-file-lines"></i> Function Sheet - ${b.event_name}`;
 
         document.getElementById('dossier-order-content').innerHTML = `
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: #f8fafc; padding: 12px; border-radius: 8px; margin-bottom: 14px; font-size: 12px;">
-            <div><strong>Venue:</strong> ${b.hall ? b.hall.name : 'Grand Hall'}</div>
-            <div><strong>Client:</strong> ${b.client_name} (${b.phone || '-'})</div>
-            <div><strong>Event Date:</strong> ${b.event_date}</div>
-            <div><strong>Time Slot:</strong> ${b.time_slot}</div>
-            <div><strong>Pax Capacity:</strong> ${b.guaranteed_pax} Guests</div>
-            <div><strong>Status:</strong> ${b.status}</div>
+          <div class="grid grid-cols-2 gap-2.5 bg-slate-50 border border-slate-200/80 p-3.5 rounded-xl text-xs">
+            <div class="text-slate-600"><span class="font-semibold text-slate-800">Venue:</span> ${b.hall ? b.hall.name : 'Grand Hall'}</div>
+            <div class="text-slate-600"><span class="font-semibold text-slate-800">Client:</span> ${b.client_name} (${b.phone || '-'})</div>
+            <div class="text-slate-600"><span class="font-semibold text-slate-800">Event Date:</span> ${b.event_date}</div>
+            <div class="text-slate-600"><span class="font-semibold text-slate-800">Time Slot:</span> ${b.time_slot}</div>
+            <div class="text-slate-600"><span class="font-semibold text-slate-800">Pax Capacity:</span> <strong class="text-slate-800">${b.guaranteed_pax} Guests</strong></div>
+            <div class="text-slate-600"><span class="font-semibold text-slate-800">Status:</span> <span class="capitalize font-semibold text-emerald-700">${b.status}</span></div>
           </div>
-          <div style="font-weight: 800; font-size: 12px; margin-bottom: 8px; color: #0f172a;">Event Setup &amp; AV Notes</div>
-          <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 14px; font-size: 12px; line-height: 1.5; color: #334155; margin-bottom: 12px;">
+          <div class="font-bold text-xs text-slate-800 uppercase tracking-wider pt-2">Event Setup &amp; AV Notes</div>
+          <div class="bg-white border border-slate-200/80 rounded-xl p-3.5 text-xs leading-relaxed text-slate-700 shadow-xs">
             ${b.function_sheet_notes || 'Standard banquet cluster setup with audio-visual system and stage lighting.'}
           </div>
-          <div style="display: flex; justify-content: space-between; background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 10px 14px; font-size: 12px; font-weight: 700;">
-            <div>Total Amount: <strong>₹ ${parseFloat(b.total_amount).toFixed(2)}</strong></div>
-            <div style="color: #059669;">Advance Paid: <strong>₹ ${parseFloat(b.advance_paid).toFixed(2)}</strong></div>
-            <div style="color: #d97706;">Balance Due: <strong>₹ ${parseFloat(b.balance_due).toFixed(2)}</strong></div>
+          <div class="flex items-center justify-between bg-amber-50 border border-amber-200 rounded-xl p-3.5 text-xs font-bold">
+            <div>Total: <span class="font-mono text-slate-900">₹ ${parseFloat(b.total_amount).toFixed(2)}</span></div>
+            <div class="text-emerald-700">Advance: <span class="font-mono">₹ ${parseFloat(b.advance_paid).toFixed(2)}</span></div>
+            <div class="text-amber-700">Due: <span class="font-mono">₹ ${parseFloat(b.balance_due).toFixed(2)}</span></div>
           </div>
         `;
 

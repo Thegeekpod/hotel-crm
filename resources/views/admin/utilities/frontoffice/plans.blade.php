@@ -1,379 +1,187 @@
 @extends('admin.layouts.app')
 
-@section('title', 'Plans Master - Hotel Sagar Sonnet PMS')
-
-@push('styles')
-<style>
-  .admin-layout {
-    display: grid;
-    grid-template-columns: 280px 1fr;
-    gap: 20px;
-    min-height: calc(100vh - 165px);
-  }
-  .pms-page-header {
-    border-bottom: none !important;
-    background: transparent !important;
-  }
-  .admin-sidebar {
-    background: #ffffff;
-    border: 1px solid var(--border-medium);
-    border-radius: var(--radius-lg);
-    box-shadow: 0 4px 16px rgba(0,0,0,0.03);
-    padding: 14px;
-    height: fit-content;
-    position: sticky;
-    top: 10px;
-    max-height: calc(100vh - 180px);
-    overflow-y: auto;
-  }
-  .admin-nav-group { margin-bottom: 8px; }
-  .admin-nav-header {
-    font-size: 11px;
-    font-weight: 800;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-    padding: 9px 12px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    border-radius: var(--radius-md);
-    cursor: pointer;
-    user-select: none;
-    transition: all 0.2s ease;
-    background: #f8fafc;
-    border: 1px solid #f1f5f9;
-  }
-  .admin-nav-header:hover { background: #f1f5f9; color: var(--accent-primary); }
-  .admin-nav-header.active {
-    color: var(--accent-primary);
-    font-weight: 900;
-    background: rgba(99, 102, 241, 0.08);
-    border-color: rgba(99, 102, 241, 0.2);
-  }
-  .admin-nav-flat {
-    font-size: 11px;
-    font-weight: 800;
-    color: var(--text-secondary);
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-    padding: 10px 12px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    border-radius: var(--radius-md);
-    cursor: pointer;
-    user-select: none;
-    transition: all 0.2s ease;
-    background: #ffffff;
-    border: 1px solid #f1f5f9;
-    margin-bottom: 6px;
-  }
-  .admin-nav-flat:hover { background: #f8fafc; color: var(--accent-primary); }
-  .admin-sub-list {
-    list-style: none;
-    padding: 4px 0 4px 8px;
-    margin: 4px 0 0 4px;
-    border-left: 2px solid var(--border-medium);
-  }
-  .admin-sub-item {
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--text-secondary);
-    padding: 7px 10px;
-    border-radius: 6px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    transition: all 0.2s ease;
-    margin-bottom: 2px;
-    text-decoration: none;
-  }
-  .admin-sub-item:hover {
-    background: rgba(99, 102, 241, 0.06);
-    color: var(--accent-primary);
-    transform: translateX(3px);
-  }
-  .admin-sub-item.active {
-    background: linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(168, 85, 247, 0.08));
-    color: var(--accent-primary);
-    font-weight: 800;
-    border-left: 3px solid var(--accent-primary);
-  }
-  .admin-content-pane {
-    background: #ffffff;
-    border: 1px solid var(--border-medium);
-    border-radius: var(--radius-lg);
-    box-shadow: 0 4px 16px rgba(0,0,0,0.03);
-    padding: 24px;
-  }
-  .crud-header-card {
-    background: #ffffff;
-    border: 1px solid var(--border-medium);
-    border-radius: var(--radius-md);
-    padding: 16px 20px;
-    margin-bottom: 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.02);
-  }
-  .crud-toolbar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 16px;
-  }
-  .crud-search-input {
-    height: 38px;
-    padding: 8px 14px 8px 34px;
-    font-size: 13px;
-    border: 1px solid var(--border-medium);
-    border-radius: var(--radius-md);
-    background: #fff;
-    color: var(--text-primary);
-    width: 280px;
-    max-width: 100%;
-  }
-  .crud-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 13px;
-    background: #ffffff;
-    border-radius: var(--radius-md);
-    overflow: hidden;
-    border: 1px solid var(--border-medium);
-  }
-  .crud-table th {
-    background: #f8fafc;
-    padding: 12px 16px;
-    font-size: 10px;
-    font-weight: 800;
-    color: var(--text-secondary);
-    text-transform: uppercase;
-    letter-spacing: 0.6px;
-    border-bottom: 1px solid var(--border-medium);
-    text-align: left;
-  }
-  .crud-table td {
-    padding: 12px 16px;
-    border-bottom: 1px solid #f1f5f9;
-    color: var(--text-primary);
-    vertical-align: middle;
-  }
-  .crud-table tr:hover td { background: rgba(99, 102, 241, 0.02); }
-  .crud-actions { display: flex; gap: 8px; justify-content: flex-end; }
-  .btn-action-edit {
-    padding: 6px 11px;
-    font-size: 11px;
-    font-weight: 700;
-    border: 1px solid var(--border-medium);
-    border-radius: var(--radius-sm);
-    background: #fff;
-    color: var(--accent-primary);
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-  .btn-action-edit:hover { background: var(--accent-primary); color: #fff; }
-  .btn-action-del {
-    padding: 6px 11px;
-    font-size: 11px;
-    font-weight: 700;
-    border: 1px solid #fecaca;
-    border-radius: var(--radius-sm);
-    background: #fff;
-    color: var(--accent-rose);
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-  .btn-action-del:hover { background: var(--accent-rose); color: #fff; }
-  .admin-form-group { margin-bottom: 16px; }
-  .admin-form-label {
-    display: block;
-    font-size: 11px;
-    font-weight: 800;
-    color: var(--text-secondary);
-    text-transform: uppercase;
-    letter-spacing: 0.6px;
-    margin-bottom: 6px;
-  }
-  .admin-form-input {
-    width: 100%;
-    height: 40px;
-    padding: 8px 14px;
-    font-size: 13px;
-    border: 1px solid var(--border-medium);
-    border-radius: var(--radius-md);
-    background: #fff;
-    color: var(--text-primary);
-    box-sizing: border-box;
-  }
-  .admin-form-input:focus {
-    outline: none;
-    border-color: var(--accent-primary);
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
-  }
-</style>
-@endpush
+@section('title', 'Plans - Hotel Sagar Sonnet PMS')
 
 @section('content')
-<main class="pms-main-viewport">
-  <div class="pms-page-container">
+<main class="flex-1 p-4 lg:p-6 space-y-6">
 
-    <div class="pms-page-header">
-      <div class="pms-header-title-block">
-        <div class="pms-status-indicator"></div>
-        <div>
-          <h1 class="pms-page-title">Administrator • Master Data Management</h1>
-          <div class="pms-page-subtitle">Configure and manage live records for active hotel modules.</div>
-        </div>
-      </div>
-      <div style="display: flex; gap: 10px;">
-        <button class="btn-ui-secondary" onclick="exportDataCSV()"><i class="fa-solid fa-file-csv"></i> Export CSV</button>
+  <!-- Page Header -->
+  <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div class="flex items-center gap-3">
+      <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 ring-4 ring-emerald-50"></span>
+      <div>
+        <h1 class="text-base font-extrabold text-slate-900 tracking-tight">Administrator • Master Data Management</h1>
+        <p class="text-xs text-slate-500 font-medium">Configure and manage live records for active hotel modules.</p>
       </div>
     </div>
+    <div>
+      <button type="button" class="inline-flex items-center gap-1.5 h-9 px-3.5 text-xs font-bold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200/80 rounded-xl transition-all shadow-xs cursor-pointer" onclick="exportDataCSV()">
+        <i class="fa-solid fa-file-csv text-slate-500"></i> Export CSV
+      </button>
+    </div>
+  </div>
 
-    <div class="admin-layout">
-      @include('admin.includes.sidebar')
+  <div class="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6 items-start">
+    @include('admin.includes.sidebar')
 
-      <section class="admin-content-pane">
-        <div id="crud-view-container">
-          <div class="crud-header-card">
-            <div>
-              <div style="display: flex; align-items: center; gap: 8px;">
-                <h2 style="font-size: 16px; font-weight: 800; color: var(--text-primary); margin: 0;">Plans Master</h2>
-                <span class="badge-tag blue" id="view-count">{{ count($items) }} Records</span>
-              </div>
-              <div style="font-size: 12px; color: var(--text-secondary); margin-top: 3px;">
-                Manage hotel meal plans and tariff packages (e.g. EP, CP, MAP, AP).
-              </div>
+    <section class="min-w-0">
+      <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+        
+        <!-- Card Header -->
+        <div class="p-5 border-b border-slate-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <div class="flex items-center gap-2.5">
+              <h2 class="text-sm font-extrabold text-slate-900 tracking-tight">Meal Plans Master</h2>
+              <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200/80" id="view-count">{{ count($items) }} Records</span>
             </div>
-            <button class="btn-ui-primary" onclick="openAddModal()"><i class="fa-solid fa-plus"></i> Add Entry</button>
+            <p class="text-xs text-slate-500 font-medium mt-0.5">
+              Configure room meal plans (EP, CP, MAP, AP) and supplementary pricing.
+            </p>
+          </div>
+          <button type="button" class="inline-flex items-center gap-1.5 h-9 px-4 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-all shadow-xs cursor-pointer shrink-0" onclick="openAddModal()">
+            <i class="fa-solid fa-plus"></i> Add Entry
+          </button>
+        </div>
+
+        <!-- Toolbar -->
+        <div class="p-4 bg-slate-50/70 border-b border-slate-200/80 flex flex-wrap items-center justify-between gap-3">
+          <div class="flex items-center gap-2.5 flex-1 min-w-[260px]">
+            <div class="relative flex-1 max-w-sm">
+              <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+              <input type="text" id="table-search" class="h-9.5 pl-8 pr-3 text-xs font-medium rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-indigo-500 w-full" placeholder="Search meal plans..." value="{{ request('search') }}" oninput="handleSearch(this.value)">
+            </div>
+            <select id="status-filter" class="h-9.5 px-3 text-xs font-medium rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-indigo-500 cursor-pointer" onchange="handleStatusFilter(this.value)">
+              <option value="all" {{ request('status', 'all') === 'all' ? 'selected' : '' }}>All Statuses</option>
+              <option value="Active" {{ request('status') === 'Active' ? 'selected' : '' }}>Active</option>
+              <option value="Inactive" {{ request('status') === 'Inactive' ? 'selected' : '' }}>Inactive</option>
+            </select>
           </div>
 
-          <div class="crud-toolbar">
-            <div class="crud-toolbar-left">
-              <div class="crud-search-wrap">
-                <i class="fa-solid fa-magnifying-glass"></i>
-                <input type="text" id="table-search" class="crud-search-input" placeholder="Search active plans..." value="{{ request('search') }}" oninput="handleSearch(this.value)">
-              </div>
-              <select id="status-filter" class="crud-filter-select" onchange="handleStatusFilter(this.value)">
-                <option value="all" {{ request('status', 'all') === 'all' ? 'selected' : '' }}>All Statuses</option>
-                <option value="Active" {{ request('status') === 'Active' ? 'selected' : '' }}>Active</option>
-                <option value="Inactive" {{ request('status') === 'Inactive' ? 'selected' : '' }}>Inactive</option>
+          <div class="flex items-center gap-2">
+            <button type="button" class="hidden inline-flex items-center gap-1.5 h-9 px-3.5 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-xl transition-all shadow-xs cursor-pointer" id="btn-bulk-delete" onclick="handleBulkDelete()">
+              <i class="fa-solid fa-trash-can"></i> Delete Selected (<span id="bulk-selected-count">0</span>)
+            </button>
+            <button type="button" class="inline-flex items-center gap-1.5 h-9 px-3.5 text-xs font-bold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200/80 rounded-xl transition-all shadow-xs cursor-pointer" onclick="exportDataCSV()">
+              <i class="fa-solid fa-file-csv text-slate-500"></i> Export CSV
+            </button>
+            <button type="button" class="inline-flex items-center gap-1.5 h-9 px-3.5 text-xs font-bold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200/80 rounded-xl transition-all shadow-xs cursor-pointer" onclick="loadTableData()">
+              <i class="fa-solid fa-rotate text-slate-500"></i> Refresh
+            </button>
+          </div>
+        </div>
+
+        <!-- Table -->
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-xs" id="crud-table">
+            <thead>
+              <tr class="bg-slate-50/80 border-b border-slate-200/80 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                <th class="py-3 px-3 text-center w-10">
+                  <input type="checkbox" id="select-all-check" onchange="toggleSelectAll(this)" class="cursor-pointer w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500">
+                </th>
+                <th class="py-3 px-3 w-16">#</th>
+                <th class="py-3 px-3">Plan Name</th>
+                <th class="py-3 px-3 w-36">Price (₹)</th>
+                <th class="py-3 px-3 w-32">Status</th>
+                <th class="py-3 px-3 text-right w-28">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="table-body" class="divide-y divide-slate-100">
+              @forelse($items as $idx => $item)
+              <tr class="hover:bg-slate-50/60 transition-colors" data-id="{{ $item->id }}">
+                <td class="py-3 px-3 text-center">
+                  <input type="checkbox" class="row-select-check cursor-pointer w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500" value="{{ $item->id }}" onchange="handleRowSelect(this, '{{ $item->id }}')">
+                </td>
+                <td class="py-3 px-3 font-mono font-bold text-slate-400 text-xs">{{ $idx + 1 }}</td>
+                <td class="py-3 px-3 font-bold text-slate-900 flex items-center gap-2">
+                  <i class="fa-solid fa-list-check text-indigo-600 text-xs"></i>
+                  <span>{{ $item->plan_name }}</span>
+                </td>
+                <td class="py-3 px-3 font-mono font-bold text-emerald-700">
+                  ₹ {{ number_format((float)($item->price ?? 0), 2) }}
+                </td>
+                <td class="py-3 px-3">
+                  <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold {{ $item->status === 'Active' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/80' : 'bg-slate-100 text-slate-700 border border-slate-200/80' }}">
+                    <span class="w-1.5 h-1.5 rounded-full {{ $item->status === 'Active' ? 'bg-emerald-500' : 'bg-slate-400' }}"></span>
+                    {{ $item->status }}
+                  </span>
+                </td>
+                <td class="py-3 px-3 text-right">
+                  <div class="flex items-center justify-end gap-1">
+                    <button type="button" class="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition-colors flex items-center justify-center cursor-pointer" onclick="openEditModal({{ $item->id }})" title="Edit Record"><i class="fa-solid fa-pen text-xs"></i></button>
+                    <button type="button" class="w-7 h-7 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-100 transition-colors flex items-center justify-center cursor-pointer" onclick="deleteItem({{ $item->id }})" title="Delete Record"><i class="fa-solid fa-trash text-xs"></i></button>
+                  </div>
+                </td>
+              </tr>
+              @empty
+              <tr>
+                <td colspan="6" class="py-8 text-center text-slate-400 font-medium">
+                  <i class="fa-solid fa-inbox text-2xl mb-2 block text-slate-300"></i>
+                  No records found. Click "+ Add Entry" to create one.
+                </td>
+              </tr>
+              @endforelse
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination & Rows Controls -->
+        <div class="p-4 bg-slate-50/70 border-t border-slate-200/80 flex flex-wrap items-center justify-between gap-3 text-xs" id="table-pagination-bar">
+          <div class="text-slate-500 font-medium" id="pagination-info">
+            Showing 1 to {{ count($items) }} of {{ count($items) }} records
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="flex items-center gap-1.5 text-slate-500 font-medium">
+              <span>Rows:</span>
+              <select id="rows-per-page" class="h-8 px-2 text-xs font-medium rounded-lg border border-slate-200 bg-white focus:outline-none focus:border-indigo-500 cursor-pointer" onchange="handlePageSizeChange(this.value)">
+                <option value="10" selected>10</option>
+                <option value="20">20</option>
+                <option value="100">100</option>
+                <option value="all">All</option>
               </select>
             </div>
-            <div class="crud-toolbar-right">
-              <button class="btn-ui-danger" id="btn-bulk-delete" style="display: none; height: 38px; padding: 0 16px; border-radius: var(--radius-md); font-weight: 700; background: #ef4444; color: #fff; border: none; align-items: center; gap: 6px; cursor: pointer;" onclick="handleBulkDelete()"><i class="fa-solid fa-trash-can"></i> Delete Selected (<span id="bulk-selected-count">0</span>)</button>
-              <button class="btn-ui-secondary" onclick="exportDataCSV()"><i class="fa-solid fa-file-csv"></i> Export CSV</button>
-              <button class="btn-ui-secondary" onclick="loadTableData()"><i class="fa-solid fa-rotate"></i> Refresh</button>
-            </div>
-          </div>
-
-          <div style="overflow-x: auto;">
-            <table class="crud-table" id="crud-table">
-              <thead>
-                <tr>
-                  <th style="width: 40px; text-align: center;"><input type="checkbox" id="select-all-check" onchange="toggleSelectAll(this)" style="cursor: pointer; width: 16px; height: 16px; accent-color: var(--accent-primary);"></th>
-                  <th style="width: 50px;">#</th>
-                  <th>Plan Name</th>
-                  <th style="width: 140px;">Price (₹)</th>
-                  <th>Status</th>
-                  <th style="text-align: right; width: 120px;">Actions</th>
-                </tr>
-              </thead>
-              <tbody id="table-body">
-                @forelse($items as $idx => $item)
-                <tr data-id="{{ $item->id }}">
-                  <td style="text-align: center;">
-                    <input type="checkbox" class="row-select-check" value="{{ $item->id }}" onchange="handleRowSelect(this, '{{ $item->id }}')" style="cursor: pointer; width: 16px; height: 16px; accent-color: var(--accent-primary);">
-                  </td>
-                  <td style="font-family: var(--font-mono); font-weight: 700; color: var(--text-muted); font-size: 11px;">{{ $idx + 1 }}</td>
-                  <td style="font-weight: 600; color: var(--text-primary);">{{ $item->plan_name }}</td>
-                  <td style="font-family: var(--font-mono); font-weight: 800; color: #059669;">
-                    ₹{{ number_format((float)($item->price ?? 0), 2) }}
-                  </td>
-                  <td>
-                    <span class="badge-tag {{ $item->status === 'Active' ? 'green' : 'yellow' }}">
-                      <i class="fa-solid fa-circle-check" style="font-size: 6px; margin-right: 4px;"></i>{{ $item->status }}
-                    </span>
-                  </td>
-                  <td style="text-align: right;">
-                    <div class="crud-actions">
-                      <button class="btn-action-edit" onclick="openEditModal({{ $item->id }})" title="Edit Record"><i class="fa-solid fa-pen"></i></button>
-                      <button class="btn-action-del" onclick="deleteItem({{ $item->id }})" title="Delete Record"><i class="fa-solid fa-trash"></i></button>
-                    </div>
-                  </td>
-                </tr>
-                @empty
-                <tr>
-                  <td colspan="6" style="text-align: center; padding: 40px; color: var(--text-muted);">
-                    <i class="fa-solid fa-inbox" style="font-size: 28px; margin-bottom: 10px; display: block;"></i>
-                    No plans found. Click "+ Add Entry" to create one.
-                  </td>
-                </tr>
-                @endforelse
-              </tbody>
-            </table>
-          </div>
-
-          <!-- Pagination & Rows Controls -->
-          <div class="pms-pagination-bar" id="table-pagination-bar">
-            <div class="pms-pagination-info" id="pagination-info">
-              Showing 1 to {{ count($items) }} of {{ count($items) }} records
-            </div>
-            <div class="pms-pagination-controls">
-              <div class="pms-per-page-wrap">
-                <span>Rows:</span>
-                <select id="rows-per-page" class="pms-per-page-select" onchange="handlePageSizeChange(this.value)">
-                  <option value="10" selected>10</option>
-                  <option value="20">20</option>
-                  <option value="100">100</option>
-                  <option value="all">All</option>
-                </select>
-              </div>
-              <div class="pms-page-nav" id="pagination-nav">
-                <!-- Injected via JavaScript -->
-              </div>
+            <div class="flex items-center gap-1" id="pagination-nav">
+              <!-- Injected via JavaScript -->
             </div>
           </div>
         </div>
-      </section>
-    </div>
 
+      </div>
+    </section>
   </div>
+
 </main>
 
-<div class="modal-backdrop" id="crud-modal">
-  <div class="modal-window" style="width: 520px; max-width: 95vw;">
-    <div class="modal-top" style="display: flex; justify-content: space-between; align-items: center;">
-      <h3 style="margin: 0;"><i class="fa-solid fa-pen-to-square"></i> <span id="modal-title">Add Plan</span></h3>
-      <button class="modal-close" onclick="closeModal('crud-modal')">&times;</button>
+<!-- Modal -->
+<div class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 hidden" id="crud-modal">
+  <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col">
+    <div class="bg-slate-50/80 px-6 py-4 border-b border-slate-200/80 flex items-center justify-between">
+      <h3 class="text-sm font-extrabold text-slate-900 flex items-center gap-2">
+        <i class="fa-solid fa-pen-to-square text-indigo-600"></i> <span id="modal-title">Add Plan</span>
+      </h3>
+      <button type="button" class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center text-base cursor-pointer transition-colors" onclick="closeModal('crud-modal')">&times;</button>
     </div>
     <form id="crud-form" onsubmit="handleFormSubmit(event)">
       <input type="hidden" id="item-id">
-      <div class="modal-content-area" style="padding: 20px; background: #f8fafc;">
-        <div class="admin-form-group">
-          <label class="admin-form-label">Plan Name <span style="color: var(--accent-rose);">*</span></label>
-          <input type="text" id="form-plan-name" class="admin-form-input" placeholder="e.g. EP (European Plan), CP (Continental Plan)" required>
+      <div class="p-6 space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Plan Name <span class="text-rose-500">*</span></label>
+          <input type="text" id="form-plan-name" class="h-9.5 px-3 text-xs font-medium rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-indigo-500 w-full" placeholder="e.g. EP (European Plan), CP (Continental Plan)" required>
         </div>
-        <div class="admin-form-group">
-          <label class="admin-form-label">Price (₹)</label>
-          <input type="number" step="0.01" min="0" id="form-price" class="admin-form-input" placeholder="0.00" value="0.00">
+        <div>
+          <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Price (₹)</label>
+          <input type="number" step="0.01" min="0" id="form-price" class="h-9.5 px-3 text-xs font-mono font-bold rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-indigo-500 w-full" placeholder="0.00" value="0.00">
         </div>
-        <div class="admin-form-group">
-          <label class="admin-form-label">Status <span style="color: var(--accent-rose);">*</span></label>
-          <select id="form-status" class="admin-form-input" required>
+        <div>
+          <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Status <span class="text-rose-500">*</span></label>
+          <select id="form-status" class="h-9.5 px-3 text-xs font-medium rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-indigo-500 w-full cursor-pointer" required>
             <option value="Active">Active</option>
             <option value="Inactive">Inactive</option>
           </select>
         </div>
       </div>
-      <div class="modal-bot" style="padding: 14px 20px; background: #fff; border-top: 1px solid var(--border-medium); display: flex; justify-content: flex-end; gap: 10px;">
-        <button type="button" class="btn-ui-secondary" onclick="closeModal('crud-modal')">Cancel</button>
-        <button type="submit" class="btn-ui-primary" id="btn-save"><i class="fa-solid fa-floppy-disk"></i> Save Entry</button>
+      <div class="px-6 py-3 bg-slate-50/80 border-t border-slate-200/80 flex items-center justify-end gap-2">
+        <button type="button" class="inline-flex items-center h-9 px-4 text-xs font-bold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200/80 rounded-xl transition-all shadow-xs cursor-pointer" onclick="closeModal('crud-modal')">Cancel</button>
+        <button type="submit" class="inline-flex items-center gap-1.5 h-9 px-4 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-all shadow-xs cursor-pointer" id="btn-save"><i class="fa-solid fa-floppy-disk"></i> Save Entry</button>
       </div>
     </form>
   </div>
@@ -401,129 +209,6 @@
 
     const newUrl = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
     window.history.replaceState(null, '', newUrl);
-  }
-
-  function openAddModal() {
-    document.getElementById('modal-title').textContent = 'Add Plan';
-    document.getElementById('item-id').value = '';
-    document.getElementById('form-plan-name').value = '';
-    document.getElementById('form-price').value = '0.00';
-    document.getElementById('form-status').value = 'Active';
-    openModal('crud-modal');
-  }
-
-  function openEditModal(id) {
-    const item = tableRecords.find(r => String(r.id) === String(id));
-    if (!item) {
-      console.warn('Record not found for id:', id);
-      return;
-    }
-
-    document.getElementById('modal-title').textContent = 'Edit Plan';
-    document.getElementById('item-id').value = item.id;
-    document.getElementById('form-plan-name').value = item.plan_name;
-    document.getElementById('form-price').value = (item.price !== null && item.price !== undefined) ? parseFloat(item.price).toFixed(2) : '0.00';
-    document.getElementById('form-status').value = item.status;
-    openModal('crud-modal');
-  }
-
-  async function handleFormSubmit(e) {
-    e.preventDefault();
-    const id = document.getElementById('item-id').value;
-    const plan_name = document.getElementById('form-plan-name').value.trim();
-    const price = parseFloat(document.getElementById('form-price').value || 0);
-    const status = document.getElementById('form-status').value;
-
-    if (!plan_name) {
-      if (typeof PmsAlert !== 'undefined') {
-        PmsAlert.error('Validation Error', 'Please provide a valid Plan name.');
-      } else {
-        alert('Please provide a valid Plan name.');
-      }
-      return;
-    }
-
-    const payload = { plan_name, price, status };
-    const url = id ? `${baseUrl}/${id}` : baseUrl;
-    const method = id ? 'PUT' : 'POST';
-
-    try {
-      const res = await fetch(url, {
-        method: method,
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'X-CSRF-TOKEN': csrfToken
-        },
-        body: JSON.stringify(payload)
-      });
-      const data = await res.json();
-
-      if (res.ok && data.success) {
-        closeModal('crud-modal');
-        if (typeof PmsAlert !== 'undefined') {
-          PmsAlert.toast(data.message || 'Saved successfully!');
-        } else {
-          alert(data.message || 'Saved successfully!');
-        }
-        await loadTableData();
-      } else {
-        if (typeof PmsAlert !== 'undefined') {
-          PmsAlert.error('Error', data.message || 'Failed to save record.');
-        } else {
-          alert(data.message || 'Failed to save record.');
-        }
-      }
-    } catch (err) {
-      if (typeof PmsAlert !== 'undefined') {
-        PmsAlert.error('Server Error', 'Failed to communicate with the server.');
-      } else {
-        alert('Failed to communicate with the server.');
-      }
-    }
-  }
-
-  async function deleteItem(id) {
-    let confirmed = true;
-    if (typeof PmsAlert !== 'undefined' && PmsAlert.confirmDelete) {
-      const result = await PmsAlert.confirmDelete('Delete Plan?', 'This plan will be permanently removed from master records.');
-      confirmed = result && (result.isConfirmed || result === true);
-    } else {
-      confirmed = confirm('Are you sure you want to delete this plan?');
-    }
-
-    if (confirmed) {
-      try {
-        const res = await fetch(`${baseUrl}/${id}`, {
-          method: 'DELETE',
-          headers: {
-            'Accept': 'application/json',
-            'X-CSRF-TOKEN': csrfToken
-          }
-        });
-        const data = await res.json();
-        if (res.ok && data.success) {
-          if (typeof PmsAlert !== 'undefined') {
-            PmsAlert.toast('Record deleted successfully!');
-          } else {
-            alert('Record deleted successfully!');
-          }
-          await loadTableData();
-        } else {
-          if (typeof PmsAlert !== 'undefined') {
-            PmsAlert.error('Delete Failed', data.message || 'Could not delete record.');
-          } else {
-            alert(data.message || 'Could not delete record.');
-          }
-        }
-      } catch (err) {
-        if (typeof PmsAlert !== 'undefined') {
-          PmsAlert.error('Server Error', 'An error occurred during deletion.');
-        } else {
-          alert('An error occurred during deletion.');
-        }
-      }
-    }
   }
 
   async function loadTableData() {
@@ -575,6 +260,97 @@
     renderTable();
   }
 
+  function openAddModal() {
+    document.getElementById('modal-title').textContent = 'Add Plan';
+    document.getElementById('item-id').value = '';
+    document.getElementById('form-plan-name').value = '';
+    document.getElementById('form-price').value = '0.00';
+    document.getElementById('form-status').value = 'Active';
+    openModal('crud-modal');
+  }
+
+  function openEditModal(id) {
+    const item = tableRecords.find(r => String(r.id) === String(id));
+    if (!item) {
+      console.warn('Record not found for id:', id);
+      return;
+    }
+
+    document.getElementById('modal-title').textContent = 'Edit Plan';
+    document.getElementById('item-id').value = item.id;
+    document.getElementById('form-plan-name').value = item.plan_name;
+    document.getElementById('form-price').value = item.price || '0.00';
+    document.getElementById('form-status').value = item.status;
+    openModal('crud-modal');
+  }
+
+  async function handleFormSubmit(e) {
+    e.preventDefault();
+    const id = document.getElementById('item-id').value;
+    const plan_name = document.getElementById('form-plan-name').value.trim();
+    const price = parseFloat(document.getElementById('form-price').value) || 0;
+    const status = document.getElementById('form-status').value;
+
+    if (!plan_name) {
+      PmsAlert.error('Validation Error', 'Please provide a valid plan name.');
+      return;
+    }
+
+    const payload = { plan_name, price, status };
+    const url = id ? `${baseUrl}/${id}` : baseUrl;
+    const method = id ? 'PUT' : 'POST';
+
+    try {
+      const res = await fetch(url, {
+        method: method,
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-CSRF-TOKEN': csrfToken
+        },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        closeModal('crud-modal');
+        PmsAlert.toast(data.message || 'Saved successfully!');
+        await loadTableData();
+      } else {
+        PmsAlert.error('Error', data.message || 'Failed to save record.');
+      }
+    } catch (err) {
+      PmsAlert.error('Server Error', 'Failed to communicate with the server.');
+    }
+  }
+
+  async function deleteItem(id) {
+    const result = await PmsAlert.confirmDelete('Delete Plan?', 'This plan will be removed permanently.');
+    if (result.isConfirmed) {
+      try {
+        const res = await fetch(`${baseUrl}/${id}`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': csrfToken
+          }
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok && data.success !== false) {
+          PmsAlert.toast(data.message || 'Record deleted successfully!');
+          await loadTableData();
+        } else {
+          PmsAlert.error('Delete Failed', data.message || 'Could not delete record.');
+          await loadTableData();
+        }
+      } catch (err) {
+        console.error(err);
+        PmsAlert.error('Server Error', 'An error occurred during deletion.');
+      }
+    }
+  }
+
   let selectedIds = new Set();
 
   function updateBulkActionUI() {
@@ -584,7 +360,7 @@
 
     if (countEl) countEl.textContent = selectedIds.size;
     if (btn) {
-      btn.style.display = selectedIds.size > 0 ? 'inline-flex' : 'none';
+      btn.classList.toggle('hidden', selectedIds.size === 0);
     }
 
     const currentVisible = getFilteredRecords();
@@ -617,15 +393,8 @@
   async function handleBulkDelete() {
     if (selectedIds.size === 0) return;
     const count = selectedIds.size;
-    let confirmed = true;
-    if (typeof PmsAlert !== 'undefined' && PmsAlert.confirmDelete) {
-      const result = await PmsAlert.confirmDelete(`Delete ${count} Selected Plans?`, 'All selected plans will be permanently removed.');
-      confirmed = result && (result.isConfirmed || result === true);
-    } else {
-      confirmed = confirm(`Delete ${count} selected plans?`);
-    }
-
-    if (confirmed) {
+    const result = await PmsAlert.confirmDelete(`Delete ${count} Selected Records?`, 'All selected plans will be removed.');
+    if (result.isConfirmed) {
       try {
         const res = await fetch(`${baseUrl}/bulk-delete`, {
           method: 'POST',
@@ -638,28 +407,16 @@
         });
         const data = await res.json().catch(() => ({}));
         if (res.ok && data.success !== false) {
-          if (typeof PmsAlert !== 'undefined') {
-            PmsAlert.toast(data.message || `${count} record(s) deleted successfully!`);
-          } else {
-            alert(data.message || `${count} record(s) deleted successfully!`);
-          }
+          PmsAlert.toast(data.message || `${count} record(s) deleted successfully!`);
           selectedIds.clear();
           await loadTableData();
         } else {
-          if (typeof PmsAlert !== 'undefined') {
-            PmsAlert.error('Bulk Delete Failed', data.message || 'Could not delete selected records.');
-          } else {
-            alert(data.message || 'Could not delete selected records.');
-          }
+          PmsAlert.error('Bulk Delete Failed', data.message || 'Could not delete selected records.');
           await loadTableData();
         }
       } catch (err) {
         console.error(err);
-        if (typeof PmsAlert !== 'undefined') {
-          PmsAlert.error('Server Error', 'Failed to communicate with the server.');
-        } else {
-          alert('Failed to communicate with the server.');
-        }
+        PmsAlert.error('Server Error', 'Failed to communicate with the server.');
       }
     }
   }
@@ -670,150 +427,158 @@
         (item.plan_name && item.plan_name.toLowerCase().includes(searchQuery)) ||
         (item.status && item.status.toLowerCase().includes(searchQuery));
 
-      const matchStatus = statusFilter === 'all' || item.status === statusFilter;
+      const matchStatus = (statusFilter === 'all') || (item.status === statusFilter);
+
       return matchSearch && matchStatus;
     });
   }
 
   function renderTable() {
     const filtered = getFilteredRecords();
-    const totalCount = filtered.length;
-    const totalPages = pageSize === 'all' ? 1 : Math.max(1, Math.ceil(totalCount / pageSize));
-
-    if (currentPage > totalPages) currentPage = totalPages;
-    if (currentPage < 1) currentPage = 1;
-
-    const startIdx = pageSize === 'all' ? 0 : (currentPage - 1) * pageSize;
-    const endIdx = pageSize === 'all' ? totalCount : Math.min(startIdx + pageSize, totalCount);
-    const pageItems = filtered.slice(startIdx, endIdx);
-
-    document.getElementById('view-count').textContent = `${tableRecords.length} Record${tableRecords.length === 1 ? '' : 's'}`;
-
     const tbody = document.getElementById('table-body');
-    if (!pageItems.length) {
-      tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 40px; color: var(--text-muted);"><i class="fa-solid fa-inbox" style="font-size: 28px; margin-bottom: 10px; display: block;"></i>No matching records found.</td></tr>`;
-      updateBulkActionUI();
-    } else {
-      let html = '';
-      pageItems.forEach((item, idx) => {
-        const rowNumber = startIdx + idx + 1;
-        const badgeClass = item.status === 'Active' ? 'green' : 'yellow';
-        const priceFormatted = parseFloat(item.price || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        html += `
-          <tr data-id="${item.id}">
-            <td style="text-align: center;">
-              <input type="checkbox" class="row-select-check" value="${item.id}" ${selectedIds.has(String(item.id)) ? 'checked' : ''} onchange="handleRowSelect(this, '${item.id}')" style="cursor: pointer; width: 16px; height: 16px; accent-color: var(--accent-primary);">
-            </td>
-            <td style="font-family: var(--font-mono); font-weight: 700; color: var(--text-muted); font-size: 11px;">${rowNumber}</td>
-            <td style="font-weight: 600; color: var(--text-primary);">${escapeHtml(item.plan_name)}</td>
-            <td style="font-family: var(--font-mono); font-weight: 800; color: #059669;">₹${priceFormatted}</td>
-            <td>
-              <span class="badge-tag ${badgeClass}">
-                <i class="fa-solid fa-circle-check" style="font-size: 6px; margin-right: 4px;"></i>${escapeHtml(item.status)}
-              </span>
-            </td>
-            <td style="text-align: right;">
-              <div class="crud-actions">
-                <button class="btn-action-edit" onclick="openEditModal(${item.id})" title="Edit Record"><i class="fa-solid fa-pen"></i></button>
-                <button class="btn-action-del" onclick="deleteItem(${item.id})" title="Delete Record"><i class="fa-solid fa-trash"></i></button>
-              </div>
-            </td>
-          </tr>
-        `;
-      });
-      tbody.innerHTML = html;
-      updateBulkActionUI();
+    const viewCount = document.getElementById('view-count');
+
+    if (viewCount) {
+      viewCount.textContent = `${filtered.length} Records`;
     }
 
-    const infoEl = document.getElementById('pagination-info');
-    if (totalCount === 0) {
-      infoEl.textContent = 'Showing 0 to 0 of 0 records';
-    } else {
-      infoEl.innerHTML = `Showing <strong style="color: var(--text-primary);">${startIdx + 1}</strong> to <strong style="color: var(--text-primary);">${endIdx}</strong> of <strong style="color: var(--text-primary);">${totalCount}</strong> records${totalCount !== tableRecords.length ? ' (filtered from ' + tableRecords.length + ' total)' : ''}`;
+    const totalRecords = filtered.length;
+    let paginatedRecords = filtered;
+    let totalPages = 1;
+
+    if (pageSize !== 'all') {
+      const limit = parseInt(pageSize, 10);
+      totalPages = Math.ceil(totalRecords / limit) || 1;
+      if (currentPage > totalPages) currentPage = totalPages;
+      const startIdx = (currentPage - 1) * limit;
+      paginatedRecords = filtered.slice(startIdx, startIdx + limit);
     }
 
-    renderPaginationNav(totalPages);
+    if (paginatedRecords.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="6" class="py-8 text-center text-slate-400 font-medium">
+            <i class="fa-solid fa-inbox text-2xl mb-2 block text-slate-300"></i>
+            No matching plans found.
+          </td>
+        </tr>
+      `;
+      renderPagination(totalRecords, totalPages, 0, 0);
+      updateBulkActionUI();
+      return;
+    }
+
+    const startIndex = pageSize === 'all' ? 0 : (currentPage - 1) * parseInt(pageSize, 10);
+
+    tbody.innerHTML = paginatedRecords.map((item, idx) => {
+      const priceFormatted = parseFloat(item.price || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+      return `
+        <tr class="hover:bg-slate-50/60 transition-colors" data-id="${item.id}">
+          <td class="py-3 px-3 text-center">
+            <input type="checkbox" class="row-select-check cursor-pointer w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500" value="${item.id}" ${selectedIds.has(String(item.id)) ? 'checked' : ''} onchange="handleRowSelect(this, '${item.id}')">
+          </td>
+          <td class="py-3 px-3 font-mono font-bold text-slate-400 text-xs">
+            ${startIndex + idx + 1}
+          </td>
+          <td class="py-3 px-3 font-bold text-slate-900 flex items-center gap-2">
+            <i class="fa-solid fa-list-check text-indigo-600 text-xs"></i>
+            <span>${escapeHtml(item.plan_name)}</span>
+          </td>
+          <td class="py-3 px-3 font-mono font-bold text-emerald-700">
+            ₹ ${priceFormatted}
+          </td>
+          <td class="py-3 px-3">
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold ${item.status === 'Active' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/80' : 'bg-slate-100 text-slate-700 border border-slate-200/80'}">
+              <span class="w-1.5 h-1.5 rounded-full {{ $item->status === 'Active' ? 'bg-emerald-500' : 'bg-slate-400' }}"></span>
+              ${escapeHtml(item.status)}
+            </span>
+          </td>
+          <td class="py-3 px-3 text-right">
+            <div class="flex items-center justify-end gap-1">
+              <button type="button" class="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition-colors flex items-center justify-center cursor-pointer" onclick="openEditModal(${item.id})" title="Edit Record"><i class="fa-solid fa-pen text-xs"></i></button>
+              <button type="button" class="w-7 h-7 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-100 transition-colors flex items-center justify-center cursor-pointer" onclick="deleteItem(${item.id})" title="Delete Record"><i class="fa-solid fa-trash text-xs"></i></button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+
+    updateBulkActionUI();
+    const fromItem = totalRecords === 0 ? 0 : startIndex + 1;
+    const toItem = pageSize === 'all' ? totalRecords : Math.min(startIndex + parseInt(pageSize, 10), totalRecords);
+    renderPagination(totalRecords, totalPages, fromItem, toItem);
   }
 
-  function renderPaginationNav(totalPages) {
+  function renderPagination(total, pages, from, to) {
+    const info = document.getElementById('pagination-info');
+    if (info) {
+      info.textContent = total === 0 ? 'Showing 0 records' : `Showing ${from} to ${to} of ${total} records`;
+    }
+
     const nav = document.getElementById('pagination-nav');
     if (!nav) return;
 
-    if (totalPages <= 1) {
-      nav.innerHTML = `
-        <button class="pms-page-btn" disabled><i class="fa-solid fa-chevron-left"></i></button>
-        <button class="pms-page-btn active">1</button>
-        <button class="pms-page-btn" disabled><i class="fa-solid fa-chevron-right"></i></button>
-      `;
+    if (pages <= 1) {
+      nav.innerHTML = '';
       return;
     }
 
-    let html = '';
-    html += `<button class="pms-page-btn" onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''} title="Previous Page"><i class="fa-solid fa-chevron-left"></i></button>`;
+    let buttons = `
+      <button type="button" class="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold ${currentPage === 1 ? 'text-slate-300 cursor-not-allowed' : 'text-slate-600 hover:bg-slate-100 cursor-pointer'}" ${currentPage === 1 ? 'disabled' : ''} onclick="goToPage(${currentPage - 1})">
+        <i class="fa-solid fa-chevron-left"></i>
+      </button>
+    `;
 
-    const delta = 1;
-    const range = [];
-    const rangeWithDots = [];
-
-    for (let i = 1; i <= totalPages; i++) {
-      if (i === 1 || i === totalPages || (i >= currentPage - delta && i <= currentPage + delta)) {
-        range.push(i);
+    for (let p = 1; p <= pages; p++) {
+      if (p === 1 || p === pages || (p >= currentPage - 1 && p <= currentPage + 1)) {
+        buttons += `
+          <button type="button" class="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold transition-all cursor-pointer ${p === currentPage ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'}" onclick="goToPage(${p})">
+            ${p}
+          </button>
+        `;
+      } else if (p === currentPage - 2 || p === currentPage + 2) {
+        buttons += `<span class="w-7 h-7 flex items-center justify-center text-xs text-slate-400">...</span>`;
       }
     }
 
-    let prev = 0;
-    for (const i of range) {
-      if (prev) {
-        if (i - prev === 2) {
-          rangeWithDots.push(prev + 1);
-        } else if (i - prev !== 1) {
-          rangeWithDots.push('...');
-        }
-      }
-      rangeWithDots.push(i);
-      prev = i;
-    }
+    buttons += `
+      <button type="button" class="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold ${currentPage === pages ? 'text-slate-300 cursor-not-allowed' : 'text-slate-600 hover:bg-slate-100 cursor-pointer'}" ${currentPage === pages ? 'disabled' : ''} onclick="goToPage(${currentPage + 1})">
+        <i class="fa-solid fa-chevron-right"></i>
+      </button>
+    `;
 
-    rangeWithDots.forEach(page => {
-      if (page === '...') {
-        html += `<span class="pms-page-dots">...</span>`;
-      } else {
-        html += `<button class="pms-page-btn ${page === currentPage ? 'active' : ''}" onclick="goToPage(${page})">${page}</button>`;
-      }
-    });
-
-    html += `<button class="pms-page-btn" onclick="goToPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''} title="Next Page"><i class="fa-solid fa-chevron-right"></i></button>`;
-
-    nav.innerHTML = html;
+    nav.innerHTML = buttons;
   }
 
   function exportDataCSV() {
-    const filtered = getFilteredRecords();
-    if (!filtered.length) {
-      if (typeof PmsAlert !== 'undefined') {
-        PmsAlert.toast('No records to export', 'info');
-      } else {
-        alert('No records to export');
-      }
+    const records = getFilteredRecords();
+    if (!records.length) {
+      PmsAlert.warning('Export CSV', 'No records to export.');
       return;
     }
-    let csv = '"ID","Plan Name","Price","Status"\n';
-    filtered.forEach(r => {
-      csv += `"${r.id}","${r.plan_name}","${r.price || 0}","${r.status}"\n`;
-    });
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `Plans_${Date.now()}.csv`;
-    a.click();
-    if (typeof PmsAlert !== 'undefined') {
-      PmsAlert.toast('CSV exported successfully!');
-    }
+
+    const headers = ['#', 'Plan Name', 'Price', 'Status'];
+    const rows = records.map((r, i) => [
+      i + 1,
+      `"${(r.plan_name || '').replace(/"/g, '""')}"`,
+      parseFloat(r.price || 0).toFixed(2),
+      `"${(r.status || '').replace(/"/g, '""')}"`
+    ]);
+
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `meal_plans_${new Date().toISOString().slice(0,10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    PmsAlert.toast('CSV exported successfully!');
   }
 
   function escapeHtml(str) {
-    if (str === null || str === undefined) return '';
+    if (!str) return '';
     return String(str)
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
@@ -822,7 +587,7 @@
       .replace(/'/g, '&#039;');
   }
 
-  window.addEventListener('DOMContentLoaded', () => {
+  document.addEventListener('DOMContentLoaded', () => {
     renderTable();
   });
 </script>

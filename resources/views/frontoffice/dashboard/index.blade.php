@@ -4,53 +4,74 @@
 
 @section('content')
 <!-- Main Viewport: Room Rack Grid & Right Sidebar -->
-<main class="pms-main-viewport">
+<main class="flex-1 p-3 sm:p-4 lg:p-5 flex flex-col lg:flex-row items-start gap-4 pms-main-viewport">
   
   <!-- Left: All Rooms Rack Panel -->
-  <div class="pms-rack-panel">
-    <div class="rack-title-bar">
+  <div class="flex-1 bg-white border border-slate-200 rounded-2xl shadow-xs flex flex-col overflow-hidden pms-rack-panel">
+    <div class="p-3.5 sm:px-5 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3 bg-slate-50/70 rack-title-bar">
       <div>
-        <h2><i class="fa-solid fa-th-large" style="color: var(--accent-primary);"></i> All Rooms</h2>
-        <span style="font-size: 11px; color: var(--text-muted); font-weight: 600;">Hotel Sagar Sonnet • {{ $stats['total'] }} Total Rooms</span>
+        <h2 class="text-sm sm:text-base font-black text-slate-900 flex items-center gap-2 m-0">
+          <i class="fa-solid fa-th-large text-indigo-600"></i> All Rooms
+        </h2>
+        <span class="text-[11px] text-slate-500 font-bold">Hotel Sagar Sonnet • {{ $stats['total'] }} Total Rooms</span>
       </div>
 
-      <!-- Real-Time Date Filter Navigator -->
-      <div class="pms-date-filter-group" style="display: flex; align-items: center; gap: 8px;">
-        <div style="display: flex; align-items: center; background: #ffffff; border: 1.5px solid var(--border-color, #cbd5e1); border-radius: 8px; padding: 2px 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.06);">
-          <button type="button" class="btn-date-step" onclick="changeDateFilter(-1)" title="Previous Day ({{ \Carbon\Carbon::parse($prevDate)->format('d M') }})" style="border: none; background: transparent; width: 28px; height: 28px; border-radius: 6px; cursor: pointer; color: var(--text-secondary); display: flex; align-items: center; justify-content: center; transition: all 0.15s ease;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='transparent'">
-            <i class="fa-solid fa-chevron-left" style="font-size: 11px;"></i>
+      <!-- Real-Time Date Filter Navigator & Search -->
+      <div class="flex items-center gap-2 pms-date-filter-group flex-wrap">
+        <!-- Redesigned Search Input (Moved before Date Filter) -->
+        <div class="relative flex items-center">
+          <i class="fa-solid fa-magnifying-glass absolute left-3 text-slate-400 text-xs pointer-events-none"></i>
+          <input type="text" 
+                 id="top-room-search" 
+                 placeholder="Search room no, guest..." 
+                 value="{{ $searchQuery ?? '' }}" 
+                 oninput="onLiveRoomSearch(this.value)" 
+                 onkeydown="if(event.key === 'Enter'){ event.preventDefault(); submitTopRoomSearch(this.value); }" 
+                 class="h-8.5 pl-8.5 pr-8 text-xs font-semibold rounded-xl border border-slate-200 bg-white hover:border-slate-300 focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/15 focus:outline-none transition-all shadow-2xs w-44 sm:w-56 text-slate-800 placeholder:text-slate-400">
+          <button type="button" 
+                  id="top-search-clear-btn" 
+                  onclick="clearTopRoomSearch()" 
+                  class="absolute right-2.5 text-slate-400 hover:text-slate-600 text-xs cursor-pointer {{ empty($searchQuery) ? 'hidden' : '' }}" 
+                  title="Clear search">
+            <i class="fa-solid fa-circle-xmark"></i>
+          </button>
+        </div>
+
+        <div class="flex items-center bg-white border border-slate-300 rounded-xl px-1 py-0.5 shadow-2xs">
+          <button type="button" class="w-7 h-7 rounded-lg flex items-center justify-center text-slate-500 hover:bg-slate-100 hover:text-slate-800 transition-all btn-date-step" onclick="changeDateFilter(-1)" title="Previous Day ({{ \Carbon\Carbon::parse($prevDate)->format('d M') }})">
+            <i class="fa-solid fa-chevron-left text-[11px]"></i>
           </button>
           
-          <button type="button" class="btn-date-today" onclick="setDateFilterToday()" title="Jump to Today" style="border: none; background: {{ $isToday ? 'rgba(16, 185, 129, 0.14)' : 'transparent' }}; color: {{ $isToday ? '#059669' : 'var(--text-secondary)' }}; font-weight: 800; font-size: 11px; padding: 3px 8px; border-radius: 5px; cursor: pointer; margin: 0 2px;">
+          <button type="button" class="px-2.5 py-1 text-xs font-black rounded-lg transition-all btn-date-today {{ $isToday ? 'bg-emerald-100 text-emerald-800' : 'text-slate-600 hover:bg-slate-100' }}" onclick="setDateFilterToday()" title="Jump to Today">
             Today
           </button>
           
-          <div style="display: flex; align-items: center; gap: 6px; padding: 0 6px; border-left: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0;">
-            <i class="fa-regular fa-calendar-days" style="color: var(--accent-primary, #6366f1); font-size: 13px;"></i>
-            <input type="date" id="pms-calendar-input" value="{{ $selectedDate }}" onchange="onDateFilterChanged(this.value)" style="border: none; background: transparent; font-weight: 700; font-size: 12px; color: var(--text-primary); cursor: pointer; outline: none; font-family: inherit;">
+          <div class="flex items-center gap-1.5 px-2 border-x border-slate-200">
+            <i class="fa-regular fa-calendar-days text-indigo-500 text-xs"></i>
+            <input type="date" id="pms-calendar-input" value="{{ $selectedDate }}" onchange="onDateFilterChanged(this.value)" class="border-none bg-transparent font-bold text-xs text-slate-800 cursor-pointer outline-none font-sans">
           </div>
 
-          <button type="button" class="btn-date-step" onclick="changeDateFilter(1)" title="Next Day ({{ \Carbon\Carbon::parse($nextDate)->format('d M') }})" style="border: none; background: transparent; width: 28px; height: 28px; border-radius: 6px; cursor: pointer; color: var(--text-secondary); display: flex; align-items: center; justify-content: center; transition: all 0.15s ease;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='transparent'">
-            <i class="fa-solid fa-chevron-right" style="font-size: 11px;"></i>
+          <button type="button" class="w-7 h-7 rounded-lg flex items-center justify-center text-slate-500 hover:bg-slate-100 hover:text-slate-800 transition-all btn-date-step" onclick="changeDateFilter(1)" title="Next Day ({{ \Carbon\Carbon::parse($nextDate)->format('d M') }})">
+            <i class="fa-solid fa-chevron-right text-[11px]"></i>
           </button>
         </div>
 
         @if($isToday)
-          <span style="display: inline-flex; align-items: center; gap: 5px; background: rgba(16, 185, 129, 0.12); color: #059669; font-weight: 800; font-size: 11px; padding: 5px 10px; border-radius: 6px; border: 1px solid rgba(16, 185, 129, 0.25);">
-            <span style="width: 7px; height: 7px; background: #10b981; border-radius: 50%; display: inline-block; box-shadow: 0 0 6px rgba(16, 185, 129, 0.7);"></span>
+          <span class="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 font-extrabold text-[11px] px-2.5 py-1 rounded-xl border border-emerald-200">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
             Live Today
           </span>
         @else
-          <span style="display: inline-flex; align-items: center; gap: 5px; background: rgba(99, 102, 241, 0.12); color: #4f46e5; font-weight: 800; font-size: 11px; padding: 5px 10px; border-radius: 6px; border: 1px solid rgba(99, 102, 241, 0.25);">
-            <i class="fa-solid fa-calendar-day" style="font-size: 11px;"></i>
+          <span class="inline-flex items-center gap-1.5 bg-indigo-50 text-indigo-700 font-extrabold text-[11px] px-2.5 py-1 rounded-xl border border-indigo-200">
+            <i class="fa-solid fa-calendar-day text-[11px]"></i>
             {{ \Carbon\Carbon::parse($selectedDate)->format('D, d M Y') }}
           </span>
         @endif
       </div>
     </div>
 
-    <div class="rack-grid-viewport">
-      <div class="rack-rooms-container" id="rooms-grid">
+    <div class="flex-1 overflow-y-auto p-4 bg-slate-50/50 rack-grid-viewport">
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6 2xl:grid-cols-8 gap-2.5 rack-rooms-container" id="rooms-grid">
         
         @foreach($rackRooms as $rm)
           @php
@@ -87,21 +108,21 @@
                data-operational-id="{{ $rm['operational_status_id'] ?? '' }}"
                data-housekeeping="{{ $rm['housekeeping_status'] ?? '' }}"
                data-housekeeping-id="{{ $rm['housekeeping_status_id'] ?? '' }}">
-            <div class="rack-card-top">
+            <div class="rack-card-top flex justify-between items-baseline">
               <div class="rack-room-num">{{ $rm['room'] }}</div>
-              <div class="rack-room-type" title="{{ $rm['type'] }}">{{ $rm['type'] }}</div>
+              <div class="rack-room-type truncate max-w-[80px]" title="{{ $rm['type'] }}">{{ $rm['type'] }}</div>
             </div>
-            <div class="rack-card-mid">
+            <div class="rack-card-mid my-1 min-h-[1.2rem]">
               @if(!empty($rm['guest']['name']))
-                <div class="rack-guest-name" title="{{ $rm['guest']['name'] }}">{{ $rm['guest']['name'] }}</div>
+                <div class="rack-guest-name truncate" title="{{ $rm['guest']['name'] }}">{{ $rm['guest']['name'] }}</div>
               @elseif($rm['status'] === 'blocked')
-                <div class="rack-guest-name" title="Blocked">Blocked</div>
+                <div class="rack-guest-name text-indigo-600" title="Blocked">Blocked</div>
               @endif
             </div>
-            <div class="rack-card-bot">
+            <div class="rack-card-bot flex justify-end">
               <div class="rack-badge" onclick="openRoomStatusPopover(event, this)" title="Click to update Housekeeping / Operational status">
                 <span class="rack-badge-label">{{ $badgeText }}</span>
-                <i class="fa-solid fa-chevron-down rack-badge-arrow"></i>
+                <i class="fa-solid fa-chevron-down rack-badge-arrow text-[8px] opacity-70"></i>
               </div>
             </div>
           </div>
@@ -111,114 +132,106 @@
     </div>
   </div>
 
-  <!-- Right Sidebar: Statistics & Occupancy Pie Chart -->
-  <aside class="pms-stats-sidebar">
-    <div class="stats-gold-top">
-      <i class="fa-solid fa-crown" style="margin-right: 6px;"></i> SAGAR SONNET
+  <!-- Right Sidebar: Statistics & Occupancy Pie Chart (Sticky on Desktop) -->
+  <aside class="w-full lg:w-72 bg-white border border-slate-200 rounded-2xl shadow-xs p-4 flex flex-col gap-3 shrink-0 lg:sticky lg:top-18 lg:self-start max-h-[calc(100vh-5.5rem)] overflow-y-auto scrollbar-none z-20 pms-stats-sidebar">
+    <div class="bg-linear-to-r from-amber-500 to-amber-600 text-slate-950 font-black text-xs uppercase tracking-wider px-3 py-2 rounded-xl flex items-center justify-center gap-1.5 shadow-xs stats-gold-top">
+      <i class="fa-solid fa-crown text-amber-100"></i> SAGAR SONNET
     </div>
 
-    <div class="stats-rows-list">
-      <div class="stat-strip">
-        <span class="lbl"><i class="fa-solid fa-bed" style="color: var(--room-occupied); margin-right: 6px;"></i>Occupied Rooms</span>
-        <span class="val">{{ $stats['occupied'] }}</span>
+    <div class="flex flex-col gap-1.5 stats-rows-list">
+      <div class="flex items-center justify-between px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-100 text-xs font-bold stat-strip">
+        <span class="flex items-center gap-2 text-slate-600 lbl"><i class="fa-solid fa-bed text-rose-500"></i>Occupied</span>
+        <span class="font-mono text-slate-900 val">{{ $stats['occupied'] }}</span>
       </div>
-      <div class="stat-strip">
-        <span class="lbl"><i class="fa-solid fa-plane-arrival" style="color: var(--accent-cyan); margin-right: 6px;"></i>Expected Arrival</span>
-        <span class="val">{{ $stats['expected_arrival'] }}</span>
+      <div class="flex items-center justify-between px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-100 text-xs font-bold stat-strip">
+        <span class="flex items-center gap-2 text-slate-600 lbl"><i class="fa-solid fa-plane-arrival text-cyan-500"></i>Expected Arrival</span>
+        <span class="font-mono text-slate-900 val">{{ $stats['expected_arrival'] }}</span>
       </div>
-      <div class="stat-strip">
-        <span class="lbl"><i class="fa-solid fa-plane-departure" style="color: var(--accent-amber); margin-right: 6px;"></i>Expected Departure</span>
-        <span class="val">{{ $stats['expected_departure'] }}</span>
+      <div class="flex items-center justify-between px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-100 text-xs font-bold stat-strip">
+        <span class="flex items-center gap-2 text-slate-600 lbl"><i class="fa-solid fa-plane-departure text-amber-500"></i>Expected Departure</span>
+        <span class="font-mono text-slate-900 val">{{ $stats['expected_departure'] }}</span>
       </div>
-      <div class="stat-strip">
-        <span class="lbl"><i class="fa-solid fa-tags" style="color: var(--room-available); margin-right: 6px;"></i>Rooms to Sale</span>
-        <span class="val">{{ $stats['rooms_to_sale'] }}</span>
+      <div class="flex items-center justify-between px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-100 text-xs font-bold stat-strip">
+        <span class="flex items-center gap-2 text-slate-600 lbl"><i class="fa-solid fa-tags text-emerald-500"></i>Rooms to Sale</span>
+        <span class="font-mono text-slate-900 val">{{ $stats['rooms_to_sale'] }}</span>
       </div>
-      <div class="stat-strip">
-        <span class="lbl"><i class="fa-solid fa-arrow-right-to-bracket" style="color: #10b981; margin-right: 6px;"></i>Today's Checked In</span>
-        <span class="val">{{ $stats['checked_in'] }}</span>
+      <div class="flex items-center justify-between px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-100 text-xs font-bold stat-strip">
+        <span class="flex items-center gap-2 text-slate-600 lbl"><i class="fa-solid fa-arrow-right-to-bracket text-emerald-600"></i>Today's In</span>
+        <span class="font-mono text-slate-900 val">{{ $stats['checked_in'] }}</span>
       </div>
-      <div class="stat-strip">
-        <span class="lbl"><i class="fa-solid fa-arrow-right-from-bracket" style="color: #f43f5e; margin-right: 6px;"></i>Today's Checked Out</span>
-        <span class="val">{{ $stats['checked_out'] }}</span>
+      <div class="flex items-center justify-between px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-100 text-xs font-bold stat-strip">
+        <span class="flex items-center gap-2 text-slate-600 lbl"><i class="fa-solid fa-arrow-right-from-bracket text-rose-500"></i>Today's Out</span>
+        <span class="font-mono text-slate-900 val">{{ $stats['checked_out'] }}</span>
       </div>
-      <div class="stat-strip">
-        <span class="lbl"><i class="fa-solid fa-user-group" style="color: var(--accent-primary); margin-right: 6px;"></i>Total Pax</span>
-        <span class="val">{{ $stats['total_pax'] }}</span>
+      <div class="flex items-center justify-between px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-100 text-xs font-bold stat-strip">
+        <span class="flex items-center gap-2 text-slate-600 lbl"><i class="fa-solid fa-user-group text-indigo-500"></i>Total Pax</span>
+        <span class="font-mono text-slate-900 val">{{ $stats['total_pax'] }}</span>
       </div>
-      <div class="stat-strip">
-        <span class="lbl"><i class="fa-solid fa-broom" style="color: var(--accent-amber); margin-right: 6px;"></i>Cleaned</span>
-        <span class="val">{{ $stats['cleaned_ratio'] }}</span>
+      <div class="flex items-center justify-between px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-100 text-xs font-bold stat-strip">
+        <span class="flex items-center gap-2 text-slate-600 lbl"><i class="fa-solid fa-broom text-amber-500"></i>Cleaned</span>
+        <span class="font-mono text-slate-900 val">{{ $stats['cleaned_ratio'] }}</span>
       </div>
     </div>
 
     <!-- Occupancy & Status Pie Chart Section -->
-    <div class="stats-pie-section">
-      <div style="width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid var(--border-subtle);">
-        <span style="font-size: 11px; font-weight: 800; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px;">
-          <i class="fa-solid fa-chart-pie" style="color: var(--accent-primary); margin-right: 4px;"></i> Room Occupancy
+    <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 flex flex-col items-center stats-pie-section">
+      <div class="w-full flex justify-between items-center pb-2 mb-2 border-b border-slate-200">
+        <span class="text-[10px] font-black uppercase tracking-wider text-slate-600 flex items-center gap-1.5">
+          <i class="fa-solid fa-chart-pie text-indigo-500"></i> Room Occupancy
         </span>
-        <span style="font-size: 11px; font-weight: 800; color: var(--accent-primary); font-family: var(--font-mono);">
+        <span class="text-xs font-black text-indigo-700 font-mono">
           {{ $stats['occupied'] }}/{{ $stats['total'] }}
         </span>
       </div>
 
-      <!-- Perfect Circular Donut Pie Chart -->
-      <div class="pie-donut-container" style="position: relative; width: 112px; height: 112px; margin: 2px auto 10px; display: flex; align-items: center; justify-content: center;">
-        <div style="width: 100%; height: 100%; border-radius: 50%; background: conic-gradient(
+      <!-- Donut Chart -->
+      <div class="relative w-28 h-28 my-1 flex items-center justify-center pie-donut-container">
+        <div class="w-full h-full rounded-full shadow-xs" style="background: conic-gradient(
             #e11d48 0% {{ $stats['percentages']['occupied'] }}%,
             #10b981 {{ $stats['percentages']['occupied'] }}% {{ $stats['percentages']['occupied'] + $stats['percentages']['available'] }}%,
             #f59e0b {{ $stats['percentages']['occupied'] + $stats['percentages']['available'] }}% {{ $stats['percentages']['occupied'] + $stats['percentages']['available'] + $stats['percentages']['dirty'] }}%,
             #6366f1 {{ $stats['percentages']['occupied'] + $stats['percentages']['available'] + $stats['percentages']['dirty'] }}% 100%
-          ); box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);">
+          );">
         </div>
-        <!-- Center Hole for Donut Style -->
-        <div style="position: absolute; width: 58px; height: 58px; border-radius: 50%; background: #ffffff; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: inset 0 2px 4px rgba(0,0,0,0.06);">
-          <span style="font-size: 14px; font-weight: 900; color: #0f172a; font-family: var(--font-mono); line-height: 1;">{{ $stats['percentages']['occupied'] }}%</span>
-          <span style="font-size: 8px; font-weight: 800; color: #64748b; text-transform: uppercase; margin-top: 2px;">Occupied</span>
+        <!-- Center Hole -->
+        <div class="absolute w-14 h-14 rounded-full bg-white flex flex-col items-center justify-center shadow-xs">
+          <span class="text-sm font-black text-slate-900 font-mono leading-none">{{ $stats['percentages']['occupied'] }}%</span>
+          <span class="text-[8px] font-extrabold text-slate-400 uppercase tracking-tight mt-0.5">Occupied</span>
         </div>
       </div>
 
-      <!-- Status Breakdown Grid (2x2 Clean Stacked Design) -->
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; width: 100%;">
-        <div style="background: rgba(225, 29, 72, 0.05); border: 1px solid rgba(225, 29, 72, 0.2); border-radius: 6px; padding: 5px 8px; display: flex; flex-direction: column; gap: 1px;">
-          <div style="display: flex; align-items: center; justify-content: space-between;">
-            <span style="display: flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 700; color: #9f1239;">
-              <span style="width: 6px; height: 6px; border-radius: 50%; background: #e11d48; display: inline-block;"></span> Occupied
-            </span>
-            <span style="font-size: 11px; font-weight: 900; color: #e11d48; font-family: var(--font-mono);">{{ $stats['occupied'] }}</span>
+      <!-- Breakdown Grid -->
+      <div class="grid grid-cols-2 gap-1.5 w-full mt-2">
+        <div class="bg-rose-50/80 border border-rose-200 rounded-lg p-1.5 flex flex-col">
+          <div class="flex items-center justify-between text-[10px] font-bold text-rose-800">
+            <span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span> Occ</span>
+            <span class="font-mono font-black text-rose-700">{{ $stats['occupied'] }}</span>
           </div>
-          <div style="font-size: 9px; font-weight: 700; color: #e11d48; text-align: right; opacity: 0.85;">{{ $stats['percentages']['occupied'] }}%</div>
+          <div class="text-[9px] font-bold text-rose-600 text-right opacity-80">{{ $stats['percentages']['occupied'] }}%</div>
         </div>
 
-        <div style="background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 6px; padding: 5px 8px; display: flex; flex-direction: column; gap: 1px;">
-          <div style="display: flex; align-items: center; justify-content: space-between;">
-            <span style="display: flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 700; color: #065f46;">
-              <span style="width: 6px; height: 6px; border-radius: 50%; background: #10b981; display: inline-block;"></span> Cleaned
-            </span>
-            <span style="font-size: 11px; font-weight: 900; color: #059669; font-family: var(--font-mono);">{{ $stats['available'] }}</span>
+        <div class="bg-emerald-50/80 border border-emerald-200 rounded-lg p-1.5 flex flex-col">
+          <div class="flex items-center justify-between text-[10px] font-bold text-emerald-800">
+            <span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Clean</span>
+            <span class="font-mono font-black text-emerald-700">{{ $stats['available'] }}</span>
           </div>
-          <div style="font-size: 9px; font-weight: 700; color: #059669; text-align: right; opacity: 0.85;">{{ $stats['percentages']['available'] }}%</div>
+          <div class="text-[9px] font-bold text-emerald-600 text-right opacity-80">{{ $stats['percentages']['available'] }}%</div>
         </div>
 
-        <div style="background: rgba(245, 158, 11, 0.05); border: 1px solid rgba(245, 158, 11, 0.2); border-radius: 6px; padding: 5px 8px; display: flex; flex-direction: column; gap: 1px;">
-          <div style="display: flex; align-items: center; justify-content: space-between;">
-            <span style="display: flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 700; color: #92400e;">
-              <span style="width: 6px; height: 6px; border-radius: 50%; background: #f59e0b; display: inline-block;"></span> Dirty
-            </span>
-            <span style="font-size: 11px; font-weight: 900; color: #d97706; font-family: var(--font-mono);">{{ $stats['dirty'] }}</span>
+        <div class="bg-amber-50/80 border border-amber-200 rounded-lg p-1.5 flex flex-col">
+          <div class="flex items-center justify-between text-[10px] font-bold text-amber-800">
+            <span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Dirty</span>
+            <span class="font-mono font-black text-amber-700">{{ $stats['dirty'] }}</span>
           </div>
-          <div style="font-size: 9px; font-weight: 700; color: #d97706; text-align: right; opacity: 0.85;">{{ $stats['percentages']['dirty'] }}%</div>
+          <div class="text-[9px] font-bold text-amber-600 text-right opacity-80">{{ $stats['percentages']['dirty'] }}%</div>
         </div>
 
-        <div style="background: rgba(99, 102, 241, 0.05); border: 1px solid rgba(99, 102, 241, 0.2); border-radius: 6px; padding: 5px 8px; display: flex; flex-direction: column; gap: 1px;">
-          <div style="display: flex; align-items: center; justify-content: space-between;">
-            <span style="display: flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 700; color: #3730a3;">
-              <span style="width: 6px; height: 6px; border-radius: 50%; background: #6366f1; display: inline-block;"></span> Blocked
-            </span>
-            <span style="font-size: 11px; font-weight: 900; color: #4f46e5; font-family: var(--font-mono);">{{ $stats['blocked'] }}</span>
+        <div class="bg-indigo-50/80 border border-indigo-200 rounded-lg p-1.5 flex flex-col">
+          <div class="flex items-center justify-between text-[10px] font-bold text-indigo-800">
+            <span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span> Block</span>
+            <span class="font-mono font-black text-indigo-700">{{ $stats['blocked'] }}</span>
           </div>
-          <div style="font-size: 9px; font-weight: 700; color: #4f46e5; text-align: right; opacity: 0.85;">{{ $stats['percentages']['blocked'] }}%</div>
+          <div class="text-[9px] font-bold text-indigo-600 text-right opacity-80">{{ $stats['percentages']['blocked'] }}%</div>
         </div>
       </div>
     </div>
@@ -226,47 +239,51 @@
 
 </main>
 
-<!-- Bottom Toolbar -->
-<footer class="pms-bottom-bar">
-  <div class="legend-chips">
-    <div class="legend-chip chip-occ {{ $selectedStatus === 'occupied' ? 'active-chip' : '' }}" onclick="applyBackendFilter('occupied')" style="cursor: pointer;">
-      <div class="chip-lbl">Reserved</div>
-      <div class="chip-cnt">{{ $stats['occupied'] }}</div>
+<!-- Bottom Toolbar (Sticky, Single Line, No Wrapping, Same Height) -->
+<footer class="bg-white/95 backdrop-blur-md border-t border-slate-200 px-3 sm:px-4 lg:px-5 py-2 flex items-center justify-between gap-3 shadow-sm z-30 sticky bottom-0 shrink-0 overflow-x-auto scrollbar-none flex-nowrap pms-bottom-bar">
+  @php
+    $chipBase = "h-8.5 px-3 rounded-lg border text-xs font-bold cursor-pointer transition-all inline-flex items-center gap-1.5 whitespace-nowrap leading-none legend-chip";
+  @endphp
+  <div class="flex items-center gap-1.5 legend-chips shrink-0 flex-nowrap">
+    <div class="{{ $chipBase }} {{ $selectedStatus === 'occupied' ? 'bg-rose-50 border-rose-300 text-rose-700 ring-2 ring-rose-400 active-chip' : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100' }} chip-occ" onclick="applyBackendFilter('occupied')">
+      <span class="chip-lbl">Reserved</span>
+      <span class="h-5 px-1.5 rounded-md bg-white border font-mono text-[10px] inline-flex items-center justify-center chip-cnt">{{ $stats['occupied'] }}</span>
     </div>
-    <div class="legend-chip chip-blk {{ $selectedStatus === 'blocked' ? 'active-chip' : '' }}" onclick="applyBackendFilter('blocked')" style="cursor: pointer;">
-      <div class="chip-lbl">Blocked</div>
-      <div class="chip-cnt">{{ $stats['blocked'] }}</div>
+    <div class="{{ $chipBase }} {{ $selectedStatus === 'blocked' ? 'bg-indigo-50 border-indigo-300 text-indigo-700 ring-2 ring-indigo-400 active-chip' : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100' }} chip-blk" onclick="applyBackendFilter('blocked')">
+      <span class="chip-lbl">Blocked</span>
+      <span class="h-5 px-1.5 rounded-md bg-white border font-mono text-[10px] inline-flex items-center justify-center chip-cnt">{{ $stats['blocked'] }}</span>
     </div>
-    <div class="legend-chip chip-vac {{ $selectedStatus === 'vacant' ? 'active-chip' : '' }}" onclick="applyBackendFilter('vacant')" style="cursor: pointer;">
-      <div class="chip-lbl">Vacant</div>
-      <div class="chip-cnt">{{ $stats['vacant'] }}</div>
+    <div class="{{ $chipBase }} {{ $selectedStatus === 'vacant' ? 'bg-cyan-50 border-cyan-300 text-cyan-700 ring-2 ring-cyan-400 active-chip' : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100' }} chip-vac" onclick="applyBackendFilter('vacant')">
+      <span class="chip-lbl">Vacant</span>
+      <span class="h-5 px-1.5 rounded-md bg-white border font-mono text-[10px] inline-flex items-center justify-center chip-cnt">{{ $stats['vacant'] }}</span>
     </div>
-    <div class="legend-chip chip-drt {{ $selectedStatus === 'dirty' ? 'active-chip' : '' }}" onclick="applyBackendFilter('dirty')" style="cursor: pointer;">
-      <div class="chip-lbl">Dirty</div>
-      <div class="chip-cnt">{{ $stats['dirty'] }}</div>
+    <div class="{{ $chipBase }} {{ $selectedStatus === 'dirty' ? 'bg-amber-50 border-amber-300 text-amber-700 ring-2 ring-amber-400 active-chip' : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100' }} chip-drt" onclick="applyBackendFilter('dirty')">
+      <span class="chip-lbl">Dirty</span>
+      <span class="h-5 px-1.5 rounded-md bg-white border font-mono text-[10px] inline-flex items-center justify-center chip-cnt">{{ $stats['dirty'] }}</span>
     </div>
-    <div class="legend-chip chip-avl {{ $selectedStatus === 'available' ? 'active-chip' : '' }}" onclick="applyBackendFilter('available')" style="cursor: pointer;">
-      <div class="chip-lbl">Available</div>
-      <div class="chip-cnt">{{ $stats['available'] }}</div>
+    <div class="{{ $chipBase }} {{ $selectedStatus === 'available' ? 'bg-emerald-50 border-emerald-300 text-emerald-700 ring-2 ring-emerald-400 active-chip' : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100' }} chip-avl" onclick="applyBackendFilter('available')">
+      <span class="chip-lbl">Available</span>
+      <span class="h-5 px-1.5 rounded-md bg-white border font-mono text-[10px] inline-flex items-center justify-center chip-cnt">{{ $stats['available'] }}</span>
     </div>
-    <div class="legend-chip chip-all {{ in_array($selectedStatus, ['all', '']) ? 'active-chip' : '' }}" onclick="applyBackendFilter('all')" style="cursor: pointer;">
-      <div class="chip-lbl">All</div>
-      <div class="chip-cnt">{{ $stats['total'] }}</div>
+    <div class="{{ $chipBase }} {{ in_array($selectedStatus, ['all', '']) ? 'bg-slate-900 border-slate-900 text-white active-chip' : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100' }} chip-all" onclick="applyBackendFilter('all')">
+      <span class="chip-lbl">All</span>
+      <span class="h-5 px-1.5 rounded-md bg-slate-800 text-white font-mono text-[10px] inline-flex items-center justify-center chip-cnt">{{ $stats['total'] }}</span>
     </div>
   </div>
 
-  <form method="GET" action="{{ route('frontoffice.dashboard') }}" id="backend-filter-form" class="bottom-actions">
+  <form method="GET" action="{{ route('frontoffice.dashboard') }}" id="backend-filter-form" class="flex items-center gap-1.5 shrink-0 flex-nowrap bottom-actions">
     <input type="hidden" name="date" id="filter-date-val" value="{{ $selectedDate }}">
     <input type="hidden" name="status" id="filter-status-val" value="{{ $selectedStatus ?? 'all' }}">
+    <input type="hidden" name="search" id="filter-search-val" value="{{ $searchQuery ?? '' }}">
 
-    <button type="button" class="pms-btn-action" onclick="if(typeof PmsAlert !== 'undefined') PmsAlert.toast('Notification sent to floor supervisors!', 'info'); else alert('Notification sent to floor supervisors!');">
-      <i class="fa-solid fa-bell" style="color: var(--accent-primary);"></i> Notify
+    <button type="button" class="btn-ui-secondary h-8.5 px-3 text-xs inline-flex items-center gap-1.5 font-bold rounded-lg border leading-none whitespace-nowrap cursor-pointer pms-btn-action" onclick="if(typeof PmsAlert !== 'undefined') PmsAlert.toast('Notification sent to floor supervisors!', 'info'); else alert('Notification sent to floor supervisors!');">
+      <i class="fa-solid fa-bell text-indigo-600"></i> Notify
     </button>
-    <a href="{{ route('frontoffice.dashboard') }}" class="pms-btn-action" style="text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
-      <i class="fa-solid fa-rotate" style="color: var(--accent-cyan);"></i> Refresh
+    <a href="{{ route('frontoffice.dashboard') }}" class="btn-ui-secondary h-8.5 px-3 text-xs inline-flex items-center gap-1.5 font-bold rounded-lg border leading-none whitespace-nowrap cursor-pointer pms-btn-action">
+      <i class="fa-solid fa-rotate text-cyan-600"></i> Refresh
     </a>
     
-    <select name="type" class="pms-select" id="filter-type" onchange="submitBackendFilter()" title="Filter by Room Type">
+    <select name="type" class="pms-select h-8.5 text-xs px-2.5 rounded-lg border border-slate-200 bg-white font-semibold cursor-pointer leading-none" id="filter-type" onchange="submitBackendFilter()" title="Filter by Room Type">
       <option value="ALL" {{ ($selectedType ?? 'ALL') === 'ALL' ? 'selected' : '' }}>All Types</option>
       @foreach($categories as $cat)
         <option value="{{ strtoupper($cat->name) }}" {{ ($selectedType ?? '') === strtoupper($cat->name) ? 'selected' : '' }}>{{ $cat->name }}</option>
@@ -279,7 +296,7 @@
       @endif
     </select>
 
-    <select name="floor" class="pms-select" id="filter-floor" onchange="submitBackendFilter()" title="Filter by Floor">
+    <select name="floor" class="pms-select h-8.5 text-xs px-2.5 rounded-lg border border-slate-200 bg-white font-semibold cursor-pointer leading-none" id="filter-floor" onchange="submitBackendFilter()" title="Filter by Floor">
       <option value="ALL" {{ ($selectedFloor ?? 'ALL') === 'ALL' ? 'selected' : '' }}>All Floor</option>
       @foreach($floors as $fl)
         <option value="{{ $fl->floor }}" {{ strval($selectedFloor ?? '') === strval($fl->floor) ? 'selected' : '' }}>Floor {{ $fl->floor }}</option>
@@ -293,14 +310,14 @@
       @endif
     </select>
 
-    <select name="bedding" class="pms-select" id="filter-bedding" onchange="submitBackendFilter()" title="Filter by Bedding Configuration">
+    <select name="bedding" class="pms-select h-8.5 text-xs px-2.5 rounded-lg border border-slate-200 bg-white font-semibold cursor-pointer leading-none" id="filter-bedding" onchange="submitBackendFilter()" title="Filter by Bedding Configuration">
       <option value="ALL" {{ ($selectedBedding ?? 'ALL') === 'ALL' ? 'selected' : '' }}>All Bedding</option>
       @foreach($beddingConfigs as $bc)
         <option value="{{ $bc->id }}" {{ strval($selectedBedding ?? '') === strval($bc->id) ? 'selected' : '' }}>{{ $bc->name }}</option>
       @endforeach
     </select>
 
-    <select name="pax" class="pms-select" id="filter-pax" onchange="submitBackendFilter()" title="Filter by Pax Capacity">
+    <select name="pax" class="pms-select h-8.5 text-xs px-2.5 rounded-lg border border-slate-200 bg-white font-semibold cursor-pointer leading-none" id="filter-pax" onchange="submitBackendFilter()" title="Filter by Pax Capacity">
       <option value="ALL" {{ ($selectedPax ?? 'ALL') === 'ALL' ? 'selected' : '' }}>All Pax</option>
       <option value="1" {{ strval($selectedPax ?? '') === '1' ? 'selected' : '' }}>1 Pax</option>
       <option value="2" {{ strval($selectedPax ?? '') === '2' ? 'selected' : '' }}>2 Pax</option>
@@ -309,17 +326,12 @@
       <option value="6" {{ strval($selectedPax ?? '') === '6' ? 'selected' : '' }}>6 Pax</option>
     </select>
 
-    <select name="amenity" class="pms-select" id="filter-amenity" onchange="submitBackendFilter()" title="Filter by Amenities">
+    <select name="amenity" class="pms-select h-8.5 text-xs px-2.5 rounded-lg border border-slate-200 bg-white font-semibold cursor-pointer leading-none" id="filter-amenity" onchange="submitBackendFilter()" title="Filter by Amenities">
       <option value="ALL" {{ ($selectedAmenity ?? 'ALL') === 'ALL' ? 'selected' : '' }}>All Amenities</option>
       @foreach($amenitiesList as $amn)
         <option value="{{ $amn->id }}" {{ strval($selectedAmenity ?? '') === strval($amn->id) ? 'selected' : '' }}>{{ $amn->name }}</option>
       @endforeach
     </select>
-
-    <div style="display: flex; align-items: center; gap: 6px; font-weight: 700; font-size: 11px; color: var(--text-secondary);">
-      <span><i class="fa-solid fa-search" style="color: var(--accent-primary);"></i></span>
-      <input type="text" name="search" class="pms-input" id="filter-search" placeholder="Room No. / Guest" value="{{ $searchQuery ?? '' }}" onkeydown="if(event.key === 'Enter'){ event.preventDefault(); submitBackendFilter(); }">
-    </div>
   </form>
 </footer>
 @endsection

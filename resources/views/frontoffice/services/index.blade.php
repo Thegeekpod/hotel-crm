@@ -2,581 +2,89 @@
 
 @section('title', 'Extra Services & In-Room Dining - Hotel Sagar Sonnet')
 
-@push('styles')
-<style>
-  :root {
-    --srv-emerald: #10b981;
-    --srv-indigo: #6366f1;
-    --srv-amber: #f59e0b;
-    --srv-rose: #f43f5e;
-    --srv-cyan: #06b6d4;
-  }
-
-  .services-container {
-    padding: 16px 20px;
-    background: #f1f5f9;
-    min-height: calc(100vh - 110px);
-  }
-
-  /* Metric KPI Cards */
-  .services-kpi-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 14px;
-    margin-bottom: 16px;
-  }
-
-  .kpi-card-srv {
-    background: #ffffff;
-    border-radius: 12px;
-    padding: 14px 18px;
-    border: 1px solid #e2e8f0;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.03);
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
-  }
-
-  .kpi-card-srv:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
-  }
-
-  .kpi-icon-srv {
-    width: 44px;
-    height: 44px;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 20px;
-    flex-shrink: 0;
-  }
-
-  .kpi-meta-srv h4 {
-    font-size: 11px;
-    text-transform: uppercase;
-    font-weight: 700;
-    color: #64748b;
-    margin: 0 0 2px 0;
-    letter-spacing: 0.5px;
-  }
-
-  .kpi-meta-srv .kpi-num {
-    font-size: 20px;
-    font-weight: 800;
-    color: #0f172a;
-    font-family: var(--font-mono, monospace);
-  }
-
-  /* Header Banner */
-  .srv-header-banner {
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    padding: 14px 20px;
-    margin-bottom: 16px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 12px;
-  }
-
-  .srv-header-left {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-
-  .srv-header-badge {
-    width: 42px;
-    height: 42px;
-    border-radius: 10px;
-    background: linear-gradient(135deg, #10b981, #059669);
-    color: #ffffff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 20px;
-    box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);
-  }
-
-  .srv-header-left h2 {
-    font-size: 17px;
-    font-weight: 800;
-    color: #0f172a;
-    margin: 0;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .srv-header-left p {
-    margin: 2px 0 0 0;
-    font-size: 12px;
-    color: #64748b;
-  }
-
-  .srv-header-actions {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-wrap: wrap;
-  }
-
-  /* Segmented Nav Tabs */
-  .srv-nav-tabs {
-    display: flex;
-    gap: 6px;
-    background: #e2e8f0;
-    padding: 4px;
-    border-radius: 10px;
-    margin-bottom: 16px;
-    width: fit-content;
-  }
-
-  .srv-tab-btn {
-    border: none;
-    background: transparent;
-    padding: 8px 16px;
-    font-size: 12px;
-    font-weight: 700;
-    color: #475569;
-    border-radius: 8px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    transition: all 0.15s ease;
-  }
-
-  .srv-tab-btn:hover {
-    color: #0f172a;
-  }
-
-  .srv-tab-btn.active {
-    background: #ffffff;
-    color: #0f172a;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-  }
-
-  .srv-tab-btn .badge-pill {
-    padding: 2px 7px;
-    font-size: 10px;
-    border-radius: 12px;
-    font-weight: 800;
-  }
-
-  /* Filter Toolbar */
-  .srv-filter-toolbar {
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 10px;
-    padding: 10px 14px;
-    margin-bottom: 14px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 10px;
-  }
-
-  .srv-search-box {
-    min-width: 260px;
-    position: relative;
-    display: flex;
-    align-items: center;
-  }
-
-  .srv-search-box i {
-    position: absolute;
-    left: 12px;
-    color: #94a3b8;
-    font-size: 13px;
-  }
-
-  .srv-search-box input {
-    width: 100%;
-    padding: 7px 12px 7px 34px;
-    border: 1px solid #cbd5e1;
-    border-radius: 8px;
-    font-size: 12px;
-    font-weight: 600;
-    color: #0f172a;
-    background: #f8fafc;
-    outline: none;
-  }
-
-  .srv-search-box input:focus {
-    border-color: #10b981;
-    background: #ffffff;
-    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
-  }
-
-  /* Table styling */
-  .srv-table-card {
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    overflow-x: auto;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
-  }
-
-  .srv-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 12px;
-    min-width: 850px;
-  }
-
-  .srv-table th {
-    background: #f8fafc;
-    padding: 10px 14px;
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    color: #475569;
-    letter-spacing: 0.5px;
-    border-bottom: 1px solid #e2e8f0;
-    text-align: left;
-    white-space: nowrap;
-  }
-
-  .srv-table td {
-    padding: 12px 14px;
-    border-bottom: 1px solid #f1f5f9;
-    color: #1e293b;
-    vertical-align: middle;
-  }
-
-  .srv-table tr:hover td {
-    background: #f8fafc;
-  }
-
-  .room-tag-pill {
-    background: #eef2ff;
-    color: #4338ca;
-    padding: 3px 8px;
-    border-radius: 6px;
-    font-family: var(--font-mono, monospace);
-    font-weight: 800;
-    font-size: 12px;
-    border: 1px solid #c7d2fe;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-  }
-
-  .order-status-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 3px 8px;
-    border-radius: 9999px;
-    font-size: 11px;
-    font-weight: 700;
-  }
-
-  .order-status-badge.received { background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; }
-  .order-status-badge.preparing { background: #fffbeb; color: #d97706; border: 1px solid #fde68a; }
-  .order-status-badge.out { background: #fdf4ff; color: #c026d3; border: 1px solid #f5d0fe; }
-  .order-status-badge.delivered { background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; }
-  .order-status-badge.cancelled { background: #fff1f2; color: #e11d48; border: 1px solid #fecdd3; }
-
-  /* Modals */
-  .srv-modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(15, 23, 42, 0.6);
-    backdrop-filter: blur(4px);
-    z-index: 99999;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-  }
-
-  .srv-modal-window {
-    background: #ffffff;
-    border-radius: 14px;
-    width: 680px;
-    max-width: 95vw;
-    box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
-    overflow: hidden;
-    animation: srvModalPop 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  }
-
-  @keyframes srvModalPop {
-    from { opacity: 0; transform: scale(0.96); }
-    to { opacity: 1; transform: scale(1); }
-  }
-
-  .srv-modal-header {
-    background: linear-gradient(135deg, #10b981, #059669);
-    color: #ffffff;
-    padding: 14px 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-
-  .srv-modal-header h3 {
-    margin: 0;
-    font-size: 15px;
-    font-weight: 800;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .srv-modal-close {
-    background: rgba(255,255,255,0.2);
-    border: none;
-    color: #ffffff;
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    cursor: pointer;
-    font-size: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .srv-modal-body {
-    padding: 20px;
-    max-height: calc(85vh - 120px);
-    overflow-y: auto;
-  }
-
-  .srv-modal-footer {
-    padding: 12px 20px;
-    background: #f8fafc;
-    border-top: 1px solid #e2e8f0;
-    display: flex;
-    justify-content: flex-end;
-    gap: 8px;
-  }
-
-  .form-grid-2 {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 14px;
-  }
-
-  .form-group-srv {
-    margin-bottom: 12px;
-  }
-
-  .form-group-srv label {
-    display: block;
-    font-size: 11px;
-    font-weight: 700;
-    color: #475569;
-    text-transform: uppercase;
-    margin-bottom: 5px;
-  }
-
-  .form-group-srv input,
-  .form-group-srv select,
-  .form-group-srv textarea {
-    width: 100%;
-    padding: 8px 12px;
-    border: 1px solid #cbd5e1;
-    border-radius: 8px;
-    font-size: 12px;
-    font-weight: 600;
-    color: #0f172a;
-    background: #ffffff;
-    box-sizing: border-box;
-  }
-
-  .order-item-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 8px;
-    background: #f8fafc;
-    padding: 8px 10px;
-    border-radius: 8px;
-    border: 1px solid #e2e8f0;
-  }
-
-  /* Select2 Custom Styles for PMS */
-  .select2-container {
-    width: 100% !important;
-  }
-  .select2-container--default .select2-selection--single {
-    height: 38px !important;
-    border: 1px solid #cbd5e1 !important;
-    border-radius: 8px !important;
-    background-color: #ffffff !important;
-    display: flex !important;
-    align-items: center !important;
-    padding: 0 4px !important;
-    transition: all 0.2s ease !important;
-  }
-  .select2-container--default .select2-selection--single:focus,
-  .select2-container--default.select2-container--focus .select2-selection--single,
-  .select2-container--default.select2-container--open .select2-selection--single {
-    border-color: #10b981 !important;
-    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15) !important;
-    outline: none !important;
-  }
-  .select2-container--default .select2-selection--single .select2-selection__rendered {
-    color: #0f172a !important;
-    font-size: 12px !important;
-    font-weight: 600 !important;
-    line-height: 36px !important;
-    padding-left: 8px !important;
-    padding-right: 24px !important;
-  }
-  .select2-container--default .select2-selection--single .select2-selection__arrow {
-    height: 36px !important;
-    right: 8px !important;
-  }
-  .select2-container--default .select2-selection--single .select2-selection__arrow b {
-    border-color: #64748b transparent transparent transparent !important;
-  }
-  .select2-container--default.select2-container--open .select2-selection--single .select2-selection__arrow b {
-    border-color: transparent transparent #64748b transparent !important;
-  }
-  .select2-dropdown {
-    border: 1px solid #cbd5e1 !important;
-    border-radius: 10px !important;
-    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.15) !important;
-    z-index: 1000000 !important;
-    background: #ffffff !important;
-    overflow: hidden !important;
-  }
-  .select2-search--dropdown {
-    padding: 8px !important;
-    background: #f8fafc !important;
-    border-bottom: 1px solid #f1f5f9 !important;
-  }
-  .select2-search--dropdown .select2-search__field {
-    border: 1px solid #cbd5e1 !important;
-    border-radius: 6px !important;
-    padding: 6px 10px !important;
-    font-size: 12px !important;
-    font-weight: 600 !important;
-    outline: none !important;
-  }
-  .select2-search--dropdown .select2-search__field:focus {
-    border-color: #10b981 !important;
-  }
-  .select2-results__option {
-    padding: 8px 12px !important;
-    font-size: 12px !important;
-    font-weight: 600 !important;
-    color: #1e293b !important;
-  }
-  .select2-container--default .select2-results__option--highlighted[aria-selected] {
-    background-color: #10b981 !important;
-    color: #ffffff !important;
-  }
-  .select2-container--default .select2-results__option[aria-selected="true"] {
-    background-color: #ecfdf5 !important;
-    color: #065f46 !important;
-    font-weight: 700 !important;
-  }
-</style>
-@endpush
 
 @section('content')
-<main class="services-container">
+<main class="flex-1 w-full p-3 sm:p-4 lg:p-5 flex flex-col gap-4 pms-main-viewport services-container">
+  <div class="w-full flex flex-col gap-4 pms-page-container">
 
   <!-- KPI Overview Cards -->
-  <div class="services-kpi-grid">
-    <div class="kpi-card-srv">
-      <div class="kpi-icon-srv" style="background: #ecfdf5; color: #059669;">
+  <div class="services-kpi-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="kpi-card-srv bg-white border border-slate-200/80 rounded-2xl p-4 shadow-xs flex items-center gap-3.5">
+      <div class="kpi-icon-srv w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl shrink-0">
         <i class="fa-solid fa-bell-concierge"></i>
       </div>
       <div class="kpi-meta-srv">
-        <h4>Available Services</h4>
-        <div class="kpi-num">{{ $totalServicesCount }} <span style="font-size: 11px; color: #64748b; font-weight: 500;">Active Items</span></div>
+        <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider m-0">Available Services</h4>
+        <div class="kpi-num text-xl font-extrabold text-slate-800 mt-0.5">{{ $totalServicesCount }} <span class="text-xs text-slate-400 font-semibold">Active Items</span></div>
       </div>
     </div>
 
-    <div class="kpi-card-srv">
-      <div class="kpi-icon-srv" style="background: #eff6ff; color: #2563eb;">
+    <div class="kpi-card-srv bg-white border border-slate-200/80 rounded-2xl p-4 shadow-xs flex items-center gap-3.5">
+      <div class="kpi-icon-srv w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl shrink-0">
         <i class="fa-solid fa-fire"></i>
       </div>
       <div class="kpi-meta-srv">
-        <h4>Active Room Orders</h4>
-        <div class="kpi-num">{{ $activeRoomOrdersCount }} <span style="font-size: 11px; color: #64748b; font-weight: 500;">In Progress</span></div>
+        <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider m-0">Active Room Orders</h4>
+        <div class="kpi-num text-xl font-extrabold text-slate-800 mt-0.5">{{ $activeRoomOrdersCount }} <span class="text-xs text-slate-400 font-semibold">In Progress</span></div>
       </div>
     </div>
 
-    <div class="kpi-card-srv">
-      <div class="kpi-icon-srv" style="background: #f0fdf4; color: #16a34a;">
+    <div class="kpi-card-srv bg-white border border-slate-200/80 rounded-2xl p-4 shadow-xs flex items-center gap-3.5">
+      <div class="kpi-icon-srv w-12 h-12 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center text-xl shrink-0">
         <i class="fa-solid fa-circle-check"></i>
       </div>
       <div class="kpi-meta-srv">
-        <h4>Delivered Orders</h4>
-        <div class="kpi-num">{{ $deliveredOrdersCount }} <span style="font-size: 11px; color: #64748b; font-weight: 500;">Completed</span></div>
+        <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider m-0">Delivered Orders</h4>
+        <div class="kpi-num text-xl font-extrabold text-slate-800 mt-0.5">{{ $deliveredOrdersCount }} <span class="text-xs text-slate-400 font-semibold">Completed</span></div>
       </div>
     </div>
 
-    <div class="kpi-card-srv">
-      <div class="kpi-icon-srv" style="background: #fffbeb; color: #d97706;">
+    <div class="kpi-card-srv bg-white border border-slate-200/80 rounded-2xl p-4 shadow-xs flex items-center gap-3.5">
+      <div class="kpi-icon-srv w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl shrink-0">
         <i class="fa-solid fa-indian-rupee-sign"></i>
       </div>
       <div class="kpi-meta-srv">
-        <h4>Services Revenue</h4>
-        <div class="kpi-num" style="color: #059669;">₹ {{ number_format($totalServicesRevenue, 2) }}</div>
+        <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider m-0">Services Revenue</h4>
+        <div class="kpi-num text-xl font-extrabold text-emerald-600 font-mono mt-0.5">₹ {{ number_format($totalServicesRevenue, 2) }}</div>
       </div>
     </div>
   </div>
 
   <!-- Header Action Banner -->
-  <div class="srv-header-banner">
-    <div class="srv-header-left">
-      <div class="srv-header-badge">
+  <div class="srv-header-banner bg-white border border-slate-200/80 rounded-2xl p-4 sm:p-5 shadow-xs flex flex-wrap items-center justify-between gap-4">
+    <div class="srv-header-left flex items-center gap-3.5">
+      <div class="srv-header-badge w-11 h-11 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl shrink-0">
         <i class="fa-solid fa-bell-concierge"></i>
       </div>
       <div>
-        <h2>Extra Services &amp; In-Room Dining</h2>
-        <p>Manage guest room service orders, food dishes, laundry tariffs, and room amenities.</p>
+        <h2 class="m-0 text-lg font-extrabold text-slate-800">Extra Services &amp; In-Room Dining</h2>
+        <p class="text-xs text-slate-500 mt-0.5 m-0">Manage guest room service orders, food dishes, laundry tariffs, and room amenities.</p>
       </div>
     </div>
-    <!-- <div class="srv-header-actions">
-      <a href="{{ route('admin.services.index') }}" class="btn-ui-secondary" style="text-decoration: none;">
-        <i class="fa-solid fa-sliders"></i> Manage Catalog (Admin)
-      </a>
-      <button type="button" class="btn-ui-primary" onclick="openNewRoomOrderModal()" style="background: #10b981; border-color: #10b981;">
-        <i class="fa-solid fa-utensils"></i> Place Room Order
-      </button>
-    </div> -->
   </div>
 
   <!-- Segmented Nav Tabs -->
-  <div class="srv-nav-tabs">
-    <button type="button" class="srv-tab-btn active" id="tab-btn-orders" onclick="switchServicesTab('orders')">
+  <div class="srv-nav-tabs flex items-center gap-2 border-b border-slate-200/80 pb-1">
+    <button type="button" class="srv-tab-btn active py-2 px-4 rounded-xl font-extrabold text-xs inline-flex items-center gap-2 cursor-pointer transition-all border-none bg-indigo-600 text-white shadow-xs" id="tab-btn-orders" onclick="switchServicesTab('orders')">
       <i class="fa-solid fa-receipt"></i> Room Orders 
-      <span class="badge-pill" style="background: #dbeafe; color: #1e40af;">{{ count($roomOrders) }}</span>
+      <span class="badge-pill px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-white/20 text-white">{{ count($roomOrders) }}</span>
     </button>
-    <button type="button" class="srv-tab-btn" id="tab-btn-menu" onclick="switchServicesTab('menu')">
-      <i class="fa-solid fa-book-open"></i> Services Catalog
-      <span class="badge-pill" style="background: #e0e7ff; color: #3730a3;">{{ count($services) }}</span>
+    <button type="button" class="srv-tab-btn py-2 px-4 rounded-xl font-bold text-xs inline-flex items-center gap-2 cursor-pointer transition-all border border-slate-200 bg-white text-slate-600 hover:bg-slate-50" id="tab-btn-menu" onclick="switchServicesTab('menu')">
+      <i class="fa-solid fa-book-open text-indigo-500"></i> Services Catalog
+      <span class="badge-pill px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-slate-100 text-slate-700">{{ count($services) }}</span>
     </button>
   </div>
 
   <!-- TAB 1: ROOM SERVICE & AMENITY ORDERS -->
   <div id="srv-tab-orders" class="srv-tab-pane">
-    <div class="srv-filter-toolbar">
-      <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; flex: 1;">
-        <div class="srv-search-box">
-          <i class="fa-solid fa-magnifying-glass"></i>
-          <input type="text" id="order-search-box" placeholder="Search Room #, Guest, Order ID..." onkeyup="filterOrdersTable()">
+    <div class="srv-filter-toolbar bg-white border border-slate-200/80 rounded-2xl p-3 sm:p-4 shadow-xs flex flex-wrap items-center justify-between gap-3 mb-4">
+      <div class="flex items-center gap-2.5 flex-wrap flex-1">
+        <div class="srv-search-box relative min-w-[260px] flex-1 max-w-md">
+          <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+          <input type="text" id="order-search-box" placeholder="Search Room #, Guest, Order ID..." onkeyup="filterOrdersTable()" class="w-full pl-8 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-800 placeholder-slate-400 focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-hidden transition-all">
         </div>
 
-        <select id="filter-order-status" style="padding: 7px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 12px; font-weight: 600; color: #334155; background: #f8fafc;" onchange="filterOrdersTable()">
+        <select id="filter-order-status" class="py-1.5 px-3 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold text-slate-700 focus:bg-white focus:border-indigo-500 focus:outline-hidden" onchange="filterOrdersTable()">
           <option value="all">All Order Statuses</option>
           <option value="Received">Received / New</option>
           <option value="Preparing">Preparing in Kitchen</option>
@@ -586,25 +94,25 @@
         </select>
       </div>
 
-      <button type="button" class="btn-ui-primary" onclick="openNewRoomOrderModal()" style="background: #10b981; border-color: #10b981;">
+      <button type="button" class="btn-ui-primary py-2 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs inline-flex items-center gap-1.5 shadow-xs cursor-pointer border-none transition-colors" onclick="openNewRoomOrderModal()">
         <i class="fa-solid fa-plus"></i> Place Room Order
       </button>
     </div>
 
     <!-- Orders Table -->
-    <div class="srv-table-card">
-      <table class="srv-table">
+    <div class="srv-table-card bg-white border border-slate-200/80 rounded-2xl shadow-xs overflow-x-auto">
+      <table class="srv-table w-full text-left border-collapse text-xs">
         <thead>
-          <tr>
-            <th>Order #</th>
-            <th>Room</th>
-            <th>Guest Name</th>
-            <th>Order Items &amp; Qty</th>
-            <th style="text-align: right;">Total Bill</th>
-            <th>Billing Mode</th>
-            <th style="text-align: center;">Delivery Status</th>
-            <th>Order Time</th>
-            <th style="text-align: right;">Actions</th>
+          <tr class="bg-slate-50 border-b border-slate-200 text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">
+            <th class="py-3 px-3">Order #</th>
+            <th class="py-3 px-3">Room</th>
+            <th class="py-3 px-3">Guest Name</th>
+            <th class="py-3 px-3">Order Items &amp; Qty</th>
+            <th class="py-3 px-3 text-right">Total Bill</th>
+            <th class="py-3 px-3">Billing Mode</th>
+            <th class="py-3 px-3 text-center">Delivery Status</th>
+            <th class="py-3 px-3">Order Time</th>
+            <th class="py-3 px-3 text-right">Actions</th>
           </tr>
         </thead>
         <tbody id="orders-table-body">
@@ -612,69 +120,70 @@
             <tr data-order="{{ strtolower($ord->order_number) }}"
                 data-room="{{ strtolower($ord->room_number ?? '') }}"
                 data-guest="{{ strtolower($ord->guest_name ?? '') }}"
-                data-status="{{ $ord->order_status }}">
-              <td>
-                <span style="font-family: var(--font-mono, monospace); font-weight: 700; color: #2563eb;">{{ $ord->order_number }}</span>
+                data-status="{{ $ord->order_status }}"
+                class="hover:bg-slate-50/70 border-b border-slate-100 transition-colors">
+              <td class="py-3 px-3 whitespace-nowrap">
+                <span class="font-mono font-bold text-indigo-600">{{ $ord->order_number }}</span>
               </td>
-              <td>
-                <span class="room-tag-pill">
-                  <i class="fa-solid fa-door-open" style="font-size: 10px;"></i>
+              <td class="py-3 px-3 whitespace-nowrap">
+                <span class="room-tag-pill inline-flex items-center gap-1 px-2 py-0.5 rounded-md font-mono font-extrabold text-xs bg-indigo-50 text-indigo-700 border border-indigo-200">
+                  <i class="fa-solid fa-door-open text-[10px]"></i>
                   Room {{ $ord->room_number }}
                 </span>
               </td>
-              <td>
-                <div style="font-weight: 700; color: #0f172a;">{{ $ord->guest_name ?? 'In-House Guest' }}</div>
+              <td class="py-3 px-3">
+                <div class="font-bold text-slate-900">{{ $ord->guest_name ?? 'In-House Guest' }}</div>
                 @if($ord->booking?->settle_number)
-                  <div style="font-size: 10px; color: #64748b;">Folio: {{ $ord->booking->settle_number }}</div>
+                  <div class="text-[10px] text-slate-400 font-mono mt-0.5">Folio: {{ $ord->booking->settle_number }}</div>
                 @endif
               </td>
-              <td>
-                <div style="font-size: 11px; color: #334155; line-height: 1.4;">
+              <td class="py-3 px-3">
+                <div class="text-[11px] text-slate-700 leading-snug">
                   @foreach($ord->items as $it)
                     <div>&bull; <strong>{{ $it->quantity }}x</strong> {{ $it->item_name }}</div>
                   @endforeach
                 </div>
               </td>
-              <td style="text-align: right; font-family: var(--font-mono, monospace); font-weight: 700; color: #0f172a;">
+              <td class="py-3 px-3 text-right font-mono font-extrabold text-slate-900 whitespace-nowrap">
                 ₹ {{ number_format($ord->total_amount, 2) }}
               </td>
-              <td>
-                <span style="font-size: 11px; font-weight: 600; color: {{ $ord->payment_status === 'Charged to Room Folio' ? '#6366f1' : '#059669' }};">
+              <td class="py-3 px-3 whitespace-nowrap">
+                <span class="text-xs font-semibold {{ $ord->payment_status === 'Charged to Room Folio' ? 'text-indigo-600' : 'text-emerald-600' }}">
                   <i class="fa-solid {{ $ord->payment_status === 'Charged to Room Folio' ? 'fa-file-invoice-dollar' : 'fa-check' }}"></i>
                   {{ $ord->payment_status }}
                 </span>
               </td>
-              <td style="text-align: center;">
+              <td class="py-3 px-3 text-center whitespace-nowrap">
                 @if($ord->order_status === 'Received')
-                  <span class="order-status-badge received"><i class="fa-solid fa-bell"></i> Received</span>
+                  <span class="order-status-badge inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-50 text-blue-700 border border-blue-200"><i class="fa-solid fa-bell text-[9px]"></i> Received</span>
                 @elseif($ord->order_status === 'Preparing')
-                  <span class="order-status-badge preparing"><i class="fa-solid fa-fire"></i> Preparing</span>
+                  <span class="order-status-badge inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-50 text-amber-700 border border-amber-200"><i class="fa-solid fa-fire text-[9px]"></i> Preparing</span>
                 @elseif($ord->order_status === 'Out for Delivery')
-                  <span class="order-status-badge out"><i class="fa-solid fa-person-walking-luggage"></i> Out for Delivery</span>
+                  <span class="order-status-badge inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-fuchsia-50 text-fuchsia-700 border border-fuchsia-200"><i class="fa-solid fa-person-walking-luggage text-[9px]"></i> Out for Delivery</span>
                 @elseif($ord->order_status === 'Delivered')
-                  <span class="order-status-badge delivered"><i class="fa-solid fa-circle-check"></i> Delivered</span>
+                  <span class="order-status-badge inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200"><i class="fa-solid fa-circle-check text-[9px]"></i> Delivered</span>
                 @else
-                  <span class="order-status-badge cancelled">Cancelled</span>
+                  <span class="order-status-badge inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-50 text-rose-700 border border-rose-200">Cancelled</span>
                 @endif
               </td>
-              <td style="font-size: 11px; color: #64748b; font-family: var(--font-mono, monospace);">
+              <td class="py-3 px-3 text-[11px] text-slate-500 font-mono whitespace-nowrap">
                 {{ $ord->created_at->format('h:i A') }}
               </td>
-              <td style="text-align: right;">
-                <div style="display: flex; align-items: center; justify-content: flex-end; gap: 6px;">
-                  <button type="button" class="btn-ui-secondary" style="padding: 4px 8px; font-size: 11px;" onclick="viewOrderDossier({{ $ord->id }})">
-                    <i class="fa-solid fa-eye"></i> Details
+              <td class="py-3 px-3 text-right whitespace-nowrap">
+                <div class="inline-flex items-center justify-end gap-1.5">
+                  <button type="button" class="btn-ui-secondary py-1 px-2.5 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 text-xs font-bold inline-flex items-center gap-1 cursor-pointer" onclick="viewOrderDossier({{ $ord->id }})">
+                    <i class="fa-solid fa-eye text-slate-400"></i> Details
                   </button>
                   @if($ord->order_status === 'Received')
-                    <button type="button" class="btn-ui-primary" style="padding: 4px 8px; font-size: 11px; background: #f59e0b; border-color: #f59e0b;" onclick="updateOrderStatusAjax({{ $ord->id }}, 'Preparing')">
+                    <button type="button" class="py-1 px-2.5 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold cursor-pointer border-none transition-colors" onclick="updateOrderStatusAjax({{ $ord->id }}, 'Preparing')">
                       Prep
                     </button>
                   @elseif($ord->order_status === 'Preparing')
-                    <button type="button" class="btn-ui-primary" style="padding: 4px 8px; font-size: 11px; background: #c026d3; border-color: #c026d3;" onclick="updateOrderStatusAjax({{ $ord->id }}, 'Out for Delivery')">
+                    <button type="button" class="py-1 px-2.5 rounded-lg bg-fuchsia-600 hover:bg-fuchsia-700 text-white text-xs font-bold cursor-pointer border-none transition-colors" onclick="updateOrderStatusAjax({{ $ord->id }}, 'Out for Delivery')">
                       Dispatch
                     </button>
                   @elseif($ord->order_status === 'Out for Delivery')
-                    <button type="button" class="btn-ui-primary" style="padding: 4px 8px; font-size: 11px; background: #10b981; border-color: #10b981;" onclick="updateOrderStatusAjax({{ $ord->id }}, 'Delivered')">
+                    <button type="button" class="py-1 px-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold cursor-pointer border-none transition-colors" onclick="updateOrderStatusAjax({{ $ord->id }}, 'Delivered')">
                       Delivered
                     </button>
                   @endif
@@ -683,9 +192,9 @@
             </tr>
           @empty
             <tr>
-              <td colspan="9" style="text-align: center; padding: 30px; color: #64748b;">
-                <i class="fa-solid fa-bell-concierge" style="font-size: 24px; margin-bottom: 8px; color: #cbd5e1; display: block;"></i>
-                No room service orders placed today. Click <strong>"Place Room Order"</strong> above to send food, beverages, or amenities directly to an in-house room.
+              <td colspan="9" class="text-center py-8 px-4 text-slate-500">
+                <i class="fa-solid fa-bell-concierge text-3xl mb-2 text-slate-300 block"></i>
+                No room service orders placed today. Click <strong class="text-slate-700">"Place Room Order"</strong> above to send food, beverages, or amenities directly to an in-house room.
               </td>
             </tr>
           @endforelse
@@ -695,45 +204,45 @@
   </div>
 
   <!-- TAB 2: IN-ROOM MENU & SERVICES CATALOG -->
-  <div id="srv-tab-menu" class="srv-tab-pane" style="display: none;">
-    <div class="srv-filter-toolbar">
-      <div style="font-weight: 800; color: #0f172a; font-size: 13px; display: flex; align-items: center; gap: 8px;">
-        <i class="fa-solid fa-book-open" style="color: #0891b2;"></i> Available Room Dining Dishes &amp; Guest Amenities
+  <div id="srv-tab-menu" class="srv-tab-pane hidden">
+    <div class="srv-filter-toolbar bg-white border border-slate-200/80 rounded-2xl p-3 sm:p-4 shadow-xs flex flex-wrap items-center justify-between gap-3 mb-4">
+      <div class="font-extrabold text-slate-900 text-xs flex items-center gap-2">
+        <i class="fa-solid fa-book-open text-cyan-600"></i> Available Room Dining Dishes &amp; Guest Amenities
       </div>
-      <div style="display: flex; align-items: center; gap: 10px;">
-        <a href="{{ route('admin.services.index') }}" class="btn-ui-secondary" style="font-size: 11px; padding: 4px 10px; text-decoration: none;">
-          <i class="fa-solid fa-plus"></i> Add New in Admin
+      <div class="flex items-center gap-2.5">
+        <a href="{{ route('admin.services.index') }}" class="btn-ui-secondary py-1.5 px-3 rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 font-bold text-xs inline-flex items-center gap-1.5 no-underline">
+          <i class="fa-solid fa-plus text-indigo-500"></i> Add New in Admin
         </a>
       </div>
     </div>
 
-    <div class="srv-table-card">
-      <table class="srv-table">
+    <div class="srv-table-card bg-white border border-slate-200/80 rounded-2xl shadow-xs overflow-x-auto">
+      <table class="srv-table w-full text-left border-collapse text-xs">
         <thead>
-          <tr>
-            <th style="width: 80px;">Code</th>
-            <th>Service / Dish Name</th>
-            <th>Category</th>
-            <th>Unit / Serving</th>
-            <th style="text-align: right;">Tariff / Price</th>
-            <th>Description</th>
-            <th style="text-align: center;">Status</th>
-            <th style="text-align: right;">Action</th>
+          <tr class="bg-slate-50 border-b border-slate-200 text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">
+            <th class="w-20 py-3 px-3">Code</th>
+            <th class="py-3 px-3">Service / Dish Name</th>
+            <th class="py-3 px-3">Category</th>
+            <th class="py-3 px-3">Unit / Serving</th>
+            <th class="py-3 px-3 text-right">Tariff / Price</th>
+            <th class="py-3 px-3">Description</th>
+            <th class="py-3 px-3 text-center">Status</th>
+            <th class="py-3 px-3 text-right">Action</th>
           </tr>
         </thead>
         <tbody>
           @foreach($services as $srv)
-            <tr>
-              <td><span style="font-family: var(--font-mono, monospace); font-weight: 700; color: #0891b2; background: #ecfeff; padding: 2px 6px; border-radius: 4px;">{{ $srv->code }}</span></td>
-              <td><strong>{{ $srv->name }}</strong></td>
-              <td><span class="badge-tag blue">{{ $srv->category }}</span></td>
-              <td style="color: #64748b;">{{ $srv->unit }}</td>
-              <td style="text-align: right; font-family: var(--font-mono, monospace); font-weight: 800; color: #0f172a;">₹ {{ number_format($srv->price, 2) }}</td>
-              <td style="font-size: 11px; color: #475569; max-width: 300px;">{{ $srv->description ?: '-' }}</td>
-              <td style="text-align: center;"><span class="badge-tag green">Available</span></td>
-              <td style="text-align: right;">
-                <button type="button" class="btn-ui-primary" style="padding: 4px 10px; font-size: 11px; background: #10b981; border-color: #10b981;" onclick="quickOrderThisService({{ $srv->id }}, '{{ addslashes($srv->name) }}', {{ $srv->price }})">
-                  <i class="fa-solid fa-plus"></i> Order to Room
+            <tr class="hover:bg-slate-50/70 border-b border-slate-100 transition-colors">
+              <td class="py-3 px-3 whitespace-nowrap"><span class="font-mono font-bold text-cyan-700 bg-cyan-50 border border-cyan-200 px-1.5 py-0.5 rounded text-xs">{{ $srv->code }}</span></td>
+              <td class="py-3 px-3 font-bold text-slate-900">{{ $srv->name }}</td>
+              <td class="py-3 px-3 whitespace-nowrap"><span class="bg-indigo-50 text-indigo-700 border border-indigo-200 text-[10px] font-extrabold px-2 py-0.5 rounded-md">{{ $srv->category }}</span></td>
+              <td class="py-3 px-3 text-slate-500">{{ $srv->unit }}</td>
+              <td class="py-3 px-3 text-right font-mono font-extrabold text-slate-900 whitespace-nowrap">₹ {{ number_format($srv->price, 2) }}</td>
+              <td class="py-3 px-3 text-xs text-slate-600 max-w-xs truncate">{{ $srv->description ?: '-' }}</td>
+              <td class="py-3 px-3 text-center whitespace-nowrap"><span class="bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-extrabold px-2 py-0.5 rounded-md">Available</span></td>
+              <td class="py-3 px-3 text-right whitespace-nowrap">
+                <button type="button" class="btn-ui-primary py-1.5 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs inline-flex items-center gap-1 cursor-pointer border-none transition-colors" onclick="quickOrderThisService({{ $srv->id }}, '{{ addslashes($srv->name) }}', {{ $srv->price }})">
+                  <i class="fa-solid fa-plus text-[10px]"></i> Order to Room
                 </button>
               </td>
             </tr>
@@ -742,23 +251,23 @@
       </table>
     </div>
   </div>
-
+  </div>
 </main>
 
 <!-- MODAL 1: NEW ROOM SERVICE ORDER -->
-<div class="srv-modal-overlay" id="modal-new-room-order">
-  <div class="srv-modal-window" style="width: 720px;">
-    <div class="srv-modal-header" style="background: linear-gradient(135deg, #10b981, #059669);">
-      <h3><i class="fa-solid fa-utensils"></i> In-Room Dining &amp; Service Order</h3>
-      <button type="button" class="srv-modal-close" onclick="closeSrvModal('modal-new-room-order')">&times;</button>
+<div class="srv-modal-overlay modal-backdrop fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center p-4" id="modal-new-room-order">
+  <div class="srv-modal-window modal-window w-[720px] max-w-[95vw] max-h-[90vh] flex flex-col rounded-2xl overflow-hidden shadow-2xl border border-slate-200/80 bg-white">
+    <div class="srv-modal-header bg-gradient-to-r from-emerald-600 to-teal-600 p-4 sm:p-5 flex justify-between items-center text-white shrink-0">
+      <h3 class="m-0 text-base font-extrabold text-white flex items-center gap-2"><i class="fa-solid fa-utensils"></i> In-Room Dining &amp; Service Order</h3>
+      <button type="button" class="srv-modal-close bg-white/20 hover:bg-white/30 text-white w-7.5 h-7.5 rounded-full text-lg cursor-pointer flex items-center justify-center transition-colors border-none" onclick="closeSrvModal('modal-new-room-order')">&times;</button>
     </div>
-    <form id="form-room-order" onsubmit="submitRoomOrder(event)">
+    <form id="form-room-order" onsubmit="submitRoomOrder(event)" class="flex flex-col flex-1 overflow-hidden m-0">
       @csrf
-      <div class="srv-modal-body">
-        <div class="form-grid-2">
-          <div class="form-group-srv">
-            <label>Select In-House Room *</label>
-            <select name="room_id" id="ro-room-select" required style="width: 100%;">
+      <div class="srv-modal-body p-4 sm:p-5 overflow-y-auto flex-1 bg-white">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div class="space-y-1.5">
+            <label class="block text-xs font-bold text-slate-700">Select In-House Room *</label>
+            <select name="room_id" id="ro-room-select" required class="w-full text-xs font-medium py-2 px-3 border border-slate-200 rounded-lg">
               <option value="">Choose Occupied Room</option>
               @foreach($activeRooms as $rm)
                 @php
@@ -770,59 +279,59 @@
               @endforeach
             </select>
           </div>
-          <div class="form-group-srv">
-            <label>Guest Name</label>
-            <input type="text" id="ro-guest-display" readonly placeholder="Guest name will load here" style="background: #f8fafc;">
+          <div class="space-y-1.5">
+            <label class="block text-xs font-bold text-slate-700">Guest Name</label>
+            <input type="text" id="ro-guest-display" readonly placeholder="Guest name will load here" class="w-full text-xs font-semibold py-2 px-3 bg-slate-50 border border-slate-200 rounded-lg text-slate-600 focus:outline-hidden">
           </div>
         </div>
 
-        <div style="font-size: 12px; font-weight: 800; color: #0f172a; margin: 12px 0 8px 0; display: flex; justify-content: space-between; align-items: center;">
-          <span><i class="fa-solid fa-bowl-food" style="color: #10b981;"></i> Order Line Items</span>
-          <button type="button" class="btn-ui-secondary" style="font-size: 11px; padding: 3px 8px;" onclick="addOrderLineItem()">
-            <i class="fa-solid fa-plus"></i> Add Item
+        <div class="flex justify-between items-center text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-2.5 mt-4 pt-3 border-t border-slate-100">
+          <span><i class="fa-solid fa-bowl-food text-emerald-600"></i> Order Line Items</span>
+          <button type="button" class="btn-ui-secondary py-1 px-2.5 rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 text-xs font-bold inline-flex items-center gap-1 cursor-pointer" onclick="addOrderLineItem()">
+            <i class="fa-solid fa-plus text-emerald-600"></i> Add Item
           </button>
         </div>
 
         <!-- Dynamic Order Line Items -->
-        <div id="order-line-items-container">
+        <div id="order-line-items-container" class="space-y-2.5">
           <!-- Populated by JS -->
         </div>
 
-        <div class="form-grid-2" style="margin-top: 14px;">
-          <div class="form-group-srv">
-            <label>Billing &amp; Settlement *</label>
-            <select name="payment_status" id="ro-payment-status" required style="width: 100%;">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+          <div class="space-y-1.5">
+            <label class="block text-xs font-bold text-slate-700">Billing &amp; Settlement *</label>
+            <select name="payment_status" id="ro-payment-status" required class="w-full text-xs font-medium py-2 px-3 border border-slate-200 rounded-lg">
               <option value="Charged to Room Folio">Charged to Room Folio (Bill at Checkout)</option>
               <option value="Paid Cash">Cash Paid upon Delivery</option>
               <option value="Paid UPI/Card">Digital UPI / POS Card Paid</option>
               <option value="Pending">Pending Collection</option>
             </select>
           </div>
-          <div class="form-group-srv">
-            <label>Delivery Staff / Order Taker</label>
-            <input type="text" name="served_by" placeholder="Server Name" value="Room Service Desk">
+          <div class="space-y-1.5">
+            <label class="block text-xs font-bold text-slate-700">Delivery Staff / Order Taker</label>
+            <input type="text" name="served_by" placeholder="Server Name" value="Room Service Desk" class="w-full text-xs font-medium py-2 px-3 border border-slate-200 rounded-lg focus:outline-hidden focus:border-emerald-500">
           </div>
         </div>
 
-        <div class="form-group-srv">
-          <label>Kitchen / Delivery Instructions</label>
-          <textarea name="special_instructions" rows="2" placeholder="e.g. Less spicy, send extra napkins & cutlery, deliver at 8:30 PM"></textarea>
+        <div class="space-y-1.5 mt-4">
+          <label class="block text-xs font-bold text-slate-700">Kitchen / Delivery Instructions</label>
+          <textarea name="special_instructions" rows="2" placeholder="e.g. Less spicy, send extra napkins & cutlery, deliver at 8:30 PM" class="w-full text-xs font-medium p-2.5 border border-slate-200 rounded-lg focus:outline-hidden focus:border-emerald-500"></textarea>
         </div>
 
         <!-- Order Total Summary -->
-        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center;">
+        <div class="bg-slate-50 border border-slate-200 rounded-xl p-3.5 flex justify-between items-center mt-4">
           <div>
-            <div style="font-size: 11px; color: #64748b;">Subtotal + 5% F&amp;B Tax:</div>
-            <div style="font-size: 16px; font-weight: 800; font-family: var(--font-mono, monospace); color: #0f172a;" id="ro-total-display">₹ 0.00</div>
+            <div class="text-[11px] text-slate-500">Subtotal + 5% F&amp;B Tax:</div>
+            <div class="text-base font-extrabold font-mono text-slate-900 mt-0.5" id="ro-total-display">₹ 0.00</div>
           </div>
-          <div style="font-size: 11px; font-weight: 700; color: #10b981;">
+          <div class="text-xs font-extrabold text-emerald-600 inline-flex items-center gap-1.5">
             <i class="fa-solid fa-clock"></i> Est. Delivery: 30-40 Mins
           </div>
         </div>
       </div>
-      <div class="srv-modal-footer">
-        <button type="button" class="btn-ui-secondary" onclick="closeSrvModal('modal-new-room-order')">Cancel</button>
-        <button type="submit" class="btn-ui-primary" id="btn-submit-order" style="background: #10b981; border-color: #10b981;">
+      <div class="srv-modal-footer p-3 sm:px-5 bg-slate-50 border-t border-slate-200 flex justify-end gap-2.5 items-center shrink-0">
+        <button type="button" class="btn-ui-secondary py-1.5 px-4 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 font-bold text-xs cursor-pointer" onclick="closeSrvModal('modal-new-room-order')">Cancel</button>
+        <button type="submit" class="btn-ui-primary py-1.5 px-5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs cursor-pointer border-none shadow-xs transition-colors" id="btn-submit-order">
           <i class="fa-solid fa-check"></i> Place Room Order
         </button>
       </div>
@@ -831,17 +340,17 @@
 </div>
 
 <!-- MODAL 2: VIEW ORDER DOSSIER -->
-<div class="srv-modal-overlay" id="modal-order-dossier">
-  <div class="srv-modal-window">
-    <div class="srv-modal-header" style="background: linear-gradient(135deg, #2563eb, #1d4ed8);">
-      <h3 id="dossier-order-title"><i class="fa-solid fa-receipt"></i> Room Order Dossier</h3>
-      <button type="button" class="srv-modal-close" onclick="closeSrvModal('modal-order-dossier')">&times;</button>
+<div class="srv-modal-overlay modal-backdrop fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center p-4" id="modal-order-dossier">
+  <div class="srv-modal-window modal-window w-[600px] max-w-[95vw] max-h-[90vh] flex flex-col rounded-2xl overflow-hidden shadow-2xl border border-slate-200/80 bg-white">
+    <div class="srv-modal-header bg-gradient-to-r from-blue-600 to-indigo-600 p-4 sm:p-5 flex justify-between items-center text-white shrink-0">
+      <h3 id="dossier-order-title" class="m-0 text-base font-extrabold text-white flex items-center gap-2"><i class="fa-solid fa-receipt"></i> Room Order Dossier</h3>
+      <button type="button" class="srv-modal-close bg-white/20 hover:bg-white/30 text-white w-7.5 h-7.5 rounded-full text-lg cursor-pointer flex items-center justify-center transition-colors border-none" onclick="closeSrvModal('modal-order-dossier')">&times;</button>
     </div>
-    <div class="srv-modal-body" id="dossier-order-content">
+    <div class="srv-modal-body p-4 sm:p-5 overflow-y-auto flex-1 bg-slate-50" id="dossier-order-content">
       <!-- Loaded dynamically -->
     </div>
-    <div class="srv-modal-footer">
-      <button type="button" class="btn-ui-secondary" onclick="closeSrvModal('modal-order-dossier')">Close</button>
+    <div class="srv-modal-footer p-3 sm:px-5 bg-white border-t border-slate-200 flex justify-end items-center shrink-0">
+      <button type="button" class="btn-ui-secondary py-1.5 px-4 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 font-bold text-xs cursor-pointer" onclick="closeSrvModal('modal-order-dossier')">Close</button>
     </div>
   </div>
 </div>
@@ -922,7 +431,7 @@
     itemCounter++;
     const container = document.getElementById('order-line-items-container');
     const row = document.createElement('div');
-    row.className = 'order-item-row';
+    row.className = 'order-item-row flex items-center gap-2.5 bg-slate-50/80 p-2.5 rounded-xl border border-slate-200/80 transition-colors hover:border-slate-300';
     row.id = `item-row-${itemCounter}`;
 
     let optionsHtml = '<option value="">-- Search &amp; Choose Hotel Service / Food Item --</option>';
@@ -932,21 +441,21 @@
     });
 
     row.innerHTML = `
-      <div style="flex: 2; min-width: 0;">
-        <select class="item-service-select" id="item-service-select-${itemCounter}" style="width: 100%;">
+      <div class="flex-[2] min-w-0">
+        <select class="item-service-select w-full" id="item-service-select-${itemCounter}">
           ${optionsHtml}
         </select>
         <input type="hidden" name="items[${itemCounter}][service_id]" id="input-service-id-${itemCounter}" value="${selectedServiceId || ''}">
-        <input type="text" name="items[${itemCounter}][name]" id="input-item-name-${itemCounter}" placeholder="Custom item description" style="padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 11px; width: 100%; margin-top: 4px; display: none; box-sizing: border-box;">
+        <input type="text" name="items[${itemCounter}][name]" id="input-item-name-${itemCounter}" placeholder="Custom item description" class="hidden px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs w-full mt-1.5 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 box-border">
       </div>
-      <div style="width: 85px; flex-shrink: 0;">
-        <input type="number" step="0.01" name="items[${itemCounter}][price]" id="input-item-price-${itemCounter}" placeholder="Price" value="0.00" onkeyup="calculateRoomOrderTotal()" onchange="calculateRoomOrderTotal()" style="padding: 8px 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 11px; width: 100%; font-family: var(--font-mono, monospace); font-weight: 700; box-sizing: border-box;">
+      <div class="w-24 shrink-0">
+        <input type="number" step="0.01" name="items[${itemCounter}][price]" id="input-item-price-${itemCounter}" placeholder="Price" value="0.00" onkeyup="calculateRoomOrderTotal()" onchange="calculateRoomOrderTotal()" class="px-2.5 py-2 border border-slate-300 rounded-lg text-xs w-full font-mono font-bold text-slate-800 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 box-border text-right">
       </div>
-      <div style="width: 60px; flex-shrink: 0;">
-        <input type="number" name="items[${itemCounter}][quantity]" id="input-item-qty-${itemCounter}" value="1" min="1" onkeyup="calculateRoomOrderTotal()" onchange="calculateRoomOrderTotal()" style="padding: 8px 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 11px; width: 100%; font-family: var(--font-mono, monospace); font-weight: 700; box-sizing: border-box;">
+      <div class="w-16 shrink-0">
+        <input type="number" name="items[${itemCounter}][quantity]" id="input-item-qty-${itemCounter}" value="1" min="1" onkeyup="calculateRoomOrderTotal()" onchange="calculateRoomOrderTotal()" class="px-2.5 py-2 border border-slate-300 rounded-lg text-xs w-full font-mono font-bold text-slate-800 text-center focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 box-border">
       </div>
-      <button type="button" onclick="removeOrderLineItem(${itemCounter})" style="background: #fff1f2; border: 1px solid #fecdd3; color: #e11d48; width: 34px; height: 34px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-        <i class="fa-solid fa-trash-can" style="font-size: 11px;"></i>
+      <button type="button" onclick="removeOrderLineItem(${itemCounter})" class="bg-rose-50 border border-rose-200 text-rose-600 hover:bg-rose-100 hover:text-rose-700 w-8.5 h-8.5 rounded-lg cursor-pointer flex items-center justify-center shrink-0 transition-colors shadow-xs" title="Remove Item">
+        <i class="fa-solid fa-trash-can text-xs"></i>
       </button>
     `;
 
@@ -990,8 +499,10 @@
       priceInput.value = selectedOpt.getAttribute('data-price');
       serviceIdInput.value = selectedOpt.value;
       nameInput.style.display = 'none';
+      nameInput.classList.add('hidden');
     } else {
       nameInput.style.display = 'block';
+      nameInput.classList.remove('hidden');
       serviceIdInput.value = '';
     }
 
@@ -1117,29 +628,29 @@
         let itemsHtml = '';
         o.items.forEach(it => {
           itemsHtml += `
-            <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f1f5f9; font-size: 12px;">
-              <div><strong>${it.quantity}x</strong> ${it.item_name}</div>
-              <div style="font-family: var(--font-mono, monospace); font-weight: 700;">₹ ${parseFloat(it.line_total).toFixed(2)}</div>
+            <div class="flex items-center justify-between py-2 border-b border-slate-100 last:border-b-0 text-xs">
+              <div class="text-slate-800 font-medium"><strong class="font-bold text-slate-900 mr-1">${it.quantity}x</strong> ${it.item_name}</div>
+              <div class="font-mono font-bold text-slate-800">₹ ${parseFloat(it.line_total).toFixed(2)}</div>
             </div>
           `;
         });
 
         document.getElementById('dossier-order-content').innerHTML = `
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: #f8fafc; padding: 12px; border-radius: 8px; margin-bottom: 14px; font-size: 12px;">
-            <div><strong>Guest:</strong> ${o.guest_name}</div>
-            <div><strong>Room #:</strong> ${o.room_number}</div>
-            <div><strong>Billing:</strong> ${o.payment_status}</div>
-            <div><strong>Status:</strong> ${o.order_status}</div>
-            <div><strong>Served By:</strong> ${o.served_by || 'Room Service'}</div>
-            <div><strong>Est. Delivery:</strong> ${o.delivery_time || '-'}</div>
-            <div style="grid-column: 1 / -1;"><strong>Special Instructions:</strong> ${o.special_instructions || 'None'}</div>
+          <div class="grid grid-cols-2 gap-2.5 bg-slate-50/80 border border-slate-200/80 p-3 rounded-xl mb-4 text-xs">
+            <div class="text-slate-600"><span class="font-semibold text-slate-800">Guest:</span> ${o.guest_name}</div>
+            <div class="text-slate-600"><span class="font-semibold text-slate-800">Room #:</span> ${o.room_number}</div>
+            <div class="text-slate-600"><span class="font-semibold text-slate-800">Billing:</span> <span class="capitalize font-semibold text-slate-800">${o.payment_status}</span></div>
+            <div class="text-slate-600"><span class="font-semibold text-slate-800">Status:</span> <span class="capitalize font-semibold text-indigo-700">${o.order_status}</span></div>
+            <div class="text-slate-600"><span class="font-semibold text-slate-800">Served By:</span> ${o.served_by || 'Room Service'}</div>
+            <div class="text-slate-600"><span class="font-semibold text-slate-800">Est. Delivery:</span> ${o.delivery_time || '-'}</div>
+            <div class="col-span-2 text-slate-600"><span class="font-semibold text-slate-800">Special Instructions:</span> ${o.special_instructions || 'None'}</div>
           </div>
-          <div style="font-weight: 800; font-size: 12px; margin-bottom: 8px; color: #0f172a;">Order Items</div>
-          <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 14px; margin-bottom: 12px;">
+          <div class="font-bold text-xs mb-2 text-slate-800 uppercase tracking-wider">Order Items</div>
+          <div class="bg-white border border-slate-200/80 rounded-xl p-3.5 mb-3 shadow-xs">
             ${itemsHtml}
-            <div style="display: flex; justify-content: space-between; padding-top: 8px; font-weight: 800; font-size: 13px; color: #0f172a;">
+            <div class="flex items-center justify-between pt-3 font-bold text-sm text-slate-900 border-t border-slate-200/80 mt-1">
               <div>Total (inc. 5% tax):</div>
-              <div style="font-family: var(--font-mono, monospace); color: #059669;">₹ ${parseFloat(o.total_amount).toFixed(2)}</div>
+              <div class="font-mono text-emerald-600 text-base font-extrabold">₹ ${parseFloat(o.total_amount).toFixed(2)}</div>
             </div>
           </div>
         `;

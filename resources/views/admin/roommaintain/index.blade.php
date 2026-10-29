@@ -2,658 +2,407 @@
 
 @section('title', 'Room Maintenance - Hotel Sagar Sonnet PMS')
 
-@push('styles')
-<style>
-  .admin-layout {
-    display: grid;
-    grid-template-columns: 280px 1fr;
-    gap: 20px;
-    min-height: calc(100vh - 165px);
-  }
-  .pms-page-header {
-    border-bottom: none !important;
-    background: transparent !important;
-  }
-  .admin-sidebar {
-    background: #ffffff;
-    border: 1px solid var(--border-medium);
-    border-radius: var(--radius-lg);
-    box-shadow: 0 4px 16px rgba(0,0,0,0.03);
-    padding: 14px;
-    height: fit-content;
-    position: sticky;
-    top: 10px;
-    max-height: calc(100vh - 180px);
-    overflow-y: auto;
-  }
-  .admin-nav-group { margin-bottom: 8px; }
-  .admin-nav-header {
-    font-size: 11px;
-    font-weight: 800;
-    /* color: var(--text-muted); */
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-    padding: 9px 12px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    border-radius: var(--radius-md);
-    cursor: pointer;
-    user-select: none;
-    transition: all 0.2s ease;
-    background: #f8fafc;
-    border: 1px solid #f1f5f9;
-  }
-  .admin-nav-header:hover { background: #f1f5f9; color: var(--accent-primary); }
-  .admin-nav-header.active {
-    color: var(--accent-primary);
-    font-weight: 900;
-    background: rgba(99, 102, 241, 0.08);
-    border-color: rgba(99, 102, 241, 0.2);
-  }
-  .admin-nav-flat {
-    font-size: 11px;
-    font-weight: 800;
-    color: var(--text-secondary);
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-    padding: 10px 12px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    border-radius: var(--radius-md);
-    cursor: pointer;
-    user-select: none;
-    transition: all 0.2s ease;
-    background: #ffffff;
-    border: 1px solid #f1f5f9;
-    margin-bottom: 6px;
-  }
-  .admin-nav-flat:hover { background: #f8fafc; color: var(--accent-primary); }
-  .admin-sub-list {
-    list-style: none;
-    padding: 4px 0 4px 8px;
-    margin: 4px 0 0 4px;
-    border-left: 2px solid var(--border-medium);
-  }
-  .admin-sub-item {
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--text-secondary);
-    padding: 7px 10px;
-    border-radius: 6px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    transition: all 0.2s ease;
-    margin-bottom: 2px;
-    text-decoration: none;
-  }
-  .admin-sub-item:hover {
-    background: rgba(99, 102, 241, 0.06);
-    color: var(--accent-primary);
-    transform: translateX(3px);
-  }
-  .admin-sub-item.active {
-    background: linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(168, 85, 247, 0.08));
-    color: var(--accent-primary);
-    font-weight: 800;
-    border-left: 3px solid var(--accent-primary);
-  }
-  .admin-content-pane {
-    background: #ffffff;
-    border: 1px solid var(--border-medium);
-    border-radius: var(--radius-lg);
-    box-shadow: 0 4px 16px rgba(0,0,0,0.03);
-    padding: 24px;
-  }
-  .crud-header-card {
-    background: #ffffff;
-    border: 1px solid var(--border-medium);
-    border-radius: var(--radius-md);
-    padding: 16px 20px;
-    margin-bottom: 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.02);
-  }
-  .crud-toolbar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 16px;
-    flex-wrap: wrap;
-  }
-  .crud-toolbar-left {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex-wrap: wrap;
-  }
-  .crud-search-input {
-    height: 38px;
-    padding: 8px 14px 8px 34px;
-    font-size: 13px;
-    border: 1px solid var(--border-medium);
-    border-radius: var(--radius-md);
-    background: #fff;
-    color: var(--text-primary);
-    width: 260px;
-    max-width: 100%;
-  }
-  .crud-filter-select {
-    height: 38px;
-    padding: 6px 12px;
-    font-size: 12px;
-    font-weight: 600;
-    border: 1px solid var(--border-medium);
-    border-radius: var(--radius-md);
-    background: #fff;
-    color: var(--text-primary);
-  }
-  .crud-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 13px;
-    background: #ffffff;
-    border-radius: var(--radius-md);
-    overflow: hidden;
-    border: 1px solid var(--border-medium);
-  }
-  .crud-table th {
-    background: #f8fafc;
-    padding: 12px 14px;
-    font-size: 10px;
-    font-weight: 800;
-    color: var(--text-secondary);
-    text-transform: uppercase;
-    letter-spacing: 0.6px;
-    border-bottom: 1px solid var(--border-medium);
-    text-align: left;
-  }
-  .crud-table td {
-    padding: 12px 14px;
-    border-bottom: 1px solid #f1f5f9;
-    color: var(--text-primary);
-    vertical-align: middle;
-  }
-  .crud-table tr:hover td { background: rgba(99, 102, 241, 0.02); }
-  .crud-actions { display: flex; gap: 6px; justify-content: flex-end; }
-  .btn-action-view {
-    padding: 6px 10px;
-    font-size: 11px;
-    font-weight: 700;
-    border: 1px solid var(--border-medium);
-    border-radius: var(--radius-sm);
-    background: #fff;
-    color: #0284c7;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-  .btn-action-view:hover { background: #0284c7; color: #fff; }
-  .btn-action-edit {
-    padding: 6px 10px;
-    font-size: 11px;
-    font-weight: 700;
-    border: 1px solid var(--border-medium);
-    border-radius: var(--radius-sm);
-    background: #fff;
-    color: var(--accent-primary);
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-  .btn-action-edit:hover { background: var(--accent-primary); color: #fff; }
-  .btn-action-del {
-    padding: 6px 10px;
-    font-size: 11px;
-    font-weight: 700;
-    border: 1px solid #fecaca;
-    border-radius: var(--radius-sm);
-    background: #fff;
-    color: var(--accent-rose);
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-  .btn-action-del:hover { background: var(--accent-rose); color: #fff; }
-
-  .status-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 3px 10px;
-    border-radius: 12px;
-    font-size: 11px;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 0.4px;
-  }
-  .status-pill.active {
-    background: #fef2f2;
-    color: #ef4444;
-    border: 1px solid #fca5a5;
-  }
-  .status-pill.checking {
-    background: #fffbeb;
-    color: #f59e0b;
-    border: 1px solid #fcd34d;
-  }
-  .status-pill.completed {
-    background: #ecfdf5;
-    color: #10b981;
-    border: 1px solid #6ee7b7;
-  }
-
-  .stats-summary-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 12px;
-    margin-bottom: 20px;
-  }
-  .stats-summary-card {
-    background: #fff;
-    border: 1px solid var(--border-medium);
-    border-radius: var(--radius-md);
-    padding: 14px 16px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.02);
-  }
-  .stats-summary-card .val {
-    font-size: 20px;
-    font-weight: 900;
-    color: var(--text-primary);
-  }
-  .stats-summary-card .lbl {
-    font-size: 11px;
-    font-weight: 700;
-    color: var(--text-secondary);
-    text-transform: uppercase;
-  }
-
-  .admin-form-group { margin-bottom: 14px; }
-  .admin-form-label {
-    display: block;
-    font-size: 11px;
-    font-weight: 800;
-    color: var(--text-secondary);
-    text-transform: uppercase;
-    letter-spacing: 0.6px;
-    margin-bottom: 5px;
-  }
-  .admin-form-input {
-    width: 100%;
-    height: 38px;
-    padding: 8px 12px;
-    font-size: 13px;
-    border: 1px solid var(--border-medium);
-    border-radius: var(--radius-md);
-    background: #fff;
-    color: var(--text-primary);
-    box-sizing: border-box;
-  }
-  .admin-form-textarea {
-    width: 100%;
-    min-height: 80px;
-    padding: 10px 12px;
-    font-size: 13px;
-    border: 1px solid var(--border-medium);
-    border-radius: var(--radius-md);
-    background: #fff;
-    color: var(--text-primary);
-    box-sizing: border-box;
-    font-family: inherit;
-    resize: vertical;
-  }
-</style>
-@endpush
-
 @section('content')
-<main class="pms-main-viewport">
-  <div class="pms-page-container">
-
-    <div class="pms-page-header">
-      <div class="pms-header-title-block">
-        <div class="pms-status-indicator"></div>
-        <div>
-          <h1 class="pms-page-title">Administrator • Room Maintenance Management</h1>
-          <div class="pms-page-subtitle">Track, assign, inspect, and update room maintenance work orders and engineer logs.</div>
-        </div>
-      </div>
-      <div style="display: flex; gap: 10px;">
-        <button class="btn-ui-secondary" onclick="exportDataCSV()"><i class="fa-solid fa-file-csv"></i> Export CSV</button>
+<main class="flex-1 p-4 lg:p-6 space-y-6">
+  <!-- Page Header -->
+  <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div class="flex items-center gap-3">
+      <div class="w-2.5 h-8 bg-indigo-600 rounded-full"></div>
+      <div>
+        <h1 class="text-xl lg:text-2xl font-black text-slate-800 tracking-tight">Administrator • Room Maintenance Management</h1>
+        <p class="text-xs lg:text-sm text-slate-500 font-medium">Track, assign, inspect, and update room maintenance work orders and engineer logs.</p>
       </div>
     </div>
-
-    <div class="admin-layout">
-      @include('admin.includes.sidebar')
-
-      <section class="admin-content-pane">
-        <!-- Quick KPI Cards -->
-        <div class="stats-summary-grid">
-          <div class="stats-summary-card">
-            <div>
-              <div class="lbl">Total Records</div>
-              <div class="val" id="kpi-total">{{ count($items) }}</div>
-            </div>
-            <i class="fa-solid fa-list-check" style="font-size: 24px; color: #6366f1; opacity: 0.8;"></i>
-          </div>
-          <div class="stats-summary-card" style="border-left: 4px solid #ef4444;">
-            <div>
-              <div class="lbl">Active Work</div>
-              <div class="val" style="color: #ef4444;" id="kpi-active">{{ $activeCount ?? 0 }}</div>
-            </div>
-            <i class="fa-solid fa-triangle-exclamation" style="font-size: 24px; color: #ef4444; opacity: 0.8;"></i>
-          </div>
-          <div class="stats-summary-card" style="border-left: 4px solid #f59e0b;">
-            <div>
-              <div class="lbl">Checking / Testing</div>
-              <div class="val" style="color: #f59e0b;" id="kpi-checking">{{ $checkingCount ?? 0 }}</div>
-            </div>
-            <i class="fa-solid fa-spinner" style="font-size: 24px; color: #f59e0b; opacity: 0.8;"></i>
-          </div>
-          <div class="stats-summary-card" style="border-left: 4px solid #10b981;">
-            <div>
-              <div class="lbl">Completed</div>
-              <div class="val" style="color: #10b981;" id="kpi-completed">{{ $completedCount ?? 0 }}</div>
-            </div>
-            <i class="fa-solid fa-circle-check" style="font-size: 24px; color: #10b981; opacity: 0.8;"></i>
-          </div>
-        </div>
-
-        <div id="crud-view-container">
-          <div class="crud-header-card">
-            <div>
-              <div style="display: flex; align-items: center; gap: 8px;">
-                <h2 style="font-size: 16px; font-weight: 800; color: var(--text-primary); margin: 0;">Room Maintenance Tasks</h2>
-                <span class="badge-tag blue" id="view-count">{{ count($items) }} Logs</span>
-              </div>
-              <div style="font-size: 12px; color: var(--text-secondary); margin-top: 3px;">
-                Manage work descriptions, assigned engineers, completion schedules, and resolution notes.
-              </div>
-            </div>
-            <button class="btn-ui-primary" onclick="openAddModal()"><i class="fa-solid fa-plus"></i> Schedule Maintenance</button>
-          </div>
-
-          <div class="crud-toolbar">
-            <div class="crud-toolbar-left">
-              <div class="crud-search-wrap">
-                <i class="fa-solid fa-magnifying-glass"></i>
-                <input type="text" id="table-search" class="crud-search-input" placeholder="Search room, engineer, reason..." value="{{ request('search') }}" oninput="handleSearch(this.value)">
-              </div>
-              <select id="status-filter" class="crud-filter-select" onchange="handleStatusFilter(this.value)">
-                <option value="all" {{ request('status', 'all') === 'all' ? 'selected' : '' }}>All Statuses</option>
-                <option value="Active" {{ request('status') === 'Active' ? 'selected' : '' }}>Active</option>
-                <option value="Checking" {{ request('status') === 'Checking' ? 'selected' : '' }}>Checking</option>
-                <option value="Completed" {{ request('status') === 'Completed' ? 'selected' : '' }}>Completed</option>
-              </select>
-              <select id="floor-filter" class="crud-filter-select" onchange="handleFloorFilter(this.value)">
-                <option value="all">All Floors</option>
-                @foreach($floors as $fl)
-                  <option value="{{ $fl->floor }}">Floor {{ $fl->floor }}</option>
-                @endforeach
-              </select>
-            </div>
-            <div class="crud-toolbar-right">
-              <button class="btn-ui-danger" id="btn-bulk-delete" style="display: none; height: 38px; padding: 0 16px; border-radius: var(--radius-md); font-weight: 700; background: #ef4444; color: #fff; border: none; align-items: center; gap: 6px; cursor: pointer;" onclick="handleBulkDelete()"><i class="fa-solid fa-trash-can"></i> Delete Selected (<span id="bulk-selected-count">0</span>)</button>
-              <button class="btn-ui-secondary" onclick="exportDataCSV()"><i class="fa-solid fa-file-csv"></i> Export CSV</button>
-              <button class="btn-ui-secondary" onclick="loadTableData()"><i class="fa-solid fa-rotate"></i> Refresh</button>
-            </div>
-          </div>
-
-          <div style="overflow-x: auto;">
-            <table class="crud-table" id="crud-table">
-              <thead>
-                <tr>
-                  <th style="width: 40px; text-align: center;"><input type="checkbox" id="select-all-check" onchange="toggleSelectAll(this)" style="cursor: pointer; width: 16px; height: 16px; accent-color: var(--accent-primary);"></th>
-                  <th style="width: 50px;">#</th>
-                  <th>Room Details</th>
-                  <th>Reason / Work Description</th>
-                  <th>Assigned Personnel / Team</th>
-                  <th>Expected Completion</th>
-                  <th>Status</th>
-                  <th style="text-align: right; width: 130px;">Actions</th>
-                </tr>
-              </thead>
-              <tbody id="table-body">
-                @forelse($items as $idx => $item)
-                <tr data-id="{{ $item->id }}">
-                  <td style="text-align: center;">
-                    <input type="checkbox" class="row-select-check" value="{{ $item->id }}" onchange="handleRowSelect(this, '{{ $item->id }}')" style="cursor: pointer; width: 16px; height: 16px; accent-color: var(--accent-primary);">
-                  </td>
-                  <td style="font-family: var(--font-mono); font-weight: 700; color: var(--text-muted); font-size: 11px;">{{ $idx + 1 }}</td>
-                  <td>
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                      <span style="display: inline-block; padding: 3px 8px; border-radius: 4px; font-weight: 800; font-size: 12px; background: rgba(99, 102, 241, 0.1); color: var(--accent-primary);">
-                        #{{ $item->room->room_number ?? $item->room_id }}
-                      </span>
-                      <div>
-                        <div style="font-weight: 700; font-size: 12px; color: var(--text-primary);">{{ $item->room->category ?? 'Standard Room' }}</div>
-                        <div style="font-size: 11px; color: var(--text-secondary);">Floor {{ $item->room->floor ?? '-' }}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td style="font-weight: 600; color: var(--text-primary); max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ $item->reason }}">
-                    {{ $item->reason ?? 'Maintenance Check' }}
-                  </td>
-                  <td>
-                    <span style="font-size: 12px; font-weight: 600; color: var(--text-secondary); display: flex; align-items: center; gap: 6px;">
-                      <i class="fa-solid fa-user-gear" style="color: #64748b;"></i> {{ $item->assign ?: 'Not Assigned' }}
-                    </span>
-                  </td>
-                  <td>
-                    <span style="font-size: 12px; font-weight: 600; color: var(--text-secondary);">
-                      <i class="fa-regular fa-clock" style="margin-right: 4px; color: #94a3b8;"></i>
-                      {{ $item->expected_date_time ? \Carbon\Carbon::parse($item->expected_date_time)->format('d M Y, h:i A') : '-' }}
-                    </span>
-                  </td>
-                  <td>
-                    @php
-                      $st = strtolower($item->status ?? 'active');
-                      $pillClass = $st === 'completed' ? 'completed' : ($st === 'checking' ? 'checking' : 'active');
-                    @endphp
-                    <span class="status-pill {{ $pillClass }}">
-                      <i class="fa-solid {{ $st === 'completed' ? 'fa-circle-check' : ($st === 'checking' ? 'fa-spinner' : 'fa-triangle-exclamation') }}"></i>
-                      {{ $item->status ?? 'Active' }}
-                    </span>
-                  </td>
-                  <td style="text-align: right;">
-                    <div class="crud-actions">
-                      <button class="btn-action-view" onclick="openViewModal({{ $item->id }})" title="View Details & Note"><i class="fa-solid fa-eye"></i></button>
-                      <button class="btn-action-edit" onclick="openEditModal({{ $item->id }})" title="Edit Status / Assignment"><i class="fa-solid fa-pen"></i></button>
-                      <button class="btn-action-del" onclick="deleteItem({{ $item->id }})" title="Delete Task"><i class="fa-solid fa-trash"></i></button>
-                    </div>
-                  </td>
-                </tr>
-                @empty
-                <tr>
-                  <td colspan="8" style="text-align: center; padding: 40px; color: var(--text-muted);">
-                    <i class="fa-solid fa-inbox" style="font-size: 28px; margin-bottom: 10px; display: block;"></i>
-                    No room maintenance logs found. Click "+ Schedule Maintenance" to create one.
-                  </td>
-                </tr>
-                @endforelse
-              </tbody>
-            </table>
-          </div>
-
-          <!-- Pagination Bar -->
-          <div class="pms-pagination-bar" id="table-pagination-bar">
-            <div class="pms-pagination-info" id="pagination-info">
-              Showing 1 to {{ count($items) }} of {{ count($items) }} records
-            </div>
-            <div class="pms-pagination-controls">
-              <div class="pms-per-page-wrap">
-                <span>Rows:</span>
-                <select id="rows-per-page" class="pms-per-page-select" onchange="handlePageSizeChange(this.value)">
-                  <option value="10" selected>10</option>
-                  <option value="20">20</option>
-                  <option value="100">100</option>
-                  <option value="all">All</option>
-                </select>
-              </div>
-              <div class="pms-page-nav" id="pagination-nav"></div>
-            </div>
-          </div>
-        </div>
-      </section>
+    <div class="flex items-center gap-2.5">
+      <button type="button" onclick="exportDataCSV()" class="h-9.5 px-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold shadow-xs hover:border-slate-300 transition-all flex items-center gap-2 cursor-pointer">
+        <i class="fa-solid fa-file-csv text-slate-500"></i> Export CSV
+      </button>
     </div>
+  </div>
 
+  <div class="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6 items-start">
+    @include('admin.includes.sidebar')
+
+    <section class="min-w-0 space-y-6">
+      <!-- Quick KPI Cards -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-white rounded-2xl p-4.5 border border-slate-200/80 shadow-xs flex items-center justify-between">
+          <div>
+            <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Records</div>
+            <div class="text-2xl font-black text-slate-800 mt-1" id="kpi-total">{{ count($items) }}</div>
+          </div>
+          <div class="w-11 h-11 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-lg">
+            <i class="fa-solid fa-list-check"></i>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl p-4.5 border border-slate-200/80 shadow-xs flex items-center justify-between border-l-4 border-l-rose-500">
+          <div>
+            <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Active Work</div>
+            <div class="text-2xl font-black text-rose-600 mt-1" id="kpi-active">{{ $activeCount ?? 0 }}</div>
+          </div>
+          <div class="w-11 h-11 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center text-lg">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl p-4.5 border border-slate-200/80 shadow-xs flex items-center justify-between border-l-4 border-l-amber-500">
+          <div>
+            <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Checking / Testing</div>
+            <div class="text-2xl font-black text-amber-600 mt-1" id="kpi-checking">{{ $checkingCount ?? 0 }}</div>
+          </div>
+          <div class="w-11 h-11 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-lg">
+            <i class="fa-solid fa-spinner"></i>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl p-4.5 border border-slate-200/80 shadow-xs flex items-center justify-between border-l-4 border-l-emerald-500">
+          <div>
+            <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Completed</div>
+            <div class="text-2xl font-black text-emerald-600 mt-1" id="kpi-completed">{{ $completedCount ?? 0 }}</div>
+          </div>
+          <div class="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg">
+            <i class="fa-solid fa-circle-check"></i>
+          </div>
+        </div>
+      </div>
+
+      <div id="crud-view-container" class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+        <!-- Header Card -->
+        <div class="p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50/50">
+          <div>
+            <div class="flex items-center gap-2.5">
+              <h2 class="text-base font-bold text-slate-800 tracking-tight">Room Maintenance Tasks</h2>
+              <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200/60" id="view-count">{{ count($items) }} Logs</span>
+            </div>
+            <p class="text-xs text-slate-500 mt-0.5">Manage work descriptions, assigned engineers, completion schedules, and resolution notes.</p>
+          </div>
+          <button type="button" class="h-9.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-xs shadow-indigo-200 transition-all flex items-center gap-2 self-start sm:self-auto cursor-pointer" onclick="openAddModal()">
+            <i class="fa-solid fa-plus text-xs"></i> Schedule Maintenance
+          </button>
+        </div>
+
+        <!-- Toolbar -->
+        <div class="p-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white">
+          <div class="flex flex-wrap items-center gap-2.5 flex-1 max-w-2xl">
+            <div class="relative flex-1 min-w-[200px]">
+              <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+              <input type="text" id="table-search" class="w-full h-9.5 pl-9 pr-3.5 rounded-xl border border-slate-200 bg-white text-xs font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all" placeholder="Search room, engineer, reason..." value="{{ request('search') }}" oninput="handleSearch(this.value)">
+            </div>
+            <select id="status-filter" class="h-9.5 px-3 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all cursor-pointer" onchange="handleStatusFilter(this.value)">
+              <option value="all" {{ request('status', 'all') === 'all' ? 'selected' : '' }}>All Statuses</option>
+              <option value="Active" {{ request('status') === 'Active' ? 'selected' : '' }}>Active</option>
+              <option value="Checking" {{ request('status') === 'Checking' ? 'selected' : '' }}>Checking</option>
+              <option value="Completed" {{ request('status') === 'Completed' ? 'selected' : '' }}>Completed</option>
+            </select>
+            <select id="floor-filter" class="h-9.5 px-3 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all cursor-pointer" onchange="handleFloorFilter(this.value)">
+              <option value="all">All Floors</option>
+              @foreach($floors as $fl)
+                <option value="{{ $fl->floor }}">Floor {{ $fl->floor }}</option>
+              @endforeach
+            </select>
+          </div>
+          <div class="flex items-center gap-2">
+            <button type="button" class="h-9.5 px-3.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-xs transition-all hidden items-center gap-2 cursor-pointer" id="btn-bulk-delete" onclick="handleBulkDelete()">
+              <i class="fa-solid fa-trash-can text-xs"></i> Delete Selected (<span id="bulk-selected-count">0</span>)
+            </button>
+            <button type="button" class="h-9.5 px-3.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all flex items-center gap-2 cursor-pointer" onclick="exportDataCSV()">
+              <i class="fa-solid fa-file-csv text-slate-500 text-xs"></i> Export
+            </button>
+            <button type="button" class="h-9.5 px-3.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all flex items-center gap-2 cursor-pointer" onclick="loadTableData()">
+              <i class="fa-solid fa-rotate text-slate-500 text-xs"></i> Refresh
+            </button>
+          </div>
+        </div>
+
+        <!-- Responsive Table -->
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse" id="crud-table">
+            <thead>
+              <tr class="border-b border-slate-200 bg-slate-50/80 text-[11px] font-black uppercase tracking-wider text-slate-500">
+                <th class="w-10 px-4 py-3.5 text-center">
+                  <input type="checkbox" id="select-all-check" onchange="toggleSelectAll(this)" class="cursor-pointer w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 border-slate-300">
+                </th>
+                <th class="w-12 px-3 py-3.5 text-slate-400 font-mono">#</th>
+                <th class="px-4 py-3.5">Room Details</th>
+                <th class="px-4 py-3.5">Reason / Work Description</th>
+                <th class="px-4 py-3.5">Assigned Personnel / Team</th>
+                <th class="px-4 py-3.5">Expected Completion</th>
+                <th class="px-4 py-3.5">Status</th>
+                <th class="px-4 py-3.5 text-right w-32">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="table-body" class="divide-y divide-slate-100 text-xs font-medium text-slate-700">
+              @forelse($items as $idx => $item)
+              <tr class="hover:bg-slate-50/70 transition-colors" data-id="{{ $item->id }}">
+                <td class="px-4 py-3 text-center">
+                  <input type="checkbox" class="row-select-check cursor-pointer w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 border-slate-300" value="{{ $item->id }}" onchange="handleRowSelect(this, '{{ $item->id }}')">
+                </td>
+                <td class="px-3 py-3 font-mono font-bold text-slate-400 text-[11px]">{{ $idx + 1 }}</td>
+                <td class="px-4 py-3">
+                  <div class="flex items-center gap-2.5">
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-md font-mono text-xs font-black bg-indigo-50 text-indigo-700 border border-indigo-200/60">
+                      #{{ $item->room->room_number ?? $item->room_id }}
+                    </span>
+                    <div>
+                      <div class="font-bold text-slate-800 text-xs">{{ $item->room->category ?? 'Standard Room' }}</div>
+                      <div class="text-[11px] text-slate-400">Floor {{ $item->room->floor ?? '-' }}</div>
+                    </div>
+                  </div>
+                </td>
+                <td class="px-4 py-3 font-semibold text-slate-800 max-w-[220px] truncate" title="{{ $item->reason }}">
+                  {{ $item->reason ?? 'Maintenance Check' }}
+                </td>
+                <td class="px-4 py-3 font-medium text-slate-600">
+                  <span class="inline-flex items-center gap-1.5 text-xs">
+                    <i class="fa-solid fa-user-gear text-slate-400 text-[11px]"></i> {{ $item->assign ?: 'Not Assigned' }}
+                  </span>
+                </td>
+                <td class="px-4 py-3 font-medium text-slate-600">
+                  <span class="inline-flex items-center gap-1.5 text-xs">
+                    <i class="fa-regular fa-clock text-slate-400 text-[11px]"></i>
+                    {{ $item->expected_date_time ? \Carbon\Carbon::parse($item->expected_date_time)->format('d M Y, h:i A') : '-' }}
+                  </span>
+                </td>
+                <td class="px-4 py-3">
+                  @php
+                    $st = strtolower($item->status ?? 'active');
+                  @endphp
+                  @if($st === 'completed')
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/60">
+                      <i class="fa-solid fa-circle-check text-[9px]"></i> Completed
+                    </span>
+                  @elseif($st === 'checking')
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200/60">
+                      <i class="fa-solid fa-spinner text-[9px]"></i> Checking
+                    </span>
+                  @else
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-50 text-rose-700 border border-rose-200/60">
+                      <i class="fa-solid fa-triangle-exclamation text-[9px]"></i> Active
+                    </span>
+                  @endif
+                </td>
+                <td class="px-4 py-3 text-right">
+                  <div class="inline-flex items-center gap-1 justify-end">
+                    <button type="button" class="w-7 h-7 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 border border-slate-200 transition-all flex items-center justify-center cursor-pointer" onclick="openViewModal({{ $item->id }})" title="View Details & Note">
+                      <i class="fa-solid fa-eye text-xs"></i>
+                    </button>
+                    <button type="button" class="w-7 h-7 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 border border-slate-200 transition-all flex items-center justify-center cursor-pointer" onclick="openEditModal({{ $item->id }})" title="Edit Status / Assignment">
+                      <i class="fa-solid fa-pen text-xs"></i>
+                    </button>
+                    <button type="button" class="w-7 h-7 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 border border-slate-200 transition-all flex items-center justify-center cursor-pointer" onclick="deleteItem({{ $item->id }})" title="Delete Task">
+                      <i class="fa-solid fa-trash text-xs"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+              @empty
+              <tr>
+                <td colspan="8" class="px-6 py-12 text-center text-slate-400">
+                  <i class="fa-solid fa-inbox text-3xl mb-2 text-slate-300 block"></i>
+                  No room maintenance logs found. Click "+ Schedule Maintenance" to create one.
+                </td>
+              </tr>
+              @endforelse
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination Bar -->
+        <div class="p-4 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50/50" id="table-pagination-bar">
+          <div class="text-xs text-slate-500 font-medium" id="pagination-info">
+            Showing 1 to {{ count($items) }} of {{ count($items) }} records
+          </div>
+          <div class="flex items-center gap-4">
+            <div class="flex items-center gap-2">
+              <span class="text-xs text-slate-500 font-semibold">Rows:</span>
+              <select id="rows-per-page" class="h-8 px-2.5 rounded-lg border border-slate-200 bg-white text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all cursor-pointer" onchange="handlePageSizeChange(this.value)">
+                <option value="10" selected>10</option>
+                <option value="20">20</option>
+                <option value="100">100</option>
+                <option value="all">All</option>
+              </select>
+            </div>
+            <div class="flex items-center gap-1" id="pagination-nav"></div>
+          </div>
+        </div>
+      </div>
+    </section>
   </div>
 </main>
 
 <!-- ADD MAINTENANCE MODAL -->
-<div class="modal-backdrop" id="add-modal">
-  <div class="modal-window" style="width: 560px; max-width: 95vw;">
-    <div class="modal-top" style="display: flex; justify-content: space-between; align-items: center;">
-      <h3 style="margin: 0;"><i class="fa-solid fa-screwdriver-wrench"></i> <span>Schedule Room Maintenance</span></h3>
-      <button class="modal-close" onclick="closeModal('add-modal')">&times;</button>
+<div class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 hidden" id="add-modal">
+  <div class="w-full max-w-xl bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden flex flex-col">
+    <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+      <h3 class="text-base font-bold text-slate-800 flex items-center gap-2.5">
+        <span class="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-sm">
+          <i class="fa-solid fa-screwdriver-wrench"></i>
+        </span>
+        <span>Schedule Room Maintenance</span>
+      </h3>
+      <button type="button" class="w-8 h-8 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors flex items-center justify-center cursor-pointer text-base" onclick="closeModal('add-modal')">&times;</button>
     </div>
     <form id="add-form" onsubmit="handleAddSubmit(event)">
-      <div class="modal-content-area" style="padding: 20px; background: #f8fafc;">
-        <div class="admin-form-group">
-          <label class="admin-form-label">Select Room <span style="color: var(--accent-rose);">*</span></label>
-          <select id="add-room-id" class="admin-form-input" required>
+      <div class="p-6 space-y-4 bg-slate-50/50">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1.5">Select Room <span class="text-rose-500">*</span></label>
+          <select id="add-room-id" class="w-full h-9.5 px-3.5 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all cursor-pointer" required>
             <option value="">-- Choose Room --</option>
             @foreach($rooms as $r)
               <option value="{{ $r->id }}">Room #{{ $r->room_number }} (Floor {{ $r->floor }} • {{ $r->category }})</option>
             @endforeach
           </select>
         </div>
-        <div class="admin-form-group">
-          <label class="admin-form-label">Maintenance Reason / Work Description <span style="color: var(--accent-rose);">*</span></label>
-          <input type="text" id="add-reason" class="admin-form-input" placeholder="e.g. AC Repair, Plumbing Leak, Painting" required>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1.5">Maintenance Reason / Work Description <span class="text-rose-500">*</span></label>
+          <input type="text" id="add-reason" class="w-full h-9.5 px-3.5 rounded-xl border border-slate-200 bg-white text-xs font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all" placeholder="e.g. AC Repair, Plumbing Leak, Painting" required>
         </div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-          <div class="admin-form-group">
-            <label class="admin-form-label">Assigned Personnel / Team</label>
-            <input type="text" id="add-assign" class="admin-form-input" placeholder="e.g. John Doe, MEP Team">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1.5">Assigned Personnel / Team</label>
+            <input type="text" id="add-assign" class="w-full h-9.5 px-3.5 rounded-xl border border-slate-200 bg-white text-xs font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all" placeholder="e.g. John Doe, MEP Team">
           </div>
-          <div class="admin-form-group">
-            <label class="admin-form-label">Status <span style="color: var(--accent-rose);">*</span></label>
-            <select id="add-status" class="admin-form-input" required>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1.5">Status <span class="text-rose-500">*</span></label>
+            <select id="add-status" class="w-full h-9.5 px-3.5 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all cursor-pointer" required>
               <option value="Active" selected>Active (Under Maintenance)</option>
               <option value="Checking">Checking (Testing)</option>
               <option value="Completed">Completed (Normal)</option>
             </select>
           </div>
         </div>
-        <div class="admin-form-group">
-          <label class="admin-form-label">Expected Completion Date & Time</label>
-          <input type="datetime-local" id="add-expected" class="admin-form-input">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1.5">Expected Completion Date & Time</label>
+          <input type="datetime-local" id="add-expected" class="w-full h-9.5 px-3.5 rounded-xl border border-slate-200 bg-white text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all">
         </div>
-        <div class="admin-form-group" style="margin-bottom: 0;">
-          <label class="admin-form-label">Work Note / Instructions</label>
-          <textarea id="add-note" class="admin-form-textarea" placeholder="Add any specific instructions, spare parts needed, or inspection details..."></textarea>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1.5">Work Note / Instructions</label>
+          <textarea id="add-note" class="w-full p-3 rounded-xl border border-slate-200 bg-white text-xs font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all" rows="2" placeholder="Add any specific instructions, spare parts needed, or inspection details..."></textarea>
         </div>
       </div>
-      <div class="modal-bot" style="padding: 14px 20px; background: #fff; border-top: 1px solid var(--border-medium); display: flex; justify-content: flex-end; gap: 10px;">
-        <button type="button" class="btn-ui-secondary" onclick="closeModal('add-modal')">Cancel</button>
-        <button type="submit" class="btn-ui-primary" id="btn-add-save"><i class="fa-solid fa-floppy-disk"></i> Schedule Task</button>
+      <div class="px-6 py-3.5 bg-white border-t border-slate-100 flex justify-end items-center gap-2.5">
+        <button type="button" class="h-9.5 px-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all cursor-pointer" onclick="closeModal('add-modal')">Cancel</button>
+        <button type="submit" class="h-9.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-xs shadow-indigo-200 transition-all flex items-center gap-2 cursor-pointer" id="btn-add-save">
+          <i class="fa-solid fa-floppy-disk text-xs"></i> Schedule Task
+        </button>
       </div>
     </form>
   </div>
 </div>
 
 <!-- EDIT STATUS & MAINTENANCE MODAL -->
-<div class="modal-backdrop" id="edit-modal">
-  <div class="modal-window" style="width: 560px; max-width: 95vw;">
-    <div class="modal-top" style="display: flex; justify-content: space-between; align-items: center;">
-      <h3 style="margin: 0;"><i class="fa-solid fa-pen-to-square"></i> <span>Edit Maintenance Task</span></h3>
-      <button class="modal-close" onclick="closeModal('edit-modal')">&times;</button>
+<div class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 hidden" id="edit-modal">
+  <div class="w-full max-w-xl bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden flex flex-col">
+    <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+      <h3 class="text-base font-bold text-slate-800 flex items-center gap-2.5">
+        <span class="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-sm">
+          <i class="fa-solid fa-pen-to-square"></i>
+        </span>
+        <span>Edit Maintenance Task</span>
+      </h3>
+      <button type="button" class="w-8 h-8 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors flex items-center justify-center cursor-pointer text-base" onclick="closeModal('edit-modal')">&times;</button>
     </div>
     <form id="edit-form" onsubmit="handleEditSubmit(event)">
       <input type="hidden" id="edit-id">
-      <div class="modal-content-area" style="padding: 20px; background: #f8fafc;">
-        <div class="admin-form-group">
-          <label class="admin-form-label">Room</label>
-          <input type="text" id="edit-room-display" class="admin-form-input" style="background: #e2e8f0; font-weight: 700;" readonly>
+      <div class="p-6 space-y-4 bg-slate-50/50">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1.5">Room</label>
+          <input type="text" id="edit-room-display" class="w-full h-9.5 px-3.5 rounded-xl border border-slate-200 bg-slate-100 text-xs font-bold text-slate-700 cursor-not-allowed" readonly>
         </div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-          <div class="admin-form-group">
-            <label class="admin-form-label">Maintenance Status <span style="color: var(--accent-rose);">*</span></label>
-            <select id="edit-status" class="admin-form-input" required>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1.5">Maintenance Status <span class="text-rose-500">*</span></label>
+            <select id="edit-status" class="w-full h-9.5 px-3.5 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all cursor-pointer" required>
               <option value="Active">Active (Under Maintenance)</option>
               <option value="Checking">Checking (Testing)</option>
               <option value="Completed">Completed (Room Normal Mode)</option>
             </select>
           </div>
-          <div class="admin-form-group">
-            <label class="admin-form-label">Assigned Personnel / Team</label>
-            <input type="text" id="edit-assign" class="admin-form-input" placeholder="e.g. John Doe, MEP Team">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1.5">Assigned Personnel / Team</label>
+            <input type="text" id="edit-assign" class="w-full h-9.5 px-3.5 rounded-xl border border-slate-200 bg-white text-xs font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all" placeholder="e.g. John Doe, MEP Team">
           </div>
         </div>
-        <div class="admin-form-group">
-          <label class="admin-form-label">Work Description / Reason <span style="color: var(--accent-rose);">*</span></label>
-          <input type="text" id="edit-reason" class="admin-form-input" required>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1.5">Work Description / Reason <span class="text-rose-500">*</span></label>
+          <input type="text" id="edit-reason" class="w-full h-9.5 px-3.5 rounded-xl border border-slate-200 bg-white text-xs font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all" required>
         </div>
-        <div class="admin-form-group">
-          <label class="admin-form-label">Expected Completion Date & Time</label>
-          <input type="datetime-local" id="edit-expected" class="admin-form-input">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1.5">Expected Completion Date & Time</label>
+          <input type="datetime-local" id="edit-expected" class="w-full h-9.5 px-3.5 rounded-xl border border-slate-200 bg-white text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all">
         </div>
-        <div class="admin-form-group" style="margin-bottom: 0;">
-          <label class="admin-form-label">Work Note / Resolution Details</label>
-          <textarea id="edit-note" class="admin-form-textarea" placeholder="Enter notes or completion summary..."></textarea>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1.5">Work Note / Resolution Details</label>
+          <textarea id="edit-note" class="w-full p-3 rounded-xl border border-slate-200 bg-white text-xs font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all" rows="2" placeholder="Enter notes or completion summary..."></textarea>
         </div>
       </div>
-      <div class="modal-bot" style="padding: 14px 20px; background: #fff; border-top: 1px solid var(--border-medium); display: flex; justify-content: flex-end; gap: 10px;">
-        <button type="button" class="btn-ui-secondary" onclick="closeModal('edit-modal')">Cancel</button>
-        <button type="submit" class="btn-ui-primary" id="btn-edit-save"><i class="fa-solid fa-floppy-disk"></i> Update Task</button>
+      <div class="px-6 py-3.5 bg-white border-t border-slate-100 flex justify-end items-center gap-2.5">
+        <button type="button" class="h-9.5 px-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all cursor-pointer" onclick="closeModal('edit-modal')">Cancel</button>
+        <button type="submit" class="h-9.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-xs shadow-indigo-200 transition-all flex items-center gap-2 cursor-pointer" id="btn-edit-save">
+          <i class="fa-solid fa-floppy-disk text-xs"></i> Update Task
+        </button>
       </div>
     </form>
   </div>
 </div>
 
 <!-- VIEW DETAILS MODAL -->
-<div class="modal-backdrop" id="view-modal">
-  <div class="modal-window" style="width: 580px; max-width: 95vw;">
-    <div class="modal-top" style="display: flex; justify-content: space-between; align-items: center;">
-      <h3 style="margin: 0;"><i class="fa-solid fa-file-lines"></i> <span id="view-modal-title">Maintenance Task Details</span></h3>
-      <button class="modal-close" onclick="closeModal('view-modal')">&times;</button>
+<div class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 hidden" id="view-modal">
+  <div class="w-full max-w-xl bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden flex flex-col">
+    <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+      <h3 class="text-base font-bold text-slate-800 flex items-center gap-2.5">
+        <span class="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-sm">
+          <i class="fa-solid fa-file-lines"></i>
+        </span>
+        <span id="view-modal-title">Maintenance Task Details</span>
+      </h3>
+      <button type="button" class="w-8 h-8 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors flex items-center justify-center cursor-pointer text-base" onclick="closeModal('view-modal')">&times;</button>
     </div>
-    <div class="modal-content-area" style="padding: 24px; background: #f8fafc;">
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 18px;">
-        <div style="background: #fff; border: 1px solid var(--border-medium); border-radius: var(--radius-md); padding: 14px;">
-          <div style="font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Room Information</div>
-          <div style="font-size: 16px; font-weight: 800; color: var(--accent-primary); margin-top: 4px;" id="view-room-num">-</div>
-          <div style="font-size: 12px; color: var(--text-secondary);" id="view-room-details">-</div>
+    <div class="p-6 space-y-4 bg-slate-50/50">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div class="bg-white border border-slate-200 rounded-xl p-3.5 shadow-xs">
+          <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Room Information</div>
+          <div class="text-lg font-black text-indigo-600 mt-1 font-mono" id="view-room-num">-</div>
+          <div class="text-xs text-slate-500 font-medium" id="view-room-details">-</div>
         </div>
-        <div style="background: #fff; border: 1px solid var(--border-medium); border-radius: var(--radius-md); padding: 14px;">
-          <div style="font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Task Status</div>
-          <div style="margin-top: 6px;" id="view-status-badge">-</div>
-          <div style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;" id="view-created-at">-</div>
-        </div>
-      </div>
-
-      <div style="background: #fff; border: 1px solid var(--border-medium); border-radius: var(--radius-md); padding: 14px; margin-bottom: 14px;">
-        <div style="font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px;">Reason / Work Description</div>
-        <div style="font-size: 13px; font-weight: 700; color: var(--text-primary);" id="view-reason">-</div>
-      </div>
-
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
-        <div style="background: #fff; border: 1px solid var(--border-medium); border-radius: var(--radius-md); padding: 14px;">
-          <div style="font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Assigned Personnel</div>
-          <div style="font-size: 13px; font-weight: 700; color: var(--text-primary); margin-top: 4px;" id="view-assign">-</div>
-        </div>
-        <div style="background: #fff; border: 1px solid var(--border-medium); border-radius: var(--radius-md); padding: 14px;">
-          <div style="font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Expected Completion</div>
-          <div style="font-size: 13px; font-weight: 700; color: var(--text-primary); margin-top: 4px;" id="view-expected">-</div>
+        <div class="bg-white border border-slate-200 rounded-xl p-3.5 shadow-xs">
+          <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Task Status</div>
+          <div class="mt-1.5" id="view-status-badge">-</div>
+          <div class="text-[11px] text-slate-400 mt-1" id="view-created-at">-</div>
         </div>
       </div>
 
-      <div style="background: #fff; border: 1px solid var(--border-medium); border-radius: var(--radius-md); padding: 14px;">
-        <div style="font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px;">Detailed Work Note / History</div>
-        <div style="font-size: 13px; color: var(--text-primary); line-height: 1.5; white-space: pre-wrap; max-height: 160px; overflow-y: auto;" id="view-note">-</div>
+      <div class="bg-white border border-slate-200 rounded-xl p-3.5 shadow-xs">
+        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Reason / Work Description</div>
+        <div class="text-xs font-bold text-slate-800" id="view-reason">-</div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div class="bg-white border border-slate-200 rounded-xl p-3.5 shadow-xs">
+          <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Assigned Personnel</div>
+          <div class="text-xs font-bold text-slate-800 mt-1" id="view-assign">-</div>
+        </div>
+        <div class="bg-white border border-slate-200 rounded-xl p-3.5 shadow-xs">
+          <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Expected Completion</div>
+          <div class="text-xs font-bold text-slate-800 mt-1" id="view-expected">-</div>
+        </div>
+      </div>
+
+      <div class="bg-white border border-slate-200 rounded-xl p-3.5 shadow-xs">
+        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Detailed Work Note / History</div>
+        <div class="text-xs text-slate-700 leading-relaxed whitespace-pre-wrap max-h-40 overflow-y-auto" id="view-note">-</div>
       </div>
     </div>
-    <div class="modal-bot" style="padding: 14px 20px; background: #fff; border-top: 1px solid var(--border-medium); display: flex; justify-content: space-between; align-items: center;">
-      <button type="button" class="btn-ui-danger" id="view-btn-delete" style="font-size: 12px; padding: 6px 12px;"><i class="fa-solid fa-trash"></i> Delete</button>
-      <div style="display: flex; gap: 8px;">
-        <button type="button" class="btn-ui-primary" id="view-btn-edit" style="font-size: 12px; padding: 6px 12px;"><i class="fa-solid fa-pen"></i> Edit</button>
-        <button type="button" class="btn-ui-secondary" onclick="closeModal('view-modal')" style="font-size: 12px; padding: 6px 12px;">Close</button>
+    <div class="px-6 py-3.5 bg-white border-t border-slate-100 flex justify-between items-center">
+      <button type="button" class="h-9 px-3.5 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer" id="view-btn-delete">
+        <i class="fa-solid fa-trash text-xs"></i> Delete
+      </button>
+      <div class="flex items-center gap-2">
+        <button type="button" class="h-9 px-3.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-xs transition-all flex items-center gap-1.5 cursor-pointer" id="view-btn-edit">
+          <i class="fa-solid fa-pen text-xs"></i> Edit
+        </button>
+        <button type="button" class="h-9 px-3.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all cursor-pointer" onclick="closeModal('view-modal')">Close</button>
       </div>
     </div>
   </div>
@@ -740,13 +489,15 @@
     document.getElementById('view-created-at').textContent = 'Logged: ' + (item.created_at ? new Date(item.created_at).toLocaleDateString() : '-');
 
     const st = (item.status || 'Active').toLowerCase();
-    const pillClass = st === 'completed' ? 'completed' : (st === 'checking' ? 'checking' : 'active');
-    const iconClass = st === 'completed' ? 'fa-circle-check' : (st === 'checking' ? 'fa-spinner' : 'fa-triangle-exclamation');
-    document.getElementById('view-status-badge').innerHTML = `
-      <span class="status-pill ${pillClass}">
-        <i class="fa-solid ${iconClass}"></i> ${escapeHtml(item.status || 'Active')}
-      </span>
-    `;
+    let badgeHtml = '';
+    if (st === 'completed') {
+      badgeHtml = '<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/60"><i class="fa-solid fa-circle-check text-[9px]"></i> Completed</span>';
+    } else if (st === 'checking') {
+      badgeHtml = '<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200/60"><i class="fa-solid fa-spinner text-[9px]"></i> Checking</span>';
+    } else {
+      badgeHtml = '<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-50 text-rose-700 border border-rose-200/60"><i class="fa-solid fa-triangle-exclamation text-[9px]"></i> Active</span>';
+    }
+    document.getElementById('view-status-badge').innerHTML = badgeHtml;
 
     document.getElementById('view-btn-delete').onclick = () => {
       closeModal('view-modal');
@@ -963,7 +714,13 @@
 
     if (countEl) countEl.textContent = selectedIds.size;
     if (btn) {
-      btn.style.display = selectedIds.size > 0 ? 'inline-flex' : 'none';
+      if (selectedIds.size > 0) {
+        btn.classList.remove('hidden');
+        btn.classList.add('inline-flex');
+      } else {
+        btn.classList.add('hidden');
+        btn.classList.remove('inline-flex');
+      }
     }
 
     const currentVisible = getFilteredRecords();
@@ -1065,7 +822,7 @@
 
     const tbody = document.getElementById('table-body');
     if (!pageItems.length) {
-      tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 40px; color: var(--text-muted);"><i class="fa-solid fa-inbox" style="font-size: 28px; margin-bottom: 10px; display: block;"></i>No matching maintenance records found.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="8" class="px-6 py-12 text-center text-slate-400"><i class="fa-solid fa-inbox text-3xl mb-2 text-slate-300 block"></i>No matching maintenance records found.</td></tr>`;
       updateBulkActionUI();
     } else {
       let html = '';
@@ -1076,8 +833,14 @@
         const roomFl = item.room ? item.room.floor : '-';
 
         const st = (item.status || 'Active').toLowerCase();
-        const pillClass = st === 'completed' ? 'completed' : (st === 'checking' ? 'checking' : 'active');
-        const iconClass = st === 'completed' ? 'fa-circle-check' : (st === 'checking' ? 'fa-spinner' : 'fa-triangle-exclamation');
+        let statusBadge = '';
+        if (st === 'completed') {
+          statusBadge = '<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/60"><i class="fa-solid fa-circle-check text-[9px]"></i> Completed</span>';
+        } else if (st === 'checking') {
+          statusBadge = '<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200/60"><i class="fa-solid fa-spinner text-[9px]"></i> Checking</span>';
+        } else {
+          statusBadge = '<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-50 text-rose-700 border border-rose-200/60"><i class="fa-solid fa-triangle-exclamation text-[9px]"></i> Active</span>';
+        }
 
         let expText = '-';
         if (item.expected_date_time) {
@@ -1088,45 +851,49 @@
         }
 
         html += `
-          <tr data-id="${item.id}">
-            <td style="text-align: center;">
-              <input type="checkbox" class="row-select-check" value="${item.id}" ${selectedIds.has(String(item.id)) ? 'checked' : ''} onchange="handleRowSelect(this, '${item.id}')" style="cursor: pointer; width: 16px; height: 16px; accent-color: var(--accent-primary);">
+          <tr class="hover:bg-slate-50/70 transition-colors" data-id="${item.id}">
+            <td class="px-4 py-3 text-center">
+              <input type="checkbox" class="row-select-check cursor-pointer w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 border-slate-300" value="${item.id}" ${selectedIds.has(String(item.id)) ? 'checked' : ''} onchange="handleRowSelect(this, '${item.id}')">
             </td>
-            <td style="font-family: var(--font-mono); font-weight: 700; color: var(--text-muted); font-size: 11px;">${rowNumber}</td>
-            <td>
-              <div style="display: flex; align-items: center; gap: 8px;">
-                <span style="display: inline-block; padding: 3px 8px; border-radius: 4px; font-weight: 800; font-size: 12px; background: rgba(99, 102, 241, 0.1); color: var(--accent-primary);">
+            <td class="px-3 py-3 font-mono font-bold text-slate-400 text-[11px]">${rowNumber}</td>
+            <td class="px-4 py-3">
+              <div class="flex items-center gap-2.5">
+                <span class="inline-flex items-center px-2 py-0.5 rounded-md font-mono text-xs font-black bg-indigo-50 text-indigo-700 border border-indigo-200/60">
                   #${escapeHtml(roomNum)}
                 </span>
                 <div>
-                  <div style="font-weight: 700; font-size: 12px; color: var(--text-primary);">${escapeHtml(roomCat)}</div>
-                  <div style="font-size: 11px; color: var(--text-secondary);">Floor ${escapeHtml(roomFl)}</div>
+                  <div class="font-bold text-slate-800 text-xs">${escapeHtml(roomCat)}</div>
+                  <div class="text-[11px] text-slate-400">Floor ${escapeHtml(roomFl)}</div>
                 </div>
               </div>
             </td>
-            <td style="font-weight: 600; color: var(--text-primary); max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${escapeHtml(item.reason || '')}">
+            <td class="px-4 py-3 font-semibold text-slate-800 max-w-[220px] truncate" title="${escapeHtml(item.reason || '')}">
               ${escapeHtml(item.reason || 'Maintenance Check')}
             </td>
-            <td>
-              <span style="font-size: 12px; font-weight: 600; color: var(--text-secondary); display: flex; align-items: center; gap: 6px;">
-                <i class="fa-solid fa-user-gear" style="color: #64748b;"></i> ${escapeHtml(item.assign || 'Not Assigned')}
+            <td class="px-4 py-3 font-medium text-slate-600">
+              <span class="inline-flex items-center gap-1.5 text-xs">
+                <i class="fa-solid fa-user-gear text-slate-400 text-[11px]"></i> ${escapeHtml(item.assign || 'Not Assigned')}
               </span>
             </td>
-            <td>
-              <span style="font-size: 12px; font-weight: 600; color: var(--text-secondary);">
-                <i class="fa-regular fa-clock" style="margin-right: 4px; color: #94a3b8;"></i> ${escapeHtml(expText)}
+            <td class="px-4 py-3 font-medium text-slate-600">
+              <span class="inline-flex items-center gap-1.5 text-xs">
+                <i class="fa-regular fa-clock text-slate-400 text-[11px]"></i> ${escapeHtml(expText)}
               </span>
             </td>
-            <td>
-              <span class="status-pill ${pillClass}">
-                <i class="fa-solid ${iconClass}"></i> ${escapeHtml(item.status || 'Active')}
-              </span>
+            <td class="px-4 py-3">
+              ${statusBadge}
             </td>
-            <td style="text-align: right;">
-              <div class="crud-actions">
-                <button class="btn-action-view" onclick="openViewModal(${item.id})" title="View Details & Note"><i class="fa-solid fa-eye"></i></button>
-                <button class="btn-action-edit" onclick="openEditModal(${item.id})" title="Edit Status / Assignment"><i class="fa-solid fa-pen"></i></button>
-                <button class="btn-action-del" onclick="deleteItem(${item.id})" title="Delete Task"><i class="fa-solid fa-trash"></i></button>
+            <td class="px-4 py-3 text-right">
+              <div class="inline-flex items-center gap-1 justify-end">
+                <button type="button" class="w-7 h-7 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 border border-slate-200 transition-all flex items-center justify-center cursor-pointer" onclick="openViewModal(${item.id})" title="View Details & Note">
+                  <i class="fa-solid fa-eye text-xs"></i>
+                </button>
+                <button type="button" class="w-7 h-7 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 border border-slate-200 transition-all flex items-center justify-center cursor-pointer" onclick="openEditModal(${item.id})" title="Edit Status / Assignment">
+                  <i class="fa-solid fa-pen text-xs"></i>
+                </button>
+                <button type="button" class="w-7 h-7 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 border border-slate-200 transition-all flex items-center justify-center cursor-pointer" onclick="deleteItem(${item.id})" title="Delete Task">
+                  <i class="fa-solid fa-trash text-xs"></i>
+                </button>
               </div>
             </td>
           </tr>
@@ -1140,7 +907,7 @@
     if (totalCount === 0) {
       infoEl.textContent = 'Showing 0 to 0 of 0 records';
     } else {
-      infoEl.innerHTML = `Showing <strong style="color: var(--text-primary);">${startIdx + 1}</strong> to <strong style="color: var(--text-primary);">${endIdx}</strong> of <strong style="color: var(--text-primary);">${totalCount}</strong> records${totalCount !== tableRecords.length ? ' (filtered from ' + tableRecords.length + ' total)' : ''}`;
+      infoEl.innerHTML = `Showing <strong class="text-slate-800">${startIdx + 1}</strong> to <strong class="text-slate-800">${endIdx}</strong> of <strong class="text-slate-800">${totalCount}</strong> records${totalCount !== tableRecords.length ? ' (filtered from ' + tableRecords.length + ' total)' : ''}`;
     }
 
     renderPaginationNav(totalPages);
@@ -1152,15 +919,15 @@
 
     if (totalPages <= 1) {
       nav.innerHTML = `
-        <button class="pms-page-btn" disabled><i class="fa-solid fa-chevron-left"></i></button>
-        <button class="pms-page-btn active">1</button>
-        <button class="pms-page-btn" disabled><i class="fa-solid fa-chevron-right"></i></button>
+        <button class="w-8 h-8 rounded-lg border border-slate-200 bg-white text-slate-300 text-xs flex items-center justify-center cursor-not-allowed" disabled><i class="fa-solid fa-chevron-left text-[10px]"></i></button>
+        <button class="w-8 h-8 rounded-lg bg-indigo-600 text-white text-xs font-bold flex items-center justify-center shadow-xs">1</button>
+        <button class="w-8 h-8 rounded-lg border border-slate-200 bg-white text-slate-300 text-xs flex items-center justify-center cursor-not-allowed" disabled><i class="fa-solid fa-chevron-right text-[10px]"></i></button>
       `;
       return;
     }
 
     let html = '';
-    html += `<button class="pms-page-btn" onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''} title="Previous Page"><i class="fa-solid fa-chevron-left"></i></button>`;
+    html += `<button class="w-8 h-8 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 text-xs flex items-center justify-center transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer" onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''} title="Previous Page"><i class="fa-solid fa-chevron-left text-[10px]"></i></button>`;
 
     const delta = 1;
     const range = [];
@@ -1187,13 +954,14 @@
 
     rangeWithDots.forEach(page => {
       if (page === '...') {
-        html += `<span class="pms-page-dots">...</span>`;
+        html += `<span class="w-8 h-8 text-slate-400 text-xs flex items-center justify-center font-bold">...</span>`;
       } else {
-        html += `<button class="pms-page-btn ${page === currentPage ? 'active' : ''}" onclick="goToPage(${page})">${page}</button>`;
+        const isActive = page === currentPage;
+        html += `<button class="w-8 h-8 rounded-lg text-xs font-bold flex items-center justify-center transition-all cursor-pointer ${isActive ? 'bg-indigo-600 text-white shadow-xs' : 'border border-slate-200 bg-white text-slate-700 hover:bg-slate-50'}" onclick="goToPage(${page})">${page}</button>`;
       }
     });
 
-    html += `<button class="pms-page-btn" onclick="goToPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''} title="Next Page"><i class="fa-solid fa-chevron-right"></i></button>`;
+    html += `<button class="w-8 h-8 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 text-xs flex items-center justify-center transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer" onclick="goToPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''} title="Next Page"><i class="fa-solid fa-chevron-right text-[10px]"></i></button>`;
 
     nav.innerHTML = html;
   }

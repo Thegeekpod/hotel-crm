@@ -2,542 +2,128 @@
 
 @section('title', 'Restaurant Store & Menu Management - Hotel Sagar Sonnet')
 
-@push('styles')
-<style>
-  :root {
-    --kit-cyan: #06b6d4;
-    --kit-emerald: #10b981;
-    --kit-amber: #f59e0b;
-    --kit-rose: #f43f5e;
-    --kit-indigo: #6366f1;
-  }
-
-  .stores-wrapper {
-    padding: 16px 20px;
-    background: #f1f5f9;
-    min-height: calc(100vh - 110px);
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }
-
-  /* KPI Summary Strip */
-  .stores-kpi-bar {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-    gap: 12px;
-  }
-
-  .stores-kpi-pill {
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 10px;
-    padding: 12px 16px;
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.03);
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
-  }
-
-  .stores-kpi-pill:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-  }
-
-  .stores-kpi-icon {
-    width: 42px;
-    height: 42px;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 19px;
-    flex-shrink: 0;
-  }
-
-  .stores-kpi-info h5 {
-    font-size: 10.5px;
-    font-weight: 700;
-    color: #64748b;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin: 0;
-  }
-
-  .stores-kpi-info p {
-    font-size: 19px;
-    font-weight: 900;
-    font-family: var(--font-mono, monospace);
-    color: #0f172a;
-    margin: 2px 0 0;
-  }
-
-  /* Main Card Layout */
-  .stores-main-card {
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.04);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-  }
-
-  .stores-header {
-    padding: 14px 20px;
-    background: #ffffff;
-    border-bottom: 1px solid #e2e8f0;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 14px;
-  }
-
-  .stores-header-left h2 {
-    font-size: 17px;
-    font-weight: 800;
-    color: #0f172a;
-    margin: 0;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .stores-header-left p {
-    font-size: 11.5px;
-    color: #64748b;
-    margin: 3px 0 0 0;
-  }
-
-  .stores-header-actions {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex-wrap: wrap;
-  }
-
-  /* Tab Navigation */
-  .stores-tabs-nav {
-    display: flex;
-    border-bottom: 1px solid #e2e8f0;
-    background: #f8fafc;
-    padding: 0 20px;
-    gap: 8px;
-  }
-
-  .stores-tab-btn {
-    padding: 12px 18px;
-    font-size: 12.5px;
-    font-weight: 700;
-    color: #64748b;
-    border: none;
-    background: transparent;
-    cursor: pointer;
-    border-bottom: 2px solid transparent;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    transition: all 0.2s ease;
-  }
-
-  .stores-tab-btn:hover {
-    color: #0f172a;
-  }
-
-  .stores-tab-btn.active {
-    color: #10b981;
-    border-bottom-color: #10b981;
-    background: #ffffff;
-    border-top-left-radius: 6px;
-    border-top-right-radius: 6px;
-  }
-
-  /* Filter Ribbon */
-  .stores-filter-ribbon {
-    padding: 12px 20px;
-    background: #ffffff;
-    border-bottom: 1px solid #e2e8f0;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 12px;
-  }
-
-  .stores-cat-nav {
-    display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
-    align-items: center;
-  }
-
-  .stores-cat-btn {
-    padding: 6px 12px;
-    border-radius: 6px;
-    font-size: 11px;
-    font-weight: 700;
-    cursor: pointer;
-    border: 1px solid #e2e8f0;
-    background: #ffffff;
-    color: #475569;
-    transition: all 0.15s ease;
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-  }
-
-  .stores-cat-btn:hover {
-    background: #f1f5f9;
-    color: #0f172a;
-  }
-
-  .stores-cat-btn.active {
-    background: #10b981;
-    border-color: #10b981;
-    color: #ffffff;
-    box-shadow: 0 1px 4px rgba(16, 185, 129, 0.25);
-  }
-
-  /* Table Customizations */
-  .stores-table-wrap {
-    overflow-x: auto;
-  }
-
-  .recipe-spec-box {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
-
-  .recipe-spec-box strong {
-    color: #0f172a;
-    font-size: 12px;
-  }
-
-  .recipe-spec-box small {
-    font-size: 10.5px;
-    color: #64748b;
-  }
-
-  .plate-stock-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 4px 10px;
-    border-radius: 20px;
-    font-family: var(--font-mono, monospace);
-    font-size: 11.5px;
-    font-weight: 800;
-  }
-
-  .plate-stock-badge.optimal {
-    background: #ecfdf5;
-    color: #059669;
-    border: 1px solid #a7f3d0;
-  }
-
-  .plate-stock-badge.low {
-    background: #fef3c7;
-    color: #d97706;
-    border: 1px solid #fde68a;
-  }
-
-  .plate-stock-badge.out {
-    background: #fff1f2;
-    color: #e11d48;
-    border: 1px solid #fecdd3;
-  }
-
-  /* Modals */
-  .stores-modal-backdrop {
-    position: fixed;
-    inset: 0;
-    background: rgba(15, 23, 42, 0.5);
-    backdrop-filter: blur(4px);
-    display: none;
-    align-items: center;
-    justify-content: center;
-    z-index: 9999;
-    padding: 20px;
-  }
-
-  .stores-modal-window {
-    background: #ffffff;
-    border-radius: 12px;
-    width: 620px;
-    max-width: 95vw;
-    max-height: 90vh;
-    overflow-y: auto;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.2);
-    display: flex;
-    flex-direction: column;
-  }
-
-  .stores-modal-head {
-    padding: 14px 20px;
-    background: #f8fafc;
-    border-bottom: 1px solid #e2e8f0;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-
-  .stores-modal-head h3 {
-    margin: 0;
-    font-size: 15px;
-    font-weight: 800;
-    color: #0f172a;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .stores-modal-body {
-    padding: 20px;
-  }
-
-  .stores-modal-foot {
-    padding: 14px 20px;
-    background: #f8fafc;
-    border-top: 1px solid #e2e8f0;
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-  }
-
-  /* ==========================================================================
-     RESPONSIVE MEDIA QUERIES FOR STORE & MENUS
-     ========================================================================== */
-
-  /* Medium Screens & Tablets (< 1024px) */
-  @media (max-width: 1024px) {
-    .stores-wrapper {
-      padding: 12px 14px;
-      gap: 12px;
-    }
-    .stores-kpi-bar {
-      grid-template-columns: repeat(3, 1fr);
-    }
-  }
-
-  /* Small Tablets & Mobile Devices (< 768px) */
-  @media (max-width: 768px) {
-    .stores-wrapper {
-      padding: 8px 10px;
-      gap: 10px;
-    }
-    .stores-kpi-bar {
-      grid-template-columns: repeat(2, 1fr);
-      gap: 8px;
-    }
-    .stores-kpi-pill {
-      padding: 8px 10px;
-      gap: 8px;
-    }
-    .stores-kpi-icon {
-      width: 32px;
-      height: 32px;
-      font-size: 14px;
-    }
-    .stores-kpi-info h5 {
-      font-size: 9px;
-    }
-    .stores-kpi-info p {
-      font-size: 14px;
-    }
-
-    .stores-header {
-      padding: 10px 12px;
-      flex-direction: column;
-      align-items: stretch;
-      gap: 10px;
-    }
-    .stores-header-left h2 {
-      font-size: 15px;
-    }
-    .stores-header-actions {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      width: 100%;
-      gap: 6px;
-    }
-    .stores-header-actions .btn-ui-secondary,
-    .stores-header-actions .btn-ui-primary {
-      width: 100%;
-      height: 32px;
-      font-size: 11px;
-      justify-content: center;
-      padding: 4px 6px;
-    }
-
-    .stores-tabs-nav {
-      overflow-x: auto;
-      flex-wrap: nowrap;
-      -webkit-overflow-scrolling: touch;
-      padding: 0 10px;
-    }
-    .stores-tab-btn {
-      white-space: nowrap;
-      flex-shrink: 0;
-      padding: 10px 12px;
-      font-size: 11.5px;
-    }
-
-    .stores-filter-ribbon {
-      padding: 10px 12px;
-      flex-direction: column;
-      align-items: stretch;
-      gap: 10px;
-    }
-    .stores-cat-nav {
-      overflow-x: auto;
-      flex-wrap: nowrap;
-      -webkit-overflow-scrolling: touch;
-      padding-bottom: 4px;
-      width: 100%;
-    }
-    .stores-cat-btn {
-      white-space: nowrap;
-      flex-shrink: 0;
-      padding: 5px 10px;
-      font-size: 10.5px;
-    }
-
-    .stores-table-wrap {
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
-      width: 100%;
-    }
-    .stores-table-wrap .pms-table {
-      min-width: 780px;
-    }
-
-    /* Modals Responsive */
-    .stores-modal-backdrop {
-      padding: 10px;
-    }
-    .stores-modal-window {
-      width: 95vw !important;
-      max-height: 92vh !important;
-      margin: 10px auto;
-    }
-    .stores-modal-body {
-      padding: 12px;
-    }
-    .stores-modal-body form div[style*="grid-template-columns"] {
-      grid-template-columns: 1fr !important;
-      gap: 8px !important;
-    }
-  }
-
-  /* Extra Small Mobile (< 480px) */
-  @media (max-width: 480px) {
-    .stores-kpi-bar {
-      grid-template-columns: 1fr 1fr;
-    }
-    .stores-header-actions {
-      grid-template-columns: 1fr;
-    }
-  }
-</style>
-@endpush
 
 @section('content')
-<div class="stores-wrapper">
+<main class="flex-1 w-full p-3 sm:p-4 lg:p-5 flex flex-col gap-4 pms-main-viewport">
+  <div class="w-full flex flex-col gap-4 pms-page-container">
 
   <!-- 1. Top KPI Summary Strip -->
-  <div class="stores-kpi-bar">
-    <div class="stores-kpi-pill">
-      <div class="stores-kpi-icon" style="background: rgba(16, 185, 129, 0.12); color: #10b981;">
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+    <!-- Total Plates Ready -->
+    <div class="bg-white p-4.5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between gap-3 hover:shadow-md transition-all">
+      <div>
+        <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Total Plates Ready</span>
+        <div class="text-2xl font-black font-mono text-emerald-600 mt-1">{{ number_format($totalPlatesAvailable) }}</div>
+        <div class="text-[11px] font-semibold text-slate-500 flex items-center gap-1.5 mt-1">
+          <i class="fa-solid fa-utensils text-emerald-500 text-[10px]"></i> Kitchen Stock
+        </div>
+      </div>
+      <div class="w-12 h-12 rounded-xl bg-emerald-50 border border-emerald-200/80 text-emerald-600 flex items-center justify-center text-lg shrink-0">
         <i class="fa-solid fa-utensils"></i>
       </div>
-      <div class="stores-kpi-info">
-        <h5>Total Plates Ready (Kitchen Stock)</h5>
-        <p style="color: #059669;">{{ number_format($totalPlatesAvailable) }} Plates</p>
-      </div>
     </div>
 
-    <div class="stores-kpi-pill">
-      <div class="stores-kpi-icon" style="background: rgba(6, 182, 212, 0.12); color: #06b6d4;">
+    <!-- Total Food Dishes -->
+    <div class="bg-white p-4.5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between gap-3 hover:shadow-md transition-all">
+      <div>
+        <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Total Food Dishes</span>
+        <div class="text-2xl font-black font-mono text-cyan-600 mt-1">{{ $totalItemsCount }}</div>
+        <div class="text-[11px] font-semibold text-slate-500 flex items-center gap-1.5 mt-1">
+          <i class="fa-solid fa-bowl-food text-cyan-500 text-[10px]"></i> Active Recipes
+        </div>
+      </div>
+      <div class="w-12 h-12 rounded-xl bg-cyan-50 border border-cyan-200/80 text-cyan-600 flex items-center justify-center text-lg shrink-0">
         <i class="fa-solid fa-bowl-food"></i>
       </div>
-      <div class="stores-kpi-info">
-        <h5>Total Food Dishes</h5>
-        <p>{{ $totalItemsCount }} Dishes</p>
-      </div>
     </div>
 
-    <div class="stores-kpi-pill">
-      <div class="stores-kpi-icon" style="background: rgba(99, 102, 241, 0.12); color: #6366f1;">
+    <!-- Active Menu Categories -->
+    <div class="bg-white p-4.5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between gap-3 hover:shadow-md transition-all">
+      <div>
+        <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Active Menus</span>
+        <div class="text-2xl font-black font-mono text-indigo-600 mt-1">{{ $totalMenusCount }}</div>
+        <div class="text-[11px] font-semibold text-slate-500 flex items-center gap-1.5 mt-1">
+          <i class="fa-solid fa-layer-group text-indigo-500 text-[10px]"></i> Menu Sections
+        </div>
+      </div>
+      <div class="w-12 h-12 rounded-xl bg-indigo-50 border border-indigo-200/80 text-indigo-600 flex items-center justify-center text-lg shrink-0">
         <i class="fa-solid fa-layer-group"></i>
       </div>
-      <div class="stores-kpi-info">
-        <h5>Active Menu Categories</h5>
-        <p>{{ $totalMenusCount }} Menus</p>
-      </div>
     </div>
 
-    <div class="stores-kpi-pill">
-      <div class="stores-kpi-icon" style="background: rgba(245, 158, 11, 0.12); color: #f59e0b;">
+    <!-- Low Plate Alerts -->
+    <div class="bg-white p-4.5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between gap-3 hover:shadow-md transition-all">
+      <div>
+        <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Low Plate Alerts</span>
+        <div class="text-2xl font-black font-mono {{ $lowStockCount > 0 ? 'text-amber-600' : 'text-emerald-600' }} mt-1">{{ $lowStockCount }}</div>
+        <div class="text-[11px] font-semibold text-slate-500 flex items-center gap-1.5 mt-1">
+          <i class="fa-solid fa-triangle-exclamation text-amber-500 text-[10px]"></i> Needs Inward
+        </div>
+      </div>
+      <div class="w-12 h-12 rounded-xl bg-amber-50 border border-amber-200/80 text-amber-600 flex items-center justify-center text-lg shrink-0">
         <i class="fa-solid fa-triangle-exclamation"></i>
       </div>
-      <div class="stores-kpi-info">
-        <h5>Low Plate Alerts</h5>
-        <p style="color: {{ $lowStockCount > 0 ? '#d97706' : '#10b981' }};">{{ $lowStockCount }} Dishes</p>
-      </div>
     </div>
 
-    <div class="stores-kpi-pill">
-      <div class="stores-kpi-icon" style="background: rgba(244, 63, 94, 0.12); color: #f43f5e;">
-        <i class="fa-solid fa-circle-xmark"></i>
+    <!-- Sold Out Dishes -->
+    <div class="bg-white p-4.5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between gap-3 hover:shadow-md transition-all">
+      <div>
+        <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Sold Out Dishes</span>
+        <div class="text-2xl font-black font-mono {{ $outOfStockCount > 0 ? 'text-rose-600' : 'text-emerald-600' }} mt-1">{{ $outOfStockCount }}</div>
+        <div class="text-[11px] font-semibold text-slate-500 flex items-center gap-1.5 mt-1">
+          <i class="fa-solid fa-circle-xmark text-rose-500 text-[10px]"></i> 0 Plates Available
+        </div>
       </div>
-      <div class="stores-kpi-info">
-        <h5>Sold Out Dishes</h5>
-        <p style="color: {{ $outOfStockCount > 0 ? '#f43f5e' : '#10b981' }};">{{ $outOfStockCount }}</p>
+      <div class="w-12 h-12 rounded-xl bg-rose-50 border border-rose-200/80 text-rose-600 flex items-center justify-center text-lg shrink-0">
+        <i class="fa-solid fa-circle-xmark"></i>
       </div>
     </div>
   </div>
 
   <!-- 2. Main Store & Menu Manager Container -->
-  <div class="stores-main-card">
+  <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
     
     <!-- Header with Action Buttons -->
-    <div class="stores-header">
-      <div class="stores-header-left">
-        <h2><i class="fa-solid fa-kitchen-set" style="color: #10b981;"></i> Restaurant Store &amp; POS Menu Manager</h2>
-        <p>100% of POS Menus, Dishes, Ingredients &amp; Plate Stock are created and managed here.</p>
+    <div class="bg-slate-50/80 px-6 py-5 border-b border-slate-200/80 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div>
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center text-base shrink-0">
+            <i class="fa-solid fa-kitchen-set"></i>
+          </div>
+          <h2 class="text-base font-extrabold text-slate-900">Restaurant Store &amp; POS Menu Manager</h2>
+        </div>
+        <p class="text-xs text-slate-500 font-medium mt-1">POS Menus, Dishes, Ingredients &amp; Plate Stock ("Kota Plate Hobe") are managed here.</p>
       </div>
 
-      <div class="stores-header-actions">
-        <a href="{{ route('pos.index') }}" class="btn-ui-secondary" style="height: 36px; font-weight: 700; font-size: 12px; text-decoration: none;">
-          <i class="fa-solid fa-desktop" style="color: #6366f1;"></i> Open POS Terminal
+      <div class="flex items-center gap-2.5 flex-wrap">
+        <a href="{{ route('pos.index') }}" class="inline-flex items-center gap-1.5 h-9.5 px-3.5 text-xs font-bold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200/80 rounded-xl transition-all shadow-xs" title="Open POS Terminal">
+          <i class="fa-solid fa-desktop text-indigo-600"></i> Open POS Terminal
         </a>
-        <button type="button" class="btn-ui-secondary" onclick="openMenuCategoryModal()" style="height: 36px; font-weight: 700; font-size: 12px;">
-          <i class="fa-solid fa-folder-plus" style="color: #06b6d4;"></i> + New Menu
+        <button type="button" class="inline-flex items-center gap-1.5 h-9.5 px-3.5 text-xs font-bold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200/80 rounded-xl transition-all shadow-xs cursor-pointer" onclick="openMenuCategoryModal()">
+          <i class="fa-solid fa-folder-plus text-cyan-600"></i> + New Menu
         </button>
-        <button type="button" class="btn-ui-secondary" onclick="openInwardModal()" style="height: 36px; font-weight: 700; font-size: 12px;">
-          <i class="fa-solid fa-truck-ramp-box" style="color: #f59e0b;"></i> + Inward Stock
+        <button type="button" class="inline-flex items-center gap-1.5 h-9.5 px-3.5 text-xs font-bold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200/80 rounded-xl transition-all shadow-xs cursor-pointer" onclick="openInwardModal()">
+          <i class="fa-solid fa-truck-ramp-box text-amber-600"></i> + Inward Stock
         </button>
-        <button type="button" class="btn-ui-primary" onclick="openFoodItemModal()" style="height: 36px; font-weight: 800; font-size: 12px; background: #10b981; border-color: #10b981;">
-          <i class="fa-solid fa-plus-circle"></i> + Add Food Item
+        <button type="button" class="inline-flex items-center gap-1.5 h-9.5 px-4 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl transition-all shadow-xs cursor-pointer" onclick="openFoodItemModal()">
+          <i class="fa-solid fa-circle-plus"></i> + Add Food Item
         </button>
       </div>
     </div>
 
     <!-- Navigation Tabs -->
-    <div class="stores-tabs-nav">
-      <button type="button" class="stores-tab-btn active" id="tab-btn-dishes" onclick="switchStoresTab('dishes')">
-        <i class="fa-solid fa-utensils"></i> Menu Dishes &amp; Plate Stock ({{ $totalItemsCount }})
-      </button>
-      <button type="button" class="stores-tab-btn" id="tab-btn-categories" onclick="switchStoresTab('categories')">
-        <i class="fa-solid fa-layer-group"></i> Menu Categories ({{ $totalMenusCount }})
-      </button>
-      <button type="button" class="stores-tab-btn" id="tab-btn-movements" onclick="switchStoresTab('movements')">
-        <i class="fa-solid fa-clock-rotate-left"></i> Kitchen Stock Movements
-      </button>
+    <div class="px-6 pt-4 border-b border-slate-200/80 bg-white">
+      <div class="flex items-center gap-2 overflow-x-auto pb-3">
+        <button type="button" class="stores-tab-btn inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap bg-emerald-50 text-emerald-700 border border-emerald-200/80" id="tab-btn-dishes" onclick="switchStoresTab('dishes')">
+          <i class="fa-solid fa-utensils text-[11px]"></i> Menu Dishes &amp; Plate Stock ({{ $totalItemsCount }})
+        </button>
+        <button type="button" class="stores-tab-btn inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 bg-white border border-slate-200/80 hover:bg-slate-50 transition-all cursor-pointer whitespace-nowrap" id="tab-btn-categories" onclick="switchStoresTab('categories')">
+          <i class="fa-solid fa-layer-group text-[11px]"></i> Menu Categories ({{ $totalMenusCount }})
+        </button>
+        <button type="button" class="stores-tab-btn inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 bg-white border border-slate-200/80 hover:bg-slate-50 transition-all cursor-pointer whitespace-nowrap" id="tab-btn-movements" onclick="switchStoresTab('movements')">
+          <i class="fa-solid fa-clock-rotate-left text-[11px]"></i> Kitchen Stock Movements
+        </button>
+      </div>
     </div>
 
     <!-- ========================================== -->
@@ -546,129 +132,142 @@
     <div id="tab-pane-dishes">
       
       <!-- Filter & Search Ribbon -->
-      <div class="stores-filter-ribbon">
+      <div class="p-5 border-b border-slate-200/80 flex flex-col md:flex-row md:items-center justify-between gap-3">
         <!-- Category Pills -->
-        <div class="stores-cat-nav">
-          <a href="{{ route('stores.index') }}" class="stores-cat-btn {{ !request('category') ? 'active' : '' }}">
-            <i class="fa-solid fa-border-all"></i> All Menus
+        <div class="flex items-center gap-1.5 overflow-x-auto pb-1 max-w-full">
+          <a href="{{ route('stores.index') }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap {{ !request('category') ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-600 bg-slate-100 hover:bg-slate-200' }}">
+            <i class="fa-solid fa-border-all text-[10px]"></i> All Menus
           </a>
           @foreach($categories as $cat)
             <a href="{{ route('stores.index', ['category' => $cat->name, 'stock_status' => request('stock_status')]) }}" 
-               class="stores-cat-btn {{ request('category') == $cat->name ? 'active' : '' }}">
+               class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all whitespace-nowrap {{ request('category') == $cat->name ? 'bg-emerald-600 text-white shadow-xs font-bold' : 'text-slate-600 bg-slate-100 hover:bg-slate-200' }}">
               {{ $cat->name }} ({{ $cat->pos_items_count }})
             </a>
           @endforeach
         </div>
 
         <!-- Search & Status Selectors -->
-        <div style="display: flex; gap: 8px; align-items: center;">
-          <select class="pms-select" style="height: 34px; font-size: 11.5px;" onchange="filterStockStatus(this.value)">
+        <div class="flex items-center gap-2.5 shrink-0 flex-wrap">
+          <select class="h-9 text-xs font-semibold rounded-xl border border-slate-200 bg-slate-50/70 focus:bg-white focus:outline-none focus:border-indigo-500 px-3 cursor-pointer" onchange="filterStockStatus(this.value)">
             <option value="all" {{ !request('stock_status') || request('stock_status') === 'all' ? 'selected' : '' }}>All Stock Status</option>
             <option value="optimal" {{ request('stock_status') === 'optimal' ? 'selected' : '' }}>Optimal Stock</option>
             <option value="low_stock" {{ request('stock_status') === 'low_stock' ? 'selected' : '' }}>Low Stock Alert</option>
             <option value="out_of_stock" {{ request('stock_status') === 'out_of_stock' ? 'selected' : '' }}>Out of Stock</option>
           </select>
 
-          <form action="{{ route('stores.index') }}" method="GET" style="display: flex; gap: 4px;">
+          <form action="{{ route('stores.index') }}" method="GET" class="flex items-center gap-1.5">
             @if(request('category'))
               <input type="hidden" name="category" value="{{ request('category') }}">
             @endif
             @if(request('stock_status'))
               <input type="hidden" name="stock_status" value="{{ request('stock_status') }}">
             @endif
-            <input type="text" name="search" class="pms-input" placeholder="Search dish, ingredient..." value="{{ request('search') }}" style="height: 34px; width: 190px; font-size: 11.5px;">
-            <button type="submit" class="btn-ui-secondary" style="height: 34px; padding: 0 10px;"><i class="fa-solid fa-search"></i></button>
+            <div class="relative">
+              <input type="text" name="search" placeholder="Search dish, ingredient..." value="{{ request('search') }}" class="h-9 pl-3 pr-8 text-xs font-medium rounded-xl border border-slate-200 bg-slate-50/70 focus:bg-white focus:outline-none focus:border-indigo-500 w-48">
+              <button type="submit" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 cursor-pointer text-xs"><i class="fa-solid fa-search"></i></button>
+            </div>
           </form>
         </div>
       </div>
 
       <!-- Dishes Table with Ingredients and "Kota Plate Hobe" -->
-      <div class="stores-table-wrap">
-        <table class="pms-table" style="width: 100%; margin: 0;">
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse text-xs">
           <thead>
-            <tr>
-              <th style="width: 50px; text-align: center;">Icon</th>
-              <th>Food Dish / Item</th>
-              <th>Menu Category</th>
-              <th>Price</th>
-              <th>Ingredient &amp; Recipe Yield</th>
-              <th>Raw Kitchen Stock</th>
-              <th>Available Plates ("Kota Plate Hobe")</th>
-              <th>Status</th>
-              <th style="text-align: right; width: 220px;">Actions</th>
+            <tr class="bg-slate-50/80 text-slate-500 uppercase tracking-wider text-[11px] font-bold border-b border-slate-200/80">
+              <th class="px-3.5 py-3 text-center w-12">Icon</th>
+              <th class="px-3.5 py-3">Food Dish / Item</th>
+              <th class="px-3.5 py-3">Menu Category</th>
+              <th class="px-3.5 py-3">Price</th>
+              <th class="px-3.5 py-3">Ingredient &amp; Recipe Yield</th>
+              <th class="px-3.5 py-3">Raw Kitchen Stock</th>
+              <th class="px-3.5 py-3">Available Plates ("Kota Plate Hobe")</th>
+              <th class="px-3.5 py-3 text-center">Status</th>
+              <th class="px-3.5 py-3 text-right w-44">Actions</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody class="divide-y divide-slate-100">
             @forelse($items as $dish)
               @php
                 $plates = $dish->available_plates;
                 $isLow = ($plates <= ($dish->min_alert_plates ?: 10) && $plates > 0);
                 $isOut = ($plates <= 0);
-                $badgeClass = $isOut ? 'out' : ($isLow ? 'low' : 'optimal');
               @endphp
-              <tr>
-                <td style="font-size: 22px; text-align: center;">
+              <tr class="hover:bg-slate-50/80 transition-colors">
+                <td class="px-3.5 py-3 text-2xl text-center">
                   {{ $dish->emoji ?: '🍽️' }}
                 </td>
-                <td>
-                  <strong style="color: #0f172a; font-size: 13px;">{{ $dish->name }}</strong>
+                <td class="px-3.5 py-3">
+                  <strong class="text-slate-900 text-xs block">{{ $dish->name }}</strong>
                   @if($dish->code)
-                    <span style="font-family: var(--font-mono, monospace); font-size: 10.5px; color: #0891b2; display: block;">{{ $dish->code }}</span>
+                    <span class="font-mono text-[10px] text-cyan-600 block mt-0.5">{{ $dish->code }}</span>
                   @endif
                 </td>
-                <td>
-                  <span class="badge-tag blue" style="font-size: 11px;">{{ $dish->category }}</span>
+                <td class="px-3.5 py-3">
+                  <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200/80">{{ $dish->category }}</span>
                 </td>
-                <td style="font-family: var(--font-mono, monospace); font-weight: 800; font-size: 13px; color: #0f172a;">
-                  ₹ {{ number_format($dish->price, 2) }}
+                <td class="px-3.5 py-3">
+                  <span class="font-mono font-bold text-xs text-slate-900">₹ {{ number_format($dish->price, 2) }}</span>
                   @if($dish->last_purchase_price)
-                    <span style="font-size: 10px; color: #64748b; font-weight: normal; display: block;" title="Last Inward Cost">Last Buy: ₹{{ number_format($dish->last_purchase_price, 2) }}</span>
+                    <span class="text-[10px] text-slate-400 block mt-0.5" title="Last Inward Cost">Last: ₹{{ number_format($dish->last_purchase_price, 2) }}</span>
                   @endif
                 </td>
-                <td>
-                  <div class="recipe-spec-box">
-                    <strong><i class="fa-solid fa-mortar-pestle" style="color: #10b981; font-size: 11px;"></i> {{ $dish->ingredient_name ?: 'Not configured' }}</strong>
-                    <small>Per Plate: <span style="font-weight: 700; color: #0f172a;">{{ $dish->per_plate_qty + 0 }} {{ $dish->per_plate_unit }}</span> / serving</small>
+                <td class="px-3.5 py-3">
+                  <div class="bg-slate-50/70 border border-slate-200/80 rounded-lg p-2 max-w-[220px]">
+                    <div class="font-bold text-slate-800 flex items-center gap-1.5 truncate">
+                      <i class="fa-solid fa-mortar-pestle text-emerald-600 text-[10px]"></i> {{ $dish->ingredient_name ?: 'Not configured' }}
+                    </div>
+                    <div class="text-[10px] text-slate-500 mt-0.5">
+                      Per Plate: <strong class="text-slate-800">{{ $dish->per_plate_qty + 0 }} {{ $dish->per_plate_unit }}</strong> / serving
+                    </div>
                   </div>
                 </td>
-                <td style="font-family: var(--font-mono, monospace); font-size: 12.5px; font-weight: 700; color: #334155;">
+                <td class="px-3.5 py-3 font-mono font-bold text-xs text-slate-700">
                   {{ $dish->raw_stock_qty + 0 }} {{ $dish->raw_stock_unit }}
                 </td>
-                <td>
-                  <span class="plate-stock-badge {{ $badgeClass }}">
+                <td class="px-3.5 py-3">
+                  <div>
                     @if($isOut)
-                      <i class="fa-solid fa-circle-xmark"></i> 0 Plates (Sold Out)
+                      <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200/80">
+                        <i class="fa-solid fa-circle-xmark text-[9px]"></i> 0 Plates (Sold Out)
+                      </span>
                     @elseif($isLow)
-                      <i class="fa-solid fa-triangle-exclamation"></i> Low: {{ $plates }} Plates Left
+                      <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200/80">
+                        <i class="fa-solid fa-triangle-exclamation text-[9px]"></i> Low: {{ $plates }} Plates
+                      </span>
                     @else
-                      <i class="fa-solid fa-circle-check"></i> {{ $plates }} Plates Ready
+                      <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/80">
+                        <i class="fa-solid fa-circle-check text-[9px]"></i> {{ $plates }} Plates Ready
+                      </span>
                     @endif
-                  </span>
-                  <span style="font-size: 9.5px; color: #94a3b8; display: block; margin-top: 2px;">Min Alert: {{ $dish->min_alert_plates ?: 10 }} plates</span>
+                  </div>
+                  <span class="text-[10px] text-slate-400 block mt-1">Min Alert: {{ $dish->min_alert_plates ?: 10 }} plates</span>
                 </td>
-                <td>
+                <td class="px-3.5 py-3 text-center">
                   @if($dish->status === 'Active' && !$isOut)
-                    <span class="badge-tag green">Active</span>
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/80">Active</span>
                   @else
-                    <span class="badge-tag red">Out of Stock</span>
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200/80">Out of Stock</span>
                   @endif
                 </td>
-                <td style="text-align: right;">
-                  <button type="button" class="btn-ui-secondary" style="height: 28px; font-size: 10.5px; padding: 2px 8px; color: #059669; font-weight: 700;" onclick="quickInwardForItem({{ $dish->id }}, '{{ addslashes($dish->name) }}', '{{ addslashes($dish->ingredient_name) }}', '{{ $dish->raw_stock_unit }}', {{ $dish->per_plate_qty }}, '{{ $dish->per_plate_unit }}')">
-                    <i class="fa-solid fa-plus"></i> Inward
-                  </button>
-                  <button type="button" class="btn-ui-secondary" style="height: 28px; font-size: 10.5px; padding: 2px 7px;" onclick="editFoodItem({{ json_encode($dish) }})">
-                    <i class="fa-solid fa-pen"></i>
-                  </button>
-                  <button type="button" class="btn-ui-secondary" style="height: 28px; font-size: 10.5px; padding: 2px 7px; color: #e11d48;" onclick="deleteFoodItem({{ $dish->id }}, '{{ addslashes($dish->name) }}')">
-                    <i class="fa-solid fa-trash"></i>
-                  </button>
+                <td class="px-3.5 py-3 text-right">
+                  <div class="inline-flex items-center gap-1 justify-end">
+                    <button type="button" class="inline-flex items-center gap-1 h-7 px-2 text-[11px] font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200/80 rounded-lg transition-all cursor-pointer" onclick="quickInwardForItem({{ $dish->id }}, '{{ addslashes($dish->name) }}', '{{ addslashes($dish->ingredient_name) }}', '{{ $dish->raw_stock_unit }}', {{ $dish->per_plate_qty }}, '{{ $dish->per_plate_unit }}')" title="Inward Raw Stock">
+                      <i class="fa-solid fa-plus text-[10px]"></i> Inward
+                    </button>
+                    <button type="button" class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition-all cursor-pointer" onclick="editFoodItem({{ json_encode($dish) }})" title="Edit Dish & Recipe">
+                      <i class="fa-solid fa-pen text-xs"></i>
+                    </button>
+                    <button type="button" class="w-7 h-7 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 flex items-center justify-center transition-all cursor-pointer" onclick="deleteFoodItem({{ $dish->id }}, '{{ addslashes($dish->name) }}')" title="Delete Dish">
+                      <i class="fa-solid fa-trash text-xs"></i>
+                    </button>
+                  </div>
                 </td>
               </tr>
             @empty
               <tr>
-                <td colspan="9" style="text-align: center; color: #94a3b8; padding: 40px;">
-                  <i class="fa-solid fa-utensils" style="font-size: 36px; margin-bottom: 12px; display: block;"></i>
+                <td colspan="9" class="text-center text-slate-400 py-12 text-xs">
+                  <i class="fa-solid fa-utensils text-4xl mb-3 text-slate-300 block"></i>
                   No dishes found in menu catalog. Click <strong>"+ Add Food Item"</strong> to create one.
                 </td>
               </tr>
@@ -681,59 +280,61 @@
     <!-- ========================================== -->
     <!-- TAB 2: MENU CATEGORIES                     -->
     <!-- ========================================== -->
-    <div id="tab-pane-categories" style="display: none;">
-      <div style="padding: 14px 20px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+    <div id="tab-pane-categories" class="hidden">
+      <div class="px-6 py-4 bg-slate-50/80 border-b border-slate-200/80 flex items-center justify-between">
         <div>
-          <h4 style="margin: 0; font-size: 14px; font-weight: 800; color: #0f172a;">Menu Sections</h4>
-          <p style="margin: 2px 0 0; font-size: 11px; color: #64748b;">Categories appear as tabs in the POS terminal for ordering.</p>
+          <h4 class="text-xs font-extrabold uppercase tracking-wider text-slate-900">Menu Sections</h4>
+          <p class="text-xs text-slate-500 font-medium mt-0.5">Categories appear as tabs in the POS terminal for ordering.</p>
         </div>
-        <button type="button" class="btn-ui-primary" onclick="openMenuCategoryModal()" style="height: 32px; font-size: 11.5px; background: #06b6d4; border-color: #06b6d4;">
-          <i class="fa-solid fa-plus-circle"></i> + Create New Menu
+        <button type="button" class="inline-flex items-center gap-1.5 h-8 px-3.5 text-xs font-bold text-white bg-cyan-600 hover:bg-cyan-700 rounded-xl transition-all shadow-xs cursor-pointer" onclick="openMenuCategoryModal()">
+          <i class="fa-solid fa-circle-plus"></i> + Create New Menu
         </button>
       </div>
 
-      <div class="stores-table-wrap">
-        <table class="pms-table" style="width: 100%; margin: 0;">
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse text-xs">
           <thead>
-            <tr>
-              <th style="width: 80px;">Code</th>
-              <th>Menu Name</th>
-              <th>Total Dishes Inside</th>
-              <th>Description</th>
-              <th>Status</th>
-              <th style="text-align: right; width: 150px;">Actions</th>
+            <tr class="bg-slate-50/80 text-slate-500 uppercase tracking-wider text-[11px] font-bold border-b border-slate-200/80">
+              <th class="px-3.5 py-3 w-28">Code</th>
+              <th class="px-3.5 py-3">Menu Name</th>
+              <th class="px-3.5 py-3">Total Dishes Inside</th>
+              <th class="px-3.5 py-3">Description</th>
+              <th class="px-3.5 py-3 text-center">Status</th>
+              <th class="px-3.5 py-3 text-right w-36">Actions</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody class="divide-y divide-slate-100">
             @forelse($categories as $cat)
-              <tr>
-                <td style="font-family: var(--font-mono, monospace); font-weight: 800; color: #0891b2;">
+              <tr class="hover:bg-slate-50/80 transition-colors">
+                <td class="px-3.5 py-3 font-mono font-bold text-cyan-700">
                   {{ $cat->code ?: 'CAT-' . $cat->id }}
                 </td>
-                <td>
-                  <strong style="color: #0f172a; font-size: 13px;">{{ $cat->name }}</strong>
+                <td class="px-3.5 py-3">
+                  <strong class="text-slate-900 text-xs">{{ $cat->name }}</strong>
                 </td>
-                <td>
-                  <span class="badge-tag blue">{{ $cat->pos_items_count }} Dishes</span>
+                <td class="px-3.5 py-3">
+                  <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200/80">{{ $cat->pos_items_count }} Dishes</span>
                 </td>
-                <td style="color: #64748b; font-size: 11.5px;">
+                <td class="px-3.5 py-3 text-slate-500">
                   {{ $cat->description ?: 'No description' }}
                 </td>
-                <td>
-                  <span class="badge-tag {{ $cat->status === 'Active' ? 'green' : 'red' }}">{{ $cat->status }}</span>
+                <td class="px-3.5 py-3 text-center">
+                  <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold {{ $cat->status === 'Active' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/80' : 'bg-rose-50 text-rose-700 border border-rose-200/80' }}">{{ $cat->status }}</span>
                 </td>
-                <td style="text-align: right;">
-                  <button type="button" class="btn-ui-secondary" style="height: 28px; font-size: 10.5px; padding: 2px 8px;" onclick="editMenuCategory({{ json_encode($cat) }})">
-                    <i class="fa-solid fa-pen"></i> Edit
-                  </button>
-                  <button type="button" class="btn-ui-secondary" style="height: 28px; font-size: 10.5px; padding: 2px 8px; color: #e11d48;" onclick="deleteMenuCategory({{ $cat->id }}, '{{ addslashes($cat->name) }}')">
-                    <i class="fa-solid fa-trash"></i>
-                  </button>
+                <td class="px-3.5 py-3 text-right">
+                  <div class="inline-flex items-center gap-1.5 justify-end">
+                    <button type="button" class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition-all cursor-pointer" onclick="editMenuCategory({{ json_encode($cat) }})" title="Edit Menu Category">
+                      <i class="fa-solid fa-pen text-xs"></i>
+                    </button>
+                    <button type="button" class="w-7 h-7 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 flex items-center justify-center transition-all cursor-pointer" onclick="deleteMenuCategory({{ $cat->id }}, '{{ addslashes($cat->name) }}')" title="Delete Menu Category">
+                      <i class="fa-solid fa-trash text-xs"></i>
+                    </button>
+                  </div>
                 </td>
               </tr>
             @empty
               <tr>
-                <td colspan="6" style="text-align: center; color: #94a3b8; padding: 30px;">
+                <td colspan="6" class="text-center text-slate-400 py-10 text-xs">
                   No menus created yet.
                 </td>
               </tr>
@@ -746,60 +347,60 @@
     <!-- ========================================== -->
     <!-- TAB 3: STOCK MOVEMENTS LOG                 -->
     <!-- ========================================== -->
-    <div id="tab-pane-movements" style="display: none;">
-      <div style="padding: 14px 20px; background: #f8fafc; border-bottom: 1px solid #e2e8f0;">
-        <h4 style="margin: 0; font-size: 14px; font-weight: 800; color: #0f172a;">Kitchen Inventory Audit Trail</h4>
-        <p style="margin: 2px 0 0; font-size: 11px; color: #64748b;">Live records of inward receiving and automatic POS order plate deductions.</p>
+    <div id="tab-pane-movements" class="hidden">
+      <div class="px-6 py-4 bg-slate-50/80 border-b border-slate-200/80">
+        <h4 class="text-xs font-extrabold uppercase tracking-wider text-slate-900">Kitchen Inventory Audit Trail</h4>
+        <p class="text-xs text-slate-500 font-medium mt-0.5">Live records of inward receiving and automatic POS order plate deductions.</p>
       </div>
 
-      <div class="stores-table-wrap">
-        <table class="pms-table" style="width: 100%; margin: 0;">
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse text-xs">
           <thead>
-            <tr>
-              <th>Date &amp; Time</th>
-              <th>Type</th>
-              <th>Dish / Provision</th>
-              <th>Quantity / Plates</th>
-              <th>Stock Before &rarr; After</th>
-              <th>Reference No</th>
-              <th>Performed By / Remarks</th>
+            <tr class="bg-slate-50/80 text-slate-500 uppercase tracking-wider text-[11px] font-bold border-b border-slate-200/80">
+              <th class="px-3.5 py-3">Date &amp; Time</th>
+              <th class="px-3.5 py-3">Type</th>
+              <th class="px-3.5 py-3">Dish / Provision</th>
+              <th class="px-3.5 py-3">Quantity / Plates</th>
+              <th class="px-3.5 py-3">Stock Before &rarr; After</th>
+              <th class="px-3.5 py-3">Reference No</th>
+              <th class="px-3.5 py-3">Performed By / Remarks</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody class="divide-y divide-slate-100">
             @forelse($movements as $mov)
-              <tr>
-                <td style="font-size: 11px; color: #64748b; font-family: var(--font-mono, monospace);">
+              <tr class="hover:bg-slate-50/80 transition-colors">
+                <td class="px-3.5 py-3 font-mono text-slate-500 text-xs">
                   {{ $mov->created_at->format('d M Y, h:i A') }}
                 </td>
-                <td>
+                <td class="px-3.5 py-3">
                   @if($mov->type === 'IN')
-                    <span class="badge-tag green"><i class="fa-solid fa-arrow-down"></i> INWARD (+)</span>
+                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/80"><i class="fa-solid fa-arrow-down text-[9px]"></i> INWARD (+)</span>
                   @else
-                    <span class="badge-tag red"><i class="fa-solid fa-arrow-up"></i> POS SALE (-)</span>
+                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200/80"><i class="fa-solid fa-arrow-up text-[9px]"></i> POS SALE (-)</span>
                   @endif
                 </td>
-                <td>
-                  <strong>{{ $mov->posItem?->name ?? $mov->item?->name ?? 'Dish' }}</strong>
+                <td class="px-3.5 py-3">
+                  <strong class="text-slate-800 text-xs">{{ $mov->posItem?->name ?? $mov->item?->name ?? 'Dish' }}</strong>
                 </td>
-                <td style="font-family: var(--font-mono, monospace); font-weight: 800; {{ $mov->type === 'IN' ? 'color: #059669;' : 'color: #e11d48;' }}">
+                <td class="px-3.5 py-3 font-mono font-bold text-xs {{ $mov->type === 'IN' ? 'text-emerald-600' : 'text-rose-600' }}">
                   {{ $mov->type === 'IN' ? '+' : '-' }}{{ $mov->quantity }} Plates
                   @if($mov->total_cost > 0)
-                    <span style="font-size: 10px; color: #0891b2; display: block; font-weight: 700;">Cost: ₹{{ number_format($mov->total_cost, 2) }}</span>
+                    <span class="text-[10px] text-cyan-600 block font-bold">Cost: ₹{{ number_format($mov->total_cost, 2) }}</span>
                   @endif
                 </td>
-                <td style="font-family: var(--font-mono, monospace); font-size: 11.5px; color: #64748b;">
-                  {{ $mov->stock_before }} &rarr; <strong>{{ $mov->stock_after }}</strong>
+                <td class="px-3.5 py-3 font-mono text-slate-500 text-xs">
+                  {{ $mov->stock_before }} &rarr; <strong class="text-slate-800 font-bold">{{ $mov->stock_after }}</strong>
                 </td>
-                <td style="font-family: var(--font-mono, monospace); font-size: 11px; color: #0891b2;">
+                <td class="px-3.5 py-3 font-mono text-xs text-cyan-600 font-bold">
                   {{ $mov->reference_no }}
                 </td>
-                <td style="font-size: 11px; color: #475569;">
+                <td class="px-3.5 py-3 text-slate-600">
                   {{ $mov->remarks }}
                 </td>
               </tr>
             @empty
               <tr>
-                <td colspan="7" style="text-align: center; color: #94a3b8; padding: 30px;">
+                <td colspan="7" class="text-center text-slate-400 py-10 text-xs">
                   No stock movements recorded yet.
                 </td>
               </tr>
@@ -810,71 +411,74 @@
     </div>
 
   </div>
-</div>
+  </div>
+</main>
 
 <!-- ======================================================== -->
 <!-- MODAL 1: ADD / EDIT FOOD ITEM WITH INGREDIENT & YIELD    -->
 <!-- ======================================================== -->
-<div class="stores-modal-backdrop" id="modal-food-item">
-  <div class="stores-modal-window">
-    <div class="stores-modal-head">
-      <h3 id="modal-item-title"><i class="fa-solid fa-plus-circle" style="color: #10b981;"></i> Add Food Dish &amp; Ingredient Recipe</h3>
-      <button type="button" onclick="closeFoodItemModal()" style="border: none; background: transparent; font-size: 20px; cursor: pointer;">&times;</button>
+<div class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 hidden" id="modal-food-item">
+  <div class="bg-white w-full max-w-2xl rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
+    <div class="bg-slate-50/80 px-6 py-4 border-b border-slate-200/80 flex items-center justify-between">
+      <h3 id="modal-item-title" class="text-sm font-extrabold text-slate-900 flex items-center gap-2">
+        <i class="fa-solid fa-circle-plus text-emerald-600"></i> Add Food Dish &amp; Ingredient Recipe
+      </h3>
+      <button type="button" onclick="closeFoodItemModal()" class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center text-base cursor-pointer transition-colors">&times;</button>
     </div>
-    <div class="stores-modal-body">
-      <form id="form-food-item" onsubmit="submitFoodItem(event)">
+    <div class="p-6 overflow-y-auto flex-1">
+      <form id="form-food-item" onsubmit="submitFoodItem(event)" class="space-y-4">
         <input type="hidden" id="item-id">
 
-        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 12px; margin-bottom: 12px;">
-          <div>
-            <label style="font-size: 11px; font-weight: 700; color: #475569; display: block; margin-bottom: 4px;">Dish Name *</label>
-            <input type="text" id="item-name" class="pms-input" required placeholder="e.g. Mughlai Butter Chicken" style="width: 100%;">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div class="sm:col-span-2">
+            <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Dish Name *</label>
+            <input type="text" id="item-name" class="h-9.5 px-3 text-xs font-medium rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-indigo-500 w-full" required placeholder="e.g. Mughlai Butter Chicken">
           </div>
           <div>
-            <label style="font-size: 11px; font-weight: 700; color: #475569; display: block; margin-bottom: 4px;">Emoji Icon</label>
-            <input type="text" id="item-emoji" class="pms-input" placeholder="🍗" value="🍽️" style="width: 100%; text-align: center; font-size: 16px;">
+            <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Emoji Icon</label>
+            <input type="text" id="item-emoji" class="h-9.5 px-3 text-base text-center rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-indigo-500 w-full" placeholder="🍗" value="🍽️">
           </div>
         </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 14px;">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div>
-            <label style="font-size: 11px; font-weight: 700; color: #475569; display: block; margin-bottom: 4px;">Menu Category *</label>
-            <select id="item-category" class="pms-select" required style="width: 100%;">
-              <option value="" disabled selected>-- Select Menu Category --</option>
+            <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Menu Category *</label>
+            <select id="item-category" class="h-9.5 px-3 text-xs font-medium rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-indigo-500 w-full cursor-pointer" required>
+              <option value="" disabled selected>-- Select Category --</option>
               @foreach($categories as $c)
                 <option value="{{ $c->name }}">{{ $c->name }}</option>
               @endforeach
             </select>
           </div>
           <div>
-            <label style="font-size: 11px; font-weight: 700; color: #475569; display: block; margin-bottom: 4px;">Selling Price (₹) *</label>
-            <input type="number" id="item-price" class="pms-input" required min="0" step="any" placeholder="450" style="width: 100%;">
+            <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Selling Price (₹) *</label>
+            <input type="number" id="item-price" class="h-9.5 px-3 text-xs font-mono font-bold rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-indigo-500 w-full" required min="0" step="any" placeholder="450">
           </div>
           <div>
-            <label style="font-size: 11px; font-weight: 700; color: #475569; display: block; margin-bottom: 4px;">Dish Code / SKU</label>
-            <input type="text" id="item-code" class="pms-input" placeholder="MC-01" style="width: 100%;">
+            <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Dish Code / SKU</label>
+            <input type="text" id="item-code" class="h-9.5 px-3 text-xs font-mono rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-indigo-500 w-full" placeholder="MC-01">
           </div>
         </div>
 
         <!-- Recipe & Plate Yield Configuration Box -->
-        <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 14px; margin-bottom: 14px;">
-          <div style="font-size: 12px; font-weight: 800; color: #0f172a; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
-            <i class="fa-solid fa-mortar-pestle" style="color: #10b981;"></i> Ingredient Recipe &amp; Plate Yield ("Kota Plate Hobe")
+        <div class="bg-slate-50/70 border border-slate-200/80 rounded-2xl p-4 space-y-3">
+          <div class="text-xs font-extrabold uppercase tracking-wider text-slate-800 flex items-center gap-2 pb-2 border-b border-slate-200/60">
+            <i class="fa-solid fa-mortar-pestle text-emerald-600"></i> Ingredient Recipe &amp; Plate Yield ("Kota Plate Hobe")
           </div>
 
-          <div style="margin-bottom: 10px;">
-            <label style="font-size: 11px; font-weight: 700; color: #475569; display: block; margin-bottom: 4px;">Main Ingredient Name *</label>
-            <input type="text" id="item-ingredient-name" class="pms-input" required placeholder="e.g. Boneless Chicken, Fresh Paneer, Basmati Rice" style="width: 100%;">
+          <div>
+            <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Main Ingredient Name *</label>
+            <input type="text" id="item-ingredient-name" class="h-9.5 px-3 text-xs font-medium rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-indigo-500 w-full" required placeholder="e.g. Boneless Chicken, Fresh Paneer, Basmati Rice">
           </div>
 
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 10px;">
+          <div class="grid grid-cols-2 gap-3">
             <div>
-              <label style="font-size: 11px; font-weight: 700; color: #475569; display: block; margin-bottom: 4px;">Raw Stock Quantity in Kitchen *</label>
-              <input type="number" id="item-raw-qty" class="pms-input" required min="0" step="any" placeholder="20" oninput="autoCalculatePlates()" style="width: 100%;">
+              <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Raw Stock in Kitchen *</label>
+              <input type="number" id="item-raw-qty" class="h-9.5 px-3 text-xs font-mono rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-indigo-500 w-full" required min="0" step="any" placeholder="20" oninput="autoCalculatePlates()">
             </div>
             <div>
-              <label style="font-size: 11px; font-weight: 700; color: #475569; display: block; margin-bottom: 4px;">Raw Stock Unit *</label>
-              <select id="item-raw-unit" class="pms-select" required onchange="autoCalculatePlates()" style="width: 100%;">
+              <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Raw Stock Unit *</label>
+              <select id="item-raw-unit" class="h-9.5 px-3 text-xs font-medium rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-indigo-500 w-full cursor-pointer" required onchange="autoCalculatePlates()">
                 <option value="Kg" selected>Kg</option>
                 <option value="Liters">Liters</option>
                 <option value="Pcs">Pcs</option>
@@ -884,14 +488,14 @@
             </div>
           </div>
 
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 10px;">
+          <div class="grid grid-cols-2 gap-3">
             <div>
-              <label style="font-size: 11px; font-weight: 700; color: #475569; display: block; margin-bottom: 4px;">Per Plate Requirement *</label>
-              <input type="number" id="item-per-plate-qty" class="pms-input" required min="0.001" step="any" placeholder="250" oninput="autoCalculatePlates()" style="width: 100%;">
+              <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Per Plate Requirement *</label>
+              <input type="number" id="item-per-plate-qty" class="h-9.5 px-3 text-xs font-mono rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-indigo-500 w-full" required min="0.001" step="any" placeholder="250" oninput="autoCalculatePlates()">
             </div>
             <div>
-              <label style="font-size: 11px; font-weight: 700; color: #475569; display: block; margin-bottom: 4px;">Per Plate Unit *</label>
-              <select id="item-per-plate-unit" class="pms-select" required onchange="autoCalculatePlates()" style="width: 100%;">
+              <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Per Plate Unit *</label>
+              <select id="item-per-plate-unit" class="h-9.5 px-3 text-xs font-medium rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-indigo-500 w-full cursor-pointer" required onchange="autoCalculatePlates()">
                 <option value="gm" selected>gm</option>
                 <option value="ml">ml</option>
                 <option value="pcs">pcs</option>
@@ -901,27 +505,27 @@
             </div>
           </div>
 
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding-top: 6px; border-top: 1px dashed #cbd5e1;">
+          <div class="grid grid-cols-2 gap-3 pt-3 border-t border-slate-200/80">
             <div>
-              <label style="font-size: 11px; font-weight: 800; color: #059669; display: block; margin-bottom: 4px;">Available Plates (Stock for POS) *</label>
-              <input type="number" id="item-available-plates" class="pms-input" required min="0" step="1" placeholder="80" style="width: 100%; font-weight: 800; color: #059669; font-size: 14px;">
-              <span id="plate-calc-hint" style="font-size: 10px; color: #64748b; margin-top: 2px; display: block;">Auto-calculated from raw stock</span>
+              <label class="block text-xs font-bold text-emerald-700 uppercase tracking-wider mb-1">Available Plates (Stock for POS) *</label>
+              <input type="number" id="item-available-plates" class="h-9.5 px-3 text-sm font-black font-mono text-emerald-700 rounded-xl border border-emerald-300 bg-emerald-50/50 focus:outline-none focus:border-emerald-500 w-full" required min="0" step="1" placeholder="80">
+              <span id="plate-calc-hint" class="text-[10px] text-slate-500 block mt-1">Auto-calculated from raw stock</span>
             </div>
             <div>
-              <label style="font-size: 11px; font-weight: 700; color: #475569; display: block; margin-bottom: 4px;">Low Stock Alert Below (Plates) *</label>
-              <input type="number" id="item-min-alert" class="pms-input" required min="0" step="1" value="10" placeholder="10" style="width: 100%;">
+              <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Low Stock Alert Below *</label>
+              <input type="number" id="item-min-alert" class="h-9.5 px-3 text-xs font-mono rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-indigo-500 w-full" required min="0" step="1" value="10" placeholder="10">
             </div>
           </div>
         </div>
 
-        <div style="margin-bottom: 12px;">
-          <label style="font-size: 11px; font-weight: 700; color: #475569; display: block; margin-bottom: 4px;">Description (Optional)</label>
-          <textarea id="item-desc" class="pms-input" rows="2" placeholder="Brief preparation notes..." style="width: 100%;"></textarea>
+        <div>
+          <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Description (Optional)</label>
+          <textarea id="item-desc" class="p-3 text-xs font-medium rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-indigo-500 w-full" rows="2" placeholder="Brief preparation notes..."></textarea>
         </div>
 
-        <div class="stores-modal-foot" style="padding: 12px 0 0; background: transparent; border: none;">
-          <button type="button" class="btn-ui-secondary" onclick="closeFoodItemModal()">Cancel</button>
-          <button type="submit" class="btn-ui-primary" id="btn-save-item"><i class="fa-solid fa-save"></i> Save Food Item</button>
+        <div class="flex justify-end items-center gap-2 pt-2 border-t border-slate-200">
+          <button type="button" class="inline-flex items-center h-9 px-4 text-xs font-bold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200/80 rounded-xl transition-all shadow-xs cursor-pointer" onclick="closeFoodItemModal()">Cancel</button>
+          <button type="submit" class="inline-flex items-center gap-1.5 h-9 px-4 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl transition-all shadow-xs cursor-pointer" id="btn-save-item"><i class="fa-solid fa-save"></i> Save Food Item</button>
         </div>
       </form>
     </div>
@@ -931,34 +535,36 @@
 <!-- ======================================================== -->
 <!-- MODAL 2: CREATE / EDIT MENU CATEGORY                     -->
 <!-- ======================================================== -->
-<div class="stores-modal-backdrop" id="modal-menu-category">
-  <div class="stores-modal-window" style="width: 480px;">
-    <div class="stores-modal-head">
-      <h3 id="modal-cat-title"><i class="fa-solid fa-folder-plus" style="color: #06b6d4;"></i> Create Menu Category</h3>
-      <button type="button" onclick="closeMenuCategoryModal()" style="border: none; background: transparent; font-size: 20px; cursor: pointer;">&times;</button>
+<div class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 hidden" id="modal-menu-category">
+  <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col">
+    <div class="bg-slate-50/80 px-6 py-4 border-b border-slate-200/80 flex items-center justify-between">
+      <h3 id="modal-cat-title" class="text-sm font-extrabold text-slate-900 flex items-center gap-2">
+        <i class="fa-solid fa-folder-plus text-cyan-600"></i> Create Menu Category
+      </h3>
+      <button type="button" onclick="closeMenuCategoryModal()" class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center text-base cursor-pointer transition-colors">&times;</button>
     </div>
-    <div class="stores-modal-body">
-      <form id="form-menu-category" onsubmit="submitMenuCategory(event)">
+    <div class="p-6">
+      <form id="form-menu-category" onsubmit="submitMenuCategory(event)" class="space-y-4">
         <input type="hidden" id="cat-id">
 
-        <div style="margin-bottom: 12px;">
-          <label style="font-size: 11px; font-weight: 700; color: #475569; display: block; margin-bottom: 4px;">Menu Name *</label>
-          <input type="text" id="cat-name" class="pms-input" required placeholder="e.g. Biryani &amp; Rice, Tandoori Breads, Soups" style="width: 100%;">
+        <div>
+          <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Menu Name *</label>
+          <input type="text" id="cat-name" class="h-9.5 px-3 text-xs font-medium rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-indigo-500 w-full" required placeholder="e.g. Biryani &amp; Rice, Tandoori Breads, Soups">
         </div>
 
-        <div style="margin-bottom: 12px;">
-          <label style="font-size: 11px; font-weight: 700; color: #475569; display: block; margin-bottom: 4px;">Short Code (Optional)</label>
-          <input type="text" id="cat-code" class="pms-input" placeholder="e.g. BIR, BREAD, SOUP" style="width: 100%;">
+        <div>
+          <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Short Code (Optional)</label>
+          <input type="text" id="cat-code" class="h-9.5 px-3 text-xs font-mono rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-indigo-500 w-full" placeholder="e.g. BIR, BREAD, SOUP">
         </div>
 
-        <div style="margin-bottom: 12px;">
-          <label style="font-size: 11px; font-weight: 700; color: #475569; display: block; margin-bottom: 4px;">Description (Optional)</label>
-          <textarea id="cat-desc" class="pms-input" rows="2" placeholder="Brief notes about this menu section..." style="width: 100%;"></textarea>
+        <div>
+          <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Description (Optional)</label>
+          <textarea id="cat-desc" class="p-3 text-xs font-medium rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-indigo-500 w-full" rows="2" placeholder="Brief notes about this menu section..."></textarea>
         </div>
 
-        <div class="stores-modal-foot" style="padding: 12px 0 0; background: transparent; border: none;">
-          <button type="button" class="btn-ui-secondary" onclick="closeMenuCategoryModal()">Cancel</button>
-          <button type="submit" class="btn-ui-primary"><i class="fa-solid fa-save"></i> Save Menu</button>
+        <div class="flex justify-end items-center gap-2 pt-3 border-t border-slate-200">
+          <button type="button" class="inline-flex items-center h-9 px-4 text-xs font-bold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200/80 rounded-xl transition-all shadow-xs cursor-pointer" onclick="closeMenuCategoryModal()">Cancel</button>
+          <button type="submit" class="inline-flex items-center gap-1.5 h-9 px-4 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-all shadow-xs cursor-pointer"><i class="fa-solid fa-save"></i> Save Menu</button>
         </div>
       </form>
     </div>
@@ -968,17 +574,19 @@
 <!-- ======================================================== -->
 <!-- MODAL 3: INWARD STOCK RECEIVING ("ITEM DUKLO")           -->
 <!-- ======================================================== -->
-<div class="stores-modal-backdrop" id="modal-inward">
-  <div class="stores-modal-window" style="width: 520px;">
-    <div class="stores-modal-head">
-      <h3><i class="fa-solid fa-truck-ramp-box" style="color: #f59e0b;"></i> Inward Stock Receiving ("Item Duklo")</h3>
-      <button type="button" onclick="closeInwardModal()" style="border: none; background: transparent; font-size: 20px; cursor: pointer;">&times;</button>
+<div class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 hidden" id="modal-inward">
+  <div class="bg-white w-full max-w-lg rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col">
+    <div class="bg-slate-50/80 px-6 py-4 border-b border-slate-200/80 flex items-center justify-between">
+      <h3 class="text-sm font-extrabold text-slate-900 flex items-center gap-2">
+        <i class="fa-solid fa-truck-ramp-box text-amber-600"></i> Inward Stock Receiving ("Item Duklo")
+      </h3>
+      <button type="button" onclick="closeInwardModal()" class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center text-base cursor-pointer transition-colors">&times;</button>
     </div>
-    <div class="stores-modal-body">
-      <form id="form-inward" onsubmit="submitInwardStock(event)">
-        <div style="margin-bottom: 12px;">
-          <label style="font-size: 11px; font-weight: 700; color: #475569; display: block; margin-bottom: 4px;">Select Dish / Food Item *</label>
-          <select id="inward-item-id" class="pms-select" required style="width: 100%;" onchange="onInwardDishSelected()">
+    <div class="p-6">
+      <form id="form-inward" onsubmit="submitInwardStock(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Select Dish / Food Item *</label>
+          <select id="inward-item-id" class="h-9.5 px-3 text-xs font-medium rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-indigo-500 w-full cursor-pointer" required onchange="onInwardDishSelected()">
             <option value="">-- Choose Food Dish --</option>
             @foreach($items as $dish)
               <option value="{{ $dish->id }}" 
@@ -993,50 +601,50 @@
           </select>
         </div>
 
-        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-bottom: 12px;">
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 10px;">
+        <div class="bg-slate-50/70 border border-slate-200/80 rounded-2xl p-4 space-y-3">
+          <div class="grid grid-cols-2 gap-3">
             <div>
-              <label style="font-size: 11px; font-weight: 700; color: #475569; display: block; margin-bottom: 4px;" id="lbl-inward-raw">Raw Inward Quantity *</label>
-              <input type="number" id="inward-raw-qty" class="pms-input" min="0" step="any" placeholder="e.g. 10" oninput="calculateInwardPlates()" style="width: 100%;">
+              <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1" id="lbl-inward-raw">Raw Inward Quantity *</label>
+              <input type="number" id="inward-raw-qty" class="h-9.5 px-3 text-xs font-mono rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-indigo-500 w-full" min="0" step="any" placeholder="e.g. 10" oninput="calculateInwardPlates()">
             </div>
             <div>
-              <label style="font-size: 11px; font-weight: 700; color: #059669; display: block; margin-bottom: 4px;">Plates Added (+ Plates) *</label>
-              <input type="number" id="inward-plates" class="pms-input" required min="1" step="1" placeholder="e.g. 40" style="width: 100%; font-weight: 800; color: #059669;">
+              <label class="block text-xs font-bold text-emerald-700 uppercase tracking-wider mb-1">Plates Added (+ Plates) *</label>
+              <input type="number" id="inward-plates" class="h-9.5 px-3 text-sm font-black font-mono text-emerald-700 rounded-xl border border-emerald-300 bg-emerald-50/50 focus:outline-none focus:border-emerald-500 w-full" required min="1" step="1" placeholder="e.g. 40">
             </div>
           </div>
 
-          <div style="margin-bottom: 8px;">
-            <label style="font-size: 11px; font-weight: 700; color: #475569; display: block; margin-bottom: 4px;">
-              Purchase Price / Buying Dam (₹) <span style="font-size: 10px; color: #94a3b8; font-weight: 500;">(Optional - e.g. raw item er khoroch / dam)</span>
+          <div>
+            <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">
+              Purchase Price (₹) <span class="text-[10px] text-slate-400 font-normal">(Optional - item expense)</span>
             </label>
-            <div style="position: relative;">
-              <span style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-weight: 700; color: #64748b; font-size: 13px;">₹</span>
-              <input type="number" id="inward-purchase-price" class="pms-input" min="0" step="any" placeholder="e.g. 240 (Optional)" oninput="calculateInwardPlates()" style="width: 100%; padding-left: 26px;">
+            <div class="relative">
+              <span class="absolute left-3 top-1/2 -translate-y-1/2 font-bold text-slate-400 text-xs">₹</span>
+              <input type="number" id="inward-purchase-price" class="h-9.5 pl-7 pr-3 text-xs font-mono rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-indigo-500 w-full" min="0" step="any" placeholder="e.g. 240 (Optional)" oninput="calculateInwardPlates()">
             </div>
           </div>
 
-          <span id="inward-yield-calc" style="font-size: 10.5px; color: #64748b; display: block;">Select a dish to see recipe yield.</span>
+          <span id="inward-yield-calc" class="text-[11px] text-slate-500 block pt-1">Select a dish to see recipe yield.</span>
         </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+        <div class="grid grid-cols-2 gap-3">
           <div>
-            <label style="font-size: 11px; font-weight: 700; color: #475569; display: block; margin-bottom: 4px;">Vendor / Supplier Name</label>
-            <input type="text" id="inward-vendor" class="pms-input" placeholder="e.g. Fresh Chicken Mart" style="width: 100%;">
+            <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Vendor / Supplier Name</label>
+            <input type="text" id="inward-vendor" class="h-9.5 px-3 text-xs font-medium rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-indigo-500 w-full" placeholder="e.g. Fresh Chicken Mart">
           </div>
           <div>
-            <label style="font-size: 11px; font-weight: 700; color: #475569; display: block; margin-bottom: 4px;">Invoice / Challan No</label>
-            <input type="text" id="inward-invoice" class="pms-input" placeholder="INV-2026-901" style="width: 100%;">
+            <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Invoice / Challan No</label>
+            <input type="text" id="inward-invoice" class="h-9.5 px-3 text-xs font-mono rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-indigo-500 w-full" placeholder="INV-2026-901">
           </div>
         </div>
 
-        <div style="margin-bottom: 12px;">
-          <label style="font-size: 11px; font-weight: 700; color: #475569; display: block; margin-bottom: 4px;">Remarks (Optional)</label>
-          <input type="text" id="inward-remarks" class="pms-input" placeholder="Morning delivery fresh stock received..." style="width: 100%;">
+        <div>
+          <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Remarks (Optional)</label>
+          <input type="text" id="inward-remarks" class="h-9.5 px-3 text-xs font-medium rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-indigo-500 w-full" placeholder="Morning delivery fresh stock received...">
         </div>
 
-        <div class="stores-modal-foot" style="padding: 12px 0 0; background: transparent; border: none;">
-          <button type="button" class="btn-ui-secondary" onclick="closeInwardModal()">Cancel</button>
-          <button type="submit" class="btn-ui-primary" style="background: #10b981; border-color: #10b981;"><i class="fa-solid fa-check"></i> Replenish Stock</button>
+        <div class="flex justify-end items-center gap-2 pt-3 border-t border-slate-200">
+          <button type="button" class="inline-flex items-center h-9 px-4 text-xs font-bold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200/80 rounded-xl transition-all shadow-xs cursor-pointer" onclick="closeInwardModal()">Cancel</button>
+          <button type="submit" class="inline-flex items-center gap-1.5 h-9 px-4 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl transition-all shadow-xs cursor-pointer"><i class="fa-solid fa-check"></i> Replenish Stock</button>
         </div>
       </form>
     </div>
@@ -1051,13 +659,23 @@
   // TAB SWITCHING LOGIC
   // ==========================================
   function switchStoresTab(tabKey) {
-    document.getElementById('tab-btn-dishes').classList.toggle('active', tabKey === 'dishes');
-    document.getElementById('tab-btn-categories').classList.toggle('active', tabKey === 'categories');
-    document.getElementById('tab-btn-movements').classList.toggle('active', tabKey === 'movements');
+    const tabs = [
+      { key: 'dishes', btn: document.getElementById('tab-btn-dishes'), pane: document.getElementById('tab-pane-dishes') },
+      { key: 'categories', btn: document.getElementById('tab-btn-categories'), pane: document.getElementById('tab-pane-categories') },
+      { key: 'movements', btn: document.getElementById('tab-btn-movements'), pane: document.getElementById('tab-pane-movements') }
+    ];
 
-    document.getElementById('tab-pane-dishes').style.display = (tabKey === 'dishes') ? 'block' : 'none';
-    document.getElementById('tab-pane-categories').style.display = (tabKey === 'categories') ? 'block' : 'none';
-    document.getElementById('tab-pane-movements').style.display = (tabKey === 'movements') ? 'block' : 'none';
+    tabs.forEach(t => {
+      if (!t.btn || !t.pane) return;
+      const isActive = (t.key === tabKey);
+      if (isActive) {
+        t.pane.classList.remove('hidden');
+        t.btn.className = 'stores-tab-btn inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap bg-emerald-50 text-emerald-700 border border-emerald-200/80 shadow-xs';
+      } else {
+        t.pane.classList.add('hidden');
+        t.btn.className = 'stores-tab-btn inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 bg-white border border-slate-200/80 hover:bg-slate-50 transition-all cursor-pointer whitespace-nowrap shadow-xs';
+      }
+    });
   }
 
   function filterStockStatus(status) {
@@ -1074,16 +692,16 @@
   // FOOD ITEM MODAL & AUTO PLATE CALCULATION
   // ==========================================
   function openFoodItemModal() {
-    document.getElementById('modal-item-title').innerHTML = '<i class="fa-solid fa-plus-circle" style="color: #10b981;"></i> Add Food Dish & Ingredient Recipe';
+    document.getElementById('modal-item-title').innerHTML = '<i class="fa-solid fa-plus-circle text-emerald-500"></i> Add Food Dish &amp; Ingredient Recipe';
     document.getElementById('form-food-item').reset();
     document.getElementById('item-id').value = '';
     document.getElementById('item-emoji').value = '🍽️';
     document.getElementById('item-min-alert').value = '10';
-    document.getElementById('modal-food-item').style.display = 'flex';
+    document.getElementById('modal-food-item').classList.remove('hidden');
   }
 
   function closeFoodItemModal() {
-    document.getElementById('modal-food-item').style.display = 'none';
+    document.getElementById('modal-food-item').classList.add('hidden');
   }
 
   function autoCalculatePlates() {
@@ -1108,7 +726,7 @@
   }
 
   function editFoodItem(dish) {
-    document.getElementById('modal-item-title').innerHTML = '<i class="fa-solid fa-pen" style="color: #06b6d4;"></i> Edit Food Dish & Recipe';
+    document.getElementById('modal-item-title').innerHTML = '<i class="fa-solid fa-pen text-cyan-500"></i> Edit Food Dish &amp; Recipe';
     document.getElementById('item-id').value = dish.id;
     document.getElementById('item-name').value = dish.name;
     document.getElementById('item-emoji').value = dish.emoji || '🍽️';
@@ -1125,7 +743,7 @@
     document.getElementById('item-available-plates').value = dish.available_plates || 0;
     document.getElementById('item-min-alert').value = dish.min_alert_plates || 10;
 
-    document.getElementById('modal-food-item').style.display = 'flex';
+    document.getElementById('modal-food-item').classList.remove('hidden');
   }
 
   async function submitFoodItem(e) {
@@ -1206,23 +824,23 @@
   // MENU CATEGORY MODAL
   // ==========================================
   function openMenuCategoryModal() {
-    document.getElementById('modal-cat-title').innerHTML = '<i class="fa-solid fa-folder-plus" style="color: #06b6d4;"></i> Create Menu Category';
+    document.getElementById('modal-cat-title').innerHTML = '<i class="fa-solid fa-folder-plus text-cyan-500"></i> Create Menu Category';
     document.getElementById('form-menu-category').reset();
     document.getElementById('cat-id').value = '';
-    document.getElementById('modal-menu-category').style.display = 'flex';
+    document.getElementById('modal-menu-category').classList.remove('hidden');
   }
 
   function closeMenuCategoryModal() {
-    document.getElementById('modal-menu-category').style.display = 'none';
+    document.getElementById('modal-menu-category').classList.add('hidden');
   }
 
   function editMenuCategory(cat) {
-    document.getElementById('modal-cat-title').innerHTML = '<i class="fa-solid fa-pen" style="color: #06b6d4;"></i> Edit Menu Category';
+    document.getElementById('modal-cat-title').innerHTML = '<i class="fa-solid fa-pen text-cyan-500"></i> Edit Menu Category';
     document.getElementById('cat-id').value = cat.id;
     document.getElementById('cat-name').value = cat.name;
     document.getElementById('cat-code').value = cat.code || '';
     document.getElementById('cat-desc').value = cat.description || '';
-    document.getElementById('modal-menu-category').style.display = 'flex';
+    document.getElementById('modal-menu-category').classList.remove('hidden');
   }
 
   async function submitMenuCategory(e) {
@@ -1294,18 +912,18 @@
   // ==========================================
   function openInwardModal() {
     document.getElementById('form-inward').reset();
-    document.getElementById('modal-inward').style.display = 'flex';
+    document.getElementById('modal-inward').classList.remove('hidden');
   }
 
   function closeInwardModal() {
-    document.getElementById('modal-inward').style.display = 'none';
+    document.getElementById('modal-inward').classList.add('hidden');
   }
 
   function quickInwardForItem(id, name, ingName, rawUnit, perPlate, plateUnit) {
     document.getElementById('form-inward').reset();
     document.getElementById('inward-item-id').value = id;
     onInwardDishSelected();
-    document.getElementById('modal-inward').style.display = 'flex';
+    document.getElementById('modal-inward').classList.remove('hidden');
   }
 
   function onInwardDishSelected() {

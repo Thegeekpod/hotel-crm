@@ -2,713 +2,339 @@
 
 @section('title', 'Accounts & Financial Ledgers - Hotel Sagar Sonnet')
 
-@push('styles')
-<style>
-  :root {
-    --acc-primary: #6366f1;
-    --acc-primary-dark: #4f46e5;
-    --acc-emerald: #10b981;
-    --acc-emerald-dark: #059669;
-    --acc-cyan: #06b6d4;
-    --acc-amber: #f59e0b;
-    --acc-rose: #f43f5e;
-    --acc-violet: #8b5cf6;
-    --acc-slate: #0f172a;
-    --acc-border: #e2e8f0;
-  }
-
-  .accounts-wrapper {
-    padding: 18px 24px 30px;
-    background: #f8fafc;
-    min-height: calc(100vh - 120px);
-  }
-
-  /* Filter Ribbon Card */
-  .accounts-filter-card {
-    background: #ffffff;
-    border: 1px solid var(--acc-border);
-    border-radius: 12px;
-    padding: 14px 18px;
-    margin-bottom: 18px;
-    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.03);
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-  }
-
-  .quick-date-pills {
-    display: inline-flex;
-    background: #f1f5f9;
-    padding: 3px;
-    border-radius: 8px;
-    gap: 2px;
-  }
-
-  .quick-date-btn {
-    border: none;
-    background: transparent;
-    color: #475569;
-    font-size: 11.5px;
-    font-weight: 700;
-    padding: 6px 12px;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    text-decoration: none;
-  }
-
-  .quick-date-btn:hover {
-    color: #0f172a;
-    background: rgba(255, 255, 255, 0.6);
-  }
-
-  .quick-date-btn.active {
-    background: #ffffff;
-    color: var(--acc-primary-dark);
-    font-weight: 800;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-  }
-
-  .date-picker-form {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-wrap: wrap;
-  }
-
-  .acc-input {
-    border: 1.5px solid #cbd5e1;
-    border-radius: 6px;
-    padding: 6px 10px;
-    font-size: 11.5px;
-    font-weight: 600;
-    color: #1e293b;
-    background: #ffffff;
-    outline: none;
-    height: 32px;
-    transition: all 0.2s ease;
-  }
-
-  .acc-input:focus {
-    border-color: var(--acc-primary);
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
-  }
-
-  .btn-acc-primary {
-    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
-    color: #ffffff;
-    border: none;
-    border-radius: 6px;
-    padding: 0 14px;
-    height: 32px;
-    font-size: 11.5px;
-    font-weight: 800;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    transition: all 0.2s ease;
-    box-shadow: 0 2px 6px rgba(79, 70, 229, 0.25);
-  }
-
-  .btn-acc-primary:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 10px rgba(79, 70, 229, 0.35);
-  }
-
-  .btn-acc-print {
-    background: #ffffff;
-    color: #334155;
-    border: 1.5px solid #cbd5e1;
-    border-radius: 6px;
-    padding: 0 12px;
-    height: 32px;
-    font-size: 11.5px;
-    font-weight: 700;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    transition: all 0.2s;
-  }
-
-  .btn-acc-print:hover {
-    background: #f8fafc;
-    border-color: #94a3b8;
-    color: #0f172a;
-  }
-
-  /* 5 KPI Stat Cards Grid */
-  .accounts-kpi-grid {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 14px;
-    margin-bottom: 20px;
-  }
-
-  @media (max-width: 1200px) {
-    .accounts-kpi-grid {
-      grid-template-columns: repeat(3, 1fr);
-    }
-  }
-
-  @media (max-width: 768px) {
-    .accounts-kpi-grid {
-      grid-template-columns: 1fr;
-    }
-  }
-
-  .acc-kpi-card {
-    background: #ffffff;
-    border: 1px solid var(--acc-border);
-    border-radius: 12px;
-    padding: 14px 16px;
-    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.02);
-    position: relative;
-    overflow: hidden;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-  }
-
-  .acc-kpi-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 14px rgba(15, 23, 42, 0.06);
-  }
-
-  .acc-kpi-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 8px;
-  }
-
-  .acc-kpi-label {
-    font-size: 11px;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: #64748b;
-  }
-
-  .acc-kpi-icon {
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 13px;
-  }
-
-  .acc-kpi-val {
-    font-size: 20px;
-    font-weight: 900;
-    font-family: var(--font-mono, monospace);
-    color: #0f172a;
-    line-height: 1.2;
-  }
-
-  .acc-kpi-sub {
-    font-size: 10.5px;
-    color: #64748b;
-    margin-top: 4px;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-  }
-
-  /* Card Color Variations */
-  .card-inflow { border-left: 4px solid #10b981; }
-  .card-inflow .acc-kpi-icon { background: #d1fae5; color: #059669; }
-  .card-inflow .acc-kpi-val { color: #059669; }
-
-  .card-fo { border-left: 4px solid #6366f1; }
-  .card-fo .acc-kpi-icon { background: #e0e7ff; color: #4338ca; }
-  .card-fo .acc-kpi-val { color: #4338ca; }
-
-  .card-pos { border-left: 4px solid #06b6d4; }
-  .card-pos .acc-kpi-icon { background: #cffafe; color: #0891b2; }
-  .card-pos .acc-kpi-val { color: #0891b2; }
-
-  .card-expense { border-left: 4px solid #f43f5e; }
-  .card-expense .acc-kpi-icon { background: #ffe4e6; color: #e11d48; }
-  .card-expense .acc-kpi-val { color: #e11d48; }
-
-  .card-net { border-left: 4px solid #8b5cf6; }
-  .card-net .acc-kpi-icon { background: #ede9fe; color: #7c3aed; }
-  .card-net .acc-kpi-val { color: #7c3aed; }
-
-  /* Main Workspace Tabs Container */
-  .accounts-main-card {
-    background: #ffffff;
-    border: 1px solid var(--acc-border);
-    border-radius: 12px;
-    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.03);
-    overflow: hidden;
-  }
-
-  .acc-nav-tabs {
-    display: flex;
-    background: #f8fafc;
-    border-bottom: 1px solid var(--acc-border);
-    padding: 0 16px;
-    gap: 4px;
-    overflow-x: auto;
-  }
-
-  .acc-tab-btn {
-    border: none;
-    background: transparent;
-    padding: 13px 18px;
-    font-size: 12px;
-    font-weight: 700;
-    color: #64748b;
-    cursor: pointer;
-    border-bottom: 3px solid transparent;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    white-space: nowrap;
-    transition: all 0.2s ease;
-  }
-
-  .acc-tab-btn:hover {
-    color: #0f172a;
-    background: rgba(241, 245, 249, 0.7);
-  }
-
-  .acc-tab-btn.active {
-    color: var(--acc-primary-dark);
-    font-weight: 800;
-    border-bottom-color: var(--acc-primary);
-    background: #ffffff;
-  }
-
-  .acc-tab-badge {
-    background: #e2e8f0;
-    color: #475569;
-    font-size: 9.5px;
-    font-weight: 800;
-    padding: 1px 7px;
-    border-radius: 10px;
-    font-family: var(--font-mono, monospace);
-  }
-
-  .acc-tab-btn.active .acc-tab-badge {
-    background: #e0e7ff;
-    color: #4338ca;
-  }
-
-  /* Tab Panes */
-  .acc-tab-pane {
-    display: none;
-    padding: 20px;
-  }
-
-  .acc-tab-pane.active {
-    display: block;
-  }
-
-  /* Custom Clean Table */
-  .acc-table-box {
-    border: 1px solid var(--acc-border);
-    border-radius: 8px;
-    overflow-x: auto;
-    background: #ffffff;
-  }
-
-  .acc-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 12px;
-    text-align: left;
-  }
-
-  .acc-table th {
-    background: #f8fafc;
-    color: #475569;
-    font-weight: 800;
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    padding: 11px 14px;
-    border-bottom: 1.5px solid #e2e8f0;
-    white-space: nowrap;
-  }
-
-  .acc-table td {
-    padding: 11px 14px;
-    border-bottom: 1px solid #f1f5f9;
-    color: #1e293b;
-    vertical-align: middle;
-  }
-
-  .acc-table tbody tr:hover {
-    background-color: #f8faff;
-  }
-
-  .acc-table tfoot td {
-    background: #f8fafc;
-    font-weight: 800;
-    border-top: 2px solid #e2e8f0;
-    padding: 12px 14px;
-  }
-
-  /* Tag Badges */
-  .badge-tag {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 10px;
-    font-weight: 800;
-    padding: 2px 8px;
-    border-radius: 6px;
-    white-space: nowrap;
-  }
-
-  .badge-tag.green { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
-  .badge-tag.indigo { background: #e0e7ff; color: #4338ca; border: 1px solid #c7d2fe; }
-  .badge-tag.amber { background: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
-  .badge-tag.rose { background: #ffe4e6; color: #e11d48; border: 1px solid #fecdd3; }
-  .badge-tag.slate { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
-  .badge-tag.cyan { background: #cffafe; color: #0e7490; border: 1px solid #a5f3fc; }
-
-  /* Two Column Financial Sections */
-  .acc-two-col {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 16px;
-    margin-bottom: 16px;
-  }
-
-  @media (max-width: 900px) {
-    .acc-two-col {
-      grid-template-columns: 1fr;
-    }
-  }
-
-  .acc-card-sec {
-    background: #ffffff;
-    border: 1px solid var(--acc-border);
-    border-radius: 10px;
-    padding: 16px;
-  }
-
-  .acc-card-title {
-    font-size: 13px;
-    font-weight: 800;
-    color: #0f172a;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 12px;
-    padding-bottom: 8px;
-    border-bottom: 1.5px solid #f1f5f9;
-  }
-
-  .acc-row-detail {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 7px 0;
-    font-size: 12px;
-    border-bottom: 1px dashed #f1f5f9;
-  }
-
-  .acc-row-detail:last-child {
-    border-bottom: none;
-  }
-
-  .acc-detail-lbl {
-    color: #64748b;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-
-  .acc-detail-val {
-    font-weight: 800;
-    font-family: var(--font-mono, monospace);
-    color: #0f172a;
-  }
-
-  /* Printable View */
-  @media print {
-    body * {
-      visibility: hidden;
-    }
-    #printable-accounts-area, #printable-accounts-area * {
-      visibility: visible;
-    }
-    #printable-accounts-area {
-      position: absolute;
-      left: 0;
-      top: 0;
-      width: 100%;
-      background: #ffffff;
-      padding: 10px;
-    }
-    .no-print {
-      display: none !important;
-    }
-  }
-</style>
-@endpush
-
 @section('content')
-<div class="accounts-wrapper">
+<main class="flex-1 w-full p-3 sm:p-4 lg:p-5 flex flex-col gap-4 pms-main-viewport">
+  <div class="w-full flex flex-col gap-4 pms-page-container print:hidden">
 
   <!-- 1. Header & Date Range Filter Bar -->
-  <div class="accounts-filter-card">
-    <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+  <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-5">
+    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
       <div>
-        <h1 style="font-size: 17px; font-weight: 900; color: #0f172a; margin: 0; display: flex; align-items: center; gap: 8px;">
-          <i class="fa-solid fa-file-invoice-dollar" style="color: #6366f1;"></i>
+        <h1 class="text-lg font-black text-slate-900 tracking-tight flex items-center gap-2.5">
+          <span class="w-8 h-8 rounded-xl bg-indigo-50 border border-indigo-200/60 flex items-center justify-center text-indigo-600 shadow-xs">
+            <i class="fa-solid fa-file-invoice-dollar text-sm"></i>
+          </span>
           <span>Accounts &amp; Financial Master Ledger</span>
         </h1>
-        <div style="font-size: 11px; color: #64748b; margin-top: 2px;">
+        <p class="text-xs text-slate-500 font-medium mt-1">
           Audited Real-time Reconciliations: Front Office &bull; Kitchen Stores &bull; POS Dining
-        </div>
+        </p>
       </div>
 
       <!-- Quick Preset Date Pills -->
-      <div class="quick-date-pills">
-        <a href="{{ route('accounts.index', ['date_filter' => 'today', 'search' => $search]) }}" class="quick-date-btn {{ $filterType === 'today' ? 'active' : '' }}">Today</a>
-        <a href="{{ route('accounts.index', ['date_filter' => 'yesterday', 'search' => $search]) }}" class="quick-date-btn {{ $filterType === 'yesterday' ? 'active' : '' }}">Yesterday</a>
-        <a href="{{ route('accounts.index', ['date_filter' => 'this_week', 'search' => $search]) }}" class="quick-date-btn {{ $filterType === 'this_week' ? 'active' : '' }}">This Week</a>
-        <a href="{{ route('accounts.index', ['date_filter' => 'this_month', 'search' => $search]) }}" class="quick-date-btn {{ $filterType === 'this_month' ? 'active' : '' }}">This Month</a>
-        <a href="{{ route('accounts.index', ['date_filter' => 'all', 'search' => $search]) }}" class="quick-date-btn {{ $filterType === 'all' ? 'active' : '' }}">All Time</a>
+      <div class="flex items-center gap-1.5 p-1 bg-slate-100/80 border border-slate-200/70 rounded-xl flex-wrap">
+        <a href="{{ route('accounts.index', ['date_filter' => 'today', 'search' => $search]) }}"
+           class="px-3 py-1.5 text-xs font-bold rounded-lg transition-all {{ $filterType === 'today' ? 'bg-white text-indigo-600 shadow-xs' : 'text-slate-600 hover:text-slate-900 hover:bg-white/50' }}">
+          Today
+        </a>
+        <a href="{{ route('accounts.index', ['date_filter' => 'yesterday', 'search' => $search]) }}"
+           class="px-3 py-1.5 text-xs font-bold rounded-lg transition-all {{ $filterType === 'yesterday' ? 'bg-white text-indigo-600 shadow-xs' : 'text-slate-600 hover:text-slate-900 hover:bg-white/50' }}">
+          Yesterday
+        </a>
+        <a href="{{ route('accounts.index', ['date_filter' => 'this_week', 'search' => $search]) }}"
+           class="px-3 py-1.5 text-xs font-bold rounded-lg transition-all {{ $filterType === 'this_week' ? 'bg-white text-indigo-600 shadow-xs' : 'text-slate-600 hover:text-slate-900 hover:bg-white/50' }}">
+          This Week
+        </a>
+        <a href="{{ route('accounts.index', ['date_filter' => 'this_month', 'search' => $search]) }}"
+           class="px-3 py-1.5 text-xs font-bold rounded-lg transition-all {{ $filterType === 'this_month' ? 'bg-white text-indigo-600 shadow-xs' : 'text-slate-600 hover:text-slate-900 hover:bg-white/50' }}">
+          This Month
+        </a>
+        <a href="{{ route('accounts.index', ['date_filter' => 'all', 'search' => $search]) }}"
+           class="px-3 py-1.5 text-xs font-bold rounded-lg transition-all {{ $filterType === 'all' ? 'bg-white text-indigo-600 shadow-xs' : 'text-slate-600 hover:text-slate-900 hover:bg-white/50' }}">
+          All Time
+        </a>
       </div>
     </div>
 
     <!-- Custom Date Range & Search Form -->
-    <form method="GET" action="{{ route('accounts.index') }}" class="date-picker-form">
+    <form method="GET" action="{{ route('accounts.index') }}" class="mt-4 pt-4 border-t border-slate-100 flex flex-wrap items-center gap-3">
       <input type="hidden" name="date_filter" value="custom">
-      <div style="display: flex; align-items: center; gap: 6px;">
-        <span style="font-size: 11px; font-weight: 700; color: #64748b;">From:</span>
-        <input type="date" name="start_date" value="{{ $startDate->format('Y-m-d') }}" class="acc-input">
+      <div class="flex items-center gap-2">
+        <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">From:</span>
+        <input type="date" name="start_date" value="{{ $startDate->format('Y-m-d') }}"
+               class="h-9.5 px-3 text-xs font-medium rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-indigo-500">
       </div>
-      <div style="display: flex; align-items: center; gap: 6px;">
-        <span style="font-size: 11px; font-weight: 700; color: #64748b;">To:</span>
-        <input type="date" name="end_date" value="{{ $endDate->format('Y-m-d') }}" class="acc-input">
+      <div class="flex items-center gap-2">
+        <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">To:</span>
+        <input type="date" name="end_date" value="{{ $endDate->format('Y-m-d') }}"
+               class="h-9.5 px-3 text-xs font-medium rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-indigo-500">
       </div>
-      <div style="position: relative;">
-        <input type="text" name="search" value="{{ $search }}" placeholder="Search guest, order, vendor..." class="acc-input" style="width: 170px;">
+      <div class="relative flex-1 min-w-[200px] max-w-xs">
+        <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+        <input type="text" name="search" value="{{ $search }}" placeholder="Search guest, order, vendor..."
+               class="h-9.5 pl-8 pr-3 text-xs font-medium rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-indigo-500 w-full">
       </div>
-      <button type="submit" class="btn-acc-primary">
-        <i class="fa-solid fa-filter"></i> Apply Filter
-      </button>
-      <button type="button" class="btn-acc-print" onclick="window.print()">
-        <i class="fa-solid fa-print"></i> Print Ledger
-      </button>
+      <div class="flex items-center gap-2 ml-auto">
+        <button type="submit"
+                class="inline-flex items-center gap-1.5 h-9.5 px-4 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-all shadow-xs cursor-pointer">
+          <i class="fa-solid fa-filter"></i> Apply Filter
+        </button>
+        <button type="button" onclick="window.print()"
+                class="inline-flex items-center gap-1.5 h-9.5 px-4 text-xs font-bold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200/80 rounded-xl transition-all shadow-xs cursor-pointer">
+          <i class="fa-solid fa-print"></i> Print Ledger
+        </button>
+      </div>
     </form>
   </div>
 
   <!-- Active Date Filter Pill Banner -->
-  <div style="margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between;">
-    <div style="font-size: 11.5px; font-weight: 700; color: #475569; display: flex; align-items: center; gap: 6px;">
-      <i class="fa-regular fa-calendar-check" style="color: #6366f1;"></i>
+  <div class="flex flex-wrap items-center justify-between gap-3 px-1">
+    <div class="flex items-center gap-2 text-xs font-semibold text-slate-600 flex-wrap">
+      <i class="fa-regular fa-calendar-check text-indigo-500"></i>
       <span>Active Accounting Period:</span>
-      <span class="badge-tag indigo" style="font-size: 11px; padding: 3px 10px;">{{ $filterLabel }}</span>
+      <span class="px-2.5 py-0.5 rounded-lg text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200/80">{{ $filterLabel }}</span>
       @if($search)
-        <span class="badge-tag amber">Keyword: "{{ $search }}"</span>
-        <a href="{{ route('accounts.index', ['date_filter' => $filterType]) }}" style="font-size: 11px; color: #e11d48; text-decoration: none; font-weight: 800; margin-left: 6px;">Clear Search &times;</a>
+        <span class="px-2.5 py-0.5 rounded-lg text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200/80">Keyword: "{{ $search }}"</span>
+        <a href="{{ route('accounts.index', ['date_filter' => $filterType]) }}" class="text-xs font-bold text-rose-600 hover:text-rose-700 hover:underline">Clear Search &times;</a>
       @endif
     </div>
-    <div style="font-size: 11px; color: #64748b; font-weight: 600;">
+    <div class="text-xs font-medium text-slate-500">
       Hotel Sagar Sonnet &bull; Main Luxury Wing PMS Audit
     </div>
   </div>
 
   <!-- 2. Top 5 Key Performance Stat Cards -->
-  <div class="accounts-kpi-grid">
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
     
     <!-- 1. Total Direct Collections -->
-    <div class="acc-kpi-card card-inflow">
-      <div class="acc-kpi-top">
-        <span class="acc-kpi-label">Total Inflow Collected</span>
-        <div class="acc-kpi-icon"><i class="fa-solid fa-cash-register"></i></div>
+    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-4 flex flex-col justify-between">
+      <div class="flex items-center justify-between">
+        <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Total Inflow Collected</span>
+        <span class="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xs">
+          <i class="fa-solid fa-cash-register"></i>
+        </span>
       </div>
-      <div class="acc-kpi-val">₹ {{ number_format($totalRealizedCollections, 2) }}</div>
-      <div class="acc-kpi-sub">
-        <i class="fa-solid fa-circle-check" style="color: #10b981;"></i>
-        <span>Front Office (₹{{ number_format($foTotalPayments, 0) }}) + POS (₹{{ number_format($posDirectSales, 0) }})</span>
+      <div class="text-xl font-black font-mono text-slate-900 mt-2">
+        ₹ {{ number_format($totalRealizedCollections, 2) }}
+      </div>
+      <div class="text-[11px] text-slate-500 font-medium flex items-center gap-1.5 mt-2 pt-2 border-t border-slate-100">
+        <i class="fa-solid fa-circle-check text-emerald-500"></i>
+        <span class="truncate">FO (₹{{ number_format($foTotalPayments, 0) }}) + POS (₹{{ number_format($posDirectSales, 0) }})</span>
       </div>
     </div>
 
     <!-- 2. Front Office Revenue -->
-    <div class="acc-kpi-card card-fo">
-      <div class="acc-kpi-top">
-        <span class="acc-kpi-label">Front Office Gross Bill</span>
-        <div class="acc-kpi-icon"><i class="fa-solid fa-hotel"></i></div>
+    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-4 flex flex-col justify-between">
+      <div class="flex items-center justify-between">
+        <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">FO Gross Bill</span>
+        <span class="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xs">
+          <i class="fa-solid fa-hotel"></i>
+        </span>
       </div>
-      <div class="acc-kpi-val">₹ {{ number_format($foTotalGrossBill, 2) }}</div>
-      <div class="acc-kpi-sub">
-        <span>{{ count($foBookingsLedger) }} Booking(s) &bull; Pending: ₹{{ number_format($foTotalReceivables, 0) }}</span>
+      <div class="text-xl font-black font-mono text-slate-900 mt-2">
+        ₹ {{ number_format($foTotalGrossBill, 2) }}
+      </div>
+      <div class="text-[11px] text-slate-500 font-medium mt-2 pt-2 border-t border-slate-100 truncate">
+        {{ count($foBookingsLedger) }} Booking(s) &bull; Due: ₹{{ number_format($foTotalReceivables, 0) }}
       </div>
     </div>
 
     <!-- 3. POS Dining Gross Sales -->
-    <div class="acc-kpi-card card-pos">
-      <div class="acc-kpi-top">
-        <span class="acc-kpi-label">Restaurant POS Sales</span>
-        <div class="acc-kpi-icon"><i class="fa-solid fa-utensils"></i></div>
+    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-4 flex flex-col justify-between">
+      <div class="flex items-center justify-between">
+        <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Restaurant POS Sales</span>
+        <span class="w-8 h-8 rounded-xl bg-cyan-50 text-cyan-600 flex items-center justify-center text-xs">
+          <i class="fa-solid fa-utensils"></i>
+        </span>
       </div>
-      <div class="acc-kpi-val">₹ {{ number_format($posGrossSales, 2) }}</div>
-      <div class="acc-kpi-sub">
-        <span>{{ count($posOrdersList) }} Orders &bull; Direct: ₹{{ number_format($posDirectSales, 0) }} &bull; Folio: ₹{{ number_format($posFolioCharged, 0) }}</span>
+      <div class="text-xl font-black font-mono text-slate-900 mt-2">
+        ₹ {{ number_format($posGrossSales, 2) }}
+      </div>
+      <div class="text-[11px] text-slate-500 font-medium mt-2 pt-2 border-t border-slate-100 truncate">
+        {{ count($posOrdersList) }} Orders &bull; Direct: ₹{{ number_format($posDirectSales, 0) }}
       </div>
     </div>
 
     <!-- 4. Kitchen Stores Procurements (Expense) -->
-    <div class="acc-kpi-card card-expense">
-      <div class="acc-kpi-top">
-        <span class="acc-kpi-label">Store Procurement Cost</span>
-        <div class="acc-kpi-icon"><i class="fa-solid fa-boxes-stacked"></i></div>
+    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-4 flex flex-col justify-between">
+      <div class="flex items-center justify-between">
+        <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Procurement Cost</span>
+        <span class="w-8 h-8 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center text-xs">
+          <i class="fa-solid fa-boxes-stacked"></i>
+        </span>
       </div>
-      <div class="acc-kpi-val">₹ {{ number_format($storeTotalPurchases, 2) }}</div>
-      <div class="acc-kpi-sub">
-        <span>{{ $storeInwardCount }} Inward Shipments (+{{ $storeTotalPlatesInward }} Plates Yielded)</span>
+      <div class="text-xl font-black font-mono text-slate-900 mt-2">
+        ₹ {{ number_format($storeTotalPurchases, 2) }}
+      </div>
+      <div class="text-[11px] text-slate-500 font-medium mt-2 pt-2 border-t border-slate-100 truncate">
+        {{ $storeInwardCount }} Inward (+{{ $storeTotalPlatesInward }} Plates Yield)
       </div>
     </div>
 
     <!-- 5. Net Operating Balance / Margin -->
-    <div class="acc-kpi-card card-net">
-      <div class="acc-kpi-top">
-        <span class="acc-kpi-label">Net Operating Margin</span>
-        <div class="acc-kpi-icon"><i class="fa-solid fa-chart-line"></i></div>
+    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-4 flex flex-col justify-between">
+      <div class="flex items-center justify-between">
+        <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Net Operating Margin</span>
+        <span class="w-8 h-8 rounded-xl {{ $netOperatingPosition >= 0 ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600' }} flex items-center justify-center text-xs">
+          <i class="fa-solid fa-chart-line"></i>
+        </span>
       </div>
-      <div class="acc-kpi-val" style="color: {{ $netOperatingPosition >= 0 ? '#15803d' : '#b91c1c' }};">
+      <div class="text-xl font-black font-mono mt-2 {{ $netOperatingPosition >= 0 ? 'text-emerald-700' : 'text-rose-700' }}">
         ₹ {{ number_format($netOperatingPosition, 2) }}
       </div>
-      <div class="acc-kpi-sub">
-        <span>(Direct Inflow &minus; Store Purchases)</span>
+      <div class="text-[11px] text-slate-500 font-medium mt-2 pt-2 border-t border-slate-100 truncate">
+        (Direct Inflow &minus; Store Purchases)
       </div>
     </div>
 
   </div>
 
   <!-- 3. Main Workspace Tabbed Container -->
-  <div class="accounts-main-card">
+  <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
     
     <!-- Tab Navigation Ribbon -->
-    <div class="acc-nav-tabs">
-      <button type="button" class="acc-tab-btn active" onclick="switchAccTab('tab-overview', this)">
+    <div class="p-3 bg-slate-50/80 border-b border-slate-200/80 flex items-center gap-2 overflow-x-auto">
+      <button type="button" 
+              class="acc-tab-btn inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap bg-indigo-50 text-indigo-700 border border-indigo-200/80 shadow-xs" 
+              onclick="switchAccTab('tab-overview', this)">
         <i class="fa-solid fa-chart-pie"></i> Executive Overview &amp; P&amp;L
       </button>
-      <button type="button" class="acc-tab-btn" onclick="switchAccTab('tab-frontoffice', this)">
-        <i class="fa-solid fa-hotel"></i> Front Office Ledger <span class="acc-tab-badge">{{ count($foBookingsLedger) }}</span>
+      <button type="button" 
+              class="acc-tab-btn inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 bg-white border border-slate-200/80 hover:bg-slate-50 transition-all cursor-pointer whitespace-nowrap shadow-xs" 
+              onclick="switchAccTab('tab-frontoffice', this)">
+        <i class="fa-solid fa-hotel"></i> Front Office Ledger 
+        <span class="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700">{{ count($foBookingsLedger) }}</span>
       </button>
-      <button type="button" class="acc-tab-btn" onclick="switchAccTab('tab-pos', this)">
-        <i class="fa-solid fa-utensils"></i> POS &amp; Restaurant Sales <span class="acc-tab-badge">{{ count($posOrdersList) }}</span>
+      <button type="button" 
+              class="acc-tab-btn inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 bg-white border border-slate-200/80 hover:bg-slate-50 transition-all cursor-pointer whitespace-nowrap shadow-xs" 
+              onclick="switchAccTab('tab-pos', this)">
+        <i class="fa-solid fa-utensils"></i> POS &amp; Restaurant Sales 
+        <span class="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700">{{ count($posOrdersList) }}</span>
       </button>
-      <button type="button" class="acc-tab-btn" onclick="switchAccTab('tab-stores', this)">
-        <i class="fa-solid fa-boxes-stacked"></i> Stores &amp; Procurement <span class="acc-tab-badge">{{ count($storeMovementsList) }}</span>
+      <button type="button" 
+              class="acc-tab-btn inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 bg-white border border-slate-200/80 hover:bg-slate-50 transition-all cursor-pointer whitespace-nowrap shadow-xs" 
+              onclick="switchAccTab('tab-stores', this)">
+        <i class="fa-solid fa-boxes-stacked"></i> Stores &amp; Procurement 
+        <span class="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700">{{ count($storeMovementsList) }}</span>
       </button>
-      <button type="button" class="acc-tab-btn" onclick="switchAccTab('tab-receipts', this)">
-        <i class="fa-solid fa-receipt"></i> Transaction Receipts Trail <span class="acc-tab-badge">{{ count($unifiedReceipts) }}</span>
+      <button type="button" 
+              class="acc-tab-btn inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 bg-white border border-slate-200/80 hover:bg-slate-50 transition-all cursor-pointer whitespace-nowrap shadow-xs" 
+              onclick="switchAccTab('tab-receipts', this)">
+        <i class="fa-solid fa-receipt"></i> Transaction Receipts Trail 
+        <span class="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700">{{ count($unifiedReceipts) }}</span>
       </button>
     </div>
 
     <!-- TAB 1: EXECUTIVE OVERVIEW & P&L STATEMENT -->
-    <div id="tab-overview" class="acc-tab-pane active">
+    <div id="tab-overview" class="acc-tab-pane">
       
       <!-- 2 Columns: Revenue Reconciliations & Payment Drawer -->
-      <div class="acc-two-col">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 p-6">
         
         <!-- Section 1: Department Revenue Breakdown -->
-        <div class="acc-card-sec">
-          <div class="acc-card-title">
-            <span><i class="fa-solid fa-building-columns" style="color: #6366f1;"></i> Revenue Breakdown By Department</span>
-            <span class="badge-tag indigo">Income Statement</span>
+        <div class="bg-slate-50/70 border border-slate-200/80 rounded-2xl p-5 space-y-3">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-200/80">
+            <span class="text-xs font-extrabold uppercase tracking-wider text-slate-900 flex items-center gap-2">
+              <i class="fa-solid fa-building-columns text-indigo-600"></i> Revenue Breakdown By Department
+            </span>
+            <span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200/60 uppercase">Income Statement</span>
           </div>
 
-          <div class="acc-row-detail">
-            <span class="acc-detail-lbl"><i class="fa-solid fa-door-open" style="color: #6366f1;"></i> Room Tariffs &amp; Accommodations:</span>
-            <span class="acc-detail-val" style="color: #4338ca;">₹ {{ number_format($foTotalRoomTariffs, 2) }}</span>
+          <div class="flex items-center justify-between text-xs py-1">
+            <span class="font-medium text-slate-600 flex items-center gap-2">
+              <i class="fa-solid fa-door-open text-indigo-500 w-4"></i> Room Tariffs &amp; Accommodations:
+            </span>
+            <span class="font-mono font-bold text-indigo-700">₹ {{ number_format($foTotalRoomTariffs, 2) }}</span>
           </div>
 
-          <div class="acc-row-detail">
-            <span class="acc-detail-lbl"><i class="fa-solid fa-bell-concierge" style="color: #f59e0b;"></i> Extra Services (Folio Transferred):</span>
-            <span class="acc-detail-val" style="color: #d97706;">+ ₹ {{ number_format($foTotalExtraCharged, 2) }}</span>
+          <div class="flex items-center justify-between text-xs py-1">
+            <span class="font-medium text-slate-600 flex items-center gap-2">
+              <i class="fa-solid fa-bell-concierge text-amber-500 w-4"></i> Extra Services (Folio Transferred):
+            </span>
+            <span class="font-mono font-bold text-amber-600">+ ₹ {{ number_format($foTotalExtraCharged, 2) }}</span>
           </div>
 
-          <div class="acc-row-detail">
-            <span class="acc-detail-lbl"><i class="fa-solid fa-utensils" style="color: #06b6d4;"></i> POS Dining Sales (Room &bull; Table &bull; Takeaway):</span>
-            <span class="acc-detail-val" style="color: #0891b2;">₹ {{ number_format($posGrossSales, 2) }}</span>
+          <div class="flex items-center justify-between text-xs py-1">
+            <span class="font-medium text-slate-600 flex items-center gap-2">
+              <i class="fa-solid fa-utensils text-cyan-500 w-4"></i> POS Dining Sales (Room &bull; Table &bull; Takeaway):
+            </span>
+            <span class="font-mono font-bold text-cyan-700">₹ {{ number_format($posGrossSales, 2) }}</span>
           </div>
 
-          <div class="acc-row-detail">
-            <span class="acc-detail-lbl"><i class="fa-solid fa-percent" style="color: #64748b;"></i> POS GST Tax Collected (12%):</span>
-            <span class="acc-detail-val" style="color: #475569;">₹ {{ number_format($posTaxCollected, 2) }}</span>
+          <div class="flex items-center justify-between text-xs py-1">
+            <span class="font-medium text-slate-600 flex items-center gap-2">
+              <i class="fa-solid fa-percent text-slate-400 w-4"></i> POS GST Tax Collected (12%):
+            </span>
+            <span class="font-mono font-bold text-slate-600">₹ {{ number_format($posTaxCollected, 2) }}</span>
           </div>
 
-          <div class="acc-row-detail" style="border-top: 1.5px solid #e2e8f0; margin-top: 6px; padding-top: 10px; font-weight: 800;">
-            <span class="acc-detail-lbl" style="font-weight: 800; color: #0f172a;">Total Gross Billings Incurred:</span>
-            <span class="acc-detail-val" style="color: #4338ca; font-size: 14px;">₹ {{ number_format($totalGrossRevenue, 2) }}</span>
+          <div class="flex items-center justify-between text-xs pt-3 border-t border-slate-200 font-extrabold text-slate-900">
+            <span>Total Gross Billings Incurred:</span>
+            <span class="font-mono text-sm text-indigo-700">₹ {{ number_format($totalGrossRevenue, 2) }}</span>
           </div>
 
-          <div class="acc-row-detail">
-            <span class="acc-detail-lbl"><i class="fa-solid fa-boxes-stacked" style="color: #f43f5e;"></i> Less: Kitchen Store Raw Procurement Expense:</span>
-            <span class="acc-detail-val" style="color: #e11d48;">- ₹ {{ number_format($storeTotalPurchases, 2) }}</span>
+          <div class="flex items-center justify-between text-xs py-1">
+            <span class="font-medium text-slate-600 flex items-center gap-2">
+              <i class="fa-solid fa-boxes-stacked text-rose-500 w-4"></i> Less: Kitchen Store Raw Procurement Expense:
+            </span>
+            <span class="font-mono font-bold text-rose-600">- ₹ {{ number_format($storeTotalPurchases, 2) }}</span>
           </div>
 
-          <div class="acc-row-detail" style="background: #f8faff; border-radius: 8px; padding: 10px 12px; margin-top: 8px; border: 1px solid #e0e7ff;">
-            <span class="acc-detail-lbl" style="font-weight: 900; color: #0f172a; font-size: 13px;">Net Realized Cash Operating Position:</span>
-            <span class="acc-detail-val" style="color: {{ $netOperatingPosition >= 0 ? '#15803d' : '#b91c1c' }}; font-size: 15px; font-weight: 900;">
+          <div class="bg-indigo-50/70 border border-indigo-200/80 rounded-xl p-3.5 flex items-center justify-between mt-3">
+            <span class="text-xs font-black text-slate-900">Net Realized Cash Operating Position:</span>
+            <span class="text-base font-black font-mono {{ $netOperatingPosition >= 0 ? 'text-emerald-700' : 'text-rose-700' }}">
               ₹ {{ number_format($netOperatingPosition, 2) }}
             </span>
           </div>
         </div>
 
         <!-- Section 2: Unified Cash Drawer & Payment Modes Reconciliations -->
-        <div class="acc-card-sec">
-          <div class="acc-card-title">
-            <span><i class="fa-solid fa-wallet" style="color: #10b981;"></i> Consolidated Cash Drawer &amp; Digital Collections</span>
-            <span class="badge-tag green">Realized Inflow</span>
+        <div class="bg-slate-50/70 border border-slate-200/80 rounded-2xl p-5 space-y-3">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-200/80">
+            <span class="text-xs font-extrabold uppercase tracking-wider text-slate-900 flex items-center gap-2">
+              <i class="fa-solid fa-wallet text-emerald-600"></i> Consolidated Cash Drawer &amp; Digital Collections
+            </span>
+            <span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/60 uppercase">Realized Inflow</span>
           </div>
 
-          <div class="acc-row-detail">
-            <span class="acc-detail-lbl"><i class="fa-solid fa-money-bill-wave" style="color: #10b981;"></i> Cash In Hand (Front Desk + POS Counter):</span>
-            <span class="acc-detail-val" style="color: #059669;">₹ {{ number_format($consolidatedCash, 2) }}</span>
+          <div class="flex items-center justify-between text-xs py-1">
+            <span class="font-medium text-slate-600 flex items-center gap-2">
+              <i class="fa-solid fa-money-bill-wave text-emerald-500 w-4"></i> Cash In Hand (Front Desk + POS Counter):
+            </span>
+            <span class="font-mono font-bold text-emerald-700">₹ {{ number_format($consolidatedCash, 2) }}</span>
           </div>
 
-          <div class="acc-row-detail">
-            <span class="acc-detail-lbl"><i class="fa-solid fa-qrcode" style="color: #6366f1;"></i> UPI / Digital Payments (GPay &bull; PhonePe &bull; Paytm):</span>
-            <span class="acc-detail-val" style="color: #4338ca;">₹ {{ number_format($consolidatedUpi, 2) }}</span>
+          <div class="flex items-center justify-between text-xs py-1">
+            <span class="font-medium text-slate-600 flex items-center gap-2">
+              <i class="fa-solid fa-qrcode text-indigo-500 w-4"></i> UPI / Digital Payments (GPay &bull; PhonePe &bull; Paytm):
+            </span>
+            <span class="font-mono font-bold text-indigo-700">₹ {{ number_format($consolidatedUpi, 2) }}</span>
           </div>
 
-          <div class="acc-row-detail">
-            <span class="acc-detail-lbl"><i class="fa-solid fa-credit-card" style="color: #f59e0b;"></i> Card / EDC POS Swipes:</span>
-            <span class="acc-detail-val" style="color: #b45309;">₹ {{ number_format($consolidatedCard, 2) }}</span>
+          <div class="flex items-center justify-between text-xs py-1">
+            <span class="font-medium text-slate-600 flex items-center gap-2">
+              <i class="fa-solid fa-credit-card text-amber-500 w-4"></i> Card / EDC POS Swipes:
+            </span>
+            <span class="font-mono font-bold text-amber-700">₹ {{ number_format($consolidatedCard, 2) }}</span>
           </div>
 
-          <div class="acc-row-detail">
-            <span class="acc-detail-lbl"><i class="fa-solid fa-landmark" style="color: #0284c7;"></i> Direct Bank Transfers (NEFT &bull; RTGS &bull; IMPS):</span>
-            <span class="acc-detail-val" style="color: #0284c7;">₹ {{ number_format($consolidatedBank, 2) }}</span>
+          <div class="flex items-center justify-between text-xs py-1">
+            <span class="font-medium text-slate-600 flex items-center gap-2">
+              <i class="fa-solid fa-landmark text-cyan-500 w-4"></i> Direct Bank Transfers (NEFT &bull; RTGS &bull; IMPS):
+            </span>
+            <span class="font-mono font-bold text-cyan-700">₹ {{ number_format($consolidatedBank, 2) }}</span>
           </div>
 
           @if($consolidatedOther > 0)
-            <div class="acc-row-detail">
-              <span class="acc-detail-lbl"><i class="fa-solid fa-receipt" style="color: #64748b;"></i> Other Payment Modes:</span>
-              <span class="acc-detail-val">₹ {{ number_format($consolidatedOther, 2) }}</span>
+            <div class="flex items-center justify-between text-xs py-1">
+              <span class="font-medium text-slate-600 flex items-center gap-2">
+                <i class="fa-solid fa-receipt text-slate-400 w-4"></i> Other Payment Modes:
+              </span>
+              <span class="font-mono font-bold text-slate-700">₹ {{ number_format($consolidatedOther, 2) }}</span>
             </div>
           @endif
 
-          <div class="acc-row-detail" style="border-top: 1.5px solid #e2e8f0; margin-top: 6px; padding-top: 10px; font-weight: 800;">
-            <span class="acc-detail-lbl" style="font-weight: 800; color: #0f172a;">Total Realized Direct Inflow:</span>
-            <span class="acc-detail-val" style="color: #059669; font-size: 15px; font-weight: 900;">₹ {{ number_format($totalRealizedCollections, 2) }}</span>
+          <div class="flex items-center justify-between text-xs pt-3 border-t border-slate-200 font-extrabold text-slate-900">
+            <span>Total Realized Direct Inflow:</span>
+            <span class="font-mono text-sm text-emerald-700">₹ {{ number_format($totalRealizedCollections, 2) }}</span>
           </div>
 
           <!-- Outstanding Receivables Warning -->
-          <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 10px 12px; margin-top: 12px; display: flex; align-items: center; justify-content: space-between;">
-            <div style="font-size: 11.5px; color: #92400e; font-weight: 700;">
-              <i class="fa-solid fa-clock-rotate-left"></i> Outstanding Pending Receivables:
+          <div class="bg-amber-50 border border-amber-200/80 rounded-xl p-3.5 flex items-center justify-between mt-3">
+            <div class="text-xs text-amber-900 font-bold flex items-center gap-2">
+              <i class="fa-solid fa-clock-rotate-left text-amber-600"></i> Outstanding Pending Receivables:
             </div>
-            <div style="font-size: 13.5px; font-weight: 900; color: #b45309; font-family: var(--font-mono, monospace);">
+            <div class="text-sm font-black font-mono text-amber-700">
               ₹ {{ number_format($foTotalReceivables, 2) }}
             </div>
           </div>
@@ -717,115 +343,115 @@
       </div>
 
       <!-- POS Order Type Breakdown Mini Grid -->
-      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px;">
-        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 14px;">
-          <div style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase;">Room Dining POS Sales</div>
-          <div style="font-size: 16px; font-weight: 900; color: #0f172a; font-family: var(--font-mono, monospace); margin-top: 4px;">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 px-6 pb-6">
+        <div class="bg-slate-50/70 border border-slate-200/80 rounded-2xl p-4">
+          <div class="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">Room Dining POS Sales</div>
+          <div class="text-lg font-black font-mono text-slate-900 mt-1">
             ₹ {{ number_format($posRoomDiningSales, 2) }}
           </div>
-          <div style="font-size: 10.5px; color: #64748b; margin-top: 2px;">Direct In-Room orders</div>
+          <div class="text-xs text-slate-500 font-medium mt-1">Direct In-Room orders</div>
         </div>
-        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 14px;">
-          <div style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase;">Table Dine-in Sales</div>
-          <div style="font-size: 16px; font-weight: 900; color: #0f172a; font-family: var(--font-mono, monospace); margin-top: 4px;">
+        <div class="bg-slate-50/70 border border-slate-200/80 rounded-2xl p-4">
+          <div class="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">Table Dine-in Sales</div>
+          <div class="text-lg font-black font-mono text-slate-900 mt-1">
             ₹ {{ number_format($posTableDineInSales, 2) }}
           </div>
-          <div style="font-size: 10.5px; color: #64748b; margin-top: 2px;">Restaurant tables &amp; deck dining</div>
+          <div class="text-xs text-slate-500 font-medium mt-1">Restaurant tables &amp; deck dining</div>
         </div>
-        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 14px;">
-          <div style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase;">Walk-in Takeaway Sales</div>
-          <div style="font-size: 16px; font-weight: 900; color: #0f172a; font-family: var(--font-mono, monospace); margin-top: 4px;">
+        <div class="bg-slate-50/70 border border-slate-200/80 rounded-2xl p-4">
+          <div class="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">Walk-in Takeaway Sales</div>
+          <div class="text-lg font-black font-mono text-slate-900 mt-1">
             ₹ {{ number_format($posTakeawaySales, 2) }}
           </div>
-          <div style="font-size: 10.5px; color: #64748b; margin-top: 2px;">Non-resident takeaway patrons</div>
+          <div class="text-xs text-slate-500 font-medium mt-1">Non-resident takeaway patrons</div>
         </div>
       </div>
 
     </div>
 
     <!-- TAB 2: FRONT OFFICE FINANCIAL LEDGER -->
-    <div id="tab-frontoffice" class="acc-tab-pane">
-      <div style="margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
+    <div id="tab-frontoffice" class="acc-tab-pane hidden">
+      <div class="px-6 py-4 bg-slate-50/80 border-b border-slate-200/80 flex items-center justify-between">
         <div>
-          <h3 style="font-size: 14px; font-weight: 800; color: #0f172a; margin: 0;">Front Office Guest Bookings &amp; Settlement Ledger</h3>
-          <div style="font-size: 11px; color: #64748b;">All active room bookings, stay tariffs, extra charges, advance receipts &amp; balances.</div>
+          <h3 class="text-xs font-extrabold uppercase tracking-wider text-slate-900">Front Office Guest Bookings &amp; Settlement Ledger</h3>
+          <p class="text-xs text-slate-500 font-medium mt-0.5">All active room bookings, stay tariffs, extra charges, advance receipts &amp; balances.</p>
         </div>
-        <span class="badge-tag indigo">{{ count($foBookingsLedger) }} Record(s)</span>
+        <span class="px-2.5 py-0.5 rounded-lg text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200/80">{{ count($foBookingsLedger) }} Record(s)</span>
       </div>
 
-      <div class="acc-table-box">
-        <table class="acc-table">
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse text-xs">
           <thead>
-            <tr>
-              <th style="width: 35px; text-align: center;">SL</th>
-              <th>BOOKING / FOLIO #</th>
-              <th>PRIMARY GUEST &amp; MOBILE</th>
-              <th style="text-align: center;">ROOM</th>
-              <th>STAY DATES</th>
-              <th style="text-align: right;">ROOM TARIFF</th>
-              <th style="text-align: right;">EXTRA SERV.</th>
-              <th style="text-align: right;">TOTAL BILL</th>
-              <th style="text-align: right;">PAID AMT</th>
-              <th style="text-align: right;">BALANCE DUE</th>
-              <th style="text-align: center;">STATUS</th>
+            <tr class="bg-slate-50/80 border-b border-slate-200/80 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+              <th class="py-3 px-3 text-center w-10">SL</th>
+              <th class="py-3 px-3">Booking / Folio #</th>
+              <th class="py-3 px-3">Primary Guest &amp; Mobile</th>
+              <th class="py-3 px-3 text-center">Room</th>
+              <th class="py-3 px-3">Stay Dates</th>
+              <th class="py-3 px-3 text-right">Room Tariff</th>
+              <th class="py-3 px-3 text-right">Extra Serv.</th>
+              <th class="py-3 px-3 text-right">Total Bill</th>
+              <th class="py-3 px-3 text-right">Paid Amt</th>
+              <th class="py-3 px-3 text-right">Balance Due</th>
+              <th class="py-3 px-3 text-center">Status</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody class="divide-y divide-slate-100">
             @forelse($foBookingsLedger as $idx => $fb)
-              <tr>
-                <td style="text-align: center; font-weight: 800; color: #64748b; font-family: var(--font-mono, monospace);">{{ $idx + 1 }}</td>
-                <td>
-                  <div style="font-weight: 800; color: #4338ca; font-family: var(--font-mono, monospace); font-size: 11.5px;">{{ $fb['booking_number'] }}</div>
-                  <div style="font-size: 10px; color: #64748b; margin-top: 2px;">Folio: {{ $fb['folio_number'] }}</div>
+              <tr class="hover:bg-slate-50/60 transition-colors">
+                <td class="py-3 px-3 text-center font-bold text-slate-400 font-mono">{{ $idx + 1 }}</td>
+                <td class="py-3 px-3">
+                  <div class="font-extrabold text-indigo-700 font-mono text-xs">{{ $fb['booking_number'] }}</div>
+                  <div class="text-[10px] text-slate-500 font-medium mt-0.5">Folio: {{ $fb['folio_number'] }}</div>
                 </td>
-                <td>
-                  <div style="font-weight: 700; color: #0f172a;">{{ $fb['guest_name'] }}</div>
-                  <div style="font-size: 11px; color: #64748b; font-family: var(--font-mono, monospace); margin-top: 2px;">
-                    <i class="fa-solid fa-phone" style="font-size: 8px; opacity: 0.6;"></i> {{ $fb['mobile'] }}
+                <td class="py-3 px-3">
+                  <div class="font-bold text-slate-900">{{ $fb['guest_name'] }}</div>
+                  <div class="text-[11px] text-slate-500 font-mono mt-0.5 flex items-center gap-1">
+                    <i class="fa-solid fa-phone text-[9px] opacity-60"></i> {{ $fb['mobile'] }}
                   </div>
                 </td>
-                <td style="text-align: center;">
-                  <span class="badge-tag indigo" style="font-family: var(--font-mono, monospace);">
-                    <i class="fa-solid fa-door-open" style="font-size: 8px;"></i> {{ $fb['room_number'] }}
+                <td class="py-3 px-3 text-center">
+                  <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-xs font-bold font-mono bg-indigo-50 text-indigo-700 border border-indigo-200/80">
+                    <i class="fa-solid fa-door-open text-[9px]"></i> {{ $fb['room_number'] }}
                   </span>
                 </td>
-                <td style="font-size: 11px; color: #475569; white-space: nowrap;">
-                  <div><i class="fa-regular fa-calendar-check" style="font-size: 8.5px; color: #10b981;"></i> {{ $fb['checkin_date'] }}</div>
-                  <div style="font-size: 10px; color: #94a3b8; margin-top: 1px;"><i class="fa-regular fa-calendar-xmark" style="font-size: 8.5px; color: #e11d48;"></i> {{ $fb['checkout_date'] }}</div>
+                <td class="py-3 px-3 whitespace-nowrap text-slate-600">
+                  <div class="flex items-center gap-1 text-[11px]"><i class="fa-regular fa-calendar-check text-[10px] text-emerald-600"></i> {{ $fb['checkin_date'] }}</div>
+                  <div class="flex items-center gap-1 text-[10px] text-slate-400 mt-0.5"><i class="fa-regular fa-calendar-xmark text-[10px] text-rose-500"></i> {{ $fb['checkout_date'] }}</div>
                 </td>
-                <td style="text-align: right; font-family: var(--font-mono, monospace); font-weight: 700;">
+                <td class="py-3 px-3 text-right font-mono font-bold text-slate-700">
                   ₹ {{ number_format($fb['room_charges'], 2) }}
                 </td>
-                <td style="text-align: right; font-family: var(--font-mono, monospace); white-space: nowrap;">
+                <td class="py-3 px-3 text-right font-mono whitespace-nowrap">
                   @if(($fb['extra_orders_count'] ?? 0) > 0)
                     @if($fb['extra_charged'] > 0)
-                      <div style="font-weight: 800; color: #d97706;" title="Added to Folio & Total Bill">
+                      <div class="font-bold text-amber-600" title="Added to Folio & Total Bill">
                         + ₹ {{ number_format($fb['extra_charged'], 2) }}
                       </div>
                     @endif
                     @if($fb['extra_paid_direct'] > 0)
-                      <div style="font-size: 10px; color: #15803d; font-weight: 700;">
+                      <div class="text-[10px] text-emerald-700 font-bold">
                         <i class="fa-solid fa-check"></i> ₹ {{ number_format($fb['extra_paid_direct'], 2) }} (Paid)
                       </div>
                     @endif
-                    <div style="font-size: 9.5px; color: #b45309; font-weight: 700; margin-top: 2px;">
-                      <i class="fa-solid fa-bell-concierge" style="font-size: 8px;"></i> {{ $fb['extra_orders_count'] }} extra bill(s)
+                    <div class="text-[10px] text-amber-700 font-bold mt-0.5">
+                      <i class="fa-solid fa-bell-concierge text-[9px]"></i> {{ $fb['extra_orders_count'] }} extra bill(s)
                     </div>
                     @if(!empty($fb['extra_orders_detailed']))
-                      <div style="display: flex; flex-direction: column; gap: 2px; margin-top: 4px; align-items: flex-end;">
+                      <div class="flex flex-col gap-1 mt-1 items-end">
                         @foreach($fb['extra_orders_detailed'] as $eOrd)
                           @if(!empty($eOrd['is_paid']))
-                            <div style="font-size: 8.5px; color: #166534; background: #dcfce7; border: 1px solid #bbf7d0; border-radius: 4px; padding: 1px 5px; display: inline-flex; align-items: center; gap: 4px;" title="{{ $eOrd['order_number'] }}: {{ $eOrd['items_summary'] }}">
+                            <div class="text-[9px] text-emerald-800 bg-emerald-50 border border-emerald-200/80 rounded-md px-1.5 py-0.5 inline-flex items-center gap-1" title="{{ $eOrd['order_number'] }}: {{ $eOrd['items_summary'] }}">
                               <span>{{ $eOrd['date_short'] }}: ₹{{ number_format($eOrd['total_amount'], 2) }} (PAID)</span>
                               @if(!empty($eOrd['table_number']))
-                                <span style="font-size: 7.5px; background: #bbf7d0; padding: 0 3px; border-radius: 3px; font-weight: 700;">{{ $eOrd['table_number'] }}</span>
+                                <span class="bg-emerald-100 text-emerald-800 px-1 rounded text-[8px] font-bold">{{ $eOrd['table_number'] }}</span>
                               @endif
                             </div>
                           @else
-                            <div style="font-size: 8.5px; color: #9a3412; background: #fff7ed; border: 1px solid #ffedd5; border-radius: 4px; padding: 1px 5px; display: inline-flex; align-items: center; gap: 4px;" title="{{ $eOrd['order_number'] }}: {{ $eOrd['items_summary'] }} (Added to Folio & Total Bill)">
-                              <span><i class="fa-solid fa-plus" style="font-size: 7px;"></i> {{ $eOrd['date_short'] }}: ₹{{ number_format($eOrd['total_amount'], 2) }}</span>
+                            <div class="text-[9px] text-amber-800 bg-amber-50 border border-amber-200/80 rounded-md px-1.5 py-0.5 inline-flex items-center gap-1" title="{{ $eOrd['order_number'] }}: {{ $eOrd['items_summary'] }} (Added to Folio & Total Bill)">
+                              <span><i class="fa-solid fa-plus text-[7px]"></i> {{ $eOrd['date_short'] }}: ₹{{ number_format($eOrd['total_amount'], 2) }}</span>
                               @if(!empty($eOrd['table_number']))
-                                <span style="font-size: 7.5px; background: #fed7aa; padding: 0 3px; border-radius: 3px; font-weight: 700;">{{ $eOrd['table_number'] }}</span>
+                                <span class="bg-amber-100 text-amber-800 px-1 rounded text-[8px] font-bold">{{ $eOrd['table_number'] }}</span>
                               @endif
                             </div>
                           @endif
@@ -833,39 +459,43 @@
                       </div>
                     @endif
                   @else
-                    <span style="color: #94a3b8;">₹ 0.00</span>
+                    <span class="text-slate-400">₹ 0.00</span>
                   @endif
                 </td>
-                <td style="text-align: right; font-family: var(--font-mono, monospace); font-weight: 800; color: #0f172a;">
+                <td class="py-3 px-3 text-right font-mono font-black text-slate-900">
                   <div>₹ {{ number_format($fb['total_bill'], 2) }}</div>
                   @if($fb['extra_charged'] > 0)
-                    <div style="font-size: 9px; color: #b45309; font-weight: 700; margin-top: 1px;" title="Tariff (₹{{ number_format($fb['room_charges'], 2) }}) + Extra Services (₹{{ number_format($fb['extra_charged'], 2) }})">
+                    <div class="text-[10px] text-amber-700 font-bold mt-0.5" title="Tariff (₹{{ number_format($fb['room_charges'], 2) }}) + Extra Services (₹{{ number_format($fb['extra_charged'], 2) }})">
                       (Room + Extra)
                     </div>
                   @endif
                 </td>
-                <td style="text-align: right; font-family: var(--font-mono, monospace); font-weight: 700; color: #059669;">
+                <td class="py-3 px-3 text-right font-mono font-bold text-emerald-700">
                   ₹ {{ number_format($fb['paid_amount'], 2) }}
                 </td>
-                <td style="text-align: right; font-family: var(--font-mono, monospace); font-weight: 800; color: {{ $fb['remaining_amount'] > 0.01 ? '#b91c1c' : '#059669' }};">
+                <td class="py-3 px-3 text-right font-mono font-black {{ $fb['remaining_amount'] > 0.01 ? 'text-rose-600' : 'text-emerald-700' }}">
                   <div>₹ {{ number_format($fb['remaining_amount'], 2) }}</div>
                   @if($fb['extra_charged'] > 0 && $fb['remaining_amount'] > 0.01)
-                    <div style="font-size: 8.5px; color: #b45309; font-weight: 700; margin-top: 1px;">
+                    <div class="text-[9px] text-amber-700 font-bold mt-0.5">
                       (incl. +₹{{ number_format($fb['extra_charged'], 2) }} extra)
                     </div>
                   @endif
                 </td>
-                <td style="text-align: center; white-space: nowrap;">
+                <td class="py-3 px-3 text-center whitespace-nowrap">
                   @if($fb['is_settled'])
-                    <span class="badge-tag green"><i class="fa-solid fa-circle-check"></i> Settled</span>
+                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/80">
+                      <i class="fa-solid fa-circle-check"></i> Settled
+                    </span>
                   @else
-                    <span class="badge-tag rose"><i class="fa-solid fa-clock"></i> Due</span>
+                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200/80">
+                      <i class="fa-solid fa-clock"></i> Due
+                    </span>
                   @endif
                 </td>
               </tr>
             @empty
               <tr>
-                <td colspan="11" style="text-align: center; padding: 24px; color: #94a3b8;">
+                <td colspan="11" class="py-8 text-center text-slate-400 font-medium">
                   No front office bookings recorded for this date filter.
                 </td>
               </tr>
@@ -873,13 +503,13 @@
           </tbody>
           @if(count($foBookingsLedger) > 0)
             <tfoot>
-              <tr>
-                <td colspan="5" style="text-align: right; font-size: 11px; text-transform: uppercase;">Front Office Totals:</td>
-                <td style="text-align: right; font-family: var(--font-mono, monospace);">₹ {{ number_format($foTotalRoomTariffs, 2) }}</td>
-                <td style="text-align: right; font-family: var(--font-mono, monospace); color: #d97706;">+₹ {{ number_format($foTotalExtraCharged, 2) }}</td>
-                <td style="text-align: right; font-family: var(--font-mono, monospace); font-size: 13px; color: #4338ca;">₹ {{ number_format($foTotalGrossBill, 2) }}</td>
-                <td style="text-align: right; font-family: var(--font-mono, monospace); font-size: 13px; color: #059669;">₹ {{ number_format($foTotalPaidOverall, 2) }}</td>
-                <td style="text-align: right; font-family: var(--font-mono, monospace); font-size: 13px; color: #b91c1c;">₹ {{ number_format($foTotalReceivables, 2) }}</td>
+              <tr class="bg-slate-50 font-bold border-t-2 border-slate-200 text-xs text-slate-700">
+                <td colspan="5" class="py-3 px-3 text-right uppercase tracking-wider text-[11px] text-slate-500">Front Office Totals:</td>
+                <td class="py-3 px-3 text-right font-mono">₹ {{ number_format($foTotalRoomTariffs, 2) }}</td>
+                <td class="py-3 px-3 text-right font-mono text-amber-700">+₹ {{ number_format($foTotalExtraCharged, 2) }}</td>
+                <td class="py-3 px-3 text-right font-mono font-black text-indigo-700 text-sm">₹ {{ number_format($foTotalGrossBill, 2) }}</td>
+                <td class="py-3 px-3 text-right font-mono font-black text-emerald-700 text-sm">₹ {{ number_format($foTotalPaidOverall, 2) }}</td>
+                <td class="py-3 px-3 text-right font-mono font-black text-rose-600 text-sm">₹ {{ number_format($foTotalReceivables, 2) }}</td>
                 <td></td>
               </tr>
             </tfoot>
@@ -889,95 +519,113 @@
     </div>
 
     <!-- TAB 3: POS & RESTAURANT SALES LEDGER -->
-    <div id="tab-pos" class="acc-tab-pane">
-      <div style="margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
+    <div id="tab-pos" class="acc-tab-pane hidden">
+      <div class="px-6 py-4 bg-slate-50/80 border-b border-slate-200/80 flex items-center justify-between">
         <div>
-          <h3 style="font-size: 14px; font-weight: 800; color: #0f172a; margin: 0;">POS Restaurant Dining &amp; Takeaway Sales Ledger</h3>
-          <div style="font-size: 11px; color: #64748b;">Itemized restaurant orders, food items sold, tax collected, and settlement modes.</div>
+          <h3 class="text-xs font-extrabold uppercase tracking-wider text-slate-900">POS Restaurant Dining &amp; Takeaway Sales Ledger</h3>
+          <p class="text-xs text-slate-500 font-medium mt-0.5">Itemized restaurant orders, food items sold, tax collected, and settlement modes.</p>
         </div>
-        <span class="badge-tag cyan">{{ count($posOrdersList) }} POS Order(s)</span>
+        <span class="px-2.5 py-0.5 rounded-lg text-xs font-bold bg-cyan-50 text-cyan-700 border border-cyan-200/80">{{ count($posOrdersList) }} POS Order(s)</span>
       </div>
 
-      <div class="acc-table-box">
-        <table class="acc-table">
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse text-xs">
           <thead>
-            <tr>
-              <th style="width: 35px; text-align: center;">SL</th>
-              <th>ORDER #</th>
-              <th>ORDER TYPE</th>
-              <th>TABLE / ROOM</th>
-              <th>CUSTOMER / GUEST</th>
-              <th>ORDERED ITEMS</th>
-              <th style="text-align: right;">SUBTOTAL</th>
-              <th style="text-align: right;">GST (12%)</th>
-              <th style="text-align: right;">TOTAL BILL</th>
-              <th style="text-align: center;">BILLING MODE</th>
-              <th style="text-align: center;">STATUS</th>
+            <tr class="bg-slate-50/80 border-b border-slate-200/80 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+              <th class="py-3 px-3 text-center w-10">SL</th>
+              <th class="py-3 px-3">Order #</th>
+              <th class="py-3 px-3">Order Type</th>
+              <th class="py-3 px-3">Table / Room</th>
+              <th class="py-3 px-3">Customer / Guest</th>
+              <th class="py-3 px-3">Ordered Items</th>
+              <th class="py-3 px-3 text-right">Subtotal</th>
+              <th class="py-3 px-3 text-right">GST (12%)</th>
+              <th class="py-3 px-3 text-right">Total Bill</th>
+              <th class="py-3 px-3 text-center">Billing Mode</th>
+              <th class="py-3 px-3 text-center">Status</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody class="divide-y divide-slate-100">
             @forelse($posOrdersList as $idx => $po)
-              <tr>
-                <td style="text-align: center; font-weight: 800; color: #64748b; font-family: var(--font-mono, monospace);">{{ $idx + 1 }}</td>
-                <td>
-                  <div style="font-weight: 800; color: #0891b2; font-family: var(--font-mono, monospace); font-size: 11.5px;">{{ $po['order_number'] }}</div>
-                  <div style="font-size: 10px; color: #64748b; margin-top: 2px;">{{ $po['created_at'] }}</div>
+              <tr class="hover:bg-slate-50/60 transition-colors">
+                <td class="py-3 px-3 text-center font-bold text-slate-400 font-mono">{{ $idx + 1 }}</td>
+                <td class="py-3 px-3">
+                  <div class="font-extrabold text-cyan-700 font-mono text-xs">{{ $po['order_number'] }}</div>
+                  <div class="text-[10px] text-slate-500 font-medium mt-0.5">{{ $po['created_at'] }}</div>
                 </td>
-                <td>
+                <td class="py-3 px-3">
                   @if($po['order_type'] === 'Room Dining')
-                    <span class="badge-tag indigo"><i class="fa-solid fa-bell-concierge"></i> Room Dining</span>
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200/80">
+                      <i class="fa-solid fa-bell-concierge"></i> Room Dining
+                    </span>
                   @elseif($po['order_type'] === 'Table Dine-in')
-                    <span class="badge-tag green"><i class="fa-solid fa-chair"></i> Table Dine-in</span>
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/80">
+                      <i class="fa-solid fa-chair"></i> Table Dine-in
+                    </span>
                   @else
-                    <span class="badge-tag amber"><i class="fa-solid fa-bag-shopping"></i> Takeaway</span>
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200/80">
+                      <i class="fa-solid fa-bag-shopping"></i> Takeaway
+                    </span>
                   @endif
                 </td>
-                <td>
+                <td class="py-3 px-3">
                   @if($po['table_number'] !== '-')
-                    <div style="font-weight: 700; color: #0f172a; font-size: 11.5px;"><i class="fa-solid fa-chair" style="color: #10b981; font-size: 9px;"></i> {{ $po['table_number'] }}</div>
+                    <div class="font-bold text-slate-900 flex items-center gap-1 text-xs">
+                      <i class="fa-solid fa-chair text-emerald-600 text-[9px]"></i> {{ $po['table_number'] }}
+                    </div>
                   @endif
                   @if($po['room_number'] !== '-')
-                    <div style="font-size: 10.5px; color: #4338ca; font-weight: 700; font-family: var(--font-mono, monospace); margin-top: 1px;"><i class="fa-solid fa-door-open" style="font-size: 8px;"></i> {{ $po['room_number'] }}</div>
+                    <div class="text-[11px] text-indigo-700 font-bold font-mono mt-0.5 flex items-center gap-1">
+                      <i class="fa-solid fa-door-open text-[9px]"></i> {{ $po['room_number'] }}
+                    </div>
                   @endif
                   @if($po['table_number'] === '-' && $po['room_number'] === '-')
-                    <span style="color: #94a3b8;">-</span>
+                    <span class="text-slate-400">-</span>
                   @endif
                 </td>
-                <td>
-                  <div style="font-weight: 700; color: #0f172a;">{{ $po['customer_name'] }}</div>
+                <td class="py-3 px-3">
+                  <div class="font-bold text-slate-900">{{ $po['customer_name'] }}</div>
                   @if($po['customer_phone'] !== '-')
-                    <div style="font-size: 11px; color: #64748b; font-family: var(--font-mono, monospace); margin-top: 2px;"><i class="fa-solid fa-phone" style="font-size: 8px; opacity: 0.6;"></i> {{ $po['customer_phone'] }}</div>
+                    <div class="text-[11px] text-slate-500 font-mono mt-0.5 flex items-center gap-1">
+                      <i class="fa-solid fa-phone text-[8px] opacity-60"></i> {{ $po['customer_phone'] }}
+                    </div>
                   @endif
                 </td>
-                <td style="max-width: 250px;">
-                  <div style="font-size: 11.5px; color: #1e293b; font-weight: 600;">{{ $po['items_summary'] }}</div>
-                  <div style="font-size: 10px; color: #64748b; margin-top: 2px;">{{ $po['total_plates'] }} plate(s) served</div>
+                <td class="py-3 px-3 max-w-[240px]">
+                  <div class="text-xs text-slate-800 font-semibold line-clamp-2">{{ $po['items_summary'] }}</div>
+                  <div class="text-[10px] text-slate-500 font-medium mt-0.5">{{ $po['total_plates'] }} plate(s) served</div>
                 </td>
-                <td style="text-align: right; font-family: var(--font-mono, monospace); font-weight: 700;">
+                <td class="py-3 px-3 text-right font-mono font-bold text-slate-700">
                   ₹ {{ number_format($po['subtotal'], 2) }}
                 </td>
-                <td style="text-align: right; font-family: var(--font-mono, monospace); color: #64748b;">
+                <td class="py-3 px-3 text-right font-mono text-slate-500">
                   ₹ {{ number_format($po['tax_amount'], 2) }}
                 </td>
-                <td style="text-align: right; font-family: var(--font-mono, monospace); font-weight: 800; color: #0f172a; font-size: 12.5px;">
+                <td class="py-3 px-3 text-right font-mono font-black text-slate-900 text-xs">
                   ₹ {{ number_format($po['total_amount'], 2) }}
                 </td>
-                <td style="text-align: center; white-space: nowrap;">
+                <td class="py-3 px-3 text-center whitespace-nowrap">
                   @if($po['billing_type'] === 'Cash Paid')
-                    <span class="badge-tag green"><i class="fa-solid fa-money-bill-wave"></i> Cash Paid</span>
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/80">
+                      <i class="fa-solid fa-money-bill-wave"></i> Cash Paid
+                    </span>
                   @elseif($po['billing_type'] === 'Digital UPI / Card Paid')
-                    <span class="badge-tag indigo"><i class="fa-solid fa-qrcode"></i> UPI Paid</span>
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200/80">
+                      <i class="fa-solid fa-qrcode"></i> UPI Paid
+                    </span>
                   @else
-                    <span class="badge-tag amber"><i class="fa-solid fa-file-invoice"></i> Room Folio</span>
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200/80">
+                      <i class="fa-solid fa-file-invoice"></i> Room Folio
+                    </span>
                   @endif
                 </td>
-                <td style="text-align: center;">
-                  <span class="badge-tag slate">{{ $po['status'] }}</span>
+                <td class="py-3 px-3 text-center">
+                  <span class="px-2 py-0.5 rounded-md text-[11px] font-bold bg-slate-100 text-slate-700">{{ $po['status'] }}</span>
                 </td>
               </tr>
             @empty
               <tr>
-                <td colspan="11" style="text-align: center; padding: 24px; color: #94a3b8;">
+                <td colspan="11" class="py-8 text-center text-slate-400 font-medium">
                   No POS dining orders found for this date filter.
                 </td>
               </tr>
@@ -985,13 +633,13 @@
           </tbody>
           @if(count($posOrdersList) > 0)
             <tfoot>
-              <tr>
-                <td colspan="6" style="text-align: right; font-size: 11px; text-transform: uppercase;">POS Sales Totals:</td>
-                <td style="text-align: right; font-family: var(--font-mono, monospace);">₹ {{ number_format($posSubtotal, 2) }}</td>
-                <td style="text-align: right; font-family: var(--font-mono, monospace); color: #64748b;">₹ {{ number_format($posTaxCollected, 2) }}</td>
-                <td style="text-align: right; font-family: var(--font-mono, monospace); font-size: 13.5px; color: #0891b2;">₹ {{ number_format($posGrossSales, 2) }}</td>
-                <td colspan="2" style="font-size: 11px; color: #64748b;">
-                  Direct Cash/UPI: <strong>₹{{ number_format($posDirectSales, 2) }}</strong> &bull; Folio: <strong>₹{{ number_format($posFolioCharged, 2) }}</strong>
+              <tr class="bg-slate-50 font-bold border-t-2 border-slate-200 text-xs text-slate-700">
+                <td colspan="6" class="py-3 px-3 text-right uppercase tracking-wider text-[11px] text-slate-500">POS Sales Totals:</td>
+                <td class="py-3 px-3 text-right font-mono">₹ {{ number_format($posSubtotal, 2) }}</td>
+                <td class="py-3 px-3 text-right font-mono text-slate-500">₹ {{ number_format($posTaxCollected, 2) }}</td>
+                <td class="py-3 px-3 text-right font-mono font-black text-cyan-700 text-sm">₹ {{ number_format($posGrossSales, 2) }}</td>
+                <td colspan="2" class="py-3 px-3 text-slate-600 font-medium text-xs">
+                  Direct Cash/UPI: <strong class="text-emerald-700 font-mono">₹{{ number_format($posDirectSales, 2) }}</strong> &bull; Folio: <strong class="text-amber-700 font-mono">₹{{ number_format($posFolioCharged, 2) }}</strong>
                 </td>
               </tr>
             </tfoot>
@@ -1001,72 +649,76 @@
     </div>
 
     <!-- TAB 4: STORES & PROCUREMENT (EXPENSES) LEDGER -->
-    <div id="tab-stores" class="acc-tab-pane">
-      <div style="margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
+    <div id="tab-stores" class="acc-tab-pane hidden">
+      <div class="px-6 py-4 bg-slate-50/80 border-b border-slate-200/80 flex items-center justify-between">
         <div>
-          <h3 style="font-size: 14px; font-weight: 800; color: #0f172a; margin: 0;">Kitchen Stores &amp; Procurement Expense Ledger</h3>
-          <div style="font-size: 11px; color: #64748b;">Raw ingredient inward receiving, purchase rates, vendor challans, and kitchen stock deductions.</div>
+          <h3 class="text-xs font-extrabold uppercase tracking-wider text-slate-900">Kitchen Stores &amp; Procurement Expense Ledger</h3>
+          <p class="text-xs text-slate-500 font-medium mt-0.5">Raw ingredient inward receiving, purchase rates, vendor challans, and kitchen stock deductions.</p>
         </div>
-        <span class="badge-tag rose">{{ count($storeMovementsList) }} Movement(s)</span>
+        <span class="px-2.5 py-0.5 rounded-lg text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200/80">{{ count($storeMovementsList) }} Movement(s)</span>
       </div>
 
-      <div class="acc-table-box">
-        <table class="acc-table">
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse text-xs">
           <thead>
-            <tr>
-              <th style="width: 35px; text-align: center;">SL</th>
-              <th>DATE &amp; TIME</th>
-              <th style="text-align: center;">TYPE</th>
-              <th>DISH / RAW INGREDIENT</th>
-              <th>CATEGORY</th>
-              <th style="text-align: center;">QUANTITY / PLATES</th>
-              <th>REFERENCE / INVOICE #</th>
-              <th style="text-align: right;">UNIT RATE</th>
-              <th style="text-align: right;">PROCUREMENT EXPENSE</th>
-              <th>ISSUED / REMARKS</th>
-              <th>PERFORMED BY</th>
+            <tr class="bg-slate-50/80 border-b border-slate-200/80 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+              <th class="py-3 px-3 text-center w-10">SL</th>
+              <th class="py-3 px-3">Date &amp; Time</th>
+              <th class="py-3 px-3 text-center">Type</th>
+              <th class="py-3 px-3">Dish / Raw Ingredient</th>
+              <th class="py-3 px-3">Category</th>
+              <th class="py-3 px-3 text-center">Quantity / Plates</th>
+              <th class="py-3 px-3">Reference / Invoice #</th>
+              <th class="py-3 px-3 text-right">Unit Rate</th>
+              <th class="py-3 px-3 text-right">Procurement Expense</th>
+              <th class="py-3 px-3">Issued / Remarks</th>
+              <th class="py-3 px-3">Performed By</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody class="divide-y divide-slate-100">
             @forelse($storeMovementsList as $idx => $sm)
-              <tr>
-                <td style="text-align: center; font-weight: 800; color: #64748b; font-family: var(--font-mono, monospace);">{{ $idx + 1 }}</td>
-                <td style="font-size: 11px; color: #64748b; white-space: nowrap;">{{ $sm['created_at'] }}</td>
-                <td style="text-align: center;">
+              <tr class="hover:bg-slate-50/60 transition-colors">
+                <td class="py-3 px-3 text-center font-bold text-slate-400 font-mono">{{ $idx + 1 }}</td>
+                <td class="py-3 px-3 text-slate-500 whitespace-nowrap">{{ $sm['created_at'] }}</td>
+                <td class="py-3 px-3 text-center">
                   @if($sm['type'] === 'IN')
-                    <span class="badge-tag green"><i class="fa-solid fa-arrow-down"></i> INWARD</span>
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/80">
+                      <i class="fa-solid fa-arrow-down"></i> INWARD
+                    </span>
                   @else
-                    <span class="badge-tag slate"><i class="fa-solid fa-arrow-up"></i> CONSUMED</span>
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200/80">
+                      <i class="fa-solid fa-arrow-up"></i> CONSUMED
+                    </span>
                   @endif
                 </td>
-                <td style="font-weight: 800; color: #0f172a;">{{ $sm['item_name'] }}</td>
-                <td><span class="badge-tag slate">{{ $sm['category'] }}</span></td>
-                <td style="text-align: center; font-weight: 800; font-family: var(--font-mono, monospace);">
+                <td class="py-3 px-3 font-bold text-slate-900">{{ $sm['item_name'] }}</td>
+                <td class="py-3 px-3"><span class="px-2 py-0.5 rounded text-[11px] font-medium bg-slate-100 text-slate-700">{{ $sm['category'] }}</span></td>
+                <td class="py-3 px-3 text-center font-bold font-mono">
                   @if($sm['type'] === 'IN')
-                    <span style="color: #059669;">+{{ $sm['quantity'] }}</span>
+                    <span class="text-emerald-700">+{{ $sm['quantity'] }}</span>
                   @else
-                    <span style="color: #64748b;">&minus;{{ $sm['quantity'] }}</span>
+                    <span class="text-slate-500">&minus;{{ $sm['quantity'] }}</span>
                   @endif
                 </td>
-                <td style="font-family: var(--font-mono, monospace); font-weight: 700; color: #4338ca; font-size: 11px;">
+                <td class="py-3 px-3 font-mono font-bold text-indigo-700 text-xs">
                   {{ $sm['reference_no'] }}
                 </td>
-                <td style="text-align: right; font-family: var(--font-mono, monospace); color: #64748b;">
+                <td class="py-3 px-3 text-right font-mono text-slate-500">
                   {{ $sm['unit_cost'] ? '₹ ' . number_format($sm['unit_cost'], 2) : '-' }}
                 </td>
-                <td style="text-align: right; font-family: var(--font-mono, monospace); font-weight: 800; color: {{ $sm['total_cost'] ? '#e11d48' : '#64748b' }};">
+                <td class="py-3 px-3 text-right font-mono font-bold {{ $sm['total_cost'] ? 'text-rose-600' : 'text-slate-400' }}">
                   {{ $sm['total_cost'] ? '₹ ' . number_format($sm['total_cost'], 2) : '-' }}
                 </td>
-                <td style="max-width: 220px; font-size: 11px; color: #475569;">
+                <td class="py-3 px-3 max-w-[200px] text-slate-600 truncate">
                   {{ $sm['remarks'] }}
                 </td>
-                <td style="font-size: 11px; color: #64748b; white-space: nowrap;">
+                <td class="py-3 px-3 text-slate-500 whitespace-nowrap">
                   {{ $sm['performed_by'] }}
                 </td>
               </tr>
             @empty
               <tr>
-                <td colspan="11" style="text-align: center; padding: 24px; color: #94a3b8;">
+                <td colspan="11" class="py-8 text-center text-slate-400 font-medium">
                   No store movements or procurement records logged for this period.
                 </td>
               </tr>
@@ -1074,13 +726,13 @@
           </tbody>
           @if(count($storeMovementsList) > 0)
             <tfoot>
-              <tr>
-                <td colspan="8" style="text-align: right; font-size: 11px; text-transform: uppercase;">Total Store Procurement Purchases:</td>
-                <td style="text-align: right; font-family: var(--font-mono, monospace); font-size: 13.5px; color: #e11d48;">
+              <tr class="bg-slate-50 font-bold border-t-2 border-slate-200 text-xs text-slate-700">
+                <td colspan="8" class="py-3 px-3 text-right uppercase tracking-wider text-[11px] text-slate-500">Total Store Procurement Purchases:</td>
+                <td class="py-3 px-3 text-right font-mono font-black text-rose-600 text-sm">
                   ₹ {{ number_format($storeTotalPurchases, 2) }}
                 </td>
-                <td colspan="2" style="font-size: 11px; color: #64748b;">
-                  Inward Shipments: <strong>{{ $storeInwardCount }}</strong> &bull; Total Plates Yielded: <strong>{{ $storeTotalPlatesInward }}</strong>
+                <td colspan="2" class="py-3 px-3 text-slate-600 font-medium text-xs">
+                  Inward Shipments: <strong>{{ $storeInwardCount }}</strong> &bull; Plates Yielded: <strong>{{ $storeTotalPlatesInward }}</strong>
                 </td>
               </tr>
             </tfoot>
@@ -1090,31 +742,31 @@
     </div>
 
     <!-- TAB 5: UNIFIED PAYMENT RECEIPTS AUDIT TRAIL -->
-    <div id="tab-receipts" class="acc-tab-pane">
-      <div style="margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
+    <div id="tab-receipts" class="acc-tab-pane hidden">
+      <div class="px-6 py-4 bg-slate-50/80 border-b border-slate-200/80 flex items-center justify-between">
         <div>
-          <h3 style="font-size: 14px; font-weight: 800; color: #0f172a; margin: 0;">Consolidated Financial Transaction Receipts Trail</h3>
-          <div style="font-size: 11px; color: #64748b;">Chronological audit log of all direct payments received and procurement disbursements.</div>
+          <h3 class="text-xs font-extrabold uppercase tracking-wider text-slate-900">Consolidated Financial Transaction Receipts Trail</h3>
+          <p class="text-xs text-slate-500 font-medium mt-0.5">Chronological audit log of all direct payments received and procurement disbursements.</p>
         </div>
-        <span class="badge-tag green">{{ count($unifiedReceipts) }} Transactions</span>
+        <span class="px-2.5 py-0.5 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/80">{{ count($unifiedReceipts) }} Transactions</span>
       </div>
 
-      <div class="acc-table-box">
-        <table class="acc-table">
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse text-xs">
           <thead>
-            <tr>
-              <th style="width: 35px; text-align: center;">SL</th>
-              <th>DATE &amp; TIME</th>
-              <th>DEPARTMENT / DOMAIN</th>
-              <th>REFERENCE #</th>
-              <th>PARTY / GUEST / VENDOR</th>
-              <th>CATEGORY / DETAILS</th>
-              <th style="text-align: center;">PAYMENT MODE</th>
-              <th style="text-align: right;">INFLOW (+)</th>
-              <th style="text-align: right;">OUTFLOW (&minus;)</th>
+            <tr class="bg-slate-50/80 border-b border-slate-200/80 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+              <th class="py-3 px-3 text-center w-10">SL</th>
+              <th class="py-3 px-3">Date &amp; Time</th>
+              <th class="py-3 px-3">Department / Domain</th>
+              <th class="py-3 px-3">Reference #</th>
+              <th class="py-3 px-3">Party / Guest / Vendor</th>
+              <th class="py-3 px-3">Category / Details</th>
+              <th class="py-3 px-3 text-center">Payment Mode</th>
+              <th class="py-3 px-3 text-right">Inflow (+)</th>
+              <th class="py-3 px-3 text-right">Outflow (&minus;)</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody class="divide-y divide-slate-100">
             @php
               $totInflow = 0;
               $totOutflow = 0;
@@ -1124,47 +776,61 @@
                 if ($r['is_inflow']) $totInflow += $r['amount'];
                 else $totOutflow += $r['amount'];
               @endphp
-              <tr>
-                <td style="text-align: center; font-weight: 800; color: #64748b; font-family: var(--font-mono, monospace);">{{ $idx + 1 }}</td>
-                <td style="font-size: 11px; color: #64748b; white-space: nowrap;">{{ $r['date_time'] }}</td>
-                <td>
+              <tr class="hover:bg-slate-50/60 transition-colors">
+                <td class="py-3 px-3 text-center font-bold text-slate-400 font-mono">{{ $idx + 1 }}</td>
+                <td class="py-3 px-3 text-slate-500 whitespace-nowrap">{{ $r['date_time'] }}</td>
+                <td class="py-3 px-3">
                   @if($r['type'] === 'Front Office')
-                    <span class="badge-tag indigo"><i class="fa-solid fa-hotel"></i> Front Office</span>
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200/80">
+                      <i class="fa-solid fa-hotel"></i> Front Office
+                    </span>
                   @elseif($r['type'] === 'POS Sales')
-                    <span class="badge-tag cyan"><i class="fa-solid fa-utensils"></i> Restaurant POS</span>
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-cyan-50 text-cyan-700 border border-cyan-200/80">
+                      <i class="fa-solid fa-utensils"></i> Restaurant POS
+                    </span>
                   @else
-                    <span class="badge-tag rose"><i class="fa-solid fa-boxes-stacked"></i> Store Purchase</span>
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-rose-50 text-rose-700 border border-rose-200/80">
+                      <i class="fa-solid fa-boxes-stacked"></i> Store Purchase
+                    </span>
                   @endif
                 </td>
-                <td style="font-family: var(--font-mono, monospace); font-weight: 800; color: #4338ca; font-size: 11.5px;">{{ $r['ref_no'] }}</td>
-                <td style="font-weight: 700; color: #0f172a;">{{ $r['party'] }}</td>
-                <td style="font-size: 11.5px; color: #475569;">{{ $r['category'] }}</td>
-                <td style="text-align: center; white-space: nowrap;">
+                <td class="py-3 px-3 font-mono font-bold text-indigo-700 text-xs">{{ $r['ref_no'] }}</td>
+                <td class="py-3 px-3 font-bold text-slate-900">{{ $r['party'] }}</td>
+                <td class="py-3 px-3 text-slate-600">{{ $r['category'] }}</td>
+                <td class="py-3 px-3 text-center whitespace-nowrap">
                   @php
                     $mUpper = strtoupper($r['mode']);
                   @endphp
                   @if(str_contains($mUpper, 'CASH'))
-                    <span class="badge-tag green"><i class="fa-solid fa-money-bill-wave"></i> Cash</span>
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/80">
+                      <i class="fa-solid fa-money-bill-wave"></i> Cash
+                    </span>
                   @elseif(str_contains($mUpper, 'UPI') || str_contains($mUpper, 'GPAY'))
-                    <span class="badge-tag indigo"><i class="fa-solid fa-qrcode"></i> UPI</span>
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200/80">
+                      <i class="fa-solid fa-qrcode"></i> UPI
+                    </span>
                   @elseif(str_contains($mUpper, 'CARD'))
-                    <span class="badge-tag amber"><i class="fa-solid fa-credit-card"></i> Card</span>
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200/80">
+                      <i class="fa-solid fa-credit-card"></i> Card
+                    </span>
                   @elseif(str_contains($mUpper, 'BANK') || str_contains($mUpper, 'NEFT'))
-                    <span class="badge-tag cyan"><i class="fa-solid fa-landmark"></i> Bank</span>
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-cyan-50 text-cyan-700 border border-cyan-200/80">
+                      <i class="fa-solid fa-landmark"></i> Bank
+                    </span>
                   @else
-                    <span class="badge-tag slate">{{ $r['mode'] }}</span>
+                    <span class="px-2 py-0.5 rounded-md text-[11px] font-bold bg-slate-100 text-slate-700">{{ $r['mode'] }}</span>
                   @endif
                 </td>
-                <td style="text-align: right; font-family: var(--font-mono, monospace); font-weight: 800; color: #059669;">
+                <td class="py-3 px-3 text-right font-mono font-bold text-emerald-700">
                   {{ $r['is_inflow'] ? '₹ ' . number_format($r['amount'], 2) : '-' }}
                 </td>
-                <td style="text-align: right; font-family: var(--font-mono, monospace); font-weight: 800; color: #e11d48;">
+                <td class="py-3 px-3 text-right font-mono font-bold text-rose-600">
                   {{ !$r['is_inflow'] ? '₹ ' . number_format($r['amount'], 2) : '-' }}
                 </td>
               </tr>
             @empty
               <tr>
-                <td colspan="9" style="text-align: center; padding: 24px; color: #94a3b8;">
+                <td colspan="9" class="py-8 text-center text-slate-400 font-medium">
                   No financial transactions recorded for this period.
                 </td>
               </tr>
@@ -1172,18 +838,18 @@
           </tbody>
           @if(count($unifiedReceipts) > 0)
             <tfoot>
-              <tr>
-                <td colspan="7" style="text-align: right; font-size: 11px; text-transform: uppercase;">Total Reconciled Cash Flow:</td>
-                <td style="text-align: right; font-family: var(--font-mono, monospace); font-size: 13.5px; color: #059669;">
+              <tr class="bg-slate-50 font-bold border-t-2 border-slate-200 text-xs text-slate-700">
+                <td colspan="7" class="py-3 px-3 text-right uppercase tracking-wider text-[11px] text-slate-500">Total Reconciled Cash Flow:</td>
+                <td class="py-3 px-3 text-right font-mono font-black text-emerald-700 text-sm">
                   ₹ {{ number_format($totInflow, 2) }}
                 </td>
-                <td style="text-align: right; font-family: var(--font-mono, monospace); font-size: 13.5px; color: #e11d48;">
+                <td class="py-3 px-3 text-right font-mono font-black text-rose-600 text-sm">
                   &minus; ₹ {{ number_format($totOutflow, 2) }}
                 </td>
               </tr>
-              <tr style="background: #f1f5f9;">
-                <td colspan="7" style="text-align: right; font-size: 12px; font-weight: 900; color: #0f172a;">NET SURPLUS / CASH POSITION:</td>
-                <td colspan="2" style="text-align: right; font-family: var(--font-mono, monospace); font-size: 14.5px; font-weight: 900; color: {{ ($totInflow - $totOutflow) >= 0 ? '#15803d' : '#b91c1c' }};">
+              <tr class="bg-slate-100/70 border-t border-slate-200 font-black text-xs text-slate-900">
+                <td colspan="7" class="py-3 px-3 text-right uppercase tracking-wider text-[11px]">NET SURPLUS / CASH POSITION:</td>
+                <td colspan="2" class="py-3 px-3 text-right font-mono text-base font-black {{ ($totInflow - $totOutflow) >= 0 ? 'text-emerald-700' : 'text-rose-700' }}">
                   ₹ {{ number_format($totInflow - $totOutflow, 2) }}
                 </td>
               </tr>
@@ -1195,18 +861,19 @@
 
   </div>
 
-</div>
+  </div>
+</main>
 
 <!-- PRINTABLE CONTAINER (Only visible during print) -->
-<div id="printable-accounts-area" style="display: none;">
-  <div style="font-family: Arial, sans-serif; padding: 20px; color: #000;">
-    <div style="display: flex; justify-content: space-between; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 14px;">
+<div id="printable-accounts-area" class="hidden print:block">
+  <div class="p-6 text-black font-sans">
+    <div class="flex justify-between border-b-2 border-black pb-3 mb-4">
       <div>
-        <h1 style="font-size: 18px; margin: 0; font-weight: bold;">HOTEL SAGAR SONNET</h1>
-        <div style="font-size: 11px; margin-top: 3px;">Comprehensive Accounts &amp; Financial Master Statement</div>
-        <div style="font-size: 10px; color: #444;">Station Road, Luxury Wing PMS Reconciliation</div>
+        <h1 class="text-lg font-bold">HOTEL SAGAR SONNET</h1>
+        <div class="text-xs mt-1">Comprehensive Accounts &amp; Financial Master Statement</div>
+        <div class="text-[10px] text-gray-600">Station Road, Luxury Wing PMS Reconciliation</div>
       </div>
-      <div style="text-align: right; font-size: 11px;">
+      <div class="text-right text-xs">
         <div><strong>Accounting Period:</strong> {{ $filterLabel }}</div>
         <div>Generated: {{ now()->format('d M Y, h:i A') }}</div>
         <div>Audited Cashier / System Administrator</div>
@@ -1214,63 +881,63 @@
     </div>
 
     <!-- 4 Print Summary Boxes -->
-    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 14px;">
-      <div style="border: 1px solid #000; padding: 8px; text-align: center;">
-        <div style="font-size: 9px; font-weight: bold; text-transform: uppercase;">Total Inflow Collected</div>
-        <div style="font-size: 14px; font-weight: bold; margin-top: 3px;">₹ {{ number_format($totalRealizedCollections, 2) }}</div>
+    <div class="grid grid-cols-4 gap-3 mb-4">
+      <div class="border border-black p-2 text-center">
+        <div class="text-[9px] font-bold uppercase">Total Inflow Collected</div>
+        <div class="text-sm font-bold mt-1">₹ {{ number_format($totalRealizedCollections, 2) }}</div>
       </div>
-      <div style="border: 1px solid #000; padding: 8px; text-align: center;">
-        <div style="font-size: 9px; font-weight: bold; text-transform: uppercase;">Gross Billings Incurred</div>
-        <div style="font-size: 14px; font-weight: bold; margin-top: 3px;">₹ {{ number_format($totalGrossRevenue, 2) }}</div>
+      <div class="border border-black p-2 text-center">
+        <div class="text-[9px] font-bold uppercase">Gross Billings Incurred</div>
+        <div class="text-sm font-bold mt-1">₹ {{ number_format($totalGrossRevenue, 2) }}</div>
       </div>
-      <div style="border: 1px solid #000; padding: 8px; text-align: center;">
-        <div style="font-size: 9px; font-weight: bold; text-transform: uppercase;">Store Procurement Cost</div>
-        <div style="font-size: 14px; font-weight: bold; margin-top: 3px;">₹ {{ number_format($storeTotalPurchases, 2) }}</div>
+      <div class="border border-black p-2 text-center">
+        <div class="text-[9px] font-bold uppercase">Store Procurement Cost</div>
+        <div class="text-sm font-bold mt-1">₹ {{ number_format($storeTotalPurchases, 2) }}</div>
       </div>
-      <div style="border: 1px solid #000; padding: 8px; text-align: center;">
-        <div style="font-size: 9px; font-weight: bold; text-transform: uppercase;">Net Operating Position</div>
-        <div style="font-size: 14px; font-weight: bold; margin-top: 3px;">₹ {{ number_format($netOperatingPosition, 2) }}</div>
+      <div class="border border-black p-2 text-center">
+        <div class="text-[9px] font-bold uppercase">Net Operating Position</div>
+        <div class="text-sm font-bold mt-1">₹ {{ number_format($netOperatingPosition, 2) }}</div>
       </div>
     </div>
 
     <!-- Print Tables Summary -->
-    <h3 style="font-size: 12px; margin-bottom: 6px; text-transform: uppercase; border-bottom: 1px solid #000;">Department Highlights</h3>
-    <table style="width: 100%; border-collapse: collapse; font-size: 10px; margin-bottom: 14px;">
+    <h3 class="text-xs font-bold uppercase border-b border-black pb-1 mb-2">Department Highlights</h3>
+    <table class="w-full border-collapse text-[10px] mb-4">
       <thead>
-        <tr style="border-bottom: 1px solid #000; background: #eee;">
-          <th style="padding: 5px; text-align: left;">Department</th>
-          <th style="padding: 5px; text-align: right;">Transactions</th>
-          <th style="padding: 5px; text-align: right;">Total Gross</th>
-          <th style="padding: 5px; text-align: right;">Direct Paid</th>
-          <th style="padding: 5px; text-align: right;">Balance / Pending</th>
+        <tr class="border-b border-black bg-gray-100 font-bold">
+          <th class="p-1.5 text-left">Department</th>
+          <th class="p-1.5 text-right">Transactions</th>
+          <th class="p-1.5 text-right">Total Gross</th>
+          <th class="p-1.5 text-right">Direct Paid</th>
+          <th class="p-1.5 text-right">Balance / Pending</th>
         </tr>
       </thead>
       <tbody>
-        <tr style="border-bottom: 1px solid #ddd;">
-          <td style="padding: 5px;"><strong>Front Office Accommodations</strong></td>
-          <td style="padding: 5px; text-align: right;">{{ count($foBookingsLedger) }} Bookings</td>
-          <td style="padding: 5px; text-align: right;">₹ {{ number_format($foTotalGrossBill, 2) }}</td>
-          <td style="padding: 5px; text-align: right;">₹ {{ number_format($foTotalPaidOverall, 2) }}</td>
-          <td style="padding: 5px; text-align: right;">₹ {{ number_format($foTotalReceivables, 2) }}</td>
+        <tr class="border-b border-gray-200">
+          <td class="p-1.5 font-bold">Front Office Accommodations</td>
+          <td class="p-1.5 text-right">{{ count($foBookingsLedger) }} Bookings</td>
+          <td class="p-1.5 text-right">₹ {{ number_format($foTotalGrossBill, 2) }}</td>
+          <td class="p-1.5 text-right">₹ {{ number_format($foTotalPaidOverall, 2) }}</td>
+          <td class="p-1.5 text-right">₹ {{ number_format($foTotalReceivables, 2) }}</td>
         </tr>
-        <tr style="border-bottom: 1px solid #ddd;">
-          <td style="padding: 5px;"><strong>POS Restaurant &amp; Dining</strong></td>
-          <td style="padding: 5px; text-align: right;">{{ count($posOrdersList) }} Orders</td>
-          <td style="padding: 5px; text-align: right;">₹ {{ number_format($posGrossSales, 2) }}</td>
-          <td style="padding: 5px; text-align: right;">₹ {{ number_format($posDirectSales, 2) }}</td>
-          <td style="padding: 5px; text-align: right;">₹ {{ number_format($posFolioCharged, 2) }} (Folio)</td>
+        <tr class="border-b border-gray-200">
+          <td class="p-1.5 font-bold">POS Restaurant &amp; Dining</td>
+          <td class="p-1.5 text-right">{{ count($posOrdersList) }} Orders</td>
+          <td class="p-1.5 text-right">₹ {{ number_format($posGrossSales, 2) }}</td>
+          <td class="p-1.5 text-right">₹ {{ number_format($posDirectSales, 2) }}</td>
+          <td class="p-1.5 text-right">₹ {{ number_format($posFolioCharged, 2) }} (Folio)</td>
         </tr>
-        <tr style="border-bottom: 1px solid #ddd;">
-          <td style="padding: 5px;"><strong>Kitchen Store Procurements (Expense)</strong></td>
-          <td style="padding: 5px; text-align: right;">{{ $storeInwardCount }} Shipments</td>
-          <td style="padding: 5px; text-align: right;">&minus; ₹ {{ number_format($storeTotalPurchases, 2) }}</td>
-          <td style="padding: 5px; text-align: right;">&minus; ₹ {{ number_format($storeTotalPurchases, 2) }}</td>
-          <td style="padding: 5px; text-align: right;">0.00</td>
+        <tr class="border-b border-gray-200">
+          <td class="p-1.5 font-bold">Kitchen Store Procurements (Expense)</td>
+          <td class="p-1.5 text-right">{{ $storeInwardCount }} Shipments</td>
+          <td class="p-1.5 text-right">&minus; ₹ {{ number_format($storeTotalPurchases, 2) }}</td>
+          <td class="p-1.5 text-right">&minus; ₹ {{ number_format($storeTotalPurchases, 2) }}</td>
+          <td class="p-1.5 text-right">0.00</td>
         </tr>
       </tbody>
     </table>
 
-    <div style="font-size: 9px; color: #555; text-align: center; margin-top: 30px; border-top: 1px solid #ddd; padding-top: 6px;">
+    <div class="text-[9px] text-gray-500 text-center mt-6 pt-2 border-t border-gray-200">
       Hotel Sagar Sonnet Accounting Management System &bull; Automatically Reconciled PMS Financial Audit Trail
     </div>
   </div>
@@ -1280,23 +947,16 @@
 @push('scripts')
 <script>
   function switchAccTab(tabId, btn) {
-    document.querySelectorAll('.acc-tab-btn').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.acc-tab-pane').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.acc-tab-btn').forEach(b => {
+      b.className = 'acc-tab-btn inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 bg-white border border-slate-200/80 hover:bg-slate-50 transition-all cursor-pointer whitespace-nowrap shadow-xs';
+    });
+    document.querySelectorAll('.acc-tab-pane').forEach(p => p.classList.add('hidden'));
 
-    if (btn) btn.classList.add('active');
+    if (btn) {
+      btn.className = 'acc-tab-btn inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap bg-indigo-50 text-indigo-700 border border-indigo-200/80 shadow-xs';
+    }
     const pane = document.getElementById(tabId);
-    if (pane) pane.classList.add('active');
+    if (pane) pane.classList.remove('hidden');
   }
-
-  // Handle print media visibility
-  window.onbeforeprint = function() {
-    const printArea = document.getElementById('printable-accounts-area');
-    if (printArea) printArea.style.display = 'block';
-  };
-  window.onafterprint = function() {
-    const printArea = document.getElementById('printable-accounts-area');
-    if (printArea) printArea.style.display = 'none';
-  };
 </script>
 @endpush
-

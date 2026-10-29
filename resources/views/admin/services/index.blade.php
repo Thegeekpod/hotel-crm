@@ -2,763 +2,282 @@
 
 @section('title', 'Hotel Services Master - Hotel Sagar Sonnet PMS')
 
-@push('styles')
-<style>
-  .admin-layout {
-    display: grid;
-    grid-template-columns: 280px 1fr;
-    gap: 20px;
-    min-height: calc(100vh - 165px);
-  }
-  .pms-page-header {
-    border-bottom: none !important;
-    background: transparent !important;
-  }
-  .admin-sidebar {
-    background: #ffffff;
-    border: 1px solid var(--border-medium);
-    border-radius: var(--radius-lg);
-    box-shadow: 0 4px 16px rgba(0,0,0,0.03);
-    padding: 14px;
-    height: fit-content;
-    position: sticky;
-    top: 10px;
-    max-height: calc(100vh - 180px);
-    overflow-y: auto;
-  }
-  .admin-nav-group { margin-bottom: 8px; }
-  .admin-nav-header {
-    font-size: 11px;
-    font-weight: 800;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-    padding: 9px 12px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    border-radius: var(--radius-md);
-    cursor: pointer;
-    user-select: none;
-    transition: all 0.2s ease;
-    background: #f8fafc;
-    border: 1px solid #f1f5f9;
-  }
-  .admin-nav-header:hover { background: #f1f5f9; color: var(--accent-primary); }
-  .admin-nav-header.active {
-    color: var(--accent-primary);
-    font-weight: 900;
-    background: rgba(99, 102, 241, 0.08);
-    border-color: rgba(99, 102, 241, 0.2);
-  }
-  .admin-nav-flat {
-    font-size: 11px;
-    font-weight: 800;
-    color: var(--text-secondary);
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-    padding: 10px 12px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    border-radius: var(--radius-md);
-    cursor: pointer;
-    user-select: none;
-    transition: all 0.2s ease;
-    background: #ffffff;
-    border: 1px solid #f1f5f9;
-    margin-bottom: 6px;
-    text-decoration: none;
-  }
-  .admin-nav-flat:hover { background: #f8fafc; color: var(--accent-primary); }
-  .admin-nav-flat.active {
-    background: linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(168, 85, 247, 0.08));
-    color: var(--accent-primary);
-    font-weight: 900;
-    border-color: rgba(99, 102, 241, 0.25);
-  }
-  .admin-sub-list {
-    list-style: none;
-    padding: 4px 0 4px 8px;
-    margin: 4px 0 0 4px;
-    border-left: 2px solid var(--border-medium);
-  }
-  .admin-sub-item {
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--text-secondary);
-    padding: 7px 10px;
-    border-radius: 6px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    transition: all 0.2s ease;
-    margin-bottom: 2px;
-    text-decoration: none;
-  }
-  .admin-sub-item:hover {
-    background: rgba(99, 102, 241, 0.06);
-    color: var(--accent-primary);
-    transform: translateX(3px);
-  }
-  .admin-sub-item.active {
-    background: linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(168, 85, 247, 0.08));
-    color: var(--accent-primary);
-    font-weight: 800;
-  }
-
-  /* Content Pane */
-  .admin-content-pane {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    min-width: 0;
-  }
-  .crud-header-card {
-    background: #ffffff;
-    border: 1px solid var(--border-medium);
-    border-radius: var(--radius-lg);
-    padding: 16px 20px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.03);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 14px;
-  }
-
-  /* KPI Cards */
-  .services-stats-row {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 12px;
-  }
-  .service-kpi-card {
-    background: #ffffff;
-    border: 1px solid var(--border-medium);
-    border-radius: 12px;
-    padding: 12px 16px;
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.02);
-  }
-  .service-kpi-icon {
-    width: 40px;
-    height: 40px;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 16px;
-    flex-shrink: 0;
-  }
-
-  /* Toolbar */
-  .crud-toolbar {
-    background: #ffffff;
-    border: 1px solid var(--border-medium);
-    border-radius: var(--radius-lg);
-    padding: 12px 16px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 10px;
-  }
-  .crud-toolbar-left {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex: 1 1 450px;
-    flex-wrap: wrap;
-  }
-  .crud-search-wrap {
-    position: relative;
-    flex: 1 1 200px;
-    max-width: 300px;
-  }
-  .crud-search-wrap i {
-    position: absolute;
-    left: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--text-muted);
-    font-size: 13px;
-  }
-  .crud-search-input {
-    width: 100%;
-    height: 38px;
-    padding: 0 12px 0 34px;
-    border-radius: var(--radius-md);
-    border: 1px solid var(--border-medium);
-    background: #f8fafc;
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--text-primary);
-    outline: none;
-    transition: all 0.2s;
-  }
-  .crud-search-input:focus {
-    background: #ffffff;
-    border-color: var(--accent-primary);
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
-  }
-  .crud-filter-select {
-    height: 38px;
-    padding: 0 28px 0 12px;
-    border-radius: var(--radius-md);
-    border: 1px solid var(--border-medium);
-    background: #f8fafc url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 10px center;
-    appearance: none;
-    -webkit-appearance: none;
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--text-primary);
-    cursor: pointer;
-    outline: none;
-  }
-  .crud-toolbar-right {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-wrap: wrap;
-  }
-
-  /* Table */
-  .crud-table-wrap {
-    background: #ffffff;
-    border: 1px solid var(--border-medium);
-    border-radius: var(--radius-lg);
-    overflow-x: auto;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.03);
-  }
-  .crud-table {
-    width: 100%;
-    min-width: 850px;
-    border-collapse: collapse;
-  }
-  .crud-table th,
-  .crud-table td {
-    padding: 12px 14px;
-    vertical-align: middle;
-  }
-  .crud-table th {
-    background: #f8fafc;
-    font-size: 11px;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: var(--text-muted);
-    border-bottom: 1px solid var(--border-medium);
-  }
-  .crud-table tbody tr {
-    border-bottom: 1px solid var(--border-light);
-    transition: background 0.15s;
-  }
-  .crud-table tbody tr:hover {
-    background: #f8fafc;
-  }
-
-  .badge-category {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 3px 8px;
-    border-radius: 6px;
-    font-size: 10px;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 0.3px;
-    white-space: nowrap;
-    background: #eef2ff;
-    color: #4338ca;
-    border: 1px solid #c7d2fe;
-  }
-
-  /* Status Badges with Clickable Toggle */
-  .badge-toggle-status {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 3px 9px;
-    border-radius: 20px;
-    font-size: 10px;
-    font-weight: 800;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    user-select: none;
-  }
-  .badge-toggle-status.active {
-    background: #ecfdf5;
-    color: #047857;
-    border: 1px solid #a7f3d0;
-  }
-  .badge-toggle-status.active:hover {
-    background: #d1fae5;
-    transform: scale(1.04);
-  }
-  .badge-toggle-status.inactive {
-    background: #fff1f2;
-    color: #be123c;
-    border: 1px solid #fecdd3;
-  }
-  .badge-toggle-status.inactive:hover {
-    background: #ffe4e6;
-    transform: scale(1.04);
-  }
-
-  /* Action Buttons */
-  .crud-actions {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    justify-content: flex-end;
-  }
-  .btn-action-edit,
-  .btn-action-del {
-    width: 30px;
-    height: 30px;
-    border-radius: 8px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 12px;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-  .btn-action-edit {
-    background: #eef2ff;
-    color: #4f46e5;
-    border: 1px solid #c7d2fe;
-  }
-  .btn-action-edit:hover {
-    background: #4f46e5;
-    color: #ffffff;
-    border-color: #4f46e5;
-    transform: translateY(-1px);
-  }
-  .btn-action-del {
-    background: #fef2f2;
-    color: #dc2626;
-    border: 1px solid #fecaca;
-  }
-  .btn-action-del:hover {
-    background: #dc2626;
-    color: #ffffff;
-    border-color: #dc2626;
-    transform: translateY(-1px);
-  }
-
-  /* Modal styling */
-  .modal-backdrop {
-    position: fixed;
-    inset: 0;
-    background: rgba(15, 23, 42, 0.55);
-    backdrop-filter: blur(4px);
-    display: none;
-    align-items: center;
-    justify-content: center;
-    z-index: 99999;
-    padding: 20px;
-    box-sizing: border-box;
-  }
-  .modal-backdrop.open {
-    display: flex !important;
-  }
-  .modal-box-card {
-    background: #ffffff;
-    border-radius: 16px;
-    width: 600px;
-    max-width: 95vw;
-    max-height: 90vh;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.35);
-  }
-  .modal-box-header {
-    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
-    padding: 16px 22px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    color: #ffffff;
-  }
-  .modal-box-body {
-    padding: 20px 22px;
-    overflow-y: auto;
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-    background: #ffffff;
-  }
-  .modal-box-footer {
-    padding: 14px 22px;
-    background: #f8fafc;
-    border-top: 1px solid #e2e8f0;
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-  }
-  .admin-form-group {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-  }
-  .admin-form-label {
-    font-size: 11px;
-    font-weight: 800;
-    color: #475569;
-    text-transform: uppercase;
-    letter-spacing: 0.4px;
-  }
-  .admin-form-input,
-  .admin-form-select,
-  .admin-form-textarea {
-    width: 100%;
-    box-sizing: border-box;
-    padding: 8px 12px;
-    border-radius: 8px;
-    border: 1px solid #cbd5e1;
-    background: #f8fafc;
-    font-size: 12px;
-    font-weight: 600;
-    color: #1e293b;
-    outline: none;
-    transition: all 0.2s;
-  }
-  .admin-form-input:focus,
-  .admin-form-select:focus,
-  .admin-form-textarea:focus {
-    background: #ffffff;
-    border-color: #6366f1;
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
-  }
-
-  /* Select2 Styling Enhancements */
-  .select2-container {
-    max-width: 100%;
-  }
-  .select2-container--default .select2-selection--single {
-    height: 38px !important;
-    border: 1px solid #cbd5e1 !important;
-    border-radius: 8px !important;
-    background-color: #f8fafc !important;
-    display: flex !important;
-    align-items: center !important;
-    padding: 0 4px !important;
-  }
-  .select2-container--default .select2-selection--single:focus,
-  .select2-container--default.select2-container--focus .select2-selection--single,
-  .select2-container--default.select2-container--open .select2-selection--single {
-    border-color: #6366f1 !important;
-    background-color: #ffffff !important;
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15) !important;
-  }
-  .select2-container--default .select2-selection--single .select2-selection__rendered {
-    color: #1e293b !important;
-    font-size: 12px !important;
-    font-weight: 700 !important;
-    line-height: 36px !important;
-    padding-left: 8px !important;
-  }
-  .select2-container--default .select2-selection--single .select2-selection__arrow {
-    height: 36px !important;
-    right: 8px !important;
-  }
-  .select2-dropdown {
-    border: 1px solid #cbd5e1 !important;
-    border-radius: 10px !important;
-    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.15) !important;
-    z-index: 1000000 !important;
-  }
-  .select2-container--default .select2-results__option--highlighted[aria-selected] {
-    background-color: #6366f1 !important;
-    color: #ffffff !important;
-  }
-</style>
-@endpush
-
 @section('content')
-<main class="pms-main-viewport">
-  <div class="pms-page-container">
-
-    <!-- Page Header -->
-    <div class="pms-page-header">
-      <div class="pms-header-title-block">
-        <div class="pms-status-indicator"></div>
-        <div>
-          <h1 class="pms-page-title">Administrator • Hotel Services Master</h1>
-          <div class="pms-page-subtitle">Configure chargeable &amp; complimentary hotel guest services, laundry, dining, and pricing units.</div>
-        </div>
-      </div>
-      <div style="display: flex; gap: 10px;">
-        <button class="btn-ui-secondary" onclick="exportDataCSV()"><i class="fa-solid fa-file-csv"></i> Export CSV</button>
+<main class="flex-1 p-4 lg:p-6 space-y-6">
+  <!-- Page Header -->
+  <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div class="flex items-center gap-3">
+      <div class="w-2.5 h-8 bg-indigo-600 rounded-full"></div>
+      <div>
+        <h1 class="text-xl lg:text-2xl font-black text-slate-800 tracking-tight">Administrator • Hotel Services Master</h1>
+        <p class="text-xs lg:text-sm text-slate-500 font-medium">Configure chargeable &amp; complimentary hotel guest services, laundry, dining, and pricing units.</p>
       </div>
     </div>
+    <div class="flex items-center gap-2.5">
+      <button type="button" onclick="exportDataCSV()" class="h-9.5 px-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold shadow-xs hover:border-slate-300 transition-all flex items-center gap-2 cursor-pointer">
+        <i class="fa-solid fa-file-csv text-slate-500"></i> Export CSV
+      </button>
+    </div>
+  </div>
 
-    <div class="admin-layout">
-      <!-- Admin Sidebar Navigation -->
-      @include('admin.includes.sidebar')
+  <div class="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6 items-start">
+    @include('admin.includes.sidebar')
 
-      <!-- Content Pane -->
-      <section class="admin-content-pane">
+    <section class="min-w-0 space-y-6">
 
-        <!-- KPI Stats Cards -->
-        <div class="services-stats-row">
-          <div class="service-kpi-card">
-            <div class="service-kpi-icon" style="background: rgba(99, 102, 241, 0.12); color: #4f46e5;">
-              <i class="fa-solid fa-bell-concierge"></i>
-            </div>
-            <div>
-              <div style="font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase;">Total Services</div>
-              <div style="font-size: 18px; font-weight: 800; color: #0f172a;" id="kpi-total">{{ $stats['total'] ?? count($items) }}</div>
-            </div>
+      <!-- KPI Stats Cards -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-white rounded-2xl p-4.5 border border-slate-200/80 shadow-xs flex items-center gap-3.5">
+          <div class="w-11 h-11 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-lg shrink-0">
+            <i class="fa-solid fa-bell-concierge"></i>
           </div>
-
-          <div class="service-kpi-card">
-            <div class="service-kpi-icon" style="background: rgba(16, 185, 129, 0.12); color: #059669;">
-              <i class="fa-solid fa-circle-check"></i>
-            </div>
-            <div>
-              <div style="font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase;">Active Services</div>
-              <div style="font-size: 18px; font-weight: 800; color: #059669;" id="kpi-active">{{ $stats['active'] ?? 0 }}</div>
-            </div>
-          </div>
-
-          <div class="service-kpi-card">
-            <div class="service-kpi-icon" style="background: rgba(239, 68, 68, 0.12); color: #dc2626;">
-              <i class="fa-solid fa-circle-xmark"></i>
-            </div>
-            <div>
-              <div style="font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase;">Inactive Services</div>
-              <div style="font-size: 18px; font-weight: 800; color: #dc2626;" id="kpi-inactive">{{ $stats['inactive'] ?? 0 }}</div>
-            </div>
-          </div>
-
-          <div class="service-kpi-card">
-            <div class="service-kpi-icon" style="background: rgba(245, 158, 11, 0.12); color: #d97706;">
-              <i class="fa-solid fa-tags"></i>
-            </div>
-            <div>
-              <div style="font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase;">Categories</div>
-              <div style="font-size: 18px; font-weight: 800; color: #0f172a;" id="kpi-categories">{{ $stats['categories'] ?? 0 }}</div>
-            </div>
+          <div>
+            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Services</div>
+            <div class="text-xl font-black text-slate-800 mt-0.5" id="kpi-total">{{ $stats['total'] ?? count($items) }}</div>
           </div>
         </div>
 
-        <!-- Main CRUD Container -->
-        <div id="crud-view-container" style="display: flex; flex-direction: column; gap: 14px;">
+        <div class="bg-white rounded-2xl p-4.5 border border-slate-200/80 shadow-xs flex items-center gap-3.5">
+          <div class="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg shrink-0">
+            <i class="fa-solid fa-circle-check"></i>
+          </div>
+          <div>
+            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Active Services</div>
+            <div class="text-xl font-black text-emerald-600 mt-0.5" id="kpi-active">{{ $stats['active'] ?? 0 }}</div>
+          </div>
+        </div>
 
-          <!-- Header Card -->
-          <div class="crud-header-card">
-            <div>
-              <div style="display: flex; align-items: center; gap: 8px;">
-                <h2 style="font-size: 16px; font-weight: 800; color: var(--text-primary); margin: 0;">
-                  <i class="fa-solid fa-bell-concierge" style="color: #6366f1;"></i> Hotel Services &amp; Facilities Directory
-                </h2>
-                <span class="badge-tag green" id="view-count">{{ count($items) }} Records</span>
-              </div>
-              <div style="font-size: 12px; color: var(--text-secondary); margin-top: 3px;">
-                Manage in-room dining dishes, laundry tariffs, extra amenities, transport and room add-ons.
-              </div>
+        <div class="bg-white rounded-2xl p-4.5 border border-slate-200/80 shadow-xs flex items-center gap-3.5">
+          <div class="w-11 h-11 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center text-lg shrink-0">
+            <i class="fa-solid fa-circle-xmark"></i>
+          </div>
+          <div>
+            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Inactive Services</div>
+            <div class="text-xl font-black text-rose-600 mt-0.5" id="kpi-inactive">{{ $stats['inactive'] ?? 0 }}</div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl p-4.5 border border-slate-200/80 shadow-xs flex items-center gap-3.5">
+          <div class="w-11 h-11 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-lg shrink-0">
+            <i class="fa-solid fa-tags"></i>
+          </div>
+          <div>
+            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Categories</div>
+            <div class="text-xl font-black text-slate-800 mt-0.5" id="kpi-categories">{{ $stats['categories'] ?? 0 }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main CRUD Container -->
+      <div id="crud-view-container" class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+
+        <!-- Header Card -->
+        <div class="p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50/50">
+          <div>
+            <div class="flex items-center gap-2.5">
+              <h2 class="text-base font-bold text-slate-800 tracking-tight flex items-center gap-2">
+                <i class="fa-solid fa-bell-concierge text-indigo-600"></i> Hotel Services &amp; Facilities Directory
+              </h2>
+              <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/60" id="view-count">{{ count($items) }} Records</span>
             </div>
-            <button class="btn-ui-primary" onclick="openAddModal()" style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 18px; font-weight: 800;">
-              <i class="fa-solid fa-plus"></i> Add New Service
+            <p class="text-xs text-slate-500 mt-0.5">
+              Manage in-room dining dishes, laundry tariffs, extra amenities, transport and room add-ons.
+            </p>
+          </div>
+          <button type="button" class="h-9.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-xs shadow-indigo-200 transition-all flex items-center gap-2 self-start sm:self-auto cursor-pointer" onclick="openAddModal()">
+            <i class="fa-solid fa-plus text-xs"></i> Add New Service
+          </button>
+        </div>
+
+        <!-- Toolbar -->
+        <div class="p-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white">
+          <div class="flex flex-wrap items-center gap-2.5 flex-1 max-w-xl">
+            <div class="relative flex-1 min-w-[200px]">
+              <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+              <input type="text" id="table-search" class="w-full h-9.5 pl-9 pr-3.5 rounded-xl border border-slate-200 bg-white text-xs font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all" placeholder="Search service name, code, category..." value="{{ request('search') }}" oninput="handleSearch(this.value)">
+            </div>
+
+            <select id="category-filter" class="h-9.5 px-3 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all cursor-pointer" onchange="handleCategoryFilter(this.value)">
+              <option value="all">All Categories</option>
+              @foreach($allCategories ?? [] as $cat)
+                <option value="{{ $cat }}" {{ request('category') === $cat ? 'selected' : '' }}>{{ $cat }}</option>
+              @endforeach
+            </select>
+
+            <select id="status-filter" class="h-9.5 px-3 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all cursor-pointer" onchange="handleStatusFilter(this.value)">
+              <option value="all" {{ request('status', 'all') === 'all' ? 'selected' : '' }}>All Statuses</option>
+              <option value="Active" {{ request('status') === 'Active' ? 'selected' : '' }}>Active</option>
+              <option value="Inactive" {{ request('status') === 'Inactive' ? 'selected' : '' }}>Inactive</option>
+            </select>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <button type="button" class="h-9.5 px-3.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-xs transition-all hidden items-center gap-2 cursor-pointer" id="btn-bulk-delete" onclick="handleBulkDelete()">
+              <i class="fa-solid fa-trash-can text-xs"></i> Delete Selected (<span id="bulk-selected-count">0</span>)
+            </button>
+            <button type="button" class="h-9.5 px-3.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all flex items-center gap-2 cursor-pointer" onclick="exportDataCSV()">
+              <i class="fa-solid fa-file-csv text-slate-500 text-xs"></i> Export
+            </button>
+            <button type="button" class="h-9.5 px-3.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all flex items-center gap-2 cursor-pointer" onclick="location.reload()">
+              <i class="fa-solid fa-rotate text-slate-500 text-xs"></i> Refresh
             </button>
           </div>
-
-          <!-- Toolbar -->
-          <div class="crud-toolbar">
-            <div class="crud-toolbar-left">
-              <div class="crud-search-wrap">
-                <i class="fa-solid fa-magnifying-glass"></i>
-                <input type="text" id="table-search" class="crud-search-input" placeholder="Search service name, code, category..." value="{{ request('search') }}" oninput="handleSearch(this.value)">
-              </div>
-
-              <!-- Category Filter -->
-              <select id="category-filter" class="crud-filter-select" onchange="handleCategoryFilter(this.value)">
-                <option value="all">All Categories</option>
-                @foreach($allCategories ?? [] as $cat)
-                  <option value="{{ $cat }}" {{ request('category') === $cat ? 'selected' : '' }}>{{ $cat }}</option>
-                @endforeach
-              </select>
-
-              <!-- Status Filter -->
-              <select id="status-filter" class="crud-filter-select" onchange="handleStatusFilter(this.value)">
-                <option value="all" {{ request('status', 'all') === 'all' ? 'selected' : '' }}>All Statuses</option>
-                <option value="Active" {{ request('status') === 'Active' ? 'selected' : '' }}>Active</option>
-                <option value="Inactive" {{ request('status') === 'Inactive' ? 'selected' : '' }}>Inactive</option>
-              </select>
-            </div>
-
-            <div class="crud-toolbar-right">
-              <button class="btn-ui-danger" id="btn-bulk-delete" style="display: none; height: 38px; padding: 0 16px; border-radius: var(--radius-md); font-weight: 700; background: #ef4444; color: #fff; border: none; align-items: center; gap: 6px; cursor: pointer;" onclick="handleBulkDelete()">
-                <i class="fa-solid fa-trash-can"></i> Delete Selected (<span id="bulk-selected-count">0</span>)
-              </button>
-              <button class="btn-ui-secondary" onclick="exportDataCSV()"><i class="fa-solid fa-file-csv"></i> Export CSV</button>
-              <button class="btn-ui-secondary" onclick="location.reload()"><i class="fa-solid fa-rotate"></i> Refresh</button>
-            </div>
-          </div>
-
-          <!-- Data Table -->
-          <div class="crud-table-wrap">
-            <table class="crud-table" id="crud-table">
-              <thead>
-                <tr>
-                  <th style="width: 40px; text-align: center;">
-                    <input type="checkbox" id="select-all-check" onchange="toggleSelectAll(this)" style="cursor: pointer; width: 16px; height: 16px; accent-color: var(--accent-primary);">
-                  </th>
-                  <th style="width: 45px;">#</th>
-                  <th style="min-width: 220px;">Service Name &amp; Code</th>
-                  <th style="min-width: 140px;">Category</th>
-                  <th style="min-width: 110px; text-align: right;">Rate (₹)</th>
-                  <th style="min-width: 110px;">Billing Unit</th>
-                  <th style="min-width: 180px;">Description</th>
-                  <th style="min-width: 100px; text-align: center;">Status</th>
-                  <th style="text-align: right; width: 100px;">Actions</th>
-                </tr>
-              </thead>
-              <tbody id="table-body">
-                @forelse($items as $idx => $item)
-                  <tr data-id="{{ $item->id }}" id="row-service-{{ $item->id }}">
-                    <td style="text-align: center;">
-                      <input type="checkbox" class="row-select-check" value="{{ $item->id }}" onchange="handleRowSelect(this, '{{ $item->id }}')" style="cursor: pointer; width: 16px; height: 16px; accent-color: var(--accent-primary);">
-                    </td>
-                    <td style="font-family: var(--font-mono); font-weight: 700; color: var(--text-muted); font-size: 11px;">
-                      {{ $idx + 1 }}
-                    </td>
-                    <td>
-                      <div style="font-weight: 800; color: var(--text-primary); font-size: 13px;">{{ $item->name }}</div>
-                      <div style="font-size: 10px; color: #64748b; font-family: var(--font-mono); margin-top: 2px;">
-                        {{ $item->code ?: 'SRV-' . sprintf('%04d', $item->id) }}
-                      </div>
-                    </td>
-                    <td>
-                      <span class="badge-category">
-                        <i class="fa-solid fa-tag" style="font-size: 8px;"></i>
-                        {{ $item->category ?: 'General' }}
-                      </span>
-                    </td>
-                    <td style="text-align: right; font-family: var(--font-mono); font-weight: 800; color: #0f172a; font-size: 13px;">
-                      @if((float)$item->price <= 0)
-                        <span style="color: #059669; font-weight: 800; font-size: 11px;">Complimentary</span>
-                      @else
-                        ₹ {{ number_format($item->price, 2) }}
-                      @endif
-                    </td>
-                    <td>
-                      <span style="font-size: 11px; font-weight: 700; color: #475569; background: #f1f5f9; padding: 2px 8px; border-radius: 4px;">
-                        {{ $item->unit ?: 'Per Order' }}
-                      </span>
-                    </td>
-                    <td style="font-size: 11px; color: #64748b;">
-                      {{ Str::limit($item->description, 50) ?: '-' }}
-                    </td>
-                    <td style="text-align: center;">
-                      <span class="badge-toggle-status {{ $item->status === 'Active' ? 'active' : 'inactive' }}" 
-                            onclick="toggleServiceStatus({{ $item->id }})" 
-                            title="Click to toggle Active / Inactive status">
-                        <i class="fa-solid {{ $item->status === 'Active' ? 'fa-circle-check' : 'fa-circle-xmark' }}" style="font-size: 8px;"></i>
-                        <span>{{ $item->status }}</span>
-                      </span>
-                    </td>
-                    <td style="text-align: right;">
-                      <div class="crud-actions">
-                        <button type="button" class="btn-action-edit" onclick="openEditModal({{ $item->id }})" title="Edit Service">
-                          <i class="fa-solid fa-pen"></i>
-                        </button>
-                        <button type="button" class="btn-action-del" onclick="deleteItem({{ $item->id }})" title="Delete Service">
-                          <i class="fa-solid fa-trash"></i>
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                @empty
-                  <tr>
-                    <td colspan="9" style="text-align: center; padding: 40px; color: var(--text-muted);">
-                      <i class="fa-solid fa-inbox" style="font-size: 28px; margin-bottom: 10px; display: block; color: #cbd5e1;"></i>
-                      No hotel services found matching your filters. Click "+ Add New Service" to create one.
-                    </td>
-                  </tr>
-                @endforelse
-              </tbody>
-            </table>
-          </div>
-
-          <!-- Pagination Bar -->
-          <div class="pms-pagination-bar" id="table-pagination-bar" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 18px; border-top: 1px solid var(--border-medium); background: #ffffff; border-radius: var(--radius-lg); flex-wrap: wrap; gap: 10px;">
-            <div class="pms-pagination-info" id="pagination-info" style="font-size: 12px; font-weight: 600; color: #64748b;">
-              Showing 1 to {{ count($items) }} of {{ count($items) }} records
-            </div>
-            <div class="pms-pagination-controls" style="display: flex; align-items: center; gap: 12px;">
-              <div class="pms-per-page-wrap" style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: #64748b;">
-                <span>Rows:</span>
-                <select id="rows-per-page" class="pms-per-page-select" onchange="handlePageSizeChange(this.value)" style="height: 32px; border-radius: 6px; border: 1px solid #cbd5e1; font-weight: 700; padding: 0 8px;">
-                  <option value="10" selected>10</option>
-                  <option value="25">25</option>
-                  <option value="50">50</option>
-                  <option value="all">All</option>
-                </select>
-              </div>
-              <div class="pms-page-nav" id="pagination-nav" style="display: flex; gap: 4px;">
-                <!-- Populated via JS -->
-              </div>
-            </div>
-          </div>
-
         </div>
-      </section>
-    </div>
 
+        <!-- Data Table -->
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse" id="crud-table">
+            <thead>
+              <tr class="border-b border-slate-200 bg-slate-50/80 text-[11px] font-black uppercase tracking-wider text-slate-500">
+                <th class="w-10 px-4 py-3.5 text-center">
+                  <input type="checkbox" id="select-all-check" onchange="toggleSelectAll(this)" class="cursor-pointer w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 border-slate-300">
+                </th>
+                <th class="w-12 px-3 py-3.5 text-slate-400 font-mono">#</th>
+                <th class="px-4 py-3.5 min-w-[200px]">Service Name &amp; Code</th>
+                <th class="px-4 py-3.5 min-w-[130px]">Category</th>
+                <th class="px-4 py-3.5 text-right min-w-[100px]">Rate (₹)</th>
+                <th class="px-4 py-3.5 min-w-[100px]">Billing Unit</th>
+                <th class="px-4 py-3.5 min-w-[160px]">Description</th>
+                <th class="px-4 py-3.5 text-center min-w-[100px]">Status</th>
+                <th class="px-4 py-3.5 text-right w-28">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="table-body" class="divide-y divide-slate-100 text-xs font-medium text-slate-700">
+              @forelse($items as $idx => $item)
+                <tr class="hover:bg-slate-50/70 transition-colors" data-id="{{ $item->id }}" id="row-service-{{ $item->id }}">
+                  <td class="px-4 py-3 text-center">
+                    <input type="checkbox" class="row-select-check cursor-pointer w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 border-slate-300" value="{{ $item->id }}" onchange="handleRowSelect(this, '{{ $item->id }}')">
+                  </td>
+                  <td class="px-3 py-3 font-mono font-bold text-slate-400 text-[11px]">
+                    {{ $idx + 1 }}
+                  </td>
+                  <td class="px-4 py-3">
+                    <div class="font-bold text-slate-800 text-xs">{{ $item->name }}</div>
+                    <div class="text-[10px] text-slate-400 font-mono mt-0.5">
+                      {{ $item->code ?: 'SRV-' . sprintf('%04d', $item->id) }}
+                    </div>
+                  </td>
+                  <td class="px-4 py-3">
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200/60">
+                      <i class="fa-solid fa-tag text-[9px]"></i>
+                      {{ $item->category ?: 'General' }}
+                    </span>
+                  </td>
+                  <td class="px-4 py-3 text-right font-mono font-bold text-slate-800 text-xs">
+                    @if((float)$item->price <= 0)
+                      <span class="text-emerald-600 font-bold text-[11px]">Complimentary</span>
+                    @else
+                      ₹ {{ number_format($item->price, 2) }}
+                    @endif
+                  </td>
+                  <td class="px-4 py-3">
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-slate-100 text-slate-600">
+                      {{ $item->unit ?: 'Per Order' }}
+                    </span>
+                  </td>
+                  <td class="px-4 py-3 text-slate-500 text-[11px]">
+                    {{ Str::limit($item->description, 50) ?: '-' }}
+                  </td>
+                  <td class="px-4 py-3 text-center">
+                    @if($item->status === 'Active')
+                      <button type="button" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/60 cursor-pointer" onclick="toggleServiceStatus({{ $item->id }})" title="Click to toggle status">
+                        <i class="fa-solid fa-circle-check text-[9px]"></i> Active
+                      </button>
+                    @else
+                      <button type="button" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-50 text-rose-700 border border-rose-200/60 cursor-pointer" onclick="toggleServiceStatus({{ $item->id }})" title="Click to toggle status">
+                        <i class="fa-solid fa-circle-xmark text-[9px]"></i> Inactive
+                      </button>
+                    @endif
+                  </td>
+                  <td class="px-4 py-3 text-right">
+                    <div class="inline-flex items-center gap-1 justify-end">
+                      <button type="button" class="w-7 h-7 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 border border-slate-200 transition-all flex items-center justify-center cursor-pointer" onclick="openEditModal({{ $item->id }})" title="Edit Service">
+                        <i class="fa-solid fa-pen text-xs"></i>
+                      </button>
+                      <button type="button" class="w-7 h-7 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 border border-slate-200 transition-all flex items-center justify-center cursor-pointer" onclick="deleteItem({{ $item->id }})" title="Delete Service">
+                        <i class="fa-solid fa-trash text-xs"></i>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              @empty
+                <tr>
+                  <td colspan="9" class="px-6 py-12 text-center text-slate-400">
+                    <i class="fa-solid fa-inbox text-3xl mb-2 text-slate-300 block"></i>
+                    No hotel services found matching your filters. Click "+ Add New Service" to create one.
+                  </td>
+                </tr>
+              @endforelse
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination Bar -->
+        <div class="p-4 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50/50" id="table-pagination-bar">
+          <div class="text-xs text-slate-500 font-medium" id="pagination-info">
+            Showing 1 to {{ count($items) }} of {{ count($items) }} records
+          </div>
+          <div class="flex items-center gap-4">
+            <div class="flex items-center gap-2">
+              <span class="text-xs text-slate-500 font-semibold">Rows:</span>
+              <select id="rows-per-page" class="h-8 px-2.5 rounded-lg border border-slate-200 bg-white text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all cursor-pointer" onchange="handlePageSizeChange(this.value)">
+                <option value="10" selected>10</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+                <option value="all">All</option>
+              </select>
+            </div>
+            <div class="flex items-center gap-1" id="pagination-nav"></div>
+          </div>
+        </div>
+
+      </div>
+    </section>
   </div>
 </main>
 
 <!-- ADD / EDIT SERVICE MODAL -->
-<div class="modal-backdrop" id="crud-modal">
-  <div class="modal-box-card">
+<div class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 hidden" id="crud-modal">
+  <div class="w-full max-w-xl bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden flex flex-col">
     
     <!-- Modal Header -->
-    <div class="modal-box-header">
-      <div style="display: flex; align-items: center; gap: 10px;">
-        <div style="width: 34px; height: 34px; border-radius: 8px; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 16px;">
+    <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+      <div class="flex items-center gap-2.5">
+        <span class="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-sm">
           <i class="fa-solid fa-bell-concierge"></i>
-        </div>
+        </span>
         <div>
-          <h3 style="margin: 0; font-size: 16px; font-weight: 800;" id="modal-title">Add Hotel Service</h3>
-          <div style="font-size: 10px; opacity: 0.9;">Configure chargeable or complimentary hotel guest service</div>
+          <h3 class="text-base font-bold text-slate-800" id="modal-title">Add Hotel Service</h3>
+          <p class="text-[11px] text-slate-400">Configure chargeable or complimentary hotel guest service</p>
         </div>
       </div>
-      <button type="button" onclick="closeModal('crud-modal')" style="background: rgba(255,255,255,0.2); border: none; color: #ffffff; width: 28px; height: 28px; border-radius: 50%; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center;">&times;</button>
+      <button type="button" onclick="closeModal('crud-modal')" class="w-8 h-8 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors flex items-center justify-center cursor-pointer text-base">&times;</button>
     </div>
 
     <!-- Modal Form -->
-    <form id="crud-form" onsubmit="handleFormSubmit(event)" style="display: flex; flex-direction: column; flex: 1; overflow: hidden; margin: 0;">
+    <form id="crud-form" onsubmit="handleFormSubmit(event)">
       <input type="hidden" id="item-id" value="">
 
-      <div class="modal-box-body">
+      <div class="p-6 space-y-4 bg-slate-50/50">
 
         <!-- Row 1: Name and Code -->
-        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 12px;">
-          <div class="admin-form-group">
-            <label class="admin-form-label" for="form-name">Service Name <span style="color: #ef4444;">*</span></label>
-            <input type="text" id="form-name" class="admin-form-input" placeholder="e.g. Continental Breakfast Tray" required>
+        <div class="grid grid-cols-1 sm:grid-cols-[2fr_1fr] gap-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1.5" for="form-name">Service Name <span class="text-rose-500">*</span></label>
+            <input type="text" id="form-name" class="w-full h-9.5 px-3.5 rounded-xl border border-slate-200 bg-white text-xs font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all" placeholder="e.g. Continental Breakfast Tray" required>
           </div>
 
-          <div class="admin-form-group">
-            <label class="admin-form-label" for="form-code">Service Code</label>
-            <input type="text" id="form-code" class="admin-form-input" placeholder="e.g. RS-01" style="font-family: var(--font-mono);">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1.5" for="form-code">Service Code</label>
+            <input type="text" id="form-code" class="w-full h-9.5 px-3.5 rounded-xl border border-slate-200 bg-white font-mono text-xs font-bold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all uppercase" placeholder="e.g. RS-01">
           </div>
         </div>
 
         <!-- Row 2: Category and Charge Unit -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-          <div class="admin-form-group">
-            <label class="admin-form-label" for="form-category">Category <span style="color: #ef4444;">*</span></label>
-            <select id="form-category" class="admin-form-select" required style="width: 100%;">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1.5" for="form-category">Category <span class="text-rose-500">*</span></label>
+            <select id="form-category" class="w-full h-9.5 px-3.5 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all cursor-pointer" required>
               <option value="Room Dining">Room Dining</option>
               <option value="Laundry & Dry Clean">Laundry & Dry Clean</option>
               <option value="Concierge & Transport">Concierge & Transport</option>
@@ -774,9 +293,9 @@
             </select>
           </div>
 
-          <div class="admin-form-group">
-            <label class="admin-form-label" for="form-unit">Pricing Unit / Serving <span style="color: #ef4444;">*</span></label>
-            <select id="form-unit" class="admin-form-select" required style="width: 100%;">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1.5" for="form-unit">Pricing Unit / Serving <span class="text-rose-500">*</span></label>
+            <select id="form-unit" class="w-full h-9.5 px-3.5 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all cursor-pointer" required>
               <option value="Per Order">Per Order</option>
               <option value="Per Item">Per Item</option>
               <option value="Per Piece">Per Piece</option>
@@ -794,15 +313,15 @@
         </div>
 
         <!-- Row 3: Rate and Status -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-          <div class="admin-form-group">
-            <label class="admin-form-label" for="form-price">Rate / Price (₹) <span style="color: #ef4444;">*</span></label>
-            <input type="number" step="0.01" min="0" id="form-price" class="admin-form-input" placeholder="0.00" required style="font-family: var(--font-mono); font-weight: 700;">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1.5" for="form-price">Rate / Price (₹) <span class="text-rose-500">*</span></label>
+            <input type="number" step="0.01" min="0" id="form-price" class="w-full h-9.5 px-3.5 rounded-xl border border-slate-200 bg-white font-mono font-bold text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all" placeholder="0.00" required>
           </div>
 
-          <div class="admin-form-group">
-            <label class="admin-form-label" for="form-status">Status <span style="color: #ef4444;">*</span></label>
-            <select id="form-status" class="admin-form-select" required style="width: 100%;">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1.5" for="form-status">Status <span class="text-rose-500">*</span></label>
+            <select id="form-status" class="w-full h-9.5 px-3.5 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all cursor-pointer" required>
               <option value="Active">Active</option>
               <option value="Inactive">Inactive</option>
             </select>
@@ -810,18 +329,18 @@
         </div>
 
         <!-- Row 4: Description -->
-        <div class="admin-form-group">
-          <label class="admin-form-label" for="form-desc">Description / Menu Details</label>
-          <textarea id="form-desc" class="admin-form-textarea" rows="3" placeholder="Brief service description, ingredients, delivery guidelines or timing for front desk staff..."></textarea>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1.5" for="form-desc">Description / Menu Details</label>
+          <textarea id="form-desc" rows="3" placeholder="Brief service description, ingredients, delivery guidelines or timing for front desk staff..." class="w-full p-3 rounded-xl border border-slate-200 bg-white text-xs font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"></textarea>
         </div>
 
       </div>
 
       <!-- Modal Footer -->
-      <div class="modal-box-footer">
-        <button type="button" class="btn-ui-secondary" onclick="closeModal('crud-modal')" style="height: 38px; padding: 0 18px; border-radius: 8px;">Cancel</button>
-        <button type="submit" class="btn-ui-primary" id="btn-save" style="height: 38px; padding: 0 22px; border-radius: 8px; background: linear-gradient(135deg, #4f46e5, #7c3aed); font-weight: 800; display: inline-flex; align-items: center; gap: 6px;">
-          <i class="fa-solid fa-floppy-disk"></i> Save Service
+      <div class="px-6 py-3.5 bg-white border-t border-slate-100 flex justify-end items-center gap-2.5">
+        <button type="button" class="h-9.5 px-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all cursor-pointer" onclick="closeModal('crud-modal')">Cancel</button>
+        <button type="submit" class="h-9.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-xs shadow-indigo-200 transition-all flex items-center gap-2 cursor-pointer" id="btn-save">
+          <i class="fa-solid fa-floppy-disk text-xs"></i> Save Service
         </button>
       </div>
 
@@ -854,7 +373,6 @@
       .replace(/'/g, '&#039;');
   }
 
-  // Live filter & search
   let searchDebounceTimer = null;
   function handleSearch(val) {
     searchQuery = (val || '').toLowerCase().trim();
@@ -909,7 +427,6 @@
     const viewCount = document.getElementById('view-count');
     if (viewCount) viewCount.textContent = `${filtered.length} Records`;
 
-    // Recalculate KPIs
     document.getElementById('kpi-total').textContent = tableRecords.length;
     document.getElementById('kpi-active').textContent = tableRecords.filter(r => r.status === 'Active').length;
     document.getElementById('kpi-inactive').textContent = tableRecords.filter(r => r.status === 'Inactive').length;
@@ -919,8 +436,8 @@
     if (filtered.length === 0) {
       tbody.innerHTML = `
         <tr>
-          <td colspan="9" style="text-align: center; padding: 40px; color: var(--text-muted);">
-            <i class="fa-solid fa-inbox" style="font-size: 28px; margin-bottom: 10px; display: block; color: #cbd5e1;"></i>
+          <td colspan="9" class="px-6 py-12 text-center text-slate-400">
+            <i class="fa-solid fa-inbox text-3xl mb-2 text-slate-300 block"></i>
             No services found matching your filters. Click "+ Add New Service" to create one.
           </td>
         </tr>
@@ -931,7 +448,6 @@
       return;
     }
 
-    // Pagination slice
     let displayList = filtered;
     let totalPages = 1;
     if (pageSize !== 'all') {
@@ -940,9 +456,9 @@
       const startIdx = (currentPage - 1) * pageSize;
       displayList = filtered.slice(startIdx, startIdx + pageSize);
       const endIdx = Math.min(startIdx + pageSize, filtered.length);
-      document.getElementById('pagination-info').textContent = `Showing ${startIdx + 1} to ${endIdx} of ${filtered.length} records`;
+      document.getElementById('pagination-info').innerHTML = `Showing <strong class="text-slate-800">${startIdx + 1}</strong> to <strong class="text-slate-800">${endIdx}</strong> of <strong class="text-slate-800">${filtered.length}</strong> records`;
     } else {
-      document.getElementById('pagination-info').textContent = `Showing all ${filtered.length} records`;
+      document.getElementById('pagination-info').innerHTML = `Showing all <strong class="text-slate-800">${filtered.length}</strong> records`;
     }
 
     tbody.innerHTML = displayList.map((item, idx) => {
@@ -951,55 +467,54 @@
 
       const priceVal = parseFloat(item.price || 0);
       const priceHtml = priceVal <= 0
-        ? `<span style="color: #059669; font-weight: 800; font-size: 11px;">Complimentary</span>`
+        ? `<span class="text-emerald-600 font-bold text-[11px]">Complimentary</span>`
         : `₹ ${priceVal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
+      const statusBadge = item.status === 'Active'
+        ? `<button type="button" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/60 cursor-pointer" onclick="toggleServiceStatus(${item.id})" title="Click to toggle status"><i class="fa-solid fa-circle-check text-[9px]"></i> Active</button>`
+        : `<button type="button" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-50 text-rose-700 border border-rose-200/60 cursor-pointer" onclick="toggleServiceStatus(${item.id})" title="Click to toggle status"><i class="fa-solid fa-circle-xmark text-[9px]"></i> Inactive</button>`;
+
       return `
-        <tr data-id="${item.id}" id="row-service-${item.id}">
-          <td style="text-align: center;">
-            <input type="checkbox" class="row-select-check" value="${item.id}" ${isChecked ? 'checked' : ''} onchange="handleRowSelect(this, '${item.id}')" style="cursor: pointer; width: 16px; height: 16px; accent-color: var(--accent-primary);">
+        <tr class="hover:bg-slate-50/70 transition-colors" data-id="${item.id}" id="row-service-${item.id}">
+          <td class="px-4 py-3 text-center">
+            <input type="checkbox" class="row-select-check cursor-pointer w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 border-slate-300" value="${item.id}" ${isChecked ? 'checked' : ''} onchange="handleRowSelect(this, '${item.id}')">
           </td>
-          <td style="font-family: var(--font-mono); font-weight: 700; color: var(--text-muted); font-size: 11px;">
+          <td class="px-3 py-3 font-mono font-bold text-slate-400 text-[11px]">
             ${globalIdx}
           </td>
-          <td>
-            <div style="font-weight: 800; color: var(--text-primary); font-size: 13px;">${escapeHtml(item.name)}</div>
-            <div style="font-size: 10px; color: #64748b; font-family: var(--font-mono); margin-top: 2px;">
+          <td class="px-4 py-3">
+            <div class="font-bold text-slate-800 text-xs">${escapeHtml(item.name)}</div>
+            <div class="text-[10px] text-slate-400 font-mono mt-0.5">
               ${escapeHtml(item.code || ('SRV-' + String(item.id).padStart(4, '0')))}
             </div>
           </td>
-          <td>
-            <span class="badge-category">
-              <i class="fa-solid fa-tag" style="font-size: 8px;"></i>
+          <td class="px-4 py-3">
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200/60">
+              <i class="fa-solid fa-tag text-[9px]"></i>
               ${escapeHtml(item.category || 'General')}
             </span>
           </td>
-          <td style="text-align: right; font-family: var(--font-mono); font-weight: 800; color: #0f172a; font-size: 13px;">
+          <td class="px-4 py-3 text-right font-mono font-bold text-slate-800 text-xs">
             ${priceHtml}
           </td>
-          <td>
-            <span style="font-size: 11px; font-weight: 700; color: #475569; background: #f1f5f9; padding: 2px 8px; border-radius: 4px;">
+          <td class="px-4 py-3">
+            <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-slate-100 text-slate-600">
               ${escapeHtml(item.unit || 'Per Order')}
             </span>
           </td>
-          <td style="font-size: 11px; color: #64748b;">
+          <td class="px-4 py-3 text-slate-500 text-[11px]">
             ${escapeHtml(item.description ? item.description.substring(0, 50) : '-')}
           </td>
-          <td style="text-align: center;">
-            <span class="badge-toggle-status ${item.status === 'Active' ? 'active' : 'inactive'}" 
-                  onclick="toggleServiceStatus(${item.id})" 
-                  title="Click to toggle Active / Inactive status">
-              <i class="fa-solid ${item.status === 'Active' ? 'fa-circle-check' : 'fa-circle-xmark'}" style="font-size: 8px;"></i>
-              <span>${item.status}</span>
-            </span>
+          <td class="px-4 py-3 text-center">
+            ${statusBadge}
           </td>
-          <td style="text-align: right;">
-            <div class="crud-actions">
-              <button type="button" class="btn-action-edit" onclick="openEditModal(${item.id})" title="Edit Service">
-                <i class="fa-solid fa-pen"></i>
+          <td class="px-4 py-3 text-right">
+            <div class="inline-flex items-center gap-1 justify-end">
+              <button type="button" class="w-7 h-7 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 border border-slate-200 transition-all flex items-center justify-center cursor-pointer" onclick="openEditModal(${item.id})" title="Edit Service">
+                <i class="fa-solid fa-pen text-xs"></i>
               </button>
-              <button type="button" class="btn-action-del" onclick="deleteItem(${item.id})" title="Delete Service">
-                <i class="fa-solid fa-trash"></i>
+              <button type="button" class="w-7 h-7 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 border border-slate-200 transition-all flex items-center justify-center cursor-pointer" onclick="deleteItem(${item.id})" title="Delete Service">
+                <i class="fa-solid fa-trash text-xs"></i>
               </button>
             </div>
           </td>
@@ -1020,21 +535,20 @@
     }
 
     let btns = '';
-    btns += `<button class="btn-ui-secondary" style="height: 30px; width: 30px; padding: 0; font-size: 11px;" ${currentPage === 1 ? 'disabled style="opacity: 0.4;"' : `onclick="goToPage(${currentPage - 1})"`}><i class="fa-solid fa-chevron-left"></i></button>`;
+    btns += `<button class="w-8 h-8 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 text-xs flex items-center justify-center transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer" ${currentPage === 1 ? 'disabled' : `onclick="goToPage(${currentPage - 1})"`} title="Previous Page"><i class="fa-solid fa-chevron-left text-[10px]"></i></button>`;
 
     for (let p = 1; p <= totalPages; p++) {
       if (p === 1 || p === totalPages || (p >= currentPage - 1 && p <= currentPage + 1)) {
-        btns += `<button class="${p === currentPage ? 'btn-ui-primary' : 'btn-ui-secondary'}" style="height: 30px; min-width: 30px; padding: 0 6px; font-size: 11px; font-weight: 800;" onclick="goToPage(${p})">${p}</button>`;
+        btns += `<button class="w-8 h-8 rounded-lg text-xs font-bold flex items-center justify-center transition-all cursor-pointer ${p === currentPage ? 'bg-indigo-600 text-white shadow-xs' : 'border border-slate-200 bg-white text-slate-700 hover:bg-slate-50'}" onclick="goToPage(${p})">${p}</button>`;
       } else if (p === currentPage - 2 || p === currentPage + 2) {
-        btns += `<span style="padding: 0 4px; color: #94a3b8;">...</span>`;
+        btns += `<span class="w-8 h-8 text-slate-400 text-xs flex items-center justify-center font-bold">...</span>`;
       }
     }
 
-    btns += `<button class="btn-ui-secondary" style="height: 30px; width: 30px; padding: 0; font-size: 11px;" ${currentPage === totalPages ? 'disabled style="opacity: 0.4;"' : `onclick="goToPage(${currentPage + 1})"`}><i class="fa-solid fa-chevron-right"></i></button>`;
+    btns += `<button class="w-8 h-8 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 text-xs flex items-center justify-center transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer" ${currentPage === totalPages ? 'disabled' : `onclick="goToPage(${currentPage + 1})"`} title="Next Page"><i class="fa-solid fa-chevron-right text-[10px]"></i></button>`;
     nav.innerHTML = btns;
   }
 
-  // Modal Open/Close
   function openAddModal() {
     document.getElementById('modal-title').textContent = 'Add Hotel Service';
     document.getElementById('item-id').value = '';
@@ -1097,23 +611,6 @@
     openModal('crud-modal');
   }
 
-  function openModal(id) {
-    const el = document.getElementById(id);
-    if (el) {
-      el.classList.add('open');
-      document.body.style.overflow = 'hidden';
-    }
-  }
-
-  function closeModal(id) {
-    const el = document.getElementById(id);
-    if (el) {
-      el.classList.remove('open');
-      document.body.style.overflow = '';
-    }
-  }
-
-  // Form Submit (Store & Update)
   async function handleFormSubmit(e) {
     e.preventDefault();
     const id = document.getElementById('item-id').value;
@@ -1190,7 +687,6 @@
     }
   }
 
-  // Toggle status
   async function toggleServiceStatus(id) {
     try {
       const response = await fetch(`${baseUrl}/${id}/toggle-status`, {
@@ -1215,7 +711,6 @@
     }
   }
 
-  // Delete single item
   async function deleteItem(id) {
     const confirmed = typeof Swal !== 'undefined' 
       ? (await Swal.fire({
@@ -1257,7 +752,6 @@
     }
   }
 
-  // Bulk Delete
   function handleRowSelect(checkbox, id) {
     if (checkbox.checked) {
       selectedIds.add(String(id));
@@ -1286,10 +780,12 @@
     if (!btn || !countSpan) return;
 
     if (selectedIds.size > 0) {
-      btn.style.display = 'inline-flex';
+      btn.classList.remove('hidden');
+      btn.classList.add('inline-flex');
       countSpan.textContent = selectedIds.size;
     } else {
-      btn.style.display = 'none';
+      btn.classList.add('hidden');
+      btn.classList.remove('inline-flex');
       countSpan.textContent = '0';
     }
   }
@@ -1338,7 +834,6 @@
     }
   }
 
-  // CSV Export
   function exportDataCSV() {
     const records = getFilteredRecords();
     if (!records.length) {
@@ -1368,11 +863,9 @@
     document.body.removeChild(link);
   }
 
-  // Initial table render & Select2 Initialization
   $(document).ready(function() {
     renderTable();
 
-    // Auto-focus search input when any Select2 opens
     $(document).on('select2:open', () => {
       setTimeout(() => {
         const searchField = document.querySelector('.select2-container--open .select2-search__field');
@@ -1380,7 +873,6 @@
       }, 50);
     });
 
-    // Toolbar Category Filter (Searchable Select2)
     $('#category-filter').select2({
       width: '180px',
       placeholder: 'All Categories'
@@ -1388,7 +880,6 @@
       handleCategoryFilter(this.value);
     });
 
-    // Toolbar Status Filter (Searchable Select2)
     $('#status-filter').select2({
       width: '140px',
       placeholder: 'All Statuses'
@@ -1396,15 +887,6 @@
       handleStatusFilter(this.value);
     });
 
-    // Pagination per page (Select2)
-    $('#rows-per-page').select2({
-      width: '80px',
-      minimumResultsForSearch: Infinity
-    }).on('select2:select change', function() {
-      handlePageSizeChange(this.value);
-    });
-
-    // Modal Category (Searchable Select2 with tag creation)
     $('#form-category').select2({
       dropdownParent: $('#crud-modal'),
       width: '100%',
@@ -1412,14 +894,12 @@
       placeholder: 'Search or type category...'
     });
 
-    // Modal Pricing Unit (Searchable Select2)
     $('#form-unit').select2({
       dropdownParent: $('#crud-modal'),
       width: '100%',
       placeholder: 'Select pricing unit'
     });
 
-    // Modal Status (Searchable Select2)
     $('#form-status').select2({
       dropdownParent: $('#crud-modal'),
       width: '100%'

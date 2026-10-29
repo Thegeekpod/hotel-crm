@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             MasterUtilitiesSeeder::class,
+            MenuCategorySeeder::class,
         ]);
     }
 }

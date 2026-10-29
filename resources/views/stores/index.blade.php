@@ -834,6 +834,7 @@
           <div>
             <label style="font-size: 11px; font-weight: 700; color: #475569; display: block; margin-bottom: 4px;">Menu Category *</label>
             <select id="item-category" class="pms-select" required style="width: 100%;">
+              <option value="" disabled selected>-- Select Menu Category --</option>
               @foreach($categories as $c)
                 <option value="{{ $c->name }}">{{ $c->name }}</option>
               @endforeach

@@ -1026,13 +1026,14 @@
             </div>
           </div>
 
-          <!-- Room Folio Picker (Visible when Room Folio is chosen, even for Table Dine-in & Takeaway) -->
-          <div id="room-folio-picker-box" style="margin-top: 10px; background: #ecfdf5; border: 1.5px solid #86efac; border-radius: 8px; padding: 10px; display: block;">
-            <label style="font-size: 11px; font-weight: 800; color: #166534; display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
-              <span><i class="fa-solid fa-door-open" style="color: #10b981;"></i> Select Room to Charge Folio: *</span>
-              <span style="font-size: 9.5px; background: #dcfce7; color: #15803d; padding: 1px 6px; border-radius: 4px; font-weight: 700;">In-House Folio</span>
+          <!-- Room Folio Picker (Visible for Room Folio [Required] or Cash/UPI [Optional]) -->
+          <div id="room-folio-picker-box" style="margin-top: 10px; background: #ecfdf5; border: 1.5px solid #86efac; border-radius: 8px; padding: 10px; display: block; transition: all 0.2s ease;">
+            <label id="room-picker-label" style="font-size: 11px; font-weight: 800; color: #166534; display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+              <span id="room-picker-title"><i class="fa-solid fa-door-open" style="color: #10b981;"></i> Select Room to Charge Folio: *</span>
+              <span id="room-picker-badge" style="font-size: 9.5px; background: #dcfce7; color: #15803d; padding: 1px 6px; border-radius: 4px; font-weight: 700;">In-House Folio</span>
             </label>
             <select class="pms-select" id="cart-room-folio-select" style="width: 100%;">
+              <option value="">-- Direct Walk-in / No Room --</option>
               @forelse($selectableRooms as $rm)
                 <option value="{{ $rm->id }}" data-room="{{ $rm->room_number }}" data-guest="{{ $rm->guest_name }}">
                   Room {{ $rm->room_number }} - {{ $rm->guest_name }}
@@ -1041,6 +1042,7 @@
                 <option value="">No Checked In Guests Found</option>
               @endforelse
             </select>
+            <div id="room-picker-info-note" style="margin-top: 6px; font-size: 11px; line-height: 1.4;"></div>
           </div>
         </div>
 
@@ -1184,6 +1186,11 @@
                 <span class="badge-tag {{ $ro->billing_type === 'Charged to Room Folio' ? 'blue' : 'green' }}">
                   {{ $ro->billing_type }}
                 </span>
+                @if($ro->room_number)
+                  <div style="font-size: 9.5px; font-weight: 700; margin-top: 3px; color: {{ $ro->billing_type === 'Charged to Room Folio' ? '#0284c7' : '#15803d' }};">
+                    <i class="fa-solid fa-door-open"></i> Room {{ $ro->room_number }} ({{ $ro->billing_type === 'Charged to Room Folio' ? 'Folio Due' : 'Paid Direct' }})
+                  </div>
+                @endif
               </td>
               <td>
                 <select class="pms-select" style="height: 26px; font-size: 10px; padding: 2px 4px;" onchange="updateOrderStatus({{ $ro->id }}, this.value)">
@@ -1239,6 +1246,78 @@
       if (headRm && headRm.value !== val) headRm.value = val;
       if (cartRm && cartRm.value !== val) cartRm.value = val;
     }
+    updateRoomPickerNote();
+  }
+
+  // Live note updating for Room Folio vs Cash/UPI Direct
+  function updateRoomPickerNote() {
+    const box = document.getElementById('room-folio-picker-box');
+    const title = document.getElementById('room-picker-title');
+    const badge = document.getElementById('room-picker-badge');
+    const note = document.getElementById('room-picker-info-note');
+    const cartRm = document.getElementById('cart-room-folio-select');
+    const selectedOpt = (cartRm && cartRm.selectedIndex >= 0) ? cartRm.options[cartRm.selectedIndex] : null;
+    const roomId = cartRm ? cartRm.value : '';
+    const roomNo = selectedOpt ? selectedOpt.getAttribute('data-room') : '';
+    const guestName = selectedOpt ? selectedOpt.getAttribute('data-guest') : '';
+
+    let subtotal = cart.reduce((acc, i) => acc + (i.price * i.qty), 0);
+    let tax = Math.round(subtotal * 0.12);
+    let grand = subtotal + tax;
+    const grandFmt = '₹ ' + grand.toLocaleString();
+
+    const btnLabel = document.getElementById('btn-order-label');
+
+    if (currentBillingType === 'Charged to Room Folio') {
+      if (box) {
+        box.style.display = 'block';
+        box.style.background = '#ecfdf5';
+        box.style.borderColor = '#86efac';
+      }
+      if (title) title.innerHTML = '<i class="fa-solid fa-door-open" style="color: #10b981;"></i> Select Room to Charge Folio: *';
+      if (badge) {
+        badge.textContent = 'In-House Folio (Adds to Balance)';
+        badge.style.background = '#dcfce7';
+        badge.style.color = '#15803d';
+      }
+      if (btnLabel) btnLabel.textContent = `Post Bill to Room Folio (${grandFmt})`;
+
+      if (note) {
+        if (roomId && roomNo) {
+          note.innerHTML = `<span style="color: #166534; font-weight: 700;"><i class="fa-solid fa-file-invoice-dollar" style="color: #10b981;"></i> Total ${grandFmt} will be added to <strong>Room ${roomNo} (${guestName})</strong> Folio remaining balance and settled at checkout.</span>`;
+        } else {
+          note.innerHTML = `<span style="color: #dc2626; font-weight: 700;"><i class="fa-solid fa-circle-exclamation"></i> Please select a Room to link this bill to the residing guest folio.</span>`;
+        }
+      }
+    } else {
+      // Cash Paid or Digital UPI / Card Paid
+      const isCash = (currentBillingType === 'Cash Paid');
+      const modeName = isCash ? 'Cash' : 'UPI / Card';
+
+      if (box) {
+        box.style.display = 'block';
+        box.style.background = '#f8fafc';
+        box.style.borderColor = '#cbd5e1';
+      }
+      if (title) title.innerHTML = `<i class="fa-solid fa-link" style="color: #64748b;"></i> Link to Room Bill (Optional):`;
+      if (badge) {
+        badge.textContent = `Optional (${modeName} Paid)`;
+        badge.style.background = '#e2e8f0';
+        badge.style.color = '#334155';
+      }
+      if (btnLabel) btnLabel.textContent = `Settle ${modeName} (${grandFmt}) & Print KOT`;
+
+      if (note) {
+        if (roomId && roomNo) {
+          note.innerHTML = `<div style="background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 6px; padding: 6px 10px; color: #166534;">
+            <i class="fa-solid fa-circle-check" style="color: #10b981;"></i> <strong>Linked to Room ${roomNo} (${guestName})</strong><br>
+            <span style="font-size: 10.5px; opacity: 0.9;">Bill of <strong>${grandFmt}</strong> will be marked as <strong style="color: #059669;">PAID (${modeName})</strong> under this booking in Settlement. Does NOT increase remaining balance.</span>
+          </div>`;
+        } else {
+          note.innerHTML = `<span style="color: #64748b; font-size: 10.5px;"><i class="fa-solid fa-circle-info"></i> Direct Walk-in settlement. Select a room above if this is an in-house guest paying on the spot.</span>`;
+        }
+      }
+    }
   }
 
   // Initialize Searchable Select2 Dropdowns
@@ -1267,6 +1346,14 @@
         }
       });
     }
+
+    // Auto-select room from URL query param if present (e.g. from Room Details modal)
+    const urlParams = new URLSearchParams(window.location.search);
+    const qRoomId = urlParams.get('room_id');
+    if (qRoomId) {
+      syncRoomSelectors(qRoomId);
+    }
+    updateRoomPickerNote();
   });
 
   // 1. Order Type Switching
@@ -1315,28 +1402,23 @@
     currentBillingType = bType;
     document.querySelectorAll('.billing-pill').forEach(p => p.classList.remove('active'));
     
-    const btnLabel = document.getElementById('btn-order-label');
-    const folioBox = document.getElementById('room-folio-picker-box');
     const headerRoomGrp = document.getElementById('room-select-group');
 
     if (bType === 'Charged to Room Folio') {
       document.getElementById('bill-folio').classList.add('active');
-      btnLabel.textContent = 'Post Bill to Room Folio';
-      if (folioBox) folioBox.style.display = 'block';
       if (headerRoomGrp) headerRoomGrp.style.display = 'flex';
-    } else {
-      if (folioBox) folioBox.style.display = 'none';
+    } else if (bType === 'Cash Paid') {
+      document.getElementById('bill-cash').classList.add('active');
       if (headerRoomGrp && currentOrderType !== 'Room Dining') {
         headerRoomGrp.style.display = 'none';
       }
-      if (bType === 'Cash Paid') {
-        document.getElementById('bill-cash').classList.add('active');
-        btnLabel.textContent = 'Settle Cash & Print KOT';
-      } else if (bType === 'Digital UPI / Card Paid') {
-        document.getElementById('bill-digital').classList.add('active');
-        btnLabel.textContent = 'Settle UPI/Card & Print KOT';
+    } else if (bType === 'Digital UPI / Card Paid') {
+      document.getElementById('bill-digital').classList.add('active');
+      if (headerRoomGrp && currentOrderType !== 'Room Dining') {
+        headerRoomGrp.style.display = 'none';
       }
     }
+    updateRoomPickerNote();
   }
 
   // 3. Cart Operations
@@ -1456,6 +1538,8 @@
     document.getElementById('sub-val').textContent = `₹ ${subtotal.toLocaleString()}`;
     document.getElementById('tax-val').textContent = `₹ ${tax.toLocaleString()}`;
     document.getElementById('tot-val').textContent = `₹ ${grand.toLocaleString()}`;
+
+    updateRoomPickerNote();
   }
 
   // 4. Menu Filter by Category
@@ -1512,12 +1596,12 @@
       }))
     };
 
-    // If charged to room folio, get selected room (works for Room Dining, Table Dine-in, or Takeaway!)
-    if (currentBillingType === 'Charged to Room Folio') {
-      const cartRm = document.getElementById('cart-room-folio-select');
-      const headRm = document.getElementById('pos-room-select');
-      const chosenRoomId = (cartRm && cartRm.value) ? cartRm.value : (headRm ? headRm.value : null);
+    // Handle room assignment (Strictly required for Room Folio, optional for Cash/UPI):
+    const cartRm = document.getElementById('cart-room-folio-select');
+    const headRm = document.getElementById('pos-room-select');
+    const chosenRoomId = (cartRm && cartRm.value) ? cartRm.value : (headRm ? headRm.value : null);
 
+    if (currentBillingType === 'Charged to Room Folio') {
       if (!chosenRoomId) {
         if (typeof Swal !== 'undefined') {
           Swal.fire({ icon: 'warning', title: 'Room Required', text: 'Please select an active Room to charge this bill to the Room Folio!' });
@@ -1527,6 +1611,11 @@
         return;
       }
       payload.room_id = chosenRoomId;
+    } else {
+      // Cash Paid or Digital UPI / Card Paid: room selection is optional
+      if (chosenRoomId) {
+        payload.room_id = chosenRoomId;
+      }
     }
 
     if (currentOrderType === 'Table Dine-in') {

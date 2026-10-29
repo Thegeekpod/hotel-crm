@@ -546,19 +546,23 @@
       if (serviceOrders.length > 0) {
         const orderRows = serviceOrders.map(ro => {
           const itemsSummary = (ro.items || []).map(it => `${it.quantity}x ${escapeHtml(it.item_name)}`).join(', ') || 'Room Service & Amenity Items';
+          const isPaid = (ro.payment_status && ro.payment_status !== 'Charged to Room Folio' && ro.payment_status !== 'Pending');
           return `
             <div style="background: #ffffff; border: 1px solid #fed7aa; border-radius: 8px; padding: 8px 12px; display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: 11px;">
               <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0;">
                 <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
                   <strong style="color: #c2410c; font-family: var(--font-mono, monospace); font-size: 12px;">#${escapeHtml(ro.order_number)}</strong>
-                  <span style="font-size: 9px; padding: 1px 6px; border-radius: 4px; font-weight: 700; background: #ffedd5; color: #9a3412;">${escapeHtml(ro.order_status || 'Received')}</span>
+                  <span style="font-size: 9px; padding: 1px 6px; border-radius: 4px; font-weight: 700; background: ${isPaid ? '#dcfce7' : '#ffedd5'}; color: ${isPaid ? '#15803d' : '#9a3412'};">${escapeHtml(ro.payment_status || ro.order_status || 'Received')}</span>
                   <span style="font-size: 10px; color: #64748b;">${escapeHtml(ro.date)}</span>
                 </div>
                 <div style="color: #334155; font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${itemsSummary}</div>
               </div>
               <div style="text-align: right; flex-shrink: 0;">
-                <div style="font-family: var(--font-mono, monospace); font-weight: 900; font-size: 13px; color: #ea580c;">₹ ${Number(ro.total_amount || 0).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
-                <span style="font-size: 9px; color: #059669; font-weight: 700;"><i class="fa-solid fa-file-invoice"></i> Charged to Room</span>
+                <div style="font-family: var(--font-mono, monospace); font-weight: 900; font-size: 13px; color: ${isPaid ? '#059669' : '#ea580c'};">₹ ${Number(ro.total_amount || 0).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                ${isPaid 
+                  ? `<span style="font-size: 9px; color: #16a34a; font-weight: 700;"><i class="fa-solid fa-circle-check"></i> PAID (Direct)</span>`
+                  : `<span style="font-size: 9px; color: #ea580c; font-weight: 700;"><i class="fa-solid fa-file-invoice"></i> Charged to Room</span>`
+                }
               </div>
             </div>
           `;
@@ -807,7 +811,7 @@
     if (isOccupied && guestObj) {
       footerEl.innerHTML = `
         <button type="button" class="btn-ui-success" onclick="checkInFromRoomModal('${roomNo}')"><i class="fa-solid fa-key"></i> New Check-In</button>
-        <button type="button" class="btn-ui-primary" onclick="window.location.href='/front-office/services?room_id=' + encodeURIComponent(roomData.id || '') + '&room_number=' + encodeURIComponent(roomNo);"><i class="fa-solid fa-utensils"></i> Add POS Charge</button>
+        <button type="button" class="btn-ui-primary" onclick="window.location.href='/pos?room_id=' + encodeURIComponent(roomData.id || '') + '&room_number=' + encodeURIComponent(roomNo);"><i class="fa-solid fa-utensils"></i> Add POS Charge</button>
         <button type="button" class="btn-ui-secondary" onclick="closeModal('room-modal')">Close</button>
       `;
     } else {

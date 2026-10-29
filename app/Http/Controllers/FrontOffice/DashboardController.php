@@ -168,12 +168,11 @@ class DashboardController extends Controller
                                 });
                             }
                         })
-                        ->where('payment_status', 'Charged to Room Folio')
                         ->where('order_status', '!=', 'Cancelled')
                         ->latest()
                         ->get();
 
-                    $extraServiceCharges = (float) $roomServiceOrders->sum('total_amount');
+                    $extraServiceCharges = (float) $roomServiceOrders->where('payment_status', 'Charged to Room Folio')->sum('total_amount');
                     $serviceOrdersList = $roomServiceOrders->map(function ($ro) {
                         return [
                             'id' => $ro->id,

@@ -176,11 +176,27 @@ class PosController extends Controller
                 default => 'Pending',
             };
 
-            // Optional: If charged to room folio and room has active booking, also sync to room_service_orders
+            // Sync to room_service_orders if room and active booking exist
+            // - If Charged to Room Folio: payment_status = 'Charged to Room Folio' (adds to outstanding folio balance)
+            // - If Cash/UPI Paid: payment_status = 'Paid via Cash' / 'Paid via UPI/Card' (shows under booking as PAID, doesn't add to remaining balance)
             $roomServiceOrderId = null;
-            if ($validated['billing_type'] === 'Charged to Room Folio' && $room && $booking) {
+            if ($room && $booking) {
                 $rsOrderSequence = RoomServiceOrder::count() + 1;
                 $rsOrderNumber = 'ORD-' . date('Y') . '-' . str_pad($rsOrderSequence, 4, '0', STR_PAD_LEFT);
+
+                $rsPaymentStatus = match ($validated['billing_type']) {
+                    'Charged to Room Folio' => 'Charged to Room Folio',
+                    'Cash Paid' => 'Paid via Cash',
+                    'Digital UPI / Card Paid' => 'Paid via UPI/Card',
+                    default => 'Paid',
+                };
+
+                $rsOrderStatus = ($validated['billing_type'] === 'Charged to Room Folio') ? 'Preparing' : 'Completed';
+
+                $instructionsNote = ($validated['billing_type'] === 'Charged to Room Folio')
+                    ? 'POS Dining (Folio): '
+                    : 'POS Dining (' . $validated['billing_type'] . ' - Settled on Spot): ';
+                $instructionsNote .= (!empty($validated['table_number']) ? '[' . $validated['table_number'] . '] ' : '') . ($validated['special_instructions'] ?? 'None');
 
                 $rsOrder = RoomServiceOrder::create([
                     'order_number' => $rsOrderNumber,
@@ -191,9 +207,9 @@ class PosController extends Controller
                     'subtotal' => $subtotal,
                     'tax_amount' => $taxAmount,
                     'total_amount' => $totalAmount,
-                    'payment_status' => 'Charged to Room Folio',
-                    'order_status' => 'Preparing',
-                    'special_instructions' => 'POS Sales KOT: ' . (!empty($validated['table_number']) ? '[' . $validated['table_number'] . '] ' : '') . ($validated['special_instructions'] ?? 'None'),
+                    'payment_status' => $rsPaymentStatus,
+                    'order_status' => $rsOrderStatus,
+                    'special_instructions' => $instructionsNote,
                     'served_by' => 'POS Cashier',
                 ]);
 
@@ -296,8 +312,8 @@ class PosController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => ($validated['billing_type'] === 'Charged to Room Folio')
-                    ? "Charge of ₹" . number_format($totalAmount, 2) . " successfully posted to Room {$roomNumber} Folio" . (!empty($validated['table_number']) ? " ({$validated['table_number']})" : "") . "! KOT ticket generated."
-                    : "Order {$orderNumber} successfully placed and settled! KOT ticket generated.",
+                    ? "Charge of ₹" . number_format($totalAmount, 2) . " successfully posted to Room {$roomNumber} Folio! Outstanding balance updated for final settlement."
+                    : ($room ? "Order {$orderNumber} (₹" . number_format($totalAmount, 2) . ") settled via {$validated['billing_type']} and recorded under Room {$roomNumber} ({$customerName}) in Settlement!" : "Order {$orderNumber} successfully placed and settled via {$validated['billing_type']}! KOT generated."),
                 'order' => $posOrder,
             ]);
         });

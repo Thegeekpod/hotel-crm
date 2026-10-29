@@ -1578,6 +1578,10 @@
             <span class="dossier-label">GST / Tax</span>
             <span class="dossier-val mono" id="fmdl-tax-row" style="color: #6366f1;">-</span>
           </div>
+          <div class="dossier-field-row" id="fmdl-services-field-row" style="display: none;">
+            <span class="dossier-label" style="color: #c2410c;"><i class="fa-solid fa-utensils"></i> Restaurant &amp; Room Dining (Folio)</span>
+            <span class="dossier-val mono" id="fmdl-services-row" style="color: #ea580c; font-weight: 800;">+ ₹ 0.00</span>
+          </div>
           <div class="dossier-field-row">
             <span class="dossier-label">Net Payable Amount</span>
             <span class="dossier-val mono" id="fmdl-payable-amount" style="font-size: 13px; font-weight: 900; color: #0f172a;">-</span>
@@ -1589,6 +1593,17 @@
           <div class="dossier-field-row">
             <span class="dossier-label">Payment Remarks / Reference</span>
             <span class="dossier-val" id="fmdl-remarks-row" style="color: #64748b;">-</span>
+          </div>
+        </div>
+
+        <!-- Room Service & Restaurant Dining Orders Box -->
+        <div style="margin-top: 14px; display: none;" id="fmdl-room-services-box">
+          <div style="font-size: 11px; font-weight: 800; color: #d97706; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center;">
+            <span><i class="fa-solid fa-bell-concierge"></i> Restaurant &amp; In-Room Dining Bills (<span id="fmdl-services-count">0</span> Orders)</span>
+            <span style="font-size: 10px; color: #64748b; text-transform: none; font-weight: 600;">Billing Breakdown</span>
+          </div>
+          <div id="fmdl-room-services-list" style="font-size: 11px;">
+            <!-- Populated via JS -->
           </div>
         </div>
 
@@ -2225,11 +2240,115 @@
     document.getElementById('fmdl-discount-row').textContent = folio.discount_amount > 0 ? `${formatINR(folio.discount_amount)} (${folio.discount_percentage}%)` : 'None';
     document.getElementById('fmdl-tax-row').textContent = folio.gst_amount > 0 ? `${formatINR(folio.gst_amount)} (${folio.gst_percentage}% ${folio.gst_type})` : 'Zero Tax / Exempt';
     
+    const totalServiceCost = Number(folio.total_room_service_charges || 0);
+
     const payableEl = document.getElementById('fmdl-payable-amount');
-    if (payableEl) payableEl.textContent = formatINR(folio.payable_amount);
+    if (payableEl) {
+      const netPayable = (folio.effective_payable !== undefined) ? Number(folio.effective_payable) : (Number(folio.payable_amount || 0) + totalServiceCost);
+      payableEl.textContent = formatINR(netPayable);
+    }
 
     document.getElementById('fmdl-paymode-row').textContent = folio.payment_mode || 'Cash / Direct';
     document.getElementById('fmdl-remarks-row').textContent = folio.payment_remarks || 'None';
+
+    // In-Room Dining & Additional Services row
+    const servicesRow = document.getElementById('fmdl-services-field-row');
+    const servicesVal = document.getElementById('fmdl-services-row');
+    const servicesBox = document.getElementById('fmdl-room-services-box');
+    const servicesList = document.getElementById('fmdl-room-services-list');
+    const servicesCount = document.getElementById('fmdl-services-count');
+
+    if (totalServiceCost > 0) {
+      if (servicesRow) servicesRow.style.display = 'flex';
+      if (servicesVal) servicesVal.textContent = `+ ${formatINR(totalServiceCost)}`;
+    } else {
+      if (servicesRow) servicesRow.style.display = 'none';
+    }
+
+    // Render itemized In-Room Dining / Restaurant orders list
+    if (folio.room_service_orders && folio.room_service_orders.length > 0) {
+      if (servicesBox) servicesBox.style.display = 'block';
+      if (servicesCount) servicesCount.textContent = folio.room_service_orders.length;
+
+      const totalFolioCharged = folio.room_service_orders
+        .filter(ro => ro.payment_status === 'Charged to Room Folio')
+        .reduce((sum, ro) => sum + Number(ro.total_amount || 0), 0);
+      const totalDirectPaid = folio.room_service_orders
+        .filter(ro => ro.payment_status && ro.payment_status !== 'Charged to Room Folio')
+        .reduce((sum, ro) => sum + Number(ro.total_amount || 0), 0);
+
+      let ordHtml = `
+        <table style="width: 100%; border-collapse: collapse; background: #ffffff; border: 1px solid #fed7aa; border-radius: 8px; overflow: hidden; margin-bottom: 4px;">
+          <thead>
+            <tr style="background: #fff7ed; border-bottom: 1px solid #fed7aa; text-align: left;">
+              <th style="padding: 6px 8px; font-size: 10px; color: #9a3412; width: 35px; text-align: center;">SL</th>
+              <th style="padding: 6px 10px; font-size: 10px; color: #9a3412;">Order #</th>
+              <th style="padding: 6px 10px; font-size: 10px; color: #9a3412;">Date &amp; Time</th>
+              <th style="padding: 6px 10px; font-size: 10px; color: #9a3412;">Ordered Items</th>
+              <th style="padding: 6px 10px; font-size: 10px; color: #9a3412; text-align: center;">Status</th>
+              <th style="padding: 6px 10px; font-size: 10px; color: #9a3412; text-align: right;">Bill Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+
+      folio.room_service_orders.forEach((ro, oIdx) => {
+        let itemsDetail = (ro.items || []).map(i => `${i.quantity}x ${escapeHtml(i.item_name)} (${formatINR(i.unit_price)})`).join(', ');
+        const isPaid = (ro.payment_status && ro.payment_status !== 'Charged to Room Folio' && ro.payment_status !== 'Pending');
+        const isFolio = (ro.payment_status === 'Charged to Room Folio');
+
+        let statusBadge = '';
+        let amountCol = '';
+
+        if (isPaid) {
+          statusBadge = `<span style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 7px; border-radius: 4px; font-size: 10px; font-weight: 800; background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0;"><i class="fa-solid fa-circle-check"></i> PAID (${escapeHtml(ro.payment_status)})</span>`;
+          amountCol = `<div style="font-family: var(--font-mono, monospace); font-weight: 800; color: #059669; font-size: 11px;">${formatINR(ro.total_amount)}</div><span style="font-size: 9px; color: #16a34a; font-weight: 700;">(Settled Direct)</span>`;
+        } else if (isFolio) {
+          statusBadge = `<span style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 7px; border-radius: 4px; font-size: 10px; font-weight: 800; background: #fef3c7; color: #b45309; border: 1px solid #fde68a;"><i class="fa-solid fa-clock"></i> UNPAID (Charged to Room)</span>`;
+          amountCol = `<div style="font-family: var(--font-mono, monospace); font-weight: 800; color: #ea580c; font-size: 11px;">+ ${formatINR(ro.total_amount)}</div><span style="font-size: 9px; color: #c2410c; font-weight: 700;">(Due at Checkout)</span>`;
+        } else {
+          statusBadge = `<span style="display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 700; background: #f1f5f9; color: #475569;">${escapeHtml(ro.payment_status || ro.order_status || 'Pending')}</span>`;
+          amountCol = `<span style="font-family: var(--font-mono, monospace); font-weight: 800; color: #475569;">${formatINR(ro.total_amount)}</span>`;
+        }
+
+        ordHtml += `
+          <tr style="border-bottom: 1px solid #ffedd5;">
+            <td style="padding: 6px 8px; text-align: center; font-weight: 800; font-family: var(--font-mono, monospace); color: #9a3412; font-size: 10px;">${oIdx + 1}</td>
+            <td style="padding: 6px 10px; font-family: var(--font-mono, monospace); font-weight: 700; color: #c2410c;">${escapeHtml(ro.order_number)}</td>
+            <td style="padding: 6px 10px; color: #475569; white-space: nowrap;">
+              <i class="fa-regular fa-calendar-days" style="font-size: 9px; color: #d97706;"></i> ${escapeHtml(ro.date)}
+            </td>
+            <td style="padding: 6px 10px; color: #1e293b; font-size: 10.5px;">${itemsDetail || escapeHtml(ro.items_summary) || 'Room Dining Service'}</td>
+            <td style="padding: 6px 10px; text-align: center;">
+              ${statusBadge}
+            </td>
+            <td style="padding: 6px 10px; text-align: right; white-space: nowrap;">${amountCol}</td>
+          </tr>
+        `;
+      });
+      ordHtml += `
+          </tbody>
+          <tfoot>
+            <tr style="background: #fff7ed; font-weight: 800; border-top: 1.5px solid #fed7aa;">
+              <td colspan="4" style="padding: 8px 10px; font-size: 10px; color: #9a3412;">
+                <strong>TOTAL DINING &amp; EXTRA SERVICES: ${folio.room_service_orders.length} ORDER(S)</strong>
+                ${totalDirectPaid > 0 ? `<span style="margin-left: 10px; font-size: 9.5px; color: #15803d; font-weight: 800; background: #dcfce7; padding: 2px 6px; border-radius: 4px;"><i class="fa-solid fa-circle-check"></i> Direct Settled: ${formatINR(totalDirectPaid)}</span>` : ''}
+              </td>
+              <td style="padding: 8px 10px; text-align: center; font-size: 10px; color: #9a3412; text-transform: uppercase;">
+                Folio Due:
+              </td>
+              <td style="padding: 8px 10px; text-align: right; font-family: var(--font-mono, monospace); color: #c2410c; font-size: 11.5px; white-space: nowrap;">
+                + ${formatINR(totalFolioCharged)}
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+      `;
+      if (servicesList) servicesList.innerHTML = ordHtml;
+    } else {
+      if (servicesBox) servicesBox.style.display = 'none';
+      if (servicesList) servicesList.innerHTML = '';
+    }
 
     // Settlement History List
     const historyBox = document.getElementById('fmdl-settle-history-box');

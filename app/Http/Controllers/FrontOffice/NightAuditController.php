@@ -887,16 +887,17 @@ class NightAuditController extends Controller
             // Room Charges
             $roomCharges = (float)($master->payable_amount > 0 ? $master->payable_amount : $master->total_amount);
 
-            // Extra Services charged to folio
+            // Extra Services / Dining orders
             $extraOrders = \App\Models\RoomServiceOrder::with('items')
                 ->whereIn('booking_id', $allResBookingIds)
-                ->where('payment_status', 'Charged to Room Folio')
                 ->where('order_status', '!=', 'Cancelled')
                 ->orderBy('created_at', 'asc')
                 ->orderBy('id', 'asc')
                 ->get();
 
-            $extraServicesCharge = (float)$extraOrders->sum('total_amount');
+            // Outstanding extra services charged to folio (unpaid, adds to balance)
+            $extraServicesCharge = (float)$extraOrders->where('payment_status', 'Charged to Room Folio')->sum('total_amount');
+            $extraPaidCharges = (float)$extraOrders->where('payment_status', '!=', 'Charged to Room Folio')->sum('total_amount');
             $extraOrdersCount = $extraOrders->count();
             $extraOrdersDetailed = [];
             $extraItemsList = [];
@@ -906,6 +907,7 @@ class NightAuditController extends Controller
                     $orderItems[] = "{$it->quantity}x {$it->item_name}";
                     $extraItemsList[] = "{$it->quantity}x {$it->item_name}";
                 }
+                $isPaid = ($eo->payment_status !== 'Charged to Room Folio');
                 $extraOrdersDetailed[] = [
                     'id' => $eo->id,
                     'order_number' => $eo->order_number,
@@ -913,6 +915,8 @@ class NightAuditController extends Controller
                     'date_time' => $eo->created_at ? $eo->created_at->format('d M Y, h:i A') : 'N/A',
                     'date_short' => $eo->created_at ? $eo->created_at->format('d M') : 'N/A',
                     'items_summary' => implode(', ', $orderItems),
+                    'payment_status' => $eo->payment_status,
+                    'is_paid' => $isPaid,
                 ];
             }
 
@@ -982,6 +986,7 @@ class NightAuditController extends Controller
                 'status' => $stayStatus,
                 'room_charges' => $roomCharges,
                 'extra_service_charges' => $extraServicesCharge,
+                'extra_paid_charges' => $extraPaidCharges,
                 'extra_orders_count' => $extraOrdersCount,
                 'extra_orders_detailed' => $extraOrdersDetailed,
                 'extra_items_list' => $extraItemsList,

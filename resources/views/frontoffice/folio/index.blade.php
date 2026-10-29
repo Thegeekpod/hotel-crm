@@ -2622,8 +2622,32 @@
           <tbody>
       `;
 
+      const totalFolioCharged = (folio.room_service_orders || [])
+        .filter(ro => ro.payment_status === 'Charged to Room Folio')
+        .reduce((sum, ro) => sum + Number(ro.total_amount || 0), 0);
+      const totalDirectPaid = (folio.room_service_orders || [])
+        .filter(ro => ro.payment_status && ro.payment_status !== 'Charged to Room Folio')
+        .reduce((sum, ro) => sum + Number(ro.total_amount || 0), 0);
+
       folio.room_service_orders.forEach((ro, oIdx) => {
         let itemsDetail = (ro.items || []).map(i => `${i.quantity}x ${escapeHtml(i.item_name)} (${formatINR(i.unit_price)})`).join(', ');
+        const isPaid = (ro.payment_status && ro.payment_status !== 'Charged to Room Folio' && ro.payment_status !== 'Pending');
+        const isFolio = (ro.payment_status === 'Charged to Room Folio');
+
+        let statusBadge = '';
+        let amountCol = '';
+
+        if (isPaid) {
+          statusBadge = `<span style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 7px; border-radius: 4px; font-size: 10px; font-weight: 800; background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0;"><i class="fa-solid fa-circle-check"></i> PAID (${escapeHtml(ro.payment_status)})</span>`;
+          amountCol = `<div style="font-family: var(--font-mono, monospace); font-weight: 800; color: #059669; font-size: 11px;">${formatINR(ro.total_amount)}</div><span style="font-size: 9px; color: #16a34a; font-weight: 700;">(Settled Direct)</span>`;
+        } else if (isFolio) {
+          statusBadge = `<span style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 7px; border-radius: 4px; font-size: 10px; font-weight: 800; background: #fef3c7; color: #b45309; border: 1px solid #fde68a;"><i class="fa-solid fa-clock"></i> UNPAID (Charged to Room)</span>`;
+          amountCol = `<div style="font-family: var(--font-mono, monospace); font-weight: 800; color: #ea580c; font-size: 11px;">+ ${formatINR(ro.total_amount)}</div><span style="font-size: 9px; color: #c2410c; font-weight: 700;">(Due at Checkout)</span>`;
+        } else {
+          statusBadge = `<span style="display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 700; background: #f1f5f9; color: #475569;">${escapeHtml(ro.payment_status || ro.order_status || 'Pending')}</span>`;
+          amountCol = `<span style="font-family: var(--font-mono, monospace); font-weight: 800; color: #475569;">${formatINR(ro.total_amount)}</span>`;
+        }
+
         ordHtml += `
           <tr style="border-bottom: 1px solid #ffedd5;">
             <td style="padding: 6px 8px; text-align: center; font-weight: 800; font-family: var(--font-mono, monospace); color: #9a3412; font-size: 10px;">${oIdx + 1}</td>
@@ -2633,9 +2657,9 @@
             </td>
             <td style="padding: 6px 10px; color: #1e293b; font-size: 10.5px;">${itemsDetail || escapeHtml(ro.items_summary) || 'Room Dining Service'}</td>
             <td style="padding: 6px 10px; text-align: center;">
-              <span style="display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 700; background: #ffedd5; color: #9a3412;">${escapeHtml(ro.order_status)}</span>
+              ${statusBadge}
             </td>
-            <td style="padding: 6px 10px; text-align: right; font-family: var(--font-mono, monospace); font-weight: 800; color: #ea580c; white-space: nowrap;">+ ${formatINR(ro.total_amount)}</td>
+            <td style="padding: 6px 10px; text-align: right; white-space: nowrap;">${amountCol}</td>
           </tr>
         `;
       });
@@ -2643,11 +2667,15 @@
           </tbody>
           <tfoot>
             <tr style="background: #fff7ed; font-weight: 800; border-top: 1.5px solid #fed7aa;">
-              <td colspan="5" style="padding: 6px 10px; text-align: right; font-size: 10px; color: #9a3412; text-transform: uppercase;">
-                Total In-Room Dining &amp; Extra Services (${folio.room_service_orders.length} Orders):
+              <td colspan="4" style="padding: 8px 10px; font-size: 10px; color: #9a3412;">
+                <strong>TOTAL DINING &amp; EXTRA SERVICES: ${folio.room_service_orders.length} ORDER(S)</strong>
+                ${totalDirectPaid > 0 ? `<span style="margin-left: 10px; font-size: 9.5px; color: #15803d; font-weight: 800; background: #dcfce7; padding: 2px 6px; border-radius: 4px;"><i class="fa-solid fa-circle-check"></i> Direct Settled: ${formatINR(totalDirectPaid)}</span>` : ''}
               </td>
-              <td style="padding: 6px 10px; text-align: right; font-family: var(--font-mono, monospace); color: #c2410c; font-size: 11px; white-space: nowrap;">
-                + ${formatINR(totalServiceCost)}
+              <td style="padding: 8px 10px; text-align: center; font-size: 10px; color: #9a3412; text-transform: uppercase;">
+                Folio Due:
+              </td>
+              <td style="padding: 8px 10px; text-align: right; font-family: var(--font-mono, monospace); color: #c2410c; font-size: 11.5px; white-space: nowrap;">
+                + ${formatINR(totalFolioCharged)}
               </td>
             </tr>
           </tfoot>

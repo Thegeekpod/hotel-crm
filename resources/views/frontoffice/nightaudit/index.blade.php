@@ -659,20 +659,34 @@
                 </td>
                 <!-- Extra Services -->
                 <td style="text-align: right; font-family: var(--font-mono, monospace); font-size: 12px; white-space: nowrap;">
-                  @if($b['extra_service_charges'] > 0)
-                    <div style="font-weight: 800; color: #d97706;">
-                      + ₹ {{ number_format($b['extra_service_charges'], 2) }}
-                    </div>
-                    <div style="font-size: 9.5px; color: #b45309; font-weight: 700; margin-top: 2px;" title="{{ implode(', ', $b['extra_items_list']) }}">
+                  @if(($b['extra_orders_count'] ?? 0) > 0)
+                    @if($b['extra_service_charges'] > 0)
+                      <div style="font-weight: 800; color: #d97706;">
+                        + ₹ {{ number_format($b['extra_service_charges'], 2) }}
+                      </div>
+                    @endif
+                    @if(($b['extra_paid_charges'] ?? 0) > 0)
+                      <div style="font-weight: 800; color: #15803d; font-size: 11px;">
+                        <i class="fa-solid fa-circle-check"></i> ₹ {{ number_format($b['extra_paid_charges'], 2) }} <span style="font-size: 9px; opacity: 0.85;">(Paid)</span>
+                      </div>
+                    @endif
+                    <div style="font-size: 9.5px; color: #b45309; font-weight: 700; margin-top: 2px;" title="{{ implode(', ', $b['extra_items_list'] ?? []) }}">
                       <i class="fa-solid fa-bell-concierge" style="font-size: 8px;"></i> {{ $b['extra_orders_count'] }} order(s)
                     </div>
                     @if(!empty($b['extra_orders_detailed']) && count($b['extra_orders_detailed']) > 0)
                       <div style="display: flex; flex-direction: column; gap: 2px; margin-top: 4px; align-items: flex-end;">
                         @foreach($b['extra_orders_detailed'] as $eOrd)
-                          <div style="font-size: 9px; color: #9a3412; background: #fff7ed; border: 1px solid #ffedd5; border-radius: 4px; padding: 1px 5px; display: inline-flex; align-items: center; gap: 4px;" title="{{ $eOrd['order_number'] }}: {{ $eOrd['items_summary'] }}">
-                            <span style="opacity: 0.8; font-size: 8px;"><i class="fa-regular fa-clock" style="font-size: 7.5px;"></i> {{ $eOrd['date_short'] }}:</span>
-                            <span style="font-weight: 700;">₹{{ number_format($eOrd['total_amount'], 2) }}</span>
-                          </div>
+                          @if(!empty($eOrd['is_paid']))
+                            <div style="font-size: 9px; color: #166534; background: #dcfce7; border: 1px solid #bbf7d0; border-radius: 4px; padding: 1px 5px; display: inline-flex; align-items: center; gap: 4px;" title="{{ $eOrd['order_number'] }}: {{ $eOrd['items_summary'] }} (Paid Direct)">
+                              <span style="opacity: 0.8; font-size: 8px;"><i class="fa-solid fa-check" style="font-size: 7.5px;"></i> {{ $eOrd['date_short'] }}:</span>
+                              <span style="font-weight: 700;">₹{{ number_format($eOrd['total_amount'], 2) }} (PAID)</span>
+                            </div>
+                          @else
+                            <div style="font-size: 9px; color: #9a3412; background: #fff7ed; border: 1px solid #ffedd5; border-radius: 4px; padding: 1px 5px; display: inline-flex; align-items: center; gap: 4px;" title="{{ $eOrd['order_number'] }}: {{ $eOrd['items_summary'] }} (Charged to Folio)">
+                              <span style="opacity: 0.8; font-size: 8px;"><i class="fa-regular fa-clock" style="font-size: 7.5px;"></i> {{ $eOrd['date_short'] }}:</span>
+                              <span style="font-weight: 700;">+ ₹{{ number_format($eOrd['total_amount'], 2) }}</span>
+                            </div>
+                          @endif
                         @endforeach
                       </div>
                     @endif

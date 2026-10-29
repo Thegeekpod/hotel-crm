@@ -281,6 +281,7 @@ class StoreController extends Controller
             'pos_item_id' => 'required|exists:pos_items,id',
             'inward_raw_qty' => 'nullable|numeric|min:0',
             'inward_plates' => 'nullable|integer|min:0',
+            'purchase_price' => 'nullable|numeric|min:0',
             'vendor_name' => 'nullable|string|max:150',
             'invoice_no' => 'nullable|string|max:100',
             'remarks' => 'nullable|string|max:500',
@@ -291,6 +292,7 @@ class StoreController extends Controller
 
             $rawQtyIn = (float) ($validated['inward_raw_qty'] ?? 0);
             $platesIn = (int) ($validated['inward_plates'] ?? 0);
+            $purchasePrice = isset($validated['purchase_price']) && is_numeric($validated['purchase_price']) ? (float) $validated['purchase_price'] : null;
 
             // If plates not provided directly, calculate from raw stock added
             if ($platesIn <= 0 && $rawQtyIn > 0) {
@@ -322,9 +324,30 @@ class StoreController extends Controller
             if ($item->available_plates > 0 && $item->status === 'Out of Stock') {
                 $item->status = 'Active';
             }
+            if ($purchasePrice !== null) {
+                $item->last_purchase_price = $purchasePrice;
+            }
             $item->save();
 
             $refNo = $validated['invoice_no'] ?: ('INWARD-' . date('Ymd-His'));
+
+            $unitCost = null;
+            $costInfo = '';
+            if ($purchasePrice !== null) {
+                if ($rawQtyIn > 0) {
+                    $unitCost = round($purchasePrice / $rawQtyIn, 2);
+                    $costInfo = " [Purchase Price: ₹" . number_format($purchasePrice, 2) . " (₹" . number_format($unitCost, 2) . "/{$item->raw_stock_unit})]";
+                } elseif ($platesIn > 0) {
+                    $unitCost = round($purchasePrice / $platesIn, 2);
+                    $costInfo = " [Purchase Price: ₹" . number_format($purchasePrice, 2) . " (~₹" . number_format($unitCost, 2) . "/plate)]";
+                } else {
+                    $unitCost = $purchasePrice;
+                    $costInfo = " [Purchase Price: ₹" . number_format($purchasePrice, 2) . "]";
+                }
+            }
+
+            $vendorInfo = !empty($validated['vendor_name']) ? " Vendor: {$validated['vendor_name']}." : '';
+            $userRemarks = !empty($validated['remarks']) ? " Note: {$validated['remarks']}" : '';
 
             StoreMovement::create([
                 'pos_item_id' => $item->id,
@@ -334,13 +357,15 @@ class StoreController extends Controller
                 'stock_after' => $platesAfter,
                 'reference_no' => $refNo,
                 'issued_to_department' => 'Restaurant Kitchen Store',
-                'remarks' => "Inward Received: +{$rawQtyIn} {$item->raw_stock_unit} {$item->ingredient_name} (+{$platesIn} Plates added). " . (!empty($validated['remarks']) ? $validated['remarks'] : ''),
-                'performed_by' => 'Chef / F&B Store Keeper',
+                'unit_cost' => $unitCost,
+                'total_cost' => $purchasePrice,
+                'remarks' => "Inward Received: +{$rawQtyIn} {$item->raw_stock_unit} {$item->ingredient_name} (+{$platesIn} Plates added).{$costInfo}{$vendorInfo}{$userRemarks}",
+                'performed_by' => auth()->user()?->name ?: 'Chef / F&B Store Keeper',
             ]);
 
             return response()->json([
                 'success' => true,
-                'message' => "Received inward stock for {$item->name}! Added +{$platesIn} plates. Total now available: {$platesAfter} plates.",
+                'message' => "Received inward stock for {$item->name}! Added +{$platesIn} plates." . ($purchasePrice ? " Purchase Cost: ₹" . number_format($purchasePrice, 2) : "") . " Total now available: {$platesAfter} plates.",
                 'item' => $item,
             ]);
         });

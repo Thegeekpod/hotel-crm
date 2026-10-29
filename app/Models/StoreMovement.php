@@ -20,6 +20,7 @@ class StoreMovement extends Model
         'issued_to_department',
         'issued_to_person',
         'unit_cost',
+        'total_cost',
         'remarks',
         'performed_by',
     ];

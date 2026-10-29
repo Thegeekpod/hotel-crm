@@ -621,6 +621,9 @@
                 </td>
                 <td style="font-family: var(--font-mono, monospace); font-weight: 800; font-size: 13px; color: #0f172a;">
                   ₹ {{ number_format($dish->price, 2) }}
+                  @if($dish->last_purchase_price)
+                    <span style="font-size: 10px; color: #64748b; font-weight: normal; display: block;" title="Last Inward Cost">Last Buy: ₹{{ number_format($dish->last_purchase_price, 2) }}</span>
+                  @endif
                 </td>
                 <td>
                   <div class="recipe-spec-box">
@@ -780,6 +783,9 @@
                 </td>
                 <td style="font-family: var(--font-mono, monospace); font-weight: 800; {{ $mov->type === 'IN' ? 'color: #059669;' : 'color: #e11d48;' }}">
                   {{ $mov->type === 'IN' ? '+' : '-' }}{{ $mov->quantity }} Plates
+                  @if($mov->total_cost > 0)
+                    <span style="font-size: 10px; color: #0891b2; display: block; font-weight: 700;">Cost: ₹{{ number_format($mov->total_cost, 2) }}</span>
+                  @endif
                 </td>
                 <td style="font-family: var(--font-mono, monospace); font-size: 11.5px; color: #64748b;">
                   {{ $mov->stock_before }} &rarr; <strong>{{ $mov->stock_after }}</strong>
@@ -998,6 +1004,17 @@
               <input type="number" id="inward-plates" class="pms-input" required min="1" step="1" placeholder="e.g. 40" style="width: 100%; font-weight: 800; color: #059669;">
             </div>
           </div>
+
+          <div style="margin-bottom: 8px;">
+            <label style="font-size: 11px; font-weight: 700; color: #475569; display: block; margin-bottom: 4px;">
+              Purchase Price / Buying Dam (₹) <span style="font-size: 10px; color: #94a3b8; font-weight: 500;">(Optional - e.g. raw item er khoroch / dam)</span>
+            </label>
+            <div style="position: relative;">
+              <span style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-weight: 700; color: #64748b; font-size: 13px;">₹</span>
+              <input type="number" id="inward-purchase-price" class="pms-input" min="0" step="any" placeholder="e.g. 240 (Optional)" oninput="calculateInwardPlates()" style="width: 100%; padding-left: 26px;">
+            </div>
+          </div>
+
           <span id="inward-yield-calc" style="font-size: 10.5px; color: #64748b; display: block;">Select a dish to see recipe yield.</span>
         </div>
 
@@ -1315,22 +1332,39 @@
     if (!opt || !opt.value) return;
 
     const rawQty = parseFloat(document.getElementById('inward-raw-qty').value) || 0;
-    const rawUnit = (opt.getAttribute('data-rawunit') || 'Kg').toLowerCase();
+    const rawUnit = (opt.getAttribute('data-rawunit') || 'Kg');
+    const rawUnitLower = rawUnit.toLowerCase();
     const perPlate = parseFloat(opt.getAttribute('data-perplate')) || 1;
-    const plateUnit = (opt.getAttribute('data-plateunit') || 'gm').toLowerCase();
-
-    if (rawQty <= 0) return;
+    const plateUnit = (opt.getAttribute('data-plateunit') || 'gm');
+    const plateUnitLower = plateUnit.toLowerCase();
+    const ing = opt.getAttribute('data-ing') || 'Main Ingredient';
+    const purchasePrice = parseFloat(document.getElementById('inward-purchase-price').value) || 0;
 
     let plates = 0;
-    if ((rawUnit === 'kg' || rawUnit === 'kgs') && (plateUnit === 'gm' || plateUnit === 'g' || plateUnit === 'grams')) {
-      plates = Math.floor((rawQty * 1000) / perPlate);
-    } else if ((rawUnit === 'liters' || rawUnit === 'liter' || rawUnit === 'l') && (plateUnit === 'ml')) {
-      plates = Math.floor((rawQty * 1000) / perPlate);
-    } else {
-      plates = Math.floor(rawQty / perPlate);
+    if (rawQty > 0) {
+      if ((rawUnitLower === 'kg' || rawUnitLower === 'kgs') && (plateUnitLower === 'gm' || plateUnitLower === 'g' || plateUnitLower === 'grams')) {
+        plates = Math.floor((rawQty * 1000) / perPlate);
+      } else if ((rawUnitLower === 'liters' || rawUnitLower === 'liter' || rawUnitLower === 'l') && (plateUnitLower === 'ml')) {
+        plates = Math.floor((rawQty * 1000) / perPlate);
+      } else {
+        plates = Math.floor(rawQty / perPlate);
+      }
+      document.getElementById('inward-plates').value = plates;
     }
 
-    document.getElementById('inward-plates').value = plates;
+    let yieldText = `Recipe: ${ing} (${perPlate} ${plateUnit} per plate). Entering raw ${rawUnit} auto-computes plates.`;
+    if (purchasePrice > 0) {
+      if (rawQty > 0) {
+        const ratePerUnit = (purchasePrice / rawQty).toFixed(2);
+        yieldText += ` • Rate: ₹${ratePerUnit}/${rawUnit}`;
+      }
+      const currentPlates = parseInt(document.getElementById('inward-plates').value) || plates;
+      if (currentPlates > 0) {
+        const costPerPlate = (purchasePrice / currentPlates).toFixed(2);
+        yieldText += ` (~₹${costPerPlate}/plate)`;
+      }
+    }
+    document.getElementById('inward-yield-calc').textContent = yieldText;
   }
 
   async function submitInwardStock(e) {
@@ -1339,6 +1373,7 @@
       pos_item_id: document.getElementById('inward-item-id').value,
       inward_raw_qty: document.getElementById('inward-raw-qty').value || 0,
       inward_plates: document.getElementById('inward-plates').value,
+      purchase_price: document.getElementById('inward-purchase-price').value || null,
       vendor_name: document.getElementById('inward-vendor').value.trim() || null,
       invoice_no: document.getElementById('inward-invoice').value.trim() || null,
       remarks: document.getElementById('inward-remarks').value.trim() || null

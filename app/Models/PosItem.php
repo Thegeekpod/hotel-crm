@@ -14,6 +14,7 @@ class PosItem extends Model
         'name',
         'category',
         'price',
+        'last_purchase_price',
         'emoji',
         'description',
         'ingredient_name',

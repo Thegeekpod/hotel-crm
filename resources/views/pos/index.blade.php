@@ -1,6 +1,6 @@
 @extends('frontoffice.layouts.app')
 
-@section('title', 'POS Sales - Sea Breeze Dining & In-Room Dining - Hotel Sagar Sonnet')
+@section('title', 'POS Sales - Dining & In-Room Dining - Hotel Sagar Sonnet')
 
 @push('styles')
 <style>
@@ -532,6 +532,49 @@
     margin: 6px 0;
   }
 
+  /* Select2 Searchable Dropdown Luxury Theme */
+  .pos-wrapper .select2-container--default .select2-selection--single {
+    height: 34px !important;
+    border-radius: 8px !important;
+    border: 1px solid #cbd5e1 !important;
+    background: #ffffff !important;
+    font-size: 11.5px !important;
+    font-weight: 700 !important;
+    color: #1e293b !important;
+    display: flex !important;
+    align-items: center !important;
+    box-sizing: border-box !important;
+  }
+  .pos-wrapper .select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 32px !important;
+  }
+  .pos-wrapper .select2-container--default .select2-selection--single .select2-selection__rendered {
+    color: #1e293b !important;
+    font-weight: 700 !important;
+    line-height: normal !important;
+    font-size: 11.5px !important;
+  }
+  #pos-room-select + .select2-container {
+    width: 280px !important;
+  }
+  #pos-table-select + .select2-container {
+    width: 220px !important;
+  }
+  #room-folio-picker-box .select2-container {
+    width: 100% !important;
+  }
+  #room-folio-picker-box .select2-container--default .select2-selection--single {
+    height: 36px !important;
+    border: 1.5px solid #10b981 !important;
+    background: #ffffff !important;
+    border-radius: 8px !important;
+  }
+  #room-folio-picker-box .select2-container--default .select2-selection--single:focus,
+  #room-folio-picker-box .select2-container--default.select2-container--open .select2-selection--single {
+    border-color: #059669 !important;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2) !important;
+  }
+
   /* Modals */
   .pos-modal-backdrop {
     position: fixed;
@@ -834,24 +877,21 @@
         <!-- Room Selector (Visible for Room Dining or when Room Folio is chosen) -->
         <div id="room-select-group" style="display: flex; gap: 8px; align-items: center;">
           <span style="font-weight: 700; font-size: 11px; color: #64748b; white-space: nowrap;">Bill To Room:</span>
-          <select class="pms-select" id="pos-room-select" style="height: 34px; min-width: 220px; font-weight: 600;" onchange="syncRoomSelectors(this.value)">
+          <select class="pms-select" id="pos-room-select" style="min-width: 260px;">
             @forelse($selectableRooms as $rm)
-              @php
-                $gName = $rm->activeBooking?->guest?->guest_name ?? 'In-House Guest';
-              @endphp
-              <option value="{{ $rm->id }}" data-room="{{ $rm->room_number }}" data-guest="{{ $gName }}">
-                Room {{ $rm->room_number }} - {{ $gName }}
+              <option value="{{ $rm->id }}" data-room="{{ $rm->room_number }}" data-guest="{{ $rm->guest_name }}">
+                Room {{ $rm->room_number }} - {{ $rm->guest_name }}
               </option>
             @empty
-              <option value="">No Active Rooms</option>
+              <option value="">No Checked In Guests</option>
             @endforelse
           </select>
         </div>
 
         <!-- Table Selector (Visible for Table Dine-in) -->
         <div id="table-select-group" style="display: none; gap: 8px; align-items: center;">
-          <span style="font-weight: 700; font-size: 11px; color: #64748b;">Table / Host:</span>
-          <select class="pms-select" id="pos-table-select" style="height: 34px; min-width: 170px; font-weight: 600;">
+          <span style="font-weight: 700; font-size: 11px; color: #64748b; white-space: nowrap;">Table / Host:</span>
+          <select class="pms-select" id="pos-table-select" style="min-width: 220px;">
             <option value="Table 1 (Sea Breeze Deck)">Table 1 (Sea Breeze Deck)</option>
             <option value="Table 2 (Lawn View)">Table 2 (Lawn View)</option>
             <option value="Table 3 (Poolside)">Table 3 (Poolside)</option>
@@ -988,20 +1028,17 @@
 
           <!-- Room Folio Picker (Visible when Room Folio is chosen, even for Table Dine-in & Takeaway) -->
           <div id="room-folio-picker-box" style="margin-top: 10px; background: #ecfdf5; border: 1.5px solid #86efac; border-radius: 8px; padding: 10px; display: block;">
-            <label style="font-size: 11px; font-weight: 800; color: #166534; display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
+            <label style="font-size: 11px; font-weight: 800; color: #166534; display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
               <span><i class="fa-solid fa-door-open" style="color: #10b981;"></i> Select Room to Charge Folio: *</span>
               <span style="font-size: 9.5px; background: #dcfce7; color: #15803d; padding: 1px 6px; border-radius: 4px; font-weight: 700;">In-House Folio</span>
             </label>
-            <select class="pms-select" id="cart-room-folio-select" style="width: 100%; height: 36px; font-weight: 700; font-size: 12px; border-color: #10b981; background: #ffffff;" onchange="syncRoomSelectors(this.value)">
+            <select class="pms-select" id="cart-room-folio-select" style="width: 100%;">
               @forelse($selectableRooms as $rm)
-                @php
-                  $gName = $rm->activeBooking?->guest?->guest_name ?? 'In-House Guest';
-                @endphp
-                <option value="{{ $rm->id }}" data-room="{{ $rm->room_number }}" data-guest="{{ $gName }}">
-                  Room {{ $rm->room_number }} - {{ $gName }}
+                <option value="{{ $rm->id }}" data-room="{{ $rm->room_number }}" data-guest="{{ $rm->guest_name }}">
+                  Room {{ $rm->room_number }} - {{ $rm->guest_name }}
                 </option>
               @empty
-                <option value="">No Active Rooms Found</option>
+                <option value="">No Checked In Guests Found</option>
               @endforelse
             </select>
           </div>
@@ -1064,6 +1101,7 @@
         </div>
         <div><strong>Type:</strong> <span id="kot-dest">Room 102</span></div>
         <div><strong>Guest / Host:</strong> <span id="kot-guest">In-House Guest</span></div>
+        <div><strong>Billing Mode:</strong> <span id="kot-billing" style="font-weight: 700; color: #0284c7;">Charged to Room Folio</span></div>
         <div class="divider-line"></div>
         <table style="width: 100%; border-collapse: collapse; text-align: left;">
           <thead>
@@ -1188,11 +1226,48 @@
 
   // Helper to sync room selectors between Header and Cart
   function syncRoomSelectors(val) {
-    const headRm = document.getElementById('pos-room-select');
-    const cartRm = document.getElementById('cart-room-folio-select');
-    if (headRm && headRm.value !== val) headRm.value = val;
-    if (cartRm && cartRm.value !== val) cartRm.value = val;
+    if (typeof $ !== 'undefined') {
+      if ($('#pos-room-select').val() !== val) {
+        $('#pos-room-select').val(val).trigger('change.select2Sync');
+      }
+      if ($('#cart-room-folio-select').val() !== val) {
+        $('#cart-room-folio-select').val(val).trigger('change.select2Sync');
+      }
+    } else {
+      const headRm = document.getElementById('pos-room-select');
+      const cartRm = document.getElementById('cart-room-folio-select');
+      if (headRm && headRm.value !== val) headRm.value = val;
+      if (cartRm && cartRm.value !== val) cartRm.value = val;
+    }
   }
+
+  // Initialize Searchable Select2 Dropdowns
+  $(document).ready(function() {
+    if (typeof $.fn.select2 !== 'undefined') {
+      $('#pos-room-select').select2({
+        width: '280px',
+        placeholder: 'Search Room # or Guest Name...'
+      }).on('change', function(e) {
+        if (e.namespace !== 'select2Sync') {
+          syncRoomSelectors($(this).val());
+        }
+      });
+
+      $('#pos-table-select').select2({
+        width: '220px',
+        placeholder: 'Select Dining Table'
+      });
+
+      $('#cart-room-folio-select').select2({
+        width: '100%',
+        placeholder: 'Search Room # or Guest Name...'
+      }).on('change', function(e) {
+        if (e.namespace !== 'select2Sync') {
+          syncRoomSelectors($(this).val());
+        }
+      });
+    }
+  });
 
   // 1. Order Type Switching
   function selectOrderType(type) {
@@ -1474,6 +1549,7 @@
 
       const data = await res.json();
       if (data.success) {
+        orderJustPlaced = true;
         if (typeof Swal !== 'undefined') {
           Swal.fire({
             icon: 'success',
@@ -1501,6 +1577,8 @@
   }
 
   // 7. KOT Thermal Slip Modal Handling
+  let orderJustPlaced = false;
+
   function showKotModal(order) {
     document.getElementById('kot-order-num').innerHTML = `<strong>KOT: ${order.order_number}</strong>`;
     document.getElementById('kot-time').textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -1516,6 +1594,8 @@
     }
     document.getElementById('kot-dest').textContent = dest;
     document.getElementById('kot-guest').textContent = order.customer_name || 'Guest';
+    const kotBillingEl = document.getElementById('kot-billing');
+    if (kotBillingEl) kotBillingEl.textContent = order.billing_type || 'Paid';
 
     let tbodyHtml = '';
     let totQty = 0;
@@ -1539,29 +1619,51 @@
 
   function closeKotModal() {
     document.getElementById('kot-modal').style.display = 'none';
+    if (orderJustPlaced) {
+      window.location.reload();
+    }
   }
 
   function printThermalTicket() {
     const printContent = document.getElementById('printable-kot-area').innerHTML;
-    const origBody = document.body.innerHTML;
-    const win = window.open('', '_blank', 'width=450,height=600');
-    win.document.write(`
-      <html>
-        <head>
-          <title>KOT Print</title>
-          <style>
-            body { font-family: 'Courier New', Courier, monospace; padding: 20px; font-size: 12px; }
-            .divider-line { border-bottom: 1px dashed #000; margin: 6px 0; }
-            table { width: 100%; border-collapse: collapse; }
-            th, td { padding: 4px 0; }
-          </style>
-        </head>
-        <body onload="window.print(); window.close();">
-          ${printContent}
-        </body>
-      </html>
+    let iframe = document.getElementById('kot-print-frame');
+    if (!iframe) {
+      iframe = document.createElement('iframe');
+      iframe.id = 'kot-print-frame';
+      iframe.style.position = 'fixed';
+      iframe.style.right = '0';
+      iframe.style.bottom = '0';
+      iframe.style.width = '0';
+      iframe.style.height = '0';
+      iframe.style.border = '0';
+      document.body.appendChild(iframe);
+    }
+    const doc = iframe.contentWindow.document;
+    doc.open();
+    doc.write('<!DOCTYPE html><html><' + 'head><title>KOT Ticket</title><style>');
+    doc.write(`
+      body { font-family: 'Courier New', Courier, monospace; padding: 10px; font-size: 12px; color: #000; margin: 0; }
+      .thermal-ticket-card { width: 100%; max-width: 320px; margin: 0 auto; }
+      h3 { text-align: center; margin: 0 0 4px; font-size: 15px; font-weight: 900; }
+      .center-sub { text-align: center; font-size: 10.5px; margin: 3px 0; }
+      .divider-line { border-bottom: 1px dashed #000; margin: 6px 0; }
+      table { width: 100%; border-collapse: collapse; margin: 6px 0; font-size: 11.5px; }
+      th, td { padding: 4px 0; }
+      th { border-bottom: 1px solid #000; }
+      @media print {
+        @page { margin: 2mm; size: auto; }
+        body { padding: 4px; }
+      }
     `);
-    win.document.close();
+    doc.write('</' + 'style></' + 'head><' + 'body>');
+    doc.write(printContent);
+    doc.write('</' + 'body></' + 'html>');
+    doc.close();
+
+    setTimeout(() => {
+      iframe.contentWindow.focus();
+      iframe.contentWindow.print();
+    }, 250);
   }
 
   // 8. Recent Orders & KOT History Modal

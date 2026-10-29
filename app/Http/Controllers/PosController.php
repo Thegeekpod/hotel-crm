@@ -39,17 +39,39 @@ class PosController extends Controller
 
         $menuItems = $itemsQuery->with(['ingredients.storeItem', 'storeItem'])->orderBy('category')->orderBy('name')->get();
 
-        // 2. Occupied / Checked-in Rooms for Room Charge Dropdown
-        $occupiedRooms = Room::with(['activeBooking.guest', 'categoryRelation'])
-            ->whereHas('activeBooking', function ($q) {
-                $q->whereIn('status', ['Confirmed', 'Checked In']);
-            })
-            ->orderBy('room_number')
-            ->get();
+        // 2. Currently residing Checked In guests (Only checked in status & primary guests)
+        $validStatuses = ['Checked In', 'Stay Over'];
+        $rooms = Room::with(['bookings' => function ($q) use ($validStatuses) {
+            $q->whereIn('status', $validStatuses)
+              ->with(['guest', 'primaryBooking.guest'])
+              ->orderByRaw('CASE WHEN primary_booking_id IS NULL THEN 0 ELSE 1 END')
+              ->latest('id');
+        }])
+        ->whereHas('bookings', function ($q) use ($validStatuses) {
+            $q->whereIn('status', $validStatuses);
+        })
+        ->orderByRaw('CAST(room_number AS UNSIGNED) ASC, room_number ASC')
+        ->get();
 
-        // If no checked-in rooms yet, load all rooms so user can test
-        $allRooms = Room::with(['activeBooking.guest', 'categoryRelation'])->orderBy('room_number')->get();
-        $selectableRooms = $occupiedRooms->isNotEmpty() ? $occupiedRooms : $allRooms;
+        $selectableRooms = collect();
+        foreach ($rooms as $room) {
+            $primaryBooking = $room->bookings->first(function ($b) {
+                return is_null($b->primary_booking_id);
+            }) ?? $room->bookings->first();
+
+            if (!$primaryBooking) continue;
+
+            $primaryGuest = $primaryBooking->primaryBooking?->guest ?? $primaryBooking->guest;
+            if (!$primaryGuest) continue;
+
+            $selectableRooms->push((object)[
+                'id' => $room->id,
+                'room_number' => $room->room_number,
+                'guest_name' => trim($primaryGuest->guest_name),
+                'booking_id' => $primaryBooking->id,
+                'status' => $primaryBooking->status,
+            ]);
+        }
 
         // 3. Today's POS Orders
         $recentOrders = PosOrder::with(['items', 'room', 'booking.guest'])
@@ -112,12 +134,24 @@ class PosController extends Controller
             $customerName = $validated['customer_name'] ?? 'Walk-in Guest';
 
             if (!empty($validated['room_id'])) {
-                $room = Room::with('activeBooking.guest')->find($validated['room_id']);
+                $room = Room::with(['bookings' => function ($q) {
+                    $q->whereIn('status', ['Checked In', 'Stay Over'])
+                      ->with(['guest', 'primaryBooking.guest'])
+                      ->orderByRaw('CASE WHEN primary_booking_id IS NULL THEN 0 ELSE 1 END')
+                      ->latest('id');
+                }])->find($validated['room_id']);
+
                 if ($room) {
                     $roomNumber = $room->room_number;
-                    $booking = $room->activeBooking;
-                    if ($booking && $booking->guest) {
-                        $customerName = $booking->guest->guest_name;
+                    $booking = $room->bookings->first(function ($b) {
+                        return is_null($b->primary_booking_id);
+                    }) ?? $room->bookings->first() ?? $room->activeBooking;
+
+                    if ($booking) {
+                        $primaryGuest = $booking->primaryBooking?->guest ?? $booking->guest;
+                        if ($primaryGuest) {
+                            $customerName = $primaryGuest->guest_name;
+                        }
                     }
                 }
             }

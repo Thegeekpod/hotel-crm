@@ -283,7 +283,7 @@
       <i class="fa-solid fa-rotate text-cyan-600"></i> Refresh
     </a>
     
-    <select name="type" class="pms-select h-8.5 text-xs px-2.5 rounded-lg border border-slate-200 bg-white font-semibold cursor-pointer leading-none" id="filter-type" onchange="submitBackendFilter()" title="Filter by Room Type">
+    <select name="type" class="pms-select h-8.5 text-xs pl-3 pr-7.5 rounded-lg border border-slate-200 bg-white font-semibold cursor-pointer leading-none" id="filter-type" onchange="submitBackendFilter()" title="Filter by Room Type">
       <option value="ALL" {{ ($selectedType ?? 'ALL') === 'ALL' ? 'selected' : '' }}>All Types</option>
       @foreach($categories as $cat)
         <option value="{{ strtoupper($cat->name) }}" {{ ($selectedType ?? '') === strtoupper($cat->name) ? 'selected' : '' }}>{{ $cat->name }}</option>
@@ -296,7 +296,7 @@
       @endif
     </select>
 
-    <select name="floor" class="pms-select h-8.5 text-xs px-2.5 rounded-lg border border-slate-200 bg-white font-semibold cursor-pointer leading-none" id="filter-floor" onchange="submitBackendFilter()" title="Filter by Floor">
+    <select name="floor" class="pms-select h-8.5 text-xs pl-3 pr-7.5 rounded-lg border border-slate-200 bg-white font-semibold cursor-pointer leading-none" id="filter-floor" onchange="submitBackendFilter()" title="Filter by Floor">
       <option value="ALL" {{ ($selectedFloor ?? 'ALL') === 'ALL' ? 'selected' : '' }}>All Floor</option>
       @foreach($floors as $fl)
         <option value="{{ $fl->floor }}" {{ strval($selectedFloor ?? '') === strval($fl->floor) ? 'selected' : '' }}>Floor {{ $fl->floor }}</option>
@@ -310,14 +310,14 @@
       @endif
     </select>
 
-    <select name="bedding" class="pms-select h-8.5 text-xs px-2.5 rounded-lg border border-slate-200 bg-white font-semibold cursor-pointer leading-none" id="filter-bedding" onchange="submitBackendFilter()" title="Filter by Bedding Configuration">
+    <select name="bedding" class="pms-select h-8.5 text-xs pl-3 pr-7.5 rounded-lg border border-slate-200 bg-white font-semibold cursor-pointer leading-none" id="filter-bedding" onchange="submitBackendFilter()" title="Filter by Bedding Configuration">
       <option value="ALL" {{ ($selectedBedding ?? 'ALL') === 'ALL' ? 'selected' : '' }}>All Bedding</option>
       @foreach($beddingConfigs as $bc)
         <option value="{{ $bc->id }}" {{ strval($selectedBedding ?? '') === strval($bc->id) ? 'selected' : '' }}>{{ $bc->name }}</option>
       @endforeach
     </select>
 
-    <select name="pax" class="pms-select h-8.5 text-xs px-2.5 rounded-lg border border-slate-200 bg-white font-semibold cursor-pointer leading-none" id="filter-pax" onchange="submitBackendFilter()" title="Filter by Pax Capacity">
+    <select name="pax" class="pms-select h-8.5 text-xs pl-3 pr-7.5 rounded-lg border border-slate-200 bg-white font-semibold cursor-pointer leading-none" id="filter-pax" onchange="submitBackendFilter()" title="Filter by Pax Capacity">
       <option value="ALL" {{ ($selectedPax ?? 'ALL') === 'ALL' ? 'selected' : '' }}>All Pax</option>
       <option value="1" {{ strval($selectedPax ?? '') === '1' ? 'selected' : '' }}>1 Pax</option>
       <option value="2" {{ strval($selectedPax ?? '') === '2' ? 'selected' : '' }}>2 Pax</option>
@@ -326,7 +326,7 @@
       <option value="6" {{ strval($selectedPax ?? '') === '6' ? 'selected' : '' }}>6 Pax</option>
     </select>
 
-    <select name="amenity" class="pms-select h-8.5 text-xs px-2.5 rounded-lg border border-slate-200 bg-white font-semibold cursor-pointer leading-none" id="filter-amenity" onchange="submitBackendFilter()" title="Filter by Amenities">
+    <select name="amenity" class="pms-select h-8.5 text-xs pl-3 pr-7.5 rounded-lg border border-slate-200 bg-white font-semibold cursor-pointer leading-none" id="filter-amenity" onchange="submitBackendFilter()" title="Filter by Amenities">
       <option value="ALL" {{ ($selectedAmenity ?? 'ALL') === 'ALL' ? 'selected' : '' }}>All Amenities</option>
       @foreach($amenitiesList as $amn)
         <option value="{{ $amn->id }}" {{ strval($selectedAmenity ?? '') === strval($amn->id) ? 'selected' : '' }}>{{ $amn->name }}</option>

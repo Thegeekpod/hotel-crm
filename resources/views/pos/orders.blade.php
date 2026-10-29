@@ -124,7 +124,7 @@
           </div>
 
           <!-- Order Type -->
-          <select name="type" class="h-9.5 px-3 text-xs font-semibold rounded-xl border border-slate-200 bg-white text-slate-700 focus:outline-none focus:border-indigo-500 cursor-pointer">
+          <select name="type" class="h-9.5 pl-3.5 pr-8.5 text-xs font-semibold rounded-xl border border-slate-200 bg-white text-slate-700 focus:outline-none focus:border-indigo-500 cursor-pointer">
             <option value="all" {{ request('type', 'all') === 'all' ? 'selected' : '' }}>All Order Types</option>
             <option value="Room Dining" {{ request('type') === 'Room Dining' ? 'selected' : '' }}>Room Dining</option>
             <option value="Table Dine-in" {{ request('type') === 'Table Dine-in' ? 'selected' : '' }}>Table Dine-in</option>
@@ -132,7 +132,7 @@
           </select>
 
           <!-- Status -->
-          <select name="status" class="h-9.5 px-3 text-xs font-semibold rounded-xl border border-slate-200 bg-white text-slate-700 focus:outline-none focus:border-indigo-500 cursor-pointer">
+          <select name="status" class="h-9.5 pl-3.5 pr-8.5 text-xs font-semibold rounded-xl border border-slate-200 bg-white text-slate-700 focus:outline-none focus:border-indigo-500 cursor-pointer">
             <option value="all" {{ request('status', 'all') === 'all' ? 'selected' : '' }}>All Statuses</option>
             <option value="Received" {{ request('status') === 'Received' ? 'selected' : '' }}>Received</option>
             <option value="In Kitchen" {{ request('status') === 'In Kitchen' ? 'selected' : '' }}>In Kitchen</option>
@@ -141,7 +141,7 @@
           </select>
 
           <!-- Billing Mode -->
-          <select name="billing_type" class="h-9.5 px-3 text-xs font-semibold rounded-xl border border-slate-200 bg-white text-slate-700 focus:outline-none focus:border-indigo-500 cursor-pointer">
+          <select name="billing_type" class="h-9.5 pl-3.5 pr-8.5 text-xs font-semibold rounded-xl border border-slate-200 bg-white text-slate-700 focus:outline-none focus:border-indigo-500 cursor-pointer">
             <option value="all" {{ request('billing_type', 'all') === 'all' ? 'selected' : '' }}>All Billing Modes</option>
             <option value="Charged to Room Folio" {{ request('billing_type') === 'Charged to Room Folio' ? 'selected' : '' }}>Charged to Room Folio</option>
             <option value="Cash Paid" {{ request('billing_type') === 'Cash Paid' ? 'selected' : '' }}>Cash Paid</option>
@@ -304,7 +304,7 @@
 
                 <!-- Status Select -->
                 <td class="px-4 py-3 text-center">
-                  <select class="h-8 text-xs font-bold rounded-lg border border-slate-200 bg-white px-2.5 focus:outline-none focus:border-indigo-500 cursor-pointer shadow-2xs" onchange="updateOrderStatus({{ $order->id }}, this.value)">
+                  <select class="h-8 text-xs font-bold rounded-lg border border-slate-200 bg-white pl-2.5 pr-7 focus:outline-none focus:border-indigo-500 cursor-pointer shadow-2xs" onchange="updateOrderStatus({{ $order->id }}, this.value)">
                     <option value="Received" {{ $order->status === 'Received' ? 'selected' : '' }}>Received</option>
                     <option value="In Kitchen" {{ $order->status === 'In Kitchen' ? 'selected' : '' }}>In Kitchen</option>
                     <option value="Completed" {{ $order->status === 'Completed' ? 'selected' : '' }}>Completed</option>

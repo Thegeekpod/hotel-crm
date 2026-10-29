@@ -50,7 +50,7 @@
               <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
               <input type="text" id="table-search" class="h-9.5 pl-8 pr-3 text-xs font-medium rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-indigo-500 w-full" placeholder="Search table # or area..." value="{{ request('search') }}" oninput="handleSearch(this.value)">
             </div>
-            <select id="status-filter" class="h-9.5 px-3 text-xs font-medium rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-indigo-500 cursor-pointer" onchange="handleStatusFilter(this.value)">
+            <select id="status-filter" class="h-9.5 pl-3.5 pr-8.5 text-xs font-medium rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-indigo-500 cursor-pointer" onchange="handleStatusFilter(this.value)">
               <option value="all" {{ request('status', 'all') === 'all' ? 'selected' : '' }}>All Statuses</option>
               <option value="available" {{ request('status') === 'available' ? 'selected' : '' }}>Available</option>
               <option value="booked" {{ request('status') === 'booked' ? 'selected' : '' }}>Booked</option>
@@ -142,7 +142,7 @@
           <div class="flex items-center gap-3">
             <div class="flex items-center gap-1.5 text-slate-500 font-medium">
               <span>Rows:</span>
-              <select id="rows-per-page" class="h-8 px-2 text-xs font-medium rounded-lg border border-slate-200 bg-white focus:outline-none focus:border-indigo-500 cursor-pointer" onchange="handlePageSizeChange(this.value)">
+              <select id="rows-per-page" class="h-8 pl-2.5 pr-7 text-xs font-medium rounded-lg border border-slate-200 bg-white focus:outline-none focus:border-indigo-500 cursor-pointer" onchange="handlePageSizeChange(this.value)">
                 <option value="10" selected>10</option>
                 <option value="20">20</option>
                 <option value="100">100</option>
@@ -183,7 +183,7 @@
         </div>
         <div>
           <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Status <span class="text-rose-500">*</span></label>
-          <select id="form-status" class="h-9.5 px-3 text-xs font-medium rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-indigo-500 w-full cursor-pointer" required>
+          <select id="form-status" class="h-9.5 pl-3.5 pr-8.5 text-xs font-medium rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-indigo-500 w-full cursor-pointer" required>
             <option value="available">Available (Default)</option>
             <option value="booked">Booked</option>
             <option value="inactive">Inactive</option>

@@ -186,27 +186,40 @@
                   </td>
                   <!-- Booking Number -->
                   <td class="py-3 px-3.5 whitespace-nowrap">
-                    <div class="font-bold text-indigo-600 font-mono text-xs inline-flex items-center gap-1.5">
-                      <i class="fa-solid fa-receipt text-[11px] text-indigo-500"></i>
-                      <span>{{ $b['booking_number'] }}</span>
-                    </div>
+                    @if(!empty($b['booking_number']) && $b['booking_number'] !== '-' && $b['booking_number'] !== 'N/A')
+                      <div class="font-bold text-indigo-600 font-mono text-xs inline-flex items-center gap-1.5">
+                        <i class="fa-solid fa-receipt text-[11px] text-indigo-500"></i>
+                        <span>{{ $b['booking_number'] }}</span>
+                      </div>
+                    @else
+                      <span class="text-slate-400 font-mono font-bold text-xs">N/A</span>
+                    @endif
                   </td>
                   <!-- Room(s) & Floor -->
                   <td class="py-3 px-3.5">
-                    <div class="flex flex-wrap gap-1 items-center">
-                      @foreach($b['rooms'] as $rm)
-                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-indigo-50 border border-indigo-100 text-indigo-700 font-bold font-mono text-[11px]" title="{{ $rm['category'] }}">
-                          <i class="fa-solid fa-door-open text-[9px]"></i> {{ $rm['room_number'] }} <span class="text-[9px] opacity-75">(Fl {{ $rm['floor'] }})</span>
-                        </span>
-                      @endforeach
-                      @if(!empty($b['transfers']))
-                        @foreach($b['transfers'] as $tf)
-                          <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold text-amber-800 bg-amber-50 border border-amber-200" title="Room swiped: R{{ $tf['from'] }} to R{{ $tf['to'] }} on {{ $tf['date'] }}">
-                            <i class="fa-solid fa-repeat text-[8px]"></i> R{{ $tf['from'] }}&rarr;R{{ $tf['to'] }}
+                    @php
+                      $validRooms = collect($b['rooms'] ?? [])->filter(function($rm) {
+                        return !empty($rm['room_number']) && $rm['room_number'] !== '-' && $rm['room_number'] !== 'N/A';
+                      });
+                    @endphp
+                    @if($validRooms->isNotEmpty())
+                      <div class="flex flex-wrap gap-1 items-center">
+                        @foreach($validRooms as $rm)
+                          <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-indigo-50 border border-indigo-100 text-indigo-700 font-bold font-mono text-[11px]" title="{{ $rm['category'] }}">
+                            <i class="fa-solid fa-door-open text-[9px]"></i> {{ $rm['room_number'] }} <span class="text-[9px] opacity-75">(Fl {{ $rm['floor'] }})</span>
                           </span>
                         @endforeach
-                      @endif
-                    </div>
+                        @if(!empty($b['transfers']))
+                          @foreach($b['transfers'] as $tf)
+                            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold text-amber-800 bg-amber-50 border border-amber-200" title="Room swiped: R{{ $tf['from'] }} to R{{ $tf['to'] }} on {{ $tf['date'] }}">
+                              <i class="fa-solid fa-repeat text-[8px]"></i> R{{ $tf['from'] }}&rarr;R{{ $tf['to'] }}
+                            </span>
+                          @endforeach
+                        @endif
+                      </div>
+                    @else
+                      <span class="text-slate-400 font-mono font-bold text-xs">N/A</span>
+                    @endif
                   </td>
                   <!-- Primary Guest & Occupants -->
                   <td class="py-3 px-3.5">
@@ -214,7 +227,9 @@
                       {{ $b['primary_guest_name'] }}
                     </div>
                     <div class="text-[10px] text-slate-500 mt-0.5 flex items-center gap-1.5">
-                      <span class="font-mono"><i class="fa-solid fa-phone text-[8px] text-emerald-600"></i> {{ $b['primary_mobile'] }}</span>
+                      @if(!empty($b['primary_mobile']) && $b['primary_mobile'] !== '-' && $b['primary_mobile'] !== 'N/A')
+                        <span class="font-mono"><i class="fa-solid fa-phone text-[8px] text-emerald-600"></i> {{ $b['primary_mobile'] }}</span>
+                      @endif
                       @if($b['total_occupants'] > 1)
                         <span class="bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded font-bold text-[9px]" title="{{ implode(', ', $b['occupants_names']) }}">
                           +{{ $b['total_occupants'] - 1 }} guest(s)
@@ -223,13 +238,21 @@
                     </div>
                   </td>
                   <!-- Settle / Folio # -->
-                  <td class="py-3 px-3.5 font-mono text-xs text-indigo-600 font-bold whitespace-nowrap">
-                    {{ $b['settle_number'] }}
+                  <td class="py-3 px-3.5 font-mono text-xs whitespace-nowrap">
+                    @if(!empty($b['settle_number']) && $b['settle_number'] !== '-' && $b['settle_number'] !== 'N/A')
+                      <span class="font-bold text-indigo-600">{{ $b['settle_number'] }}</span>
+                    @else
+                      <span class="text-slate-400 font-mono font-bold text-xs">N/A</span>
+                    @endif
                   </td>
                   <!-- Stay Dates -->
                   <td class="py-3 px-3.5 text-xs text-slate-600 whitespace-nowrap">
-                    <div><i class="fa-regular fa-calendar-check text-[9px] text-indigo-500"></i> {{ $b['checkin_date'] }}</div>
-                    <div class="text-[10px] text-slate-400 mt-0.5"><i class="fa-regular fa-calendar-xmark text-[9px] text-rose-500"></i> {{ $b['checkout_date'] }}</div>
+                    @if(!empty($b['checkin_date']) && $b['checkin_date'] !== '-' && $b['checkin_date'] !== 'N/A')
+                      <div><i class="fa-regular fa-calendar-check text-[9px] text-indigo-500"></i> {{ $b['checkin_date'] }}</div>
+                      <div class="text-[10px] text-slate-400 mt-0.5"><i class="fa-regular fa-calendar-xmark text-[9px] text-rose-500"></i> {{ $b['checkout_date'] }}</div>
+                    @else
+                      <span class="text-slate-400 font-mono font-bold text-xs">N/A</span>
+                    @endif
                   </td>
                   <!-- Stay Status -->
                   <td class="py-3 px-3.5 text-center whitespace-nowrap">
@@ -986,14 +1009,19 @@
               $rem = (float)($b['remaining_balance'] ?? $b['remaining_amount'] ?? 0);
               $pd = (float)($b['total_paid'] ?? $b['paid_amount'] ?? 0);
               $isSet = !empty($b['is_settled']) || ($rem <= 0.01);
-              $roomsStr = collect($b['rooms'] ?? [])->map(fn($r) => $r['room_number'] . ' (Fl ' . $r['floor'] . ')')->implode(', ');
+              $validRoomsCol = collect($b['rooms'] ?? [])->filter(fn($r) => !empty($r['room_number']) && $r['room_number'] !== '-' && $r['room_number'] !== 'N/A');
+              $roomsStr = $validRoomsCol->map(fn($r) => $r['room_number'] . ' (Fl ' . $r['floor'] . ')')->implode(', ');
               if (empty($roomsStr)) {
-                $roomsStr = $b['room_number'] ?? '-';
+                $roomsStr = (!empty($b['room_number']) && $b['room_number'] !== '-' && $b['room_number'] !== 'N/A') ? $b['room_number'] : 'N/A';
               }
+              $bkNoDisplay = (!empty($b['booking_number']) && $b['booking_number'] !== '-' && $b['booking_number'] !== 'N/A') ? $b['booking_number'] : 'N/A';
+              $settleDisplay = (!empty($b['settle_number']) && $b['settle_number'] !== '-' && $b['settle_number'] !== 'N/A') ? $b['settle_number'] : ((!empty($b['folio_number']) && $b['folio_number'] !== '-' && $b['folio_number'] !== 'N/A') ? $b['folio_number'] : 'N/A');
+              $inDateDisplay = (!empty($b['checkin_date']) && $b['checkin_date'] !== '-' && $b['checkin_date'] !== 'N/A') ? $b['checkin_date'] : 'N/A';
+              $outDateDisplay = (!empty($b['checkout_date']) && $b['checkout_date'] !== '-' && $b['checkout_date'] !== 'N/A') ? $b['checkout_date'] : 'N/A';
             @endphp
             <tr>
               <td class="text-center font-mono">{{ $idx + 1 }}</td>
-              <td class="font-mono font-bold text-indigo-700 whitespace-nowrap truncate">{{ $b['booking_number'] ?? ('RES-' . ($b['booking_id'] ?? $b['id'])) }}</td>
+              <td class="font-mono font-bold text-indigo-700 whitespace-nowrap truncate">{{ $bkNoDisplay }}</td>
               <td class="font-mono font-bold truncate whitespace-nowrap">{{ $roomsStr }}</td>
               <td class="font-bold truncate whitespace-nowrap">
                 {{ $b['primary_guest_name'] ?? $b['guest_name'] ?? 'Guest' }}
@@ -1001,9 +1029,9 @@
                   <span class="text-[7.5px] opacity-80 font-semibold">(+{{ ($b['total_occupants'] ?? 1) - 1 }})</span>
                 @endif
               </td>
-              <td class="font-mono font-bold text-[8px] text-teal-700 whitespace-nowrap truncate">{{ $b['settle_number'] ?? $b['folio_number'] ?? '-' }}</td>
-              <td class="text-[8px] text-slate-600 whitespace-nowrap">{{ $b['checkin_date'] ?? '-' }}</td>
-              <td class="text-[8px] text-slate-600 whitespace-nowrap">{{ $b['checkout_date'] ?? '-' }}</td>
+              <td class="font-mono font-bold text-[8px] text-teal-700 whitespace-nowrap truncate">{{ $settleDisplay }}</td>
+              <td class="text-[8px] text-slate-600 whitespace-nowrap">{{ $inDateDisplay }}</td>
+              <td class="text-[8px] text-slate-600 whitespace-nowrap">{{ $outDateDisplay }}</td>
               <td class="text-center text-[7.5px] whitespace-nowrap">{{ $b['stay_status'] ?? $b['status'] ?? 'Active' }}</td>
               <td class="text-right font-mono font-bold whitespace-nowrap">₹ {{ number_format($b['room_charges'] ?? 0, 2) }}</td>
               <td class="text-right font-mono font-bold {{ ($b['extra_service_charges'] ?? 0) > 0 ? 'text-amber-700' : 'text-slate-400' }} whitespace-nowrap">

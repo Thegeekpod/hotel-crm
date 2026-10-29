@@ -628,31 +628,41 @@
                       const pName = g.primary_guest_name || g.guest_name || 'Guest';
                       const pPhone = g.primary_mobile || g.mobile_no || '-';
 
+                      const validRooms = roomsList.filter(r => r.room_number && r.room_number !== '-' && r.room_number !== 'N/A');
+                      const bkNo = (g.booking_number && g.booking_number !== '-' && g.booking_number !== 'N/A') ? g.booking_number : (g.booking_id ? ('RES-' + g.booking_id) : 'N/A');
+                      const settleNo = (g.settle_number && g.settle_number !== '-' && g.settle_number !== 'N/A') ? g.settle_number : ((g.folio_number && g.folio_number !== '-' && g.folio_number !== 'N/A') ? g.folio_number : 'N/A');
+                      const inDate = (g.checkin_date && g.checkin_date !== '-' && g.checkin_date !== 'N/A') ? g.checkin_date : 'N/A';
+                      const outDate = (g.checkout_date && g.checkout_date !== '-' && g.checkout_date !== 'N/A') ? g.checkout_date : 'N/A';
+
                       return `
                         <tr class="hover:bg-slate-50/80 transition-colors">
                           <td class="px-3.5 py-2.5 text-center font-mono font-bold text-slate-400 text-xs">${idx + 1}</td>
                           <td class="px-3.5 py-2.5">
                             <div class="font-bold text-indigo-700 font-mono text-xs whitespace-nowrap">
-                              ${escapeHtml(g.booking_number || ('RES-' + g.booking_id))}
+                              ${bkNo !== 'N/A' ? escapeHtml(bkNo) : '<span class="text-slate-400 font-mono">N/A</span>'}
                             </div>
-                            <div class="text-[10px] text-slate-400 font-medium mt-0.5">
-                              ${roomsList.length} Room(s)
-                            </div>
+                            ${validRooms.length > 0 ? `
+                              <div class="text-[10px] text-slate-400 font-medium mt-0.5">
+                                ${validRooms.length} Room(s)
+                              </div>
+                            ` : ''}
                           </td>
                           <td class="px-3.5 py-2.5">
-                            <div class="flex flex-wrap gap-1.5 items-center">
-                              ${roomsList.map(rm => `
-                                <span class="inline-flex items-center gap-1 font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-lg font-mono text-xs whitespace-nowrap border border-indigo-200/60">
-                                  <i class="fa-solid fa-door-open text-[9px]"></i> ${escapeHtml(rm.room_number)}
-                                  <span class="text-[10px] opacity-75">(Fl ${escapeHtml(rm.floor)})</span>
-                                </span>
-                              `).join('')}
-                              ${Array.isArray(g.transfers) && g.transfers.length > 0 ? g.transfers.map(tf => `
-                                <span class="text-[10px] font-bold text-amber-800 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded-md inline-flex items-center gap-1" title="Room swiped: R${escapeHtml(tf.from)} to R${escapeHtml(tf.to)} on ${escapeHtml(tf.date)}">
-                                  <i class="fa-solid fa-repeat text-[8px]"></i> R${escapeHtml(tf.from)}&rarr;R${escapeHtml(tf.to)}
-                                </span>
-                              `).join('') : ''}
-                            </div>
+                            ${validRooms.length > 0 ? `
+                              <div class="flex flex-wrap gap-1.5 items-center">
+                                ${validRooms.map(rm => `
+                                  <span class="inline-flex items-center gap-1 font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-lg font-mono text-xs whitespace-nowrap border border-indigo-200/60">
+                                    <i class="fa-solid fa-door-open text-[9px]"></i> ${escapeHtml(rm.room_number)}
+                                    <span class="text-[10px] opacity-75">(Fl ${escapeHtml(rm.floor)})</span>
+                                  </span>
+                                `).join('')}
+                                ${Array.isArray(g.transfers) && g.transfers.length > 0 ? g.transfers.map(tf => `
+                                  <span class="text-[10px] font-bold text-amber-800 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded-md inline-flex items-center gap-1" title="Room swiped: R${escapeHtml(tf.from)} to R${escapeHtml(tf.to)} on ${escapeHtml(tf.date)}">
+                                    <i class="fa-solid fa-repeat text-[8px]"></i> R${escapeHtml(tf.from)}&rarr;R${escapeHtml(tf.to)}
+                                  </span>
+                                `).join('') : ''}
+                              </div>
+                            ` : '<span class="text-slate-400 font-mono font-bold text-xs">N/A</span>'}
                           </td>
                           <td class="px-3.5 py-2.5">
                             <div class="font-bold text-slate-800 text-xs">
@@ -664,21 +674,25 @@
                               ` : ''}
                             </div>
                             <div class="text-[11px] text-slate-400 font-mono mt-0.5">
-                              <i class="fa-solid fa-phone text-[9px] opacity-60"></i> ${escapeHtml(pPhone)}
+                              ${pPhone && pPhone !== '-' && pPhone !== 'N/A' ? `<i class="fa-solid fa-phone text-[9px] opacity-60"></i> ${escapeHtml(pPhone)}` : ''}
                             </div>
                           </td>
                           <td class="px-3.5 py-2.5">
-                            <span class="font-mono text-xs font-bold text-teal-800 bg-teal-50 px-2 py-0.5 rounded-lg border border-teal-200/80 whitespace-nowrap">
-                              ${escapeHtml(g.settle_number || g.folio_number || '-')}
-                            </span>
+                            ${settleNo !== 'N/A' ? `
+                              <span class="font-mono text-xs font-bold text-teal-800 bg-teal-50 px-2 py-0.5 rounded-lg border border-teal-200/80 whitespace-nowrap">
+                                ${escapeHtml(settleNo)}
+                              </span>
+                            ` : '<span class="text-slate-400 font-mono font-bold text-xs">N/A</span>'}
                           </td>
                           <td class="px-3.5 py-2.5 whitespace-nowrap text-xs">
-                            <div class="text-slate-700 flex items-center gap-1">
-                              <i class="fa-solid fa-arrow-right-to-bracket text-[9px] text-emerald-600"></i> ${escapeHtml(g.checkin_date || '-')}
-                            </div>
-                            <div class="text-slate-400 text-[11px] flex items-center gap-1 mt-0.5">
-                              <i class="fa-solid fa-arrow-right-from-bracket text-[9px] text-rose-500"></i> ${escapeHtml(g.checkout_date || '-')}
-                            </div>
+                            ${inDate !== 'N/A' ? `
+                              <div class="text-slate-700 flex items-center gap-1">
+                                <i class="fa-solid fa-arrow-right-to-bracket text-[9px] text-emerald-600"></i> ${escapeHtml(inDate)}
+                              </div>
+                              <div class="text-slate-400 text-[11px] flex items-center gap-1 mt-0.5">
+                                <i class="fa-solid fa-arrow-right-from-bracket text-[9px] text-rose-500"></i> ${escapeHtml(outDate)}
+                              </div>
+                            ` : '<span class="text-slate-400 font-mono font-bold text-xs">N/A</span>'}
                           </td>
                           <td class="px-3.5 py-2.5 text-center whitespace-nowrap">
                             <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
@@ -1401,24 +1415,32 @@
                 const tb = Number(g.grand_total_bill || g.total_bill || (rmCharges + exCharges));
                 const isSet = g.is_settled || (rem <= 0.01);
                 
-                let roomsStr = '-';
+                let roomsStr = 'N/A';
                 if (Array.isArray(g.rooms) && g.rooms.length > 0) {
-                  roomsStr = g.rooms.map(r => r.label || r.room_number).join(', ');
-                } else if (g.room_number) {
+                  const vr = g.rooms.filter(r => r.room_number && r.room_number !== '-' && r.room_number !== 'N/A');
+                  if (vr.length > 0) {
+                    roomsStr = vr.map(r => r.label || r.room_number).join(', ');
+                  }
+                } else if (g.room_number && g.room_number !== '-' && g.room_number !== 'N/A') {
                   roomsStr = g.room_number;
                 }
+
+                const bkNo = (g.booking_number && g.booking_number !== '-' && g.booking_number !== 'N/A') ? g.booking_number : (g.booking_id ? ('RES-' + g.booking_id) : 'N/A');
+                const settleNo = (g.settle_number && g.settle_number !== '-' && g.settle_number !== 'N/A') ? g.settle_number : ((g.folio_number && g.folio_number !== '-' && g.folio_number !== 'N/A') ? g.folio_number : 'N/A');
+                const inDate = (g.checkin_date && g.checkin_date !== '-' && g.checkin_date !== 'N/A') ? g.checkin_date : 'N/A';
+                const outDate = (g.checkout_date && g.checkout_date !== '-' && g.checkout_date !== 'N/A') ? g.checkout_date : 'N/A';
 
                 const occBonus = (g.total_occupants && g.total_occupants > 1) ? ` <span class="text-[7.5px] opacity-80 font-semibold">(+${g.total_occupants - 1})</span>` : '';
 
                 return `
                   <tr>
                     <td class="text-center font-mono">${idx + 1}</td>
-                    <td class="font-mono font-bold text-indigo-700 whitespace-nowrap truncate">${escapeHtml(g.booking_number || ('RES-' + (g.booking_id || g.id)))}</td>
+                    <td class="font-mono font-bold text-indigo-700 whitespace-nowrap truncate">${escapeHtml(bkNo)}</td>
                     <td class="font-mono font-bold truncate whitespace-nowrap">${escapeHtml(roomsStr)}</td>
                     <td class="font-bold truncate whitespace-nowrap">${escapeHtml(g.primary_guest_name || g.guest_name || 'Guest')}${occBonus}</td>
-                    <td class="font-mono font-bold text-[8px] text-teal-700 whitespace-nowrap truncate">${escapeHtml(g.settle_number || g.folio_number || '-')}</td>
-                    <td class="text-[8px] text-slate-600 whitespace-nowrap">${escapeHtml(g.checkin_date || '-')}</td>
-                    <td class="text-[8px] text-slate-600 whitespace-nowrap">${escapeHtml(g.checkout_date || '-')}</td>
+                    <td class="font-mono font-bold text-[8px] text-teal-700 whitespace-nowrap truncate">${escapeHtml(settleNo)}</td>
+                    <td class="text-[8px] text-slate-600 whitespace-nowrap">${escapeHtml(inDate)}</td>
+                    <td class="text-[8px] text-slate-600 whitespace-nowrap">${escapeHtml(outDate)}</td>
                     <td class="text-center text-[7.5px] whitespace-nowrap">${escapeHtml(g.stay_status || g.status || 'Active')}</td>
                     <td class="text-right font-mono font-bold whitespace-nowrap">₹ ${fmt(rmCharges)}</td>
                     <td class="text-right font-mono font-bold ${exCharges > 0 ? 'text-amber-700' : 'text-slate-400'} whitespace-nowrap">

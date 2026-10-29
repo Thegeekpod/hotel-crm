@@ -152,24 +152,6 @@
     <span>Extra Services</span>
   </a>
 
-  <!-- Main Item: Stores & Inventory -->
-  <a href="{{ route('stores.index') }}" class="flex items-center gap-2.5 px-3 py-2 text-xs font-bold rounded-xl transition-all border mb-2 select-none admin-nav-flat {{ request()->routeIs('stores.*') ? 'bg-indigo-50 text-indigo-700 border-indigo-200 active' : 'bg-slate-50/70 text-slate-700 border-slate-100 hover:bg-slate-100 hover:text-cyan-600' }}">
-    <i class="fa-solid fa-boxes-stacked text-cyan-600 text-xs"></i>
-    <span>Stores &amp; Inventory</span>
-  </a>
-
-  <!-- Main Item: Accounts & Finance -->
-  <a href="{{ route('accounts.index') }}" class="flex items-center gap-2.5 px-3 py-2 text-xs font-bold rounded-xl transition-all border mb-2 select-none admin-nav-flat {{ request()->routeIs('accounts.*') ? 'bg-indigo-50 text-indigo-700 border-indigo-200 active' : 'bg-slate-50/70 text-slate-700 border-slate-100 hover:bg-slate-100 hover:text-purple-600' }}">
-    <i class="fa-solid fa-file-invoice-dollar text-purple-600 text-xs"></i>
-    <span>Accounts &amp; Finance</span>
-  </a>
-
-  <!-- Main Item: Banquet & Services -->
-  <a href="{{ route('banquet.index') }}" class="flex items-center gap-2.5 px-3 py-2 text-xs font-bold rounded-xl transition-all border mb-2 select-none admin-nav-flat {{ request()->routeIs('banquet.*') ? 'bg-indigo-50 text-indigo-700 border-indigo-200 active' : 'bg-slate-50/70 text-slate-700 border-slate-100 hover:bg-slate-100 hover:text-amber-600' }}">
-    <i class="fa-solid fa-champagne-glasses text-amber-500 text-xs"></i>
-    <span>Banquet &amp; Services</span>
-  </a>
-
   <div class="flex items-center gap-2.5 px-3 py-2 text-xs font-bold rounded-xl transition-all border select-none cursor-pointer bg-slate-50/70 text-slate-600 border-slate-100 hover:bg-slate-100 hover:text-slate-800 admin-nav-flat" onclick="PmsAlert.toast('System & Roles master module queued for client review.', 'info')">
     <i class="fa-solid fa-shield-halved text-slate-500 text-xs"></i>
     <span>System &amp; Roles</span>

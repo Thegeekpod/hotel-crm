@@ -80,7 +80,9 @@
   </nav>
 
   <!-- Subheader Component -->
-  @include('frontoffice.includes.subheader')
+  @if(!request()->routeIs('accounts.*') && !request()->is('accounts*'))
+    @include('frontoffice.includes.subheader')
+  @endif
 
   <!-- Main Content Viewport -->
   <div class="flex-1 flex flex-col min-w-0">

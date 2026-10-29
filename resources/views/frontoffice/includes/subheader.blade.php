@@ -116,7 +116,7 @@
     Kitchen Store &amp; Recipe Yields Live
   </div>
 </div>
-@else
+@elseif(!request()->routeIs('accounts.*') && !request()->is('accounts*'))
 <!-- Action Sub-Ribbon (Only Front Office Options) -->
 <div class="bg-slate-50/95 backdrop-blur-xs border-b border-slate-200/80 px-4 sm:px-6 py-2 flex items-center justify-between gap-4 overflow-x-auto scrollbar-none pms-sub-ribbon">
   <div class="flex items-center gap-2 ribbon-left-section">

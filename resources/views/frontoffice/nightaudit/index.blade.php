@@ -148,6 +148,12 @@
     <button type="button" class="audit-nav-tab inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all bg-white border border-slate-200/80 text-slate-600 hover:text-slate-900 hover:bg-slate-50 cursor-pointer" onclick="switchAuditTab('tab-rooms', this)">
       <i class="fa-solid fa-bed"></i> Occupied Rooms ({{ $occupiedRoomsCount }})
     </button>
+    <button type="button" class="audit-nav-tab inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all bg-white border border-slate-200/80 text-slate-600 hover:text-slate-900 hover:bg-slate-50 cursor-pointer" onclick="switchAuditTab('tab-stores-inward', this)">
+      <i class="fa-solid fa-boxes-stacked"></i> Store Inward Stock ({{ count($inwardStockMovements) }})
+      @if($totalInwardAmount > 0)
+        <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">₹{{ number_format($totalInwardAmount, 2) }}</span>
+      @endif
+    </button>
   </div>
 
     <!-- TAB 1: TODAY PAYMENTS (Booking Ledgers & Settlements Grouped by Booking Number) -->
@@ -710,6 +716,105 @@
       </div>
     </div>
 
+    <!-- TAB 3: STORE INWARD STOCK (Purchases / Received Stock with amounts) -->
+    <div id="tab-stores-inward" class="audit-tab-pane space-y-4 hidden">
+      <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+        <!-- Table Header Toolbar -->
+        <div class="p-4 border-b border-slate-200/80 flex flex-wrap items-center justify-between gap-3 bg-slate-50/50">
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-600 flex items-center justify-center font-bold text-sm">
+              <i class="fa-solid fa-boxes-stacked"></i>
+            </div>
+            <div>
+              <h3 class="text-xs font-bold text-slate-800">Store Inward Stock Purchases</h3>
+              <p class="text-[11px] text-slate-500">Incoming stock received with entered amounts on {{ \Carbon\Carbon::parse($selectedDate)->format('d M Y') }}</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-3">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200/80">
+              Total Inward Amount: <strong class="font-mono">₹ {{ number_format($totalInwardAmount, 2) }}</strong>
+            </span>
+            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-semibold bg-slate-100 text-slate-700">
+              {{ count($inwardStockMovements) }} Entries
+            </span>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-slate-200/70 text-xs">
+            <thead>
+              <tr class="bg-slate-50/75 border-b border-slate-200/70">
+                <th class="py-3 px-3.5 text-center font-bold text-slate-500 uppercase tracking-wider w-12">SL</th>
+                <th class="py-3 px-3.5 text-left font-bold text-slate-500 uppercase tracking-wider">Time</th>
+                <th class="py-3 px-3.5 text-left font-bold text-slate-500 uppercase tracking-wider">Dish / Item Name</th>
+                <th class="py-3 px-3.5 text-left font-bold text-slate-500 uppercase tracking-wider">Reference / Inv #</th>
+                <th class="py-3 px-3.5 text-center font-bold text-slate-500 uppercase tracking-wider">Quantity / Plates Added</th>
+                <th class="py-3 px-3.5 text-right font-bold text-slate-500 uppercase tracking-wider">Unit Cost</th>
+                <th class="py-3 px-3.5 text-right font-bold text-slate-500 uppercase tracking-wider">Inward Amount</th>
+                <th class="py-3 px-3.5 text-left font-bold text-slate-500 uppercase tracking-wider">Receiver / Staff</th>
+                <th class="py-3 px-3.5 text-left font-bold text-slate-500 uppercase tracking-wider">Remarks</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 bg-white">
+              @forelse($inwardStockMovements as $idx => $m)
+                @php
+                  $itemName = $m->posItem?->name ?? ($m->item?->name ?? 'Kitchen Provision');
+                @endphp
+                <tr class="hover:bg-slate-50/70 transition-colors">
+                  <td class="py-3 px-3.5 text-center font-mono text-slate-500">{{ $idx + 1 }}</td>
+                  <td class="py-3 px-3.5 whitespace-nowrap font-mono text-slate-600">
+                    {{ $m->created_at ? $m->created_at->format('h:i A') : '-' }}
+                  </td>
+                  <td class="py-3 px-3.5 font-bold text-slate-900 whitespace-nowrap">
+                    <span class="inline-flex items-center gap-1.5">
+                      <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                      {{ $itemName }}
+                    </span>
+                  </td>
+                  <td class="py-3 px-3.5 font-mono text-slate-700 whitespace-nowrap">
+                    {{ $m->reference_no ?: '-' }}
+                  </td>
+                  <td class="py-3 px-3.5 text-center whitespace-nowrap">
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                      +{{ $m->quantity }} Plates
+                    </span>
+                  </td>
+                  <td class="py-3 px-3.5 text-right font-mono text-slate-600 whitespace-nowrap">
+                    {{ $m->unit_cost ? '₹ ' . number_format($m->unit_cost, 2) : '-' }}
+                  </td>
+                  <td class="py-3 px-3.5 text-right font-mono font-bold text-slate-900 whitespace-nowrap">
+                    ₹ {{ number_format($m->total_cost, 2) }}
+                  </td>
+                  <td class="py-3 px-3.5 text-slate-700 whitespace-nowrap">
+                    {{ $m->performed_by ?: '-' }}
+                  </td>
+                  <td class="py-3 px-3.5 text-slate-500 max-w-xs truncate" title="{{ $m->remarks }}">
+                    {{ $m->remarks ?: '-' }}
+                  </td>
+                </tr>
+              @empty
+                <tr>
+                  <td colspan="9" class="py-12 px-4 text-center text-slate-500">
+                    <i class="fa-solid fa-boxes-stacked text-3xl text-slate-300 mb-2 block"></i>
+                    No store inward stock purchases with entered amounts recorded for this date ({{ \Carbon\Carbon::parse($selectedDate)->format('d M Y') }}).
+                  </td>
+                </tr>
+              @endforelse
+            </tbody>
+            @if(count($inwardStockMovements) > 0)
+            <tfoot class="bg-slate-50/80 font-bold border-t border-slate-200">
+              <tr>
+                <td colspan="6" class="py-3 px-3.5 text-right uppercase tracking-wider text-slate-600">Total Store Inward Purchases:</td>
+                <td class="py-3 px-3.5 text-right font-mono text-amber-900">₹ {{ number_format($totalInwardAmount, 2) }}</td>
+                <td colspan="2"></td>
+              </tr>
+            </tfoot>
+            @endif
+          </table>
+        </div>
+      </div>
+    </div>
+
 
 
     @if($isToday)
@@ -741,6 +846,12 @@
               <span class="text-slate-500">Unsettled Balance:</span>
               <strong class="font-mono font-bold text-rose-600">₹ {{ number_format($totalUnsettledAmount, 2) }}</strong>
             </div>
+            @if($totalInwardAmount > 0)
+            <div class="flex items-center justify-between">
+              <span class="text-slate-500">Store Inward Purchases:</span>
+              <strong class="font-mono font-bold text-amber-600">₹ {{ number_format($totalInwardAmount, 2) }} ({{ count($inwardStockMovements) }})</strong>
+            </div>
+            @endif
             <div class="flex items-center justify-between pt-1 border-t border-slate-200/70">
               <span class="text-slate-500 font-bold">Total Bill Amount:</span>
               <strong class="font-mono font-bold text-slate-900">₹ {{ number_format($totalBookingsBill, 2) }}</strong>
@@ -979,6 +1090,56 @@
         </tbody>
       </table>
     </div>
+
+    @if(isset($inwardStockMovements) && $inwardStockMovements->count() > 0)
+    <!-- Section: Store Inward Stock Purchases -->
+    <div class="print-avoid-break mb-4">
+      <div class="text-[11px] font-black uppercase text-indigo-950 border-b border-slate-300 pb-1 mb-1.5 flex justify-between items-center">
+        <span>Store Inward Stock Purchases ({{ $inwardStockMovements->count() }} Entries)</span>
+        <span class="text-[9.5px] font-bold text-amber-800 normal-case">Total Inward: ₹ {{ number_format($totalInwardAmount, 2) }}</span>
+      </div>
+      <table class="print-table text-[8px] w-full border-collapse table-fixed">
+        <thead>
+          <tr>
+            <th class="w-6 text-center">SL</th>
+            <th class="w-16">TIME</th>
+            <th class="w-36">DISH / ITEM</th>
+            <th class="w-20">REF / INV #</th>
+            <th class="w-20 text-center">QTY / PLATES</th>
+            <th class="w-20 text-right">UNIT COST</th>
+            <th class="w-24 text-right">TOTAL AMOUNT</th>
+            <th class="w-28">PERFORMED BY</th>
+            <th>REMARKS</th>
+          </tr>
+        </thead>
+        <tbody>
+          @foreach($inwardStockMovements as $idx => $m)
+            @php
+              $itemName = $m->posItem?->name ?? ($m->item?->name ?? 'Kitchen Provision');
+            @endphp
+            <tr>
+              <td class="text-center">{{ $idx + 1 }}</td>
+              <td>{{ $m->created_at ? $m->created_at->format('h:i A') : '-' }}</td>
+              <td class="font-bold text-slate-800">{{ $itemName }}</td>
+              <td class="font-mono text-slate-600">{{ $m->reference_no ?: '-' }}</td>
+              <td class="text-center font-bold text-emerald-700">+{{ $m->quantity }} Plates</td>
+              <td class="text-right font-mono">{{ $m->unit_cost ? '₹ ' . number_format($m->unit_cost, 2) : '-' }}</td>
+              <td class="text-right font-mono font-bold text-slate-900">₹ {{ number_format($m->total_cost, 2) }}</td>
+              <td>{{ $m->performed_by ?: '-' }}</td>
+              <td class="text-slate-600 truncate">{{ $m->remarks ?: '-' }}</td>
+            </tr>
+          @endforeach
+        </tbody>
+        <tfoot>
+          <tr class="font-bold bg-slate-100">
+            <td colspan="6" class="text-right uppercase">Total Store Inward Purchases:</td>
+            <td class="text-right font-mono text-amber-900">₹ {{ number_format($totalInwardAmount, 2) }}</td>
+            <td colspan="2"></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+    @endif
 
     <!-- Auditor Remarks & Sign-off Footer -->
     <div class="print-avoid-break mt-6 pt-2.5 border-t border-slate-300">

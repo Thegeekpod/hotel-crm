@@ -409,6 +409,8 @@
         const opHistories = snapshot.operational_histories || [];
         const guestsList = snapshot.guests_list || [];
         const unsettled = snapshot.unsettled_summary || {};
+        const inwardStock = snapshot.inward_stock || [];
+        const totalInwardAmount = Number(snapshot.total_inward_amount || 0);
 
         let totalRoomBill = 0;
         let totalExtraServices = 0;
@@ -461,6 +463,10 @@
             </button>
             <button type="button" class="dossier-tab-btn inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-600 bg-white border border-slate-200/80 hover:bg-slate-50 transition-all whitespace-nowrap cursor-pointer" onclick="switchDossierTab('md-tab-op', this)">
               <i class="fa-solid fa-sliders text-[11px]"></i> Operational (${opHistories.length})
+            </button>
+            <button type="button" class="dossier-tab-btn inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-600 bg-white border border-slate-200/80 hover:bg-slate-50 transition-all whitespace-nowrap cursor-pointer" onclick="switchDossierTab('md-tab-inward', this)">
+              <i class="fa-solid fa-boxes-stacked text-[11px]"></i> Store Inward (${inwardStock.length})
+              ${totalInwardAmount > 0 ? `<span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">₹${totalInwardAmount.toFixed(2)}</span>` : ''}
             </button>
           </div>
 
@@ -925,6 +931,84 @@
               </div>
             </div>
 
+            <!-- TAB 6: STORE INWARD STOCK PURCHASES -->
+            <div id="md-tab-inward" class="dossier-tab-pane hidden space-y-4">
+              <div class="bg-white border border-slate-200/80 rounded-2xl overflow-hidden shadow-xs">
+                <div class="p-3.5 border-b border-slate-200/80 flex items-center justify-between bg-slate-50/50">
+                  <div class="flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+                    <span class="text-xs font-bold text-slate-900">Store Inward Stock Purchases (${inwardStock.length})</span>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <span class="text-xs font-bold text-amber-800 bg-amber-50 px-2.5 py-1 rounded-xl border border-amber-200">
+                      Total Inward: ₹${totalInwardAmount.toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+                <table class="min-w-full divide-y divide-slate-200/80 text-xs">
+                  <thead class="bg-slate-50/80 text-slate-600 font-semibold text-[11px] uppercase tracking-wider">
+                    <tr>
+                      <th class="px-3.5 py-2.5 text-center w-12">SL</th>
+                      <th class="px-3.5 py-2.5 text-left">Time</th>
+                      <th class="px-3.5 py-2.5 text-left">Dish / Item Name</th>
+                      <th class="px-3.5 py-2.5 text-left">Reference #</th>
+                      <th class="px-3.5 py-2.5 text-center">Plates Added</th>
+                      <th class="px-3.5 py-2.5 text-right">Unit Cost</th>
+                      <th class="px-3.5 py-2.5 text-right">Total Amount</th>
+                      <th class="px-3.5 py-2.5 text-left">Receiver</th>
+                      <th class="px-3.5 py-2.5 text-left">Remarks</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-slate-100">
+                    ${inwardStock.length > 0 ? inwardStock.map((m, idx) => `
+                      <tr class="hover:bg-slate-50/70 transition-colors">
+                        <td class="px-3.5 py-2.5 text-center font-mono text-slate-500">${idx + 1}</td>
+                        <td class="px-3.5 py-2.5 font-mono text-slate-600 whitespace-nowrap">
+                          ${escapeHtml(m.time || '-')}
+                          <span class="block text-[10px] text-slate-400">${escapeHtml(m.date || '')}</span>
+                        </td>
+                        <td class="px-3.5 py-2.5 font-bold text-slate-900 whitespace-nowrap">
+                          <span class="inline-flex items-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                            ${escapeHtml(m.item_name || 'Item')}
+                          </span>
+                        </td>
+                        <td class="px-3.5 py-2.5 font-mono text-slate-700 whitespace-nowrap">${escapeHtml(m.reference_no || '-')}</td>
+                        <td class="px-3.5 py-2.5 text-center whitespace-nowrap">
+                          <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            +${m.quantity} Plates
+                          </span>
+                        </td>
+                        <td class="px-3.5 py-2.5 text-right font-mono text-slate-600 whitespace-nowrap">
+                          ${m.unit_cost ? '₹' + Number(m.unit_cost).toFixed(2) : '-'}
+                        </td>
+                        <td class="px-3.5 py-2.5 text-right font-mono font-bold text-slate-900 whitespace-nowrap">
+                          ₹${Number(m.total_cost || 0).toFixed(2)}
+                        </td>
+                        <td class="px-3.5 py-2.5 text-slate-700 whitespace-nowrap">${escapeHtml(m.performed_by || '-')}</td>
+                        <td class="px-3.5 py-2.5 text-slate-500 max-w-xs truncate" title="${escapeHtml(m.remarks || '')}">
+                          ${escapeHtml(m.remarks || '-')}
+                        </td>
+                      </tr>
+                    `).join('') : `
+                      <tr>
+                        <td colspan="9" class="text-center py-8 text-slate-400">No store inward stock purchases with entered amounts logged on this date.</td>
+                      </tr>
+                    `}
+                  </tbody>
+                  ${inwardStock.length > 0 ? `
+                    <tfoot class="bg-slate-50/80 font-bold border-t border-slate-200">
+                      <tr>
+                        <td colspan="6" class="px-3.5 py-2.5 text-right uppercase tracking-wider text-slate-600">Total Store Inward Purchases:</td>
+                        <td class="px-3.5 py-2.5 text-right font-mono text-amber-900">₹${totalInwardAmount.toFixed(2)}</td>
+                        <td colspan="2"></td>
+                      </tr>
+                    </tfoot>
+                  ` : ''}
+                </table>
+              </div>
+            </div>
+
           </div>
         `;
         if (printBtn) {
@@ -1010,6 +1094,8 @@
     const ops = snap.operational_histories || [];
     const guests = snap.guests_list || [];
     const unsettled = snap.unsettled_summary || {};
+    const inward = snap.inward_stock || [];
+    const totalInward = Number(snap.total_inward_amount || 0);
 
     let totalBill = 0;
     let totalDue = 0;
@@ -1322,6 +1408,53 @@
                   </tr>
                 `).join('')}
               </tbody>
+            </table>
+          </div>
+        ` : ''}
+
+        <!-- 7b. Store Inward Stock Purchases (Print) -->
+        ${inward.length > 0 ? `
+          <div class="print-avoid-break mb-3.5">
+            <div class="text-xs font-black uppercase text-indigo-950 border-b border-slate-300 pb-1 mb-1.5 flex justify-between">
+              <span>Store Inward Stock Purchases (${inward.length} Entries)</span>
+              <span class="text-[9px] font-bold text-amber-800 normal-case">Total Inward: ₹${totalInward.toFixed(2)}</span>
+            </div>
+            <table class="print-table text-[8.5px] w-full">
+              <thead>
+                <tr>
+                  <th class="w-6 text-center">SL</th>
+                  <th>Time</th>
+                  <th>Dish / Item</th>
+                  <th>Ref #</th>
+                  <th class="text-center">Plates Added</th>
+                  <th class="text-right">Unit Cost</th>
+                  <th class="text-right">Total Amount</th>
+                  <th>Receiver</th>
+                  <th>Remarks</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${inward.map((m, idx) => `
+                  <tr>
+                    <td class="text-center font-mono">${idx + 1}</td>
+                    <td class="font-mono">${escapeHtml(m.time || '-')}</td>
+                    <td class="font-bold">${escapeHtml(m.item_name || 'Item')}</td>
+                    <td class="font-mono">${escapeHtml(m.reference_no || '-')}</td>
+                    <td class="text-center font-bold text-emerald-700">+${m.quantity} Plates</td>
+                    <td class="text-right font-mono">${m.unit_cost ? '₹' + Number(m.unit_cost).toFixed(2) : '-'}</td>
+                    <td class="text-right font-mono font-bold">₹${Number(m.total_cost || 0).toFixed(2)}</td>
+                    <td>${escapeHtml(m.performed_by || '-')}</td>
+                    <td class="truncate">${escapeHtml(m.remarks || '-')}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+              <tfoot>
+                <tr class="font-bold bg-slate-100">
+                  <td colspan="6" class="text-right uppercase">Total Store Inward Purchases:</td>
+                  <td class="text-right font-mono text-amber-900">₹${totalInward.toFixed(2)}</td>
+                  <td colspan="2"></td>
+                </tr>
+              </tfoot>
             </table>
           </div>
         ` : ''}

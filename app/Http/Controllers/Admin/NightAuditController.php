@@ -74,7 +74,7 @@ class NightAuditController extends Controller
         $auditDate = $audit->audit_date ? $audit->audit_date->format('Y-m-d') : Carbon::today()->format('Y-m-d');
 
         // If snapshot is missing granular lists, reconstruct them dynamically so modal displays 100% of the data
-        if (empty($snapshot['payments_list']) || empty($snapshot['occupied_rooms'])) {
+        if (empty($snapshot['payments_list']) || empty($snapshot['occupied_rooms']) || !isset($snapshot['inward_stock'])) {
             $built = $this->buildFullAuditSnapshot($auditDate, $audit);
             $audit->audit_snapshot = array_merge($snapshot, $built);
             $audit->saveQuietly();
@@ -541,12 +541,42 @@ class NightAuditController extends Controller
             ];
         }
 
+        // 6. Store Inward Stock Movements with amount (total_cost > 0)
+        $inwardStockMovements = \App\Models\StoreMovement::with(['posItem', 'item'])
+            ->where('type', 'IN')
+            ->whereDate('created_at', $auditDate)
+            ->whereNotNull('total_cost')
+            ->where('total_cost', '>', 0)
+            ->orderBy('id', 'desc')
+            ->get();
+
+        $totalInwardAmount = (float)$inwardStockMovements->sum('total_cost');
+
+        $inwardStockList = $inwardStockMovements->map(function($m) {
+            $itemName = $m->posItem?->name ?? ($m->item?->name ?? 'Kitchen Provision');
+            return [
+                'id' => $m->id,
+                'time' => $m->created_at ? $m->created_at->format('h:i A') : '-',
+                'date' => $m->created_at ? $m->created_at->format('d M Y') : '-',
+                'item_name' => $itemName,
+                'reference_no' => $m->reference_no ?: '-',
+                'quantity' => (int)$m->quantity,
+                'unit_cost' => $m->unit_cost ? (float)$m->unit_cost : null,
+                'total_cost' => (float)$m->total_cost,
+                'remarks' => $m->remarks ?: '-',
+                'performed_by' => $m->performed_by ?: '-',
+                'department' => $m->issued_to_department ?: 'Kitchen Store',
+            ];
+        })->values()->all();
+
         return [
             'payments_list' => $paymentsListItems,
             'occupied_rooms' => $occupiedRoomsList,
             'housekeeping_histories' => $hkHistoriesList,
             'operational_histories' => $opHistoriesList,
             'guests_list' => $guestsList,
+            'inward_stock' => $inwardStockList,
+            'total_inward_amount' => $totalInwardAmount,
             'unsettled_summary' => [
                 'total_unsettled_amount' => $totalUnsettledAmount,
                 'unsettled_bookings_count' => $unsettledBookingsCount,

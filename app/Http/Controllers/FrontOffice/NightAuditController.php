@@ -379,6 +379,18 @@ class NightAuditController extends Controller
             $mealPlanCounts['AP'] = (int)$existingAudit->ap_plan_count;
         }
 
+        // 5. Store Incoming Stock (Inward Purchases)
+        // Include inward stock details and amount only when an amount is entered (total_cost > 0)
+        $inwardStockQuery = \App\Models\StoreMovement::with(['posItem', 'item'])
+            ->where('type', 'IN')
+            ->whereDate('created_at', $selectedDate)
+            ->whereNotNull('total_cost')
+            ->where('total_cost', '>', 0)
+            ->orderBy('id', 'desc');
+
+        $inwardStockMovements = $inwardStockQuery->get();
+        $totalInwardAmount = (float)$inwardStockMovements->sum('total_cost');
+
         return view('frontoffice.nightaudit.index', compact(
             'selectedDate',
             'today',
@@ -441,7 +453,9 @@ class NightAuditController extends Controller
             'totalUnsettledAmount',
             'totalSettledAmount',
             'unsettledBookingsCount',
-            'settledBookingsCount'
+            'settledBookingsCount',
+            'inwardStockMovements',
+            'totalInwardAmount'
         ));
     }
 
@@ -728,6 +742,34 @@ class NightAuditController extends Controller
             $settledBookingsCount = $ledgerData['settledCount'];
             $accurateTotalBill = $totalBookingsBill > 0 ? $totalBookingsBill : $totalRev;
 
+            // 7. Store Incoming Stock (Inward Purchases) with amount (total_cost > 0)
+            $inwardStockQuery = \App\Models\StoreMovement::with(['posItem', 'item'])
+                ->where('type', 'IN')
+                ->whereDate('created_at', $auditDate)
+                ->whereNotNull('total_cost')
+                ->where('total_cost', '>', 0)
+                ->orderBy('id', 'desc');
+
+            $inwardStockRecords = $inwardStockQuery->get();
+            $totalInwardAmount = (float)$inwardStockRecords->sum('total_cost');
+
+            $inwardStockList = $inwardStockRecords->map(function($m) {
+                $itemName = $m->posItem?->name ?? ($m->item?->name ?? 'Kitchen Provision');
+                return [
+                    'id' => $m->id,
+                    'time' => $m->created_at ? $m->created_at->format('h:i A') : '-',
+                    'date' => $m->created_at ? $m->created_at->format('d M Y') : '-',
+                    'item_name' => $itemName,
+                    'reference_no' => $m->reference_no ?: '-',
+                    'quantity' => (int)$m->quantity,
+                    'unit_cost' => $m->unit_cost ? (float)$m->unit_cost : null,
+                    'total_cost' => (float)$m->total_cost,
+                    'remarks' => $m->remarks ?: '-',
+                    'performed_by' => $m->performed_by ?: '-',
+                    'department' => $m->issued_to_department ?: 'Kitchen Store',
+                ];
+            })->values()->all();
+
             // Prepare complete comprehensive JSON snapshot
             $snapshot = [
                 'audit_date' => $auditDate,
@@ -762,12 +804,16 @@ class NightAuditController extends Controller
                     'inhouse_guests_count' => $inhouse,
                     'pending_arrivals' => $pendingArr,
                     'pending_departures' => $pendingDep,
+                    'total_inward_amount' => $totalInwardAmount,
+                    'inward_stock_count' => count($inwardStockList),
                 ],
                 'payments_list' => $paymentsListItems,
                 'occupied_rooms' => $occupiedRoomsList,
                 'housekeeping_histories' => $hkHistoriesList,
                 'operational_histories' => $opHistoriesList,
                 'guests_list' => $guestsList,
+                'inward_stock' => $inwardStockList,
+                'total_inward_amount' => $totalInwardAmount,
                 'unsettled_summary' => [
                     'total_unsettled_amount' => $totalUnsettledAmount,
                     'unsettled_bookings_count' => $unsettledBookingsCount,

@@ -56,8 +56,8 @@
         </a>
       </li>
       <li>
-        <a href="{{ route('admin.utilities.frontoffice.table-manage.index') }}" class="admin-sub-item {{ request()->routeIs('admin.utilities.frontoffice.table-manage.*') ? 'active' : '' }}">
-          <i class="fa-solid fa-chair"></i> Table Manage
+        <a href="{{ route('admin.utilities.frontoffice.table-manage.index') }}" class="flex items-center gap-2 px-3 py-1.5 text-xs font-bold rounded-lg transition-all admin-sub-item {{ request()->routeIs('admin.utilities.frontoffice.table-manage.*') ? 'bg-indigo-50 text-indigo-700 font-extrabold active' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }}">
+          <i class="fa-solid fa-chair text-indigo-500 text-[11px]"></i> Table Manage
         </a>
       </li>
     </ul>

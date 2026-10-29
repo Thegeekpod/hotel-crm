@@ -64,8 +64,8 @@
         </a>
       @endif
 
-      <button type="button" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold shadow-2xs transition-all cursor-pointer" onclick="openPrintReportModal()">
-        <i class="fa-solid fa-print text-[11px]"></i> Print
+      <button type="button" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-800 text-xs font-bold shadow-xs transition-all cursor-pointer" onclick="openPrintReportModal()" title="Print or Save Night Audit as PDF">
+        <i class="fa-solid fa-file-pdf text-rose-600"></i> Print / PDF Report
       </button>
 
       @if($isToday)
@@ -942,6 +942,19 @@
       </div>
     </div>
 
+    <!-- Collections by Payment Mode Strip -->
+    <div class="print-avoid-break flex items-center justify-between gap-2 p-2.5 bg-slate-50 border border-slate-300 rounded-lg text-[8.5px] mb-4">
+      <div><span class="text-slate-500 font-semibold uppercase text-[7.5px] block">CASH</span> <strong class="font-mono text-slate-900 font-bold">₹ {{ number_format($cashCollection ?? 0, 2) }}</strong></div>
+      <div class="border-l border-slate-300 pl-2.5"><span class="text-slate-500 font-semibold uppercase text-[7.5px] block">UPI / QR</span> <strong class="font-mono text-slate-900 font-bold">₹ {{ number_format($upiCollection ?? 0, 2) }}</strong></div>
+      <div class="border-l border-slate-300 pl-2.5"><span class="text-slate-500 font-semibold uppercase text-[7.5px] block">CARD</span> <strong class="font-mono text-slate-900 font-bold">₹ {{ number_format($cardCollection ?? 0, 2) }}</strong></div>
+      <div class="border-l border-slate-300 pl-2.5"><span class="text-slate-500 font-semibold uppercase text-[7.5px] block">BANK TRANSFER</span> <strong class="font-mono text-slate-900 font-bold">₹ {{ number_format($bankCollection ?? 0, 2) }}</strong></div>
+      <div class="border-l border-slate-300 pl-2.5"><span class="text-slate-500 font-semibold uppercase text-[7.5px] block">ADVANCE</span> <strong class="font-mono text-emerald-700 font-bold">₹ {{ number_format($advancePayments ?? 0, 2) }}</strong></div>
+      <div class="border-l border-slate-300 pl-2.5"><span class="text-slate-500 font-semibold uppercase text-[7.5px] block">SETTLEMENTS</span> <strong class="font-mono text-indigo-700 font-bold">₹ {{ number_format($settlementPayments ?? 0, 2) }}</strong></div>
+      @if(isset($totalInwardAmount) && $totalInwardAmount > 0)
+      <div class="border-l border-slate-300 pl-2.5"><span class="text-slate-500 font-semibold uppercase text-[7.5px] block">STORE INWARD</span> <strong class="font-mono text-amber-800 font-bold">₹ {{ number_format($totalInwardAmount, 2) }}</strong></div>
+      @endif
+    </div>
+
     <!-- Section 1: Today Payments (Booking Billings & Extra Services) -->
     <div class="mb-4">
       <div class="text-[11px] font-black uppercase text-indigo-950 border-b border-slate-300 pb-1 mb-1.5 flex justify-between items-center">
@@ -1256,19 +1269,162 @@
     }
   }
 
+  function getNightAuditReportStyles() {
+    return `
+      <style>
+        @page {
+          size: A4 landscape;
+          margin: 8mm 10mm;
+        }
+        * {
+          box-sizing: border-box;
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
+        }
+        body {
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+          color: #0f172a;
+          background: #ffffff;
+          margin: 0;
+          padding: 0;
+          font-size: 8.5px;
+          line-height: 1.35;
+        }
+        .pdf-container {
+          width: 100%;
+          max-width: 100%;
+          margin: 0 auto;
+        }
+        .print-avoid-break {
+          page-break-inside: avoid !important;
+          break-inside: avoid !important;
+        }
+        .grid { display: grid !important; }
+        .grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
+        .grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+        .gap-2 { gap: 8px !important; }
+        .gap-2\\.5 { gap: 10px !important; }
+        .flex { display: flex !important; }
+        .items-center { align-items: center !important; }
+        .items-start { align-items: flex-start !important; }
+        .items-end { align-items: flex-end !important; }
+        .justify-between { justify-content: space-between !important; }
+        .justify-end { justify-content: flex-end !important; }
+        .text-center { text-align: center !important; }
+        .text-right { text-align: right !important; }
+        .text-left { text-align: left !important; }
+        .font-mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important; }
+        .font-bold { font-weight: 700 !important; }
+        .font-extrabold { font-weight: 800 !important; }
+        .font-black { font-weight: 900 !important; }
+        .uppercase { text-transform: uppercase !important; }
+        .border { border: 1px solid #cbd5e1 !important; }
+        .border-t { border-top: 1px solid #cbd5e1 !important; }
+        .border-b { border-bottom: 1px solid #cbd5e1 !important; }
+        .border-b-2 { border-bottom: 2px solid #0f172a !important; }
+        .border-l-4 { border-left-width: 4px !important; border-left-style: solid !important; }
+        .rounded { border-radius: 4px !important; }
+        .rounded-lg { border-radius: 6px !important; }
+        .bg-white { background-color: #ffffff !important; }
+        .bg-slate-50 { background-color: #f8fafc !important; }
+        .bg-slate-100 { background-color: #f1f5f9 !important; }
+        .text-slate-900 { color: #0f172a !important; }
+        .text-slate-600 { color: #475569 !important; }
+        .text-slate-500 { color: #64748b !important; }
+        .text-emerald-600 { color: #059669 !important; }
+        .text-emerald-700 { color: #047857 !important; }
+        .text-indigo-700 { color: #4338ca !important; }
+        .text-indigo-950 { color: #1e1b4b !important; }
+        .text-rose-700 { color: #be123c !important; }
+        .text-purple-700 { color: #7e22ce !important; }
+        .text-amber-700 { color: #b45309 !important; }
+        .text-amber-800 { color: #92400e !important; }
+        .border-l-emerald-500 { border-left-color: #10b981 !important; }
+        .border-l-indigo-600 { border-left-color: #4f46e5 !important; }
+        .border-l-rose-600 { border-left-color: #e11d48 !important; }
+        .border-l-purple-600 { border-left-color: #9333ea !important; }
+        .print-table {
+          width: 100% !important;
+          border-collapse: collapse !important;
+          margin-bottom: 12px !important;
+          font-size: 8px !important;
+          table-layout: fixed !important;
+        }
+        .print-table th {
+          background: #f1f5f9 !important;
+          color: #1e293b !important;
+          font-weight: 800 !important;
+          text-transform: uppercase !important;
+          padding: 4px 5px !important;
+          border: 1px solid #cbd5e1 !important;
+          font-size: 7.5px !important;
+          letter-spacing: 0.3px !important;
+        }
+        .print-table td {
+          padding: 3.5px 5px !important;
+          border: 1px solid #e2e8f0 !important;
+          color: #0f172a !important;
+          vertical-align: middle !important;
+        }
+        .print-table tbody tr:nth-child(even) {
+          background-color: #f8fafc !important;
+        }
+        .print-table tfoot td {
+          background: #e2e8f0 !important;
+          font-weight: 900 !important;
+          border: 1px solid #cbd5e1 !important;
+          padding: 4.5px 5px !important;
+          font-size: 8px !important;
+        }
+        .truncate {
+          overflow: hidden !important;
+          text-overflow: ellipsis !important;
+          white-space: nowrap !important;
+        }
+        .break-all {
+          word-break: break-all !important;
+        }
+      </style>
+    `;
+  }
+
   function openPrintReportModal() {
     var report = document.getElementById('printable-night-audit-report');
     if (!report) return;
-    var printArea = document.getElementById('print-area');
-    if (printArea) {
-      printArea.innerHTML = report.innerHTML;
-      printArea.classList.remove('hidden');
-      window.print();
-      printArea.classList.add('hidden');
-      printArea.innerHTML = '';
-    } else {
-      window.print();
-    }
+
+    var iframe = document.createElement('iframe');
+    iframe.style.position = 'fixed';
+    iframe.style.right = '0';
+    iframe.style.bottom = '0';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    iframe.style.border = '0';
+    document.body.appendChild(iframe);
+
+    var doc = iframe.contentWindow.document;
+    doc.open();
+    doc.write('<!DOCTYPE html><html><head><title>Night Audit - ' + @json(\Carbon\Carbon::parse($selectedDate)->format('d M Y')) + ' - Hotel Sagar Sonnet</title>');
+    document.querySelectorAll('link[rel="stylesheet"]').forEach(function(l) {
+      doc.write(l.outerHTML);
+    });
+    document.querySelectorAll('style').forEach(function(s) {
+      doc.write(s.outerHTML);
+    });
+    doc.write(getNightAuditReportStyles());
+    doc.write('</head><body><div class="pdf-container">');
+    doc.write(report.innerHTML);
+    doc.write('</div></body></html>');
+    doc.close();
+
+    setTimeout(function() {
+      iframe.contentWindow.focus();
+      iframe.contentWindow.print();
+      setTimeout(function() {
+        if (iframe.parentNode) {
+          iframe.parentNode.removeChild(iframe);
+        }
+      }, 1000);
+    }, 400);
   }
 
   function submitNightAudit(e) {

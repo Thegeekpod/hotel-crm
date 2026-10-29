@@ -266,8 +266,8 @@
                       <button type="button" class="w-8 h-8 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-600 flex items-center justify-center transition-all cursor-pointer shadow-2xs" onclick="viewAuditDossier({{ $a->id }})" title="View Details">
                         <i class="fa-solid fa-eye text-xs"></i>
                       </button>
-                      <button type="button" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition-all cursor-pointer shadow-2xs" onclick="printAuditById({{ $a->id }})" title="Print Executive Dossier">
-                        <i class="fa-solid fa-print text-xs"></i>
+                      <button type="button" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition-all cursor-pointer shadow-2xs" onclick="printAuditById({{ $a->id }})" title="Print or Save Night Audit PDF">
+                        <i class="fa-solid fa-file-pdf text-rose-600 text-xs"></i>
                       </button>
                       @if($isTodayAudit)
                         <a href="{{ route('frontoffice.nightaudit') }}" class="w-8 h-8 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-600 flex items-center justify-center transition-all shadow-2xs" title="Re-Run Today's Audit">
@@ -346,7 +346,7 @@
     <!-- Modal Footer -->
     <div class="px-6 py-3.5 bg-white border-t border-slate-200 flex justify-end items-center gap-2.5 shrink-0">
       <button type="button" id="btn-print-dossier" class="inline-flex items-center gap-1.5 h-9 px-4 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-all shadow-xs cursor-pointer">
-        <i class="fa-solid fa-print text-[11px]"></i> Print Dossier
+        <i class="fa-solid fa-file-pdf text-rose-300"></i> Print / PDF Dossier
       </button>
       <button type="button" onclick="closeAuditModal()" class="inline-flex items-center h-9 px-4 text-xs font-bold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200/80 rounded-xl transition-all shadow-xs cursor-pointer">
         Close
@@ -1083,10 +1083,126 @@
       });
   }
 
-  function printAuditObject(a) {
-    const printArea = document.getElementById('printable-audit-container');
-    if (!printArea) return;
+  function getAdminNightAuditReportStyles() {
+    return `
+      <style>
+        @page {
+          size: A4 landscape;
+          margin: 8mm 10mm;
+        }
+        * {
+          box-sizing: border-box;
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
+        }
+        body {
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+          color: #0f172a;
+          background: #ffffff;
+          margin: 0;
+          padding: 0;
+          font-size: 8.5px;
+          line-height: 1.35;
+        }
+        .pdf-container {
+          width: 100% !important;
+          max-width: 100% !important;
+          margin: 0 auto;
+        }
+        .print-avoid-break {
+          page-break-inside: avoid !important;
+          break-inside: avoid !important;
+        }
+        .grid { display: grid !important; }
+        .grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
+        .grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+        .gap-2 { gap: 8px !important; }
+        .gap-2\\.5 { gap: 10px !important; }
+        .flex { display: flex !important; }
+        .items-center { align-items: center !important; }
+        .items-start { align-items: flex-start !important; }
+        .items-end { align-items: flex-end !important; }
+        .justify-between { justify-content: space-between !important; }
+        .justify-end { justify-content: flex-end !important; }
+        .text-center { text-align: center !important; }
+        .text-right { text-align: right !important; }
+        .text-left { text-align: left !important; }
+        .font-mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important; }
+        .font-bold { font-weight: 700 !important; }
+        .font-extrabold { font-weight: 800 !important; }
+        .font-black { font-weight: 900 !important; }
+        .uppercase { text-transform: uppercase !important; }
+        .border { border: 1px solid #cbd5e1 !important; }
+        .border-t { border-top: 1px solid #cbd5e1 !important; }
+        .border-b { border-bottom: 1px solid #cbd5e1 !important; }
+        .border-b-2 { border-bottom: 2px solid #0f172a !important; }
+        .border-l-4 { border-left-width: 4px !important; border-left-style: solid !important; }
+        .rounded { border-radius: 4px !important; }
+        .rounded-lg { border-radius: 6px !important; }
+        .bg-white { background-color: #ffffff !important; }
+        .bg-slate-50 { background-color: #f8fafc !important; }
+        .bg-slate-100 { background-color: #f1f5f9 !important; }
+        .text-slate-900 { color: #0f172a !important; }
+        .text-slate-600 { color: #475569 !important; }
+        .text-slate-500 { color: #64748b !important; }
+        .text-emerald-600 { color: #059669 !important; }
+        .text-emerald-700 { color: #047857 !important; }
+        .text-indigo-700 { color: #4338ca !important; }
+        .text-indigo-950 { color: #1e1b4b !important; }
+        .text-rose-700 { color: #be123c !important; }
+        .text-purple-700 { color: #7e22ce !important; }
+        .text-amber-700 { color: #b45309 !important; }
+        .text-amber-800 { color: #92400e !important; }
+        .border-l-emerald-500 { border-left-color: #10b981 !important; }
+        .border-l-indigo-600 { border-left-color: #4f46e5 !important; }
+        .border-l-rose-600 { border-left-color: #e11d48 !important; }
+        .border-l-purple-600 { border-left-color: #9333ea !important; }
+        .print-table {
+          width: 100% !important;
+          border-collapse: collapse !important;
+          margin-bottom: 12px !important;
+          font-size: 8px !important;
+          table-layout: fixed !important;
+        }
+        .print-table th {
+          background: #f1f5f9 !important;
+          color: #1e293b !important;
+          font-weight: 800 !important;
+          text-transform: uppercase !important;
+          padding: 4px 5px !important;
+          border: 1px solid #cbd5e1 !important;
+          font-size: 7.5px !important;
+          letter-spacing: 0.3px !important;
+        }
+        .print-table td {
+          padding: 3.5px 5px !important;
+          border: 1px solid #e2e8f0 !important;
+          color: #0f172a !important;
+          vertical-align: middle !important;
+        }
+        .print-table tbody tr:nth-child(even) {
+          background-color: #f8fafc !important;
+        }
+        .print-table tfoot td {
+          background: #e2e8f0 !important;
+          font-weight: 900 !important;
+          border: 1px solid #cbd5e1 !important;
+          padding: 4.5px 5px !important;
+          font-size: 8px !important;
+        }
+        .truncate {
+          overflow: hidden !important;
+          text-overflow: ellipsis !important;
+          white-space: nowrap !important;
+        }
+        .break-all {
+          word-break: break-all !important;
+        }
+      </style>
+    `;
+  }
 
+  function printAuditObject(a) {
     const snap = a.audit_snapshot || {};
     const payments = snap.payments_list || [];
     const occupied = snap.occupied_rooms || [];
@@ -1097,6 +1213,8 @@
     const inward = snap.inward_stock || [];
     const totalInward = Number(snap.total_inward_amount || 0);
 
+    let totalRoomBill = 0;
+    let totalExtraBill = 0;
     let totalBill = 0;
     let totalDue = 0;
     let settledCount = 0;
@@ -1104,8 +1222,13 @@
 
     if (guests && guests.length > 0) {
       guests.forEach(g => {
-        totalBill += Number(g.total_bill || 0);
+        const rm = Number(g.room_charges || 0);
+        const ex = Number(g.extra_service_charges || 0);
+        const tb = Number(g.grand_total_bill || g.total_bill || (rm + ex));
         const due = Number(g.remaining_amount || 0);
+        totalRoomBill += rm;
+        totalExtraBill += ex;
+        totalBill += tb;
         totalDue += due;
         if (due <= 0.01) settledCount++;
         else unsettledCount++;
@@ -1129,14 +1252,21 @@
     const completedTime = a.completed_at ? new Date(a.completed_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : 'N/A';
     const auditorName = a.auditor_name || (a.auditor ? a.auditor.name : 'Front Office Night Auditor');
 
-    printArea.innerHTML = `
-      <div class="max-w-3xl mx-auto font-sans text-slate-900 leading-normal p-2.5">
+    let totalOccupiedTariff = 0;
+    if (occupied && occupied.length > 0) {
+      occupied.forEach(rm => {
+        totalOccupiedTariff += Number(rm.day_rate || 0);
+      });
+    }
+
+    const reportHtml = `
+      <div class="pdf-container font-sans text-slate-900 leading-normal">
         
         <!-- Header -->
         <div class="border-b-2 border-slate-900 pb-3 mb-3.5 flex justify-between items-start">
           <div>
             <h1 class="m-0 text-xl font-black tracking-wide uppercase text-slate-900">Hotel Sagar Sonnet</h1>
-            <div class="text-[11px] font-bold text-indigo-700 uppercase tracking-wider mt-0.5">Daily Night Audit Executive Dossier &amp; Financial Reconciliation</div>
+            <div class="text-[11px] font-bold text-indigo-700 uppercase tracking-wider mt-0.5">Administrative Daily Night Audit Executive Dossier &amp; Reconciliation</div>
             <div class="text-[9.5px] text-slate-500 mt-0.5">Station Road, Hotel Sagar Sonnet PMS Verification System</div>
           </div>
           <div class="text-right">
@@ -1149,62 +1279,51 @@
           </div>
         </div>
 
-        <!-- 1. Daily Operational Activity Summary Strip -->
-        <div class="grid grid-cols-4 gap-2 mb-3">
-          <div class="bg-slate-50 border border-slate-300 rounded-lg p-2 text-center">
-            <div class="text-[9px] font-extrabold text-slate-600 uppercase">Today Payments</div>
-            <div class="text-base font-black text-emerald-600 font-mono mt-0.5">${payments.length || (totalPaid > 0 ? 1 : 0)}</div>
-            <div class="text-[8.5px] text-slate-500">₹ ${fmt(totalPaid)} Reconciled</div>
+        <!-- 1. 4 Clean Financial KPI Cards -->
+        <div class="print-avoid-break grid grid-cols-4 gap-2.5 mb-3.5">
+          <div class="border border-slate-300 border-l-4 border-l-emerald-500 rounded-lg p-2.5 bg-white">
+            <div class="text-[9px] font-extrabold text-slate-600 uppercase">TOTAL COLLECTIONS</div>
+            <div class="text-base font-black text-emerald-600 font-mono mt-0.5">₹ ${fmt(totalPaid)}</div>
+            <div class="text-[8px] text-slate-500 mt-0.5">Reconciled on date</div>
           </div>
-          <div class="bg-slate-50 border border-slate-300 rounded-lg p-2 text-center">
-            <div class="text-[9px] font-extrabold text-slate-600 uppercase">Occupied Rooms</div>
-            <div class="text-base font-black text-blue-600 font-mono mt-0.5">${occupiedCount}</div>
-            <div class="text-[8.5px] text-slate-500">${occupancyRate}% Occupancy</div>
+          <div class="border border-slate-300 border-l-4 border-l-indigo-600 rounded-lg p-2.5 bg-white">
+            <div class="text-[9px] font-extrabold text-slate-600 uppercase">ROOM OCCUPANCY</div>
+            <div class="text-base font-black text-indigo-700 font-mono mt-0.5">${occupancyRate}%</div>
+            <div class="text-[8px] text-slate-500 mt-0.5">${occupiedCount} / ${totalRooms} rooms occupied</div>
           </div>
-          <div class="bg-slate-50 border border-slate-300 rounded-lg p-2 text-center">
-            <div class="text-[9px] font-extrabold text-slate-600 uppercase">Housekeeping</div>
-            <div class="text-base font-black text-emerald-600 font-mono mt-0.5">${hkCount}</div>
-            <div class="text-[8.5px] text-slate-500">Activity Logged</div>
+          <div class="border border-slate-300 border-l-4 border-l-rose-600 rounded-lg p-2.5 bg-white">
+            <div class="text-[9px] font-extrabold text-slate-600 uppercase">UNSETTLED BALANCE</div>
+            <div class="text-base font-black ${totalDue > 0.01 ? 'text-rose-700' : 'text-emerald-700'} font-mono mt-0.5">₹ ${fmt(totalDue)}</div>
+            <div class="text-[8px] text-slate-500 mt-0.5">${unsettledCount} pending folio(s)</div>
           </div>
-          <div class="bg-slate-50 border border-slate-300 rounded-lg p-2 text-center">
-            <div class="text-[9px] font-extrabold text-slate-600 uppercase">Operational</div>
-            <div class="text-base font-black text-amber-600 font-mono mt-0.5">${opCount}</div>
-            <div class="text-[8.5px] text-slate-500">Room Status Logs</div>
-          </div>
-        </div>
-
-        <!-- 2. Clean 4 Financial KPI Cards -->
-        <div class="grid grid-cols-4 gap-2 mb-3.5">
-          <div class="bg-white border border-indigo-500 rounded-lg p-2">
-            <div class="text-[9px] font-extrabold text-indigo-700 uppercase">Total Bill</div>
-            <div class="text-sm font-black text-indigo-700 font-mono mt-0.5">₹ ${fmt(totalBill)}</div>
-            <div class="text-[8px] text-slate-500">${guests.length} booking folio(s)</div>
-          </div>
-          <div class="bg-white border border-emerald-500 rounded-lg p-2">
-            <div class="text-[9px] font-extrabold text-emerald-700 uppercase">Collections</div>
-            <div class="text-sm font-black text-emerald-700 font-mono mt-0.5">₹ ${fmt(totalPaid)}</div>
-            <div class="text-[8px] text-slate-500">Reconciled on date</div>
-          </div>
-          <div class="bg-white border border-blue-500 rounded-lg p-2">
-            <div class="text-[9px] font-extrabold text-blue-700 uppercase">Room Occupancy</div>
-            <div class="text-sm font-black text-blue-700 font-mono mt-0.5">${occupancyRate}%</div>
-            <div class="text-[8px] text-slate-500">${occupiedCount} / ${totalRooms} rooms</div>
-          </div>
-          <div class="bg-white border border-rose-500 rounded-lg p-2">
-            <div class="text-[9px] font-extrabold text-rose-700 uppercase">Unsettled Balance</div>
-            <div class="text-sm font-black text-rose-700 font-mono mt-0.5">₹ ${fmt(totalDue)}</div>
-            <div class="text-[8px] text-slate-500">${unsettledCount} pending folio(s)</div>
+          <div class="border border-slate-300 border-l-4 border-l-purple-600 rounded-lg p-2.5 bg-white">
+            <div class="text-[9px] font-extrabold text-slate-600 uppercase">TOTAL BILL / REVENUE</div>
+            <div class="text-base font-black text-purple-700 font-mono mt-0.5">₹ ${fmt(totalBill)}</div>
+            <div class="text-[8px] text-slate-500 mt-0.5">${guests.length} booking folio(s)</div>
           </div>
         </div>
 
-        <!-- 3. Collections Breakdown & Revenue Reconciliations (2 columns) -->
-        <div class="grid grid-cols-2 gap-2.5 mb-3.5">
+        <!-- 2. Collections by Payment Mode Strip -->
+        <div class="print-avoid-break flex items-center justify-between gap-2 p-2.5 bg-slate-50 border border-slate-300 rounded-lg text-[8.5px] mb-3.5">
+          <div><span class="text-slate-500 font-semibold uppercase text-[7.5px] block">CASH</span> <strong class="font-mono text-slate-900 font-bold">₹ ${fmt(a.cash_collection)}</strong></div>
+          <div class="border-l border-slate-300 pl-2.5"><span class="text-slate-500 font-semibold uppercase text-[7.5px] block">UPI / QR</span> <strong class="font-mono text-slate-900 font-bold">₹ ${fmt(a.upi_collection)}</strong></div>
+          <div class="border-l border-slate-300 pl-2.5"><span class="text-slate-500 font-semibold uppercase text-[7.5px] block">CARD</span> <strong class="font-mono text-slate-900 font-bold">₹ ${fmt(a.card_collection)}</strong></div>
+          <div class="border-l border-slate-300 pl-2.5"><span class="text-slate-500 font-semibold uppercase text-[7.5px] block">BANK TRANSFER</span> <strong class="font-mono text-slate-900 font-bold">₹ ${fmt(a.bank_collection)}</strong></div>
+          <div class="border-l border-slate-300 pl-2.5"><span class="text-slate-500 font-semibold uppercase text-[7.5px] block">ADVANCE</span> <strong class="font-mono text-emerald-700 font-bold">₹ ${fmt(a.advance_payments || 0)}</strong></div>
+          <div class="border-l border-slate-300 pl-2.5"><span class="text-slate-500 font-semibold uppercase text-[7.5px] block">SETTLEMENTS</span> <strong class="font-mono text-indigo-700 font-bold">₹ ${fmt(a.settlement_payments || 0)}</strong></div>
+          ${totalInward > 0 ? `
+          <div class="border-l border-slate-300 pl-2.5"><span class="text-slate-500 font-semibold uppercase text-[7.5px] block">STORE INWARD</span> <strong class="font-mono text-amber-800 font-bold">₹ ${fmt(totalInward)}</strong></div>
+          ` : ''}
+        </div>
+
+        <!-- 3. Operational Snapshot (2 columns) -->
+        <div class="grid grid-cols-2 gap-2.5 mb-3.5 print-avoid-break">
           <!-- Collections Table -->
           <div>
-            <div class="text-xs font-black uppercase text-indigo-950 border-b border-slate-300 pb-1 mb-1.5">
+            <div class="text-[10px] font-black uppercase text-indigo-950 border-b border-slate-300 pb-1 mb-1.5">
               Reconciled Collections By Mode
             </div>
-            <table class="print-table text-[9.5px] w-full">
+            <table class="print-table text-[8.5px] w-full">
               <thead>
                 <tr>
                   <th>Payment Mode</th>
@@ -1220,7 +1339,7 @@
               </tbody>
               <tfoot>
                 <tr class="bg-slate-100 font-extrabold">
-                  <td>Total Collections:</td>
+                  <td>Total Collections Reconciled:</td>
                   <td class="text-right font-mono text-emerald-700">₹ ${fmt(totalPaid)}</td>
                 </tr>
               </tfoot>
@@ -1229,13 +1348,13 @@
 
           <!-- Room & Inventory Metrics -->
           <div>
-            <div class="text-xs font-black uppercase text-indigo-950 border-b border-slate-300 pb-1 mb-1.5">
+            <div class="text-[10px] font-black uppercase text-indigo-950 border-b border-slate-300 pb-1 mb-1.5">
               Rooms &amp; Operational Statistics
             </div>
-            <table class="print-table text-[9.5px] w-full">
+            <table class="print-table text-[8.5px] w-full">
               <tbody>
                 <tr><td>Total Hotel Rooms Inventory</td><td class="text-right font-mono font-bold">${totalRooms} Rooms</td></tr>
-                <tr><td>Occupied Rooms Sold</td><td class="text-right font-mono font-bold text-blue-600">${occupiedCount} Rooms (${occupancyRate}%)</td></tr>
+                <tr><td>Occupied Rooms Sold</td><td class="text-right font-mono font-bold text-indigo-700">${occupiedCount} Rooms (${occupancyRate}%)</td></tr>
                 <tr><td>Vacant Available Rooms</td><td class="text-right font-mono font-bold text-emerald-600">${vacantCount} Rooms</td></tr>
                 <tr><td>Maintenance / Out of Order</td><td class="text-right font-mono font-bold text-amber-600">${maintCount} Rooms</td></tr>
                 <tr><td>Average Daily Rate (ADR) / RevPAR</td><td class="text-right font-mono font-bold">₹ ${fmt(a.adr)} / ₹ ${fmt(a.revpar)}</td></tr>
@@ -1248,113 +1367,205 @@
           </div>
         </div>
 
-        <!-- 4. Guest Billings, Settlements & Outstanding Balances Table -->
-        <div class="print-avoid-break mb-3.5">
-          <div class="text-xs font-black uppercase text-indigo-950 border-b border-slate-300 pb-1 mb-1.5 flex justify-between">
-            <span>Guest Billings, Settlements &amp; Outstanding Balances (${guests.length} Bookings)</span>
-            <span class="text-[9.5px] text-slate-500 normal-case">All amounts in INR (₹)</span>
+        <!-- 4. Section 1: Guest Billings, Folio Accounts & Settlements Table -->
+        <div class="mb-4">
+          <div class="text-[11px] font-black uppercase text-indigo-950 border-b border-slate-300 pb-1 mb-1.5 flex justify-between items-center">
+            <span>Section 1: Guest Billings, Folio Accounts &amp; Settlements (${guests.length} Bookings)</span>
+            <span class="text-[9px] text-slate-500 normal-case">All amounts in INR (₹)</span>
           </div>
-          <table class="print-table text-[9px] w-full">
+          <table class="print-table text-[8px] w-full border-collapse table-fixed">
             <thead>
               <tr>
                 <th class="w-6 text-center">SL</th>
-                <th>Guest Name</th>
-                <th class="text-center">Room</th>
-                <th>Settle #</th>
-                <th>Dates</th>
-                <th class="text-right">Total Bill</th>
-                <th class="text-right">Paid Amt</th>
-                <th class="text-right">Remaining</th>
-                <th class="text-center">Status</th>
+                <th class="w-18">BOOKING #</th>
+                <th class="w-16">ROOM(S)</th>
+                <th class="w-26">PRIMARY GUEST</th>
+                <th class="w-16">SETTLE #</th>
+                <th class="w-14">CHECK-IN</th>
+                <th class="w-14">CHECK-OUT</th>
+                <th class="w-12 text-center">STATUS</th>
+                <th class="w-14 text-right">ROOM BILL</th>
+                <th class="w-14 text-right">EXTRA SERV.</th>
+                <th class="w-16 text-right">TOTAL BILL</th>
+                <th class="w-14 text-right">PAID</th>
+                <th class="w-14 text-right">REMAINING</th>
+                <th class="w-14 text-center">SETTLE</th>
               </tr>
             </thead>
             <tbody>
-              ${guests.length > 0 ? guests.map((g, idx) => `
-                <tr>
-                  <td class="text-center font-mono">${idx + 1}</td>
-                  <td class="font-bold">${escapeHtml(g.guest_name || 'Guest')}</td>
-                  <td class="text-center font-bold font-mono">${escapeHtml(g.room_number || '-')}</td>
-                  <td class="font-mono font-bold text-indigo-700">${escapeHtml(g.settle_number || g.folio_number || '-')}</td>
-                  <td class="text-[8.5px] text-slate-600">${escapeHtml(g.checkin_date || '-')} - ${escapeHtml(g.checkout_date || '-')}</td>
-                  <td class="text-right font-mono font-bold">₹ ${fmt(g.total_bill)}</td>
-                  <td class="text-right font-mono text-emerald-700 font-bold">₹ ${fmt(g.paid_amount)}</td>
-                  <td class="text-right font-mono font-extrabold ${Number(g.remaining_amount || 0) > 0.01 ? 'text-rose-700' : 'text-emerald-700'}">₹ ${fmt(g.remaining_amount)}</td>
-                  <td class="text-center text-[8.5px] font-extrabold uppercase">${g.is_settled ? 'SETTLED' : 'UNSETTLED'}</td>
-                </tr>
-              `).join('') : `
-                <tr><td colspan="9" class="text-center py-3 text-slate-400">No guest settlement records logged for this audit date.</td></tr>
+              ${guests.length > 0 ? guests.map((g, idx) => {
+                const rem = Number(g.remaining_amount || 0);
+                const pd = Number(g.paid_amount || 0);
+                const rmCharges = Number(g.room_charges || 0);
+                const exCharges = Number(g.extra_service_charges || 0);
+                const tb = Number(g.grand_total_bill || g.total_bill || (rmCharges + exCharges));
+                const isSet = g.is_settled || (rem <= 0.01);
+                
+                let roomsStr = '-';
+                if (Array.isArray(g.rooms) && g.rooms.length > 0) {
+                  roomsStr = g.rooms.map(r => r.label || r.room_number).join(', ');
+                } else if (g.room_number) {
+                  roomsStr = g.room_number;
+                }
+
+                const occBonus = (g.total_occupants && g.total_occupants > 1) ? ` <span class="text-[7.5px] opacity-80 font-semibold">(+${g.total_occupants - 1})</span>` : '';
+
+                return `
+                  <tr>
+                    <td class="text-center font-mono">${idx + 1}</td>
+                    <td class="font-mono font-bold text-indigo-700 whitespace-nowrap truncate">${escapeHtml(g.booking_number || ('RES-' + (g.booking_id || g.id)))}</td>
+                    <td class="font-mono font-bold truncate whitespace-nowrap">${escapeHtml(roomsStr)}</td>
+                    <td class="font-bold truncate whitespace-nowrap">${escapeHtml(g.primary_guest_name || g.guest_name || 'Guest')}${occBonus}</td>
+                    <td class="font-mono font-bold text-[8px] text-teal-700 whitespace-nowrap truncate">${escapeHtml(g.settle_number || g.folio_number || '-')}</td>
+                    <td class="text-[8px] text-slate-600 whitespace-nowrap">${escapeHtml(g.checkin_date || '-')}</td>
+                    <td class="text-[8px] text-slate-600 whitespace-nowrap">${escapeHtml(g.checkout_date || '-')}</td>
+                    <td class="text-center text-[7.5px] whitespace-nowrap">${escapeHtml(g.stay_status || g.status || 'Active')}</td>
+                    <td class="text-right font-mono font-bold whitespace-nowrap">₹ ${fmt(rmCharges)}</td>
+                    <td class="text-right font-mono font-bold ${exCharges > 0 ? 'text-amber-700' : 'text-slate-400'} whitespace-nowrap">
+                      ${exCharges > 0 ? '+₹ ' + fmt(exCharges) : '₹ 0.00'}
+                    </td>
+                    <td class="text-right font-mono font-extrabold whitespace-nowrap">₹ ${fmt(tb)}</td>
+                    <td class="text-right font-mono text-emerald-700 font-bold whitespace-nowrap">₹ ${fmt(pd)}</td>
+                    <td class="text-right font-mono font-extrabold ${rem > 0.01 ? 'text-rose-700' : 'text-emerald-700'} whitespace-nowrap">₹ ${fmt(rem)}</td>
+                    <td class="text-center text-[7.5px] font-extrabold ${isSet ? 'text-emerald-700' : 'text-rose-700'} whitespace-nowrap">${isSet ? 'SETTLED' : 'UNSETTLED'}</td>
+                  </tr>
+                `;
+              }).join('') : `
+                <tr><td colspan="14" class="text-center py-3 text-slate-400">No guest settlement records logged for this audit date.</td></tr>
               `}
             </tbody>
             ${guests.length > 0 ? `
               <tfoot>
-                <tr class="bg-slate-100 font-extrabold">
-                  <td colspan="5" class="text-right uppercase text-[9.5px]">Audit Grand Totals:</td>
-                  <td class="text-right font-mono text-[9.5px]">₹ ${fmt(totalBill)}</td>
-                  <td class="text-right font-mono text-[9.5px] text-emerald-700">₹ ${fmt(totalPaid)}</td>
-                  <td class="text-right font-mono text-[9.5px] ${totalDue > 0.01 ? 'text-rose-700' : 'text-emerald-700'}">₹ ${fmt(totalDue)}</td>
-                  <td class="text-center text-[8.5px]">${settledCount}S / ${unsettledCount}U</td>
+                <tr class="bg-slate-50 font-extrabold">
+                  <td colspan="8" class="text-right uppercase text-[8px] text-slate-500">AUDIT GRAND TOTALS:</td>
+                  <td class="text-right font-mono text-[8.5px]">₹ ${fmt(totalRoomBill)}</td>
+                  <td class="text-right font-mono text-[8.5px] text-amber-700">+₹ ${fmt(totalExtraBill)}</td>
+                  <td class="text-right font-mono text-[9px] font-extrabold">₹ ${fmt(totalBill)}</td>
+                  <td class="text-right font-mono text-[8.5px] text-emerald-700">₹ ${fmt(totalPaid)}</td>
+                  <td class="text-right font-mono text-[8.5px] ${totalDue > 0.01 ? 'text-rose-700' : 'text-emerald-700'}">₹ ${fmt(totalDue)}</td>
+                  <td class="text-center text-[8px] ${unsettledCount > 0 ? 'text-rose-700' : 'text-emerald-700'}">${unsettledCount} Due</td>
                 </tr>
               </tfoot>
             ` : ''}
           </table>
         </div>
 
-        <!-- 5. Occupied Rooms Sold Detail Table (if any) -->
+        <!-- 5. Section 2: Occupied Rooms Sold Inventory & Day Tariffs -->
         ${occupied.length > 0 ? `
-          <div class="print-avoid-break mb-3.5">
-            <div class="text-xs font-black uppercase text-indigo-950 border-b border-slate-300 pb-1 mb-1.5">
-              Occupied Rooms Sold Summary (${occupied.length} Rooms)
+          <div class="print-avoid-break mb-4">
+            <div class="text-[11px] font-black uppercase text-indigo-950 border-b border-slate-300 pb-1 mb-1.5 flex justify-between items-center">
+              <span>Section 2: Occupied Rooms Sold Inventory (${occupied.length} Rooms)</span>
+              <span class="text-[9px] text-slate-500 normal-case">In-House Room Occupancy &amp; Rates</span>
             </div>
-            <table class="print-table text-[9px] w-full">
+            <table class="print-table text-[8px] w-full border-collapse table-fixed">
               <thead>
                 <tr>
                   <th class="w-6 text-center">SL</th>
-                  <th>Room</th>
-                  <th>Category</th>
-                  <th>Floor</th>
-                  <th>Primary Guest</th>
-                  <th>Settle #</th>
-                  <th class="text-center">Housekeeping</th>
-                  <th class="text-right">Rate / Day</th>
+                  <th class="w-11 text-center">ROOM</th>
+                  <th class="w-22">CATEGORY</th>
+                  <th class="w-14">FLOOR</th>
+                  <th class="w-32">PRIMARY GUEST</th>
+                  <th class="w-18">SETTLE #</th>
+                  <th class="w-16">CHECK-IN</th>
+                  <th class="w-16">CHECK-OUT</th>
+                  <th class="w-14 text-center">STAY</th>
+                  <th class="w-22 text-center">HOUSEKEEPING</th>
+                  <th class="w-20 text-right">DAY TARIFF</th>
                 </tr>
               </thead>
               <tbody>
                 ${occupied.map((rm, idx) => `
                   <tr>
                     <td class="text-center font-mono">${idx + 1}</td>
-                    <td class="font-bold font-mono">${escapeHtml(rm.room_number)}</td>
-                    <td>${escapeHtml(rm.category || 'Standard')}</td>
+                    <td class="text-center font-bold font-mono text-indigo-700">${escapeHtml(rm.room_number)}</td>
+                    <td class="truncate whitespace-nowrap">${escapeHtml(rm.category || 'Standard')}</td>
                     <td>${escapeHtml(rm.floor || 'Floor 1')}</td>
-                    <td>${escapeHtml(rm.guest_name || 'Guest')}</td>
-                    <td class="font-mono font-bold text-indigo-700">${escapeHtml(rm.settle_number || rm.folio_number || '-')}</td>
-                    <td class="text-center">${escapeHtml(rm.housekeeping_status || 'Clean')}</td>
-                    <td class="text-right font-mono font-bold">₹ ${fmt(rm.day_rate)}</td>
+                    <td class="font-bold truncate whitespace-nowrap">${escapeHtml(rm.guest_name || 'Guest')}</td>
+                    <td class="font-mono font-bold text-[8px] text-indigo-700 break-all">${escapeHtml(rm.settle_number || rm.folio_number || '-')}</td>
+                    <td class="text-[8px] text-slate-600 whitespace-nowrap">${escapeHtml(rm.checkin_date || '-')}</td>
+                    <td class="text-[8px] text-slate-600 whitespace-nowrap">${escapeHtml(rm.checkout_date || '-')}</td>
+                    <td class="text-center text-[8px]">${escapeHtml(rm.stay_status || rm.status || 'Active')}</td>
+                    <td class="text-center font-bold text-[8px]">${escapeHtml(rm.housekeeping_status || 'Clean')}</td>
+                    <td class="text-right font-mono font-bold whitespace-nowrap">₹ ${fmt(rm.day_rate)}</td>
                   </tr>
                 `).join('')}
               </tbody>
+              <tfoot>
+                <tr class="bg-slate-100 font-extrabold">
+                  <td colspan="10" class="text-right uppercase text-[8px]">Total In-House Occupied Day Tariffs:</td>
+                  <td class="text-right font-mono text-[8.5px] text-indigo-900">₹ ${fmt(totalOccupiedTariff)}</td>
+                </tr>
+              </tfoot>
             </table>
           </div>
         ` : ''}
 
-        <!-- 6. Housekeeping History Logs (Print) -->
-        ${hks.length > 0 ? `
-          <div class="print-avoid-break mb-3.5">
-            <div class="text-xs font-black uppercase text-indigo-950 border-b border-slate-300 pb-1 mb-1.5 flex justify-between">
-              <span>Housekeeping Activity &amp; Status Logs (${hks.length} Records)</span>
-              <span class="text-[9px] text-slate-500 normal-case">Audited date activity</span>
+        <!-- 6. Section 3: Store Inward Stock Purchases (only when inward exists and amount > 0) -->
+        ${inward.length > 0 && totalInward > 0 ? `
+          <div class="print-avoid-break mb-4">
+            <div class="text-[11px] font-black uppercase text-indigo-950 border-b border-slate-300 pb-1 mb-1.5 flex justify-between items-center">
+              <span>Section 3: Store Inward Stock Purchases (${inward.length} Entries)</span>
+              <span class="text-[9.5px] font-bold text-amber-800 normal-case">Total Inward: ₹ ${fmt(totalInward)}</span>
             </div>
-            <table class="print-table text-[8.5px] w-full">
+            <table class="print-table text-[8px] w-full border-collapse table-fixed">
               <thead>
                 <tr>
                   <th class="w-6 text-center">SL</th>
-                  <th>Time</th>
-                  <th>Room</th>
-                  <th>Category</th>
-                  <th>Floor</th>
-                  <th class="text-center">Housekeeping State</th>
-                  <th class="text-center">Status</th>
-                  <th>Start Time</th>
-                  <th>Completion Time</th>
+                  <th class="w-16">TIME</th>
+                  <th class="w-36">DISH / ITEM</th>
+                  <th class="w-20">REF / INV #</th>
+                  <th class="w-20 text-center">QTY / PLATES</th>
+                  <th class="w-20 text-right">UNIT COST</th>
+                  <th class="w-24 text-right">TOTAL AMOUNT</th>
+                  <th class="w-28">PERFORMED BY</th>
+                  <th>REMARKS</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${inward.map((m, idx) => `
+                  <tr>
+                    <td class="text-center font-mono">${idx + 1}</td>
+                    <td>${escapeHtml(m.time || '-')}</td>
+                    <td class="font-bold text-slate-800 truncate">${escapeHtml(m.item_name || 'Item')}</td>
+                    <td class="font-mono text-slate-600">${escapeHtml(m.reference_no || '-')}</td>
+                    <td class="text-center font-bold text-emerald-700">+${m.quantity} Plates</td>
+                    <td class="text-right font-mono">${m.unit_cost ? '₹ ' + Number(m.unit_cost).toFixed(2) : '-'}</td>
+                    <td class="text-right font-mono font-bold text-slate-900">₹ ${Number(m.total_cost || 0).toFixed(2)}</td>
+                    <td>${escapeHtml(m.performed_by || '-')}</td>
+                    <td class="text-slate-600 truncate">${escapeHtml(m.remarks || '-')}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+              <tfoot>
+                <tr class="font-bold bg-slate-100">
+                  <td colspan="6" class="text-right uppercase text-[8px]">Total Store Inward Purchases:</td>
+                  <td class="text-right font-mono text-[8.5px] text-amber-900">₹ ${fmt(totalInward)}</td>
+                  <td colspan="2"></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        ` : ''}
+
+        <!-- 7. Section 4: Housekeeping Activity Logs -->
+        ${hks.length > 0 ? `
+          <div class="print-avoid-break mb-4">
+            <div class="text-[11px] font-black uppercase text-indigo-950 border-b border-slate-300 pb-1 mb-1.5 flex justify-between items-center">
+              <span>Section 4: Housekeeping Activity &amp; Status Logs (${hks.length} Records)</span>
+              <span class="text-[9px] text-slate-500 normal-case">Audited date room maintenance</span>
+            </div>
+            <table class="print-table text-[8px] w-full border-collapse table-fixed">
+              <thead>
+                <tr>
+                  <th class="w-6 text-center">SL</th>
+                  <th class="w-16">TIME</th>
+                  <th class="w-14">ROOM</th>
+                  <th class="w-24">CATEGORY</th>
+                  <th class="w-16">FLOOR</th>
+                  <th class="w-24 text-center">HK STATE</th>
+                  <th class="w-20 text-center">STATUS</th>
+                  <th class="w-20">START TIME</th>
+                  <th class="w-20">COMPLETE</th>
                 </tr>
               </thead>
               <tbody>
@@ -1362,8 +1573,8 @@
                   <tr>
                     <td class="text-center font-mono">${idx + 1}</td>
                     <td class="font-mono">${escapeHtml(hk.time || '-')}</td>
-                    <td class="font-bold font-mono">${escapeHtml(hk.room_number)}</td>
-                    <td>${escapeHtml(hk.category || 'Standard')}</td>
+                    <td class="font-bold font-mono text-indigo-700">${escapeHtml(hk.room_number)}</td>
+                    <td class="truncate">${escapeHtml(hk.category || 'Standard')}</td>
                     <td>${escapeHtml(hk.floor || 'Floor 1')}</td>
                     <td class="text-center font-bold">${escapeHtml(hk.housekeeping_status || 'Clean')}</td>
                     <td class="text-center uppercase">${escapeHtml(hk.status || 'Complete')}</td>
@@ -1376,23 +1587,23 @@
           </div>
         ` : ''}
 
-        <!-- 7. Operational Room Status Logs (Print) -->
+        <!-- 8. Section 5: Operational Room Status Logs -->
         ${ops.length > 0 ? `
-          <div class="print-avoid-break mb-3.5">
-            <div class="text-xs font-black uppercase text-indigo-950 border-b border-slate-300 pb-1 mb-1.5 flex justify-between">
-              <span>Operational Room Status Logs (${ops.length} Records)</span>
+          <div class="print-avoid-break mb-4">
+            <div class="text-[11px] font-black uppercase text-indigo-950 border-b border-slate-300 pb-1 mb-1.5 flex justify-between items-center">
+              <span>Section 5: Operational Room Status Logs (${ops.length} Records)</span>
               <span class="text-[9px] text-slate-500 normal-case">Service &amp; Maintenance Tracking</span>
             </div>
-            <table class="print-table text-[8.5px] w-full">
+            <table class="print-table text-[8px] w-full border-collapse table-fixed">
               <thead>
                 <tr>
                   <th class="w-6 text-center">SL</th>
-                  <th>Time</th>
-                  <th>Room</th>
-                  <th>Category</th>
-                  <th>Floor</th>
-                  <th class="text-center">Operational Status</th>
-                  <th class="text-center">Model State</th>
+                  <th class="w-16">TIME</th>
+                  <th class="w-16">ROOM</th>
+                  <th class="w-28">CATEGORY</th>
+                  <th class="w-20">FLOOR</th>
+                  <th class="w-28 text-center">OPERATIONAL STATUS</th>
+                  <th class="text-center">ROOM STATE</th>
                 </tr>
               </thead>
               <tbody>
@@ -1400,8 +1611,8 @@
                   <tr>
                     <td class="text-center font-mono">${idx + 1}</td>
                     <td class="font-mono">${escapeHtml(op.time || '-')}</td>
-                    <td class="font-bold font-mono">${escapeHtml(op.room_number)}</td>
-                    <td>${escapeHtml(op.category || 'Standard')}</td>
+                    <td class="font-bold font-mono text-indigo-700">${escapeHtml(op.room_number)}</td>
+                    <td class="truncate">${escapeHtml(op.category || 'Standard')}</td>
                     <td>${escapeHtml(op.floor || 'Floor 1')}</td>
                     <td class="text-center font-bold">${escapeHtml(op.operational_status || 'Active')}</td>
                     <td class="text-center uppercase">${escapeHtml(op.room_status || 'Active')}</td>
@@ -1412,75 +1623,28 @@
           </div>
         ` : ''}
 
-        <!-- 7b. Store Inward Stock Purchases (Print) -->
-        ${inward.length > 0 ? `
-          <div class="print-avoid-break mb-3.5">
-            <div class="text-xs font-black uppercase text-indigo-950 border-b border-slate-300 pb-1 mb-1.5 flex justify-between">
-              <span>Store Inward Stock Purchases (${inward.length} Entries)</span>
-              <span class="text-[9px] font-bold text-amber-800 normal-case">Total Inward: ₹${totalInward.toFixed(2)}</span>
-            </div>
-            <table class="print-table text-[8.5px] w-full">
-              <thead>
-                <tr>
-                  <th class="w-6 text-center">SL</th>
-                  <th>Time</th>
-                  <th>Dish / Item</th>
-                  <th>Ref #</th>
-                  <th class="text-center">Plates Added</th>
-                  <th class="text-right">Unit Cost</th>
-                  <th class="text-right">Total Amount</th>
-                  <th>Receiver</th>
-                  <th>Remarks</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${inward.map((m, idx) => `
-                  <tr>
-                    <td class="text-center font-mono">${idx + 1}</td>
-                    <td class="font-mono">${escapeHtml(m.time || '-')}</td>
-                    <td class="font-bold">${escapeHtml(m.item_name || 'Item')}</td>
-                    <td class="font-mono">${escapeHtml(m.reference_no || '-')}</td>
-                    <td class="text-center font-bold text-emerald-700">+${m.quantity} Plates</td>
-                    <td class="text-right font-mono">${m.unit_cost ? '₹' + Number(m.unit_cost).toFixed(2) : '-'}</td>
-                    <td class="text-right font-mono font-bold">₹${Number(m.total_cost || 0).toFixed(2)}</td>
-                    <td>${escapeHtml(m.performed_by || '-')}</td>
-                    <td class="truncate">${escapeHtml(m.remarks || '-')}</td>
-                  </tr>
-                `).join('')}
-              </tbody>
-              <tfoot>
-                <tr class="font-bold bg-slate-100">
-                  <td colspan="6" class="text-right uppercase">Total Store Inward Purchases:</td>
-                  <td class="text-right font-mono text-amber-900">₹${totalInward.toFixed(2)}</td>
-                  <td colspan="2"></td>
-                </tr>
-              </tfoot>
-            </table>
-          </div>
-        ` : ''}
-
-        <!-- 8. Closing Remarks & Sign-off Footer -->
-        <div class="print-avoid-break mt-5 pt-2 border-t border-slate-300">
+        <!-- 9. Closing Remarks & Sign-off Footer -->
+        <div class="print-avoid-break mt-6 pt-2.5 border-t border-slate-300">
           ${a.remarks ? `
-            <div class="text-[9.5px] text-slate-600 mb-4 bg-slate-50 p-2 border border-slate-200 rounded">
+            <div class="text-[10px] text-slate-600 mb-6 bg-slate-50 p-2.5 border border-slate-200 rounded">
               <strong>Closing Remarks:</strong> ${escapeHtml(a.remarks)}
             </div>
           ` : ''}
 
-          <div class="flex justify-between items-end mt-7">
-            <div class="text-center w-52">
-              <div class="border-b border-slate-900 h-6.5 mb-1.5"></div>
-              <div class="text-[10.5px] font-black text-slate-900">Night Auditor / Front Desk</div>
-              <div class="text-[9px] text-slate-500">${escapeHtml(auditorName)}</div>
+          <div class="flex justify-between items-end mt-9">
+            <div class="text-center w-56">
+              <div class="border-b border-slate-900 h-7.5 mb-1.5"></div>
+              <div class="text-[11px] font-black text-slate-900">Night Auditor / Front Desk</div>
+              <div class="text-[9.5px] text-slate-500">${escapeHtml(auditorName)}</div>
             </div>
-            <div class="text-center w-36 text-[9px] text-slate-500">
+            <div class="text-center w-40 text-[9.5px] text-slate-500">
               Hotel Sagar Sonnet PMS<br>
               Official Verification Stamp
             </div>
-            <div class="text-center w-52">
-              <div class="border-b border-slate-900 h-6.5 mb-1.5"></div>
-              <div class="text-[10.5px] font-black text-slate-900">Duty Manager / General Manager</div>
-              <div class="text-[9px] text-slate-500">Signature &amp; Verification</div>
+            <div class="text-center w-56">
+              <div class="border-b border-slate-900 h-7.5 mb-1.5"></div>
+              <div class="text-[11px] font-black text-slate-900">Duty Manager / General Manager</div>
+              <div class="text-[9.5px] text-slate-500">Signature &amp; Verification</div>
             </div>
           </div>
         </div>
@@ -1488,14 +1652,39 @@
       </div>
     `;
 
-    printArea.style.display = 'block';
+    var iframe = document.createElement('iframe');
+    iframe.style.position = 'fixed';
+    iframe.style.right = '0';
+    iframe.style.bottom = '0';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    iframe.style.border = '0';
+    document.body.appendChild(iframe);
 
-    setTimeout(() => {
-      window.print();
-      setTimeout(() => {
-        printArea.style.display = 'none';
-      }, 500);
-    }, 250);
+    var doc = iframe.contentWindow.document;
+    doc.open();
+    doc.write('<!DOCTYPE html><html><head><title>Admin Night Audit Dossier - ' + escapeHtml(auditDateFormatted) + ' - Hotel Sagar Sonnet</title>');
+    document.querySelectorAll('link[rel="stylesheet"]').forEach(function(l) {
+      doc.write(l.outerHTML);
+    });
+    document.querySelectorAll('style').forEach(function(s) {
+      doc.write(s.outerHTML);
+    });
+    doc.write(getAdminNightAuditReportStyles());
+    doc.write('</head><body>');
+    doc.write(reportHtml);
+    doc.write('</body></html>');
+    doc.close();
+
+    setTimeout(function() {
+      iframe.contentWindow.focus();
+      iframe.contentWindow.print();
+      setTimeout(function() {
+        if (iframe.parentNode) {
+          iframe.parentNode.removeChild(iframe);
+        }
+      }, 1000);
+    }, 400);
   }
 
   function escapeHtml(text) {

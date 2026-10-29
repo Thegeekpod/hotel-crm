@@ -2391,3 +2391,97 @@ select:not([multiple]):not([size]):not(.select2-hidden-accessible),
     color: #ffffff;
     border-color: #ea580c;
 }
+
+/* ==========================================================================
+   Universal High-Definition Night Audit PDF & Print Stylesheet
+   ========================================================================== */
+@media print {
+    @page {
+        size: A4 landscape;
+        margin: 8mm 10mm;
+    }
+
+    html, body {
+        width: 100% !important;
+        background: #ffffff !important;
+        color: #0f172a !important;
+        font-size: 9px !important;
+        line-height: 1.3 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    header,
+    nav,
+    aside,
+    .pms-bottom-bar,
+    .modal-backdrop,
+    #modal-complete-audit,
+    #audit-dossier-modal,
+    .no-print,
+    .audit-nav-tab,
+    .btn-ui-primary,
+    .btn-ui-secondary,
+    button:not(.allow-print) {
+        display: none !important;
+    }
+
+    #printable-night-audit-report,
+    #printable-audit-container {
+        display: block !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    .print-avoid-break {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+
+    /* Print Table Styles */
+    .print-table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+        font-size: 8.5px !important;
+        line-height: 1.35 !important;
+        margin-bottom: 12px !important;
+    }
+
+    .print-table th {
+        background-color: #f1f5f9 !important;
+        color: #1e293b !important;
+        font-weight: 800 !important;
+        text-transform: uppercase !important;
+        font-size: 8px !important;
+        letter-spacing: 0.3px !important;
+        padding: 4px 6px !important;
+        border: 1px solid #cbd5e1 !important;
+        text-align: left;
+    }
+
+    .print-table td {
+        padding: 4px 6px !important;
+        border: 1px solid #e2e8f0 !important;
+        color: #0f172a !important;
+        vertical-align: middle;
+    }
+
+    .print-table tbody tr:nth-child(even) {
+        background-color: #f8fafc !important;
+    }
+
+    .print-table tfoot tr {
+        background-color: #e2e8f0 !important;
+        font-weight: 900 !important;
+    }
+
+    .print-table tfoot td {
+        border: 1px solid #cbd5e1 !important;
+        padding: 4.5px 6px !important;
+        font-size: 8.5px !important;
+    }
+}

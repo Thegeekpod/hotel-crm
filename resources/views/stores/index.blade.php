@@ -842,7 +842,7 @@
           </div>
           <div>
             <label style="font-size: 11px; font-weight: 700; color: #475569; display: block; margin-bottom: 4px;">Selling Price (₹) *</label>
-            <input type="number" id="item-price" class="pms-input" required min="0" step="0.5" placeholder="450" style="width: 100%;">
+            <input type="number" id="item-price" class="pms-input" required min="0" step="any" placeholder="450" style="width: 100%;">
           </div>
           <div>
             <label style="font-size: 11px; font-weight: 700; color: #475569; display: block; margin-bottom: 4px;">Dish Code / SKU</label>
@@ -864,7 +864,7 @@
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 10px;">
             <div>
               <label style="font-size: 11px; font-weight: 700; color: #475569; display: block; margin-bottom: 4px;">Raw Stock Quantity in Kitchen *</label>
-              <input type="number" id="item-raw-qty" class="pms-input" required min="0" step="0.1" placeholder="20" oninput="autoCalculatePlates()" style="width: 100%;">
+              <input type="number" id="item-raw-qty" class="pms-input" required min="0" step="any" placeholder="20" oninput="autoCalculatePlates()" style="width: 100%;">
             </div>
             <div>
               <label style="font-size: 11px; font-weight: 700; color: #475569; display: block; margin-bottom: 4px;">Raw Stock Unit *</label>
@@ -881,7 +881,7 @@
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 10px;">
             <div>
               <label style="font-size: 11px; font-weight: 700; color: #475569; display: block; margin-bottom: 4px;">Per Plate Requirement *</label>
-              <input type="number" id="item-per-plate-qty" class="pms-input" required min="0.01" step="0.1" placeholder="250" oninput="autoCalculatePlates()" style="width: 100%;">
+              <input type="number" id="item-per-plate-qty" class="pms-input" required min="0.001" step="any" placeholder="250" oninput="autoCalculatePlates()" style="width: 100%;">
             </div>
             <div>
               <label style="font-size: 11px; font-weight: 700; color: #475569; display: block; margin-bottom: 4px;">Per Plate Unit *</label>
@@ -898,12 +898,12 @@
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding-top: 6px; border-top: 1px dashed #cbd5e1;">
             <div>
               <label style="font-size: 11px; font-weight: 800; color: #059669; display: block; margin-bottom: 4px;">Available Plates (Stock for POS) *</label>
-              <input type="number" id="item-available-plates" class="pms-input" required min="0" placeholder="80" style="width: 100%; font-weight: 800; color: #059669; font-size: 14px;">
+              <input type="number" id="item-available-plates" class="pms-input" required min="0" step="1" placeholder="80" style="width: 100%; font-weight: 800; color: #059669; font-size: 14px;">
               <span id="plate-calc-hint" style="font-size: 10px; color: #64748b; margin-top: 2px; display: block;">Auto-calculated from raw stock</span>
             </div>
             <div>
               <label style="font-size: 11px; font-weight: 700; color: #475569; display: block; margin-bottom: 4px;">Low Stock Alert Below (Plates) *</label>
-              <input type="number" id="item-min-alert" class="pms-input" required min="1" value="10" placeholder="10" style="width: 100%;">
+              <input type="number" id="item-min-alert" class="pms-input" required min="0" step="1" value="10" placeholder="10" style="width: 100%;">
             </div>
           </div>
         </div>
@@ -991,11 +991,11 @@
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 10px;">
             <div>
               <label style="font-size: 11px; font-weight: 700; color: #475569; display: block; margin-bottom: 4px;" id="lbl-inward-raw">Raw Inward Quantity *</label>
-              <input type="number" id="inward-raw-qty" class="pms-input" min="0" step="0.1" placeholder="e.g. 10" oninput="calculateInwardPlates()" style="width: 100%;">
+              <input type="number" id="inward-raw-qty" class="pms-input" min="0" step="any" placeholder="e.g. 10" oninput="calculateInwardPlates()" style="width: 100%;">
             </div>
             <div>
               <label style="font-size: 11px; font-weight: 700; color: #059669; display: block; margin-bottom: 4px;">Plates Added (+ Plates) *</label>
-              <input type="number" id="inward-plates" class="pms-input" required min="1" placeholder="e.g. 40" style="width: 100%; font-weight: 800; color: #059669;">
+              <input type="number" id="inward-plates" class="pms-input" required min="1" step="1" placeholder="e.g. 40" style="width: 100%; font-weight: 800; color: #059669;">
             </div>
           </div>
           <span id="inward-yield-calc" style="font-size: 10.5px; color: #64748b; display: block;">Select a dish to see recipe yield.</span>

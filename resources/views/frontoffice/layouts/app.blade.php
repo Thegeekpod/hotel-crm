@@ -739,12 +739,15 @@
                       </label>
                     </div>
 
+                    @php
+                      $defaultRoomGst = (float)\App\Models\AppSetting::get('default_gst_room', 12.00);
+                    @endphp
                     <div>
                       <select name="gst_percentage_id" id="calc-gst-rate" onchange="calculateReservationBilling()" class="pms-input-field w-full font-mono font-bold cursor-pointer">
-                        <option value="" data-rate="0">0% (No GST / Exempted)</option>
+                        <option value="" data-rate="0" {{ $defaultRoomGst == 0 ? 'selected' : '' }}>0% (No GST / Exempted)</option>
                         @foreach($gstPercentages ?? \App\Models\GstPercentage::where('status', 'Active')->orderBy('gst_percentage', 'asc')->get() as $gst)
                           @if((float)$gst->gst_percentage > 0)
-                            <option value="{{ $gst->id }}" data-rate="{{ (float)$gst->gst_percentage }}">
+                            <option value="{{ $gst->id }}" data-rate="{{ (float)$gst->gst_percentage }}" {{ (float)$gst->gst_percentage == $defaultRoomGst ? 'selected' : '' }}>
                               {{ rtrim(rtrim(number_format($gst->gst_percentage, 2), '0'), '.') }}% GST
                             </option>
                           @endif

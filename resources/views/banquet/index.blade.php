@@ -479,7 +479,7 @@
         <!-- Order Total Summary -->
         <div class="bg-slate-50 border border-slate-200/80 rounded-xl p-4 flex items-center justify-between">
           <div>
-            <div class="text-[11px] text-slate-500 font-medium">Subtotal + 5% F&amp;B Tax:</div>
+            <div class="text-[11px] text-slate-500 font-medium">Subtotal + <span id="label-banquet-gst">{{ rtrim(rtrim(number_format($defaultGstBanquet ?? 5, 2), '0'), '.') }}</span>% F&amp;B Tax:</div>
             <div class="text-lg font-bold font-mono text-slate-900" id="ro-total-display">₹ 0.00</div>
           </div>
           <div class="text-xs font-bold text-emerald-600 flex items-center gap-1.5">
@@ -815,7 +815,8 @@
       subtotal += (price * qty);
     });
 
-    const tax = subtotal * 0.05;
+    const banquetGstRate = {{ (float) ($defaultGstBanquet ?? 5.00) }};
+    const tax = (subtotal * banquetGstRate) / 100;
     const total = subtotal + tax;
 
     document.getElementById('ro-total-display').innerText = `₹ ${total.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;

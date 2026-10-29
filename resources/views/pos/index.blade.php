@@ -300,7 +300,7 @@
               <span id="sub-val" class="font-mono font-bold text-slate-800">₹ 0</span>
             </div>
             <div class="flex items-center justify-between text-slate-500 font-medium">
-              <span>GST (12%):</span>
+              <span>GST (<span id="pos-gst-label-rate">{{ rtrim(rtrim(number_format($defaultGstPos ?? 12, 2), '0'), '.') }}</span>%):</span>
               <span id="tax-val" class="font-mono text-slate-500">₹ 0</span>
             </div>
             <div class="flex items-center justify-between pt-2 border-t border-slate-100 text-sm font-black text-slate-900">
@@ -503,6 +503,7 @@
 @push('scripts')
 <script>
   // State variables
+  const posGstRate = {{ (float) ($defaultGstPos ?? 12.00) }};
   let cart = [];
   let currentOrderType = 'Room Dining';
   let currentBillingType = 'Charged to Room Folio';
@@ -538,7 +539,7 @@
     const guestName = selectedOpt ? selectedOpt.getAttribute('data-guest') : '';
 
     let subtotal = cart.reduce((acc, i) => acc + (i.price * i.qty), 0);
-    let tax = Math.round(subtotal * 0.12);
+    let tax = Math.round((subtotal * posGstRate) / 100);
     let grand = subtotal + tax;
     const grandFmt = '₹ ' + grand.toLocaleString();
 
@@ -856,7 +857,7 @@
     badge.textContent = totalQty;
     elem.innerHTML = html;
 
-    const tax = Math.round(subtotal * 0.12);
+    const tax = Math.round((subtotal * posGstRate) / 100);
     const grand = subtotal + tax;
 
     document.getElementById('sub-val').textContent = `₹ ${subtotal.toLocaleString()}`;

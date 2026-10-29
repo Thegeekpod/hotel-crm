@@ -87,6 +87,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::post('payment-mode/bulk-delete', [PaymentModeController::class, 'bulkDestroy'])->name('payment-mode.bulk-destroy');
             Route::resource('payment-mode', PaymentModeController::class)->except(['create', 'edit', 'show']);
 
+            Route::post('gst-percentage/default-settings', [GstPercentageController::class, 'updateDefaultSettings'])->name('gst-percentage.update-default-settings');
             Route::post('gst-percentage/bulk-delete', [GstPercentageController::class, 'bulkDestroy'])->name('gst-percentage.bulk-destroy');
             Route::resource('gst-percentage', GstPercentageController::class)->except(['create', 'edit', 'show']);
 

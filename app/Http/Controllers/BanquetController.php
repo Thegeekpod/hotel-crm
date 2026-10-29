@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Models\AppSetting;
 use App\Models\BanquetHall;
 use App\Models\BanquetBooking;
 use App\Models\HotelService;
@@ -54,6 +55,7 @@ class BanquetController extends Controller
         $totalEventsBooked = BanquetBooking::where('status', 'Confirmed')->count();
         $activeRoomOrdersCount = RoomServiceOrder::whereIn('order_status', ['Received', 'Preparing', 'Out for Delivery'])->count();
         $totalServicesRevenue = RoomServiceOrder::sum('total_amount') + BanquetBooking::sum('total_amount');
+        $defaultGstBanquet = (float) AppSetting::get('default_gst_banquet', 5.00);
 
         return view('banquet.index', compact(
             'halls',
@@ -64,7 +66,8 @@ class BanquetController extends Controller
             'totalHalls',
             'totalEventsBooked',
             'activeRoomOrdersCount',
-            'totalServicesRevenue'
+            'totalServicesRevenue',
+            'defaultGstBanquet'
         ));
     }
 
@@ -95,7 +98,8 @@ class BanquetController extends Controller
             $subtotal += ($item['price'] * $item['quantity']);
         }
 
-        $tax = round($subtotal * 0.05, 2); // 5% F&B GST
+        $taxRate = (float) AppSetting::get('default_gst_banquet', 5.00);
+        $tax = round($subtotal * ($taxRate / 100), 2);
         $total = $subtotal + $tax;
 
         $nextOrderNo = 'ORD-' . date('Y') . '-' . str_pad((RoomServiceOrder::count() + 1), 3, '0', STR_PAD_LEFT);

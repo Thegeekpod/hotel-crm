@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\PosItem;
+use App\Models\AppSetting;
 use App\Models\PosOrder;
 use App\Models\PosOrderItem;
 use App\Models\Room;
@@ -99,6 +100,7 @@ class PosController extends Controller
         // 5. Tables: Available for dining selection, and all tables for management modal
         $availableTables = TableManage::where('status', 'available')->orderBy('table_number')->get();
         $allTables = TableManage::orderBy('table_number')->get();
+        $defaultGstPos = (float) AppSetting::get('default_gst_pos', 12.00);
 
         return view('pos.index', compact(
             'menuItems',
@@ -110,7 +112,8 @@ class PosController extends Controller
             'chargedToRoomCount',
             'menuCategories',
             'availableTables',
-            'allTables'
+            'allTables',
+            'defaultGstPos'
         ));
     }
 
@@ -270,7 +273,7 @@ class PosController extends Controller
                 $subtotal += ($item['price'] * $item['quantity']);
             }
 
-            $taxRate = 12.00;
+            $taxRate = (float) AppSetting::get('default_gst_pos', 12.00);
             $taxAmount = round($subtotal * ($taxRate / 100), 2);
             $totalAmount = round($subtotal + $taxAmount, 2);
 

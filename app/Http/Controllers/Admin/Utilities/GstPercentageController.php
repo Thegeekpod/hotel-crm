@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin\Utilities;
 
 use App\Http\Controllers\Controller;
+use App\Models\AppSetting;
 use App\Models\GstPercentage;
 use Illuminate\Http\Request;
 
@@ -26,15 +27,50 @@ class GstPercentageController extends Controller
 
         $items = $query->get();
 
+        $defaultGstSettings = [
+            'default_gst_room' => (float) AppSetting::get('default_gst_room', 12.00),
+            'default_gst_pos' => (float) AppSetting::get('default_gst_pos', 12.00),
+            'default_gst_extra_services' => (float) AppSetting::get('default_gst_extra_services', 5.00),
+            'default_gst_banquet' => (float) AppSetting::get('default_gst_banquet', 5.00),
+        ];
+
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
                 'success' => true,
                 'data' => $items,
                 'count' => $items->count(),
+                'default_gst_settings' => $defaultGstSettings,
             ]);
         }
 
-        return view('admin.utilities.frontoffice.gst', compact('items'));
+        return view('admin.utilities.frontoffice.gst', compact('items', 'defaultGstSettings'));
+    }
+
+    public function updateDefaultSettings(Request $request)
+    {
+        $validated = $request->validate([
+            'default_gst_room' => 'nullable|numeric|min:0|max:100',
+            'default_gst_pos' => 'nullable|numeric|min:0|max:100',
+            'default_gst_extra_services' => 'nullable|numeric|min:0|max:100',
+            'default_gst_banquet' => 'nullable|numeric|min:0|max:100',
+        ]);
+
+        foreach ($validated as $key => $value) {
+            if ($value !== null) {
+                AppSetting::set($key, number_format((float)$value, 2, '.', ''));
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Default GST rates updated successfully.',
+            'data' => [
+                'default_gst_room' => (float) AppSetting::get('default_gst_room', 12.00),
+                'default_gst_pos' => (float) AppSetting::get('default_gst_pos', 12.00),
+                'default_gst_extra_services' => (float) AppSetting::get('default_gst_extra_services', 5.00),
+                'default_gst_banquet' => (float) AppSetting::get('default_gst_banquet', 5.00),
+            ],
+        ]);
     }
 
     public function store(Request $request)

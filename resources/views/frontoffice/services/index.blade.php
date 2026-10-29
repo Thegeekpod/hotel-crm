@@ -321,7 +321,7 @@
         <!-- Order Total Summary -->
         <div class="bg-slate-50 border border-slate-200 rounded-xl p-3.5 flex justify-between items-center mt-4">
           <div>
-            <div class="text-[11px] text-slate-500">Subtotal + 5% F&amp;B Tax:</div>
+            <div class="text-[11px] text-slate-500">Subtotal + <span id="label-extra-service-gst">{{ rtrim(rtrim(number_format($defaultGstExtraServices ?? 5, 2), '0'), '.') }}</span>% F&amp;B Tax:</div>
             <div class="text-base font-extrabold font-mono text-slate-900 mt-0.5" id="ro-total-display">₹ 0.00</div>
           </div>
           <div class="text-xs font-extrabold text-emerald-600 inline-flex items-center gap-1.5">
@@ -518,7 +518,8 @@
       subtotal += (price * qty);
     });
 
-    const tax = subtotal * 0.05;
+    const extraServicesGstRate = {{ (float) ($defaultGstExtraServices ?? 5.00) }};
+    const tax = (subtotal * extraServicesGstRate) / 100;
     const total = subtotal + tax;
 
     document.getElementById('ro-total-display').innerText = `₹ ${total.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -649,7 +650,7 @@
           <div class="bg-white border border-slate-200/80 rounded-xl p-3.5 mb-3 shadow-xs">
             ${itemsHtml}
             <div class="flex items-center justify-between pt-3 font-bold text-sm text-slate-900 border-t border-slate-200/80 mt-1">
-              <div>Total (inc. 5% tax):</div>
+              <div>Total (inc. Tax):</div>
               <div class="font-mono text-emerald-600 text-base font-extrabold">₹ ${parseFloat(o.total_amount).toFixed(2)}</div>
             </div>
           </div>

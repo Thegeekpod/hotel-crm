@@ -5,6 +5,7 @@ namespace App\Http\Controllers\FrontOffice;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Models\AppSetting;
 use App\Models\HotelService;
 use App\Models\RoomServiceOrder;
 use App\Models\RoomServiceOrderItem;
@@ -57,6 +58,8 @@ class ServiceController extends Controller
             ->pluck('category')
             ->toArray();
 
+        $defaultGstExtraServices = (float) AppSetting::get('default_gst_extra_services', 5.00);
+
         return view('frontoffice.services.index', compact(
             'services',
             'roomOrders',
@@ -65,7 +68,8 @@ class ServiceController extends Controller
             'activeRoomOrdersCount',
             'deliveredOrdersCount',
             'totalServicesRevenue',
-            'allCategories'
+            'allCategories',
+            'defaultGstExtraServices'
         ));
     }
 
@@ -117,7 +121,8 @@ class ServiceController extends Controller
                 ];
             }
 
-            $taxAmount = round($subtotal * 0.05, 2); // 5% GST on hotel F&B / services
+            $taxRate = (float) AppSetting::get('default_gst_extra_services', 5.00);
+            $taxAmount = round($subtotal * ($taxRate / 100), 2);
             $totalAmount = $subtotal + $taxAmount;
 
             $order = RoomServiceOrder::create([

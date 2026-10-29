@@ -24,7 +24,153 @@
   <div class="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6 items-start">
     @include('admin.includes.sidebar')
 
-    <section class="min-w-0">
+    <section class="min-w-0 space-y-6">
+
+      <!-- Default Department GST Settings Card -->
+      <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+        <div class="p-5 border-b border-slate-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-gradient-to-r from-slate-50/70 to-indigo-50/30">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center text-base shadow-xs shadow-indigo-200">
+              <i class="fa-solid fa-sliders"></i>
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <h2 class="text-sm font-extrabold text-slate-900 tracking-tight">Default GST Rates by Department</h2>
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-indigo-100 text-indigo-700 uppercase tracking-wider">Live Active Defaults</span>
+              </div>
+              <p class="text-xs text-slate-500 font-medium mt-0.5">
+                Set which GST slab is pre-selected and auto-applied when creating new orders, bookings, and services.
+              </p>
+            </div>
+          </div>
+          <button type="button" onclick="saveAllDefaultGstRates()" id="btn-save-default-gst" class="inline-flex items-center gap-2 h-9 px-4 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-all shadow-xs cursor-pointer shrink-0">
+            <i class="fa-solid fa-floppy-disk"></i> Save Default Rates
+          </button>
+        </div>
+
+        <div class="p-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <!-- Room GST -->
+          <div class="p-4 rounded-xl border border-slate-200/80 bg-slate-50/40 hover:bg-white hover:border-blue-200 transition-all flex flex-col justify-between gap-3">
+            <div class="flex items-start justify-between gap-2">
+              <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center text-sm font-bold">
+                  <i class="fa-solid fa-bed"></i>
+                </div>
+                <div>
+                  <h3 class="text-xs font-extrabold text-slate-900">Room Bookings</h3>
+                  <span class="text-[11px] text-slate-500 font-medium">Front Office Tariffs</span>
+                </div>
+              </div>
+              <span id="badge-default-gst-room" class="px-2 py-0.5 rounded-full text-[11px] font-extrabold font-mono bg-blue-50 text-blue-700 border border-blue-200">
+                {{ number_format((float)($defaultGstSettings['default_gst_room'] ?? 12), 2) }}%
+              </span>
+            </div>
+
+            <div>
+              <label for="select-default-gst-room" class="block text-[11px] font-bold text-slate-600 mb-1.5">Select Default Slab</label>
+              <select id="select-default-gst-room" onchange="handleDepartmentGstChange('default_gst_room', this.value)" class="w-full h-9.5 px-3 text-xs font-bold rounded-xl border border-slate-200 bg-white text-slate-800 focus:outline-none focus:border-blue-500 cursor-pointer">
+                @foreach($items as $slab)
+                  <option value="{{ (float)$slab->gst_percentage }}" {{ (float)($defaultGstSettings['default_gst_room'] ?? 12) == (float)$slab->gst_percentage ? 'selected' : '' }}>
+                    {{ number_format((float)$slab->gst_percentage, 2) }}% {{ $slab->status === 'Inactive' ? '(Inactive Slab)' : '' }}
+                  </option>
+                @endforeach
+              </select>
+            </div>
+            <p class="text-[10px] text-slate-400 font-medium">Auto-selected in Front Desk reservation modal billing.</p>
+          </div>
+
+          <!-- POS Dining GST -->
+          <div class="p-4 rounded-xl border border-slate-200/80 bg-slate-50/40 hover:bg-white hover:border-emerald-200 transition-all flex flex-col justify-between gap-3">
+            <div class="flex items-start justify-between gap-2">
+              <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-sm font-bold">
+                  <i class="fa-solid fa-utensils"></i>
+                </div>
+                <div>
+                  <h3 class="text-xs font-extrabold text-slate-900">POS Dining</h3>
+                  <span class="text-[11px] text-slate-500 font-medium">Restaurant &amp; Bar Orders</span>
+                </div>
+              </div>
+              <span id="badge-default-gst-pos" class="px-2 py-0.5 rounded-full text-[11px] font-extrabold font-mono bg-emerald-50 text-emerald-700 border border-emerald-200">
+                {{ number_format((float)($defaultGstSettings['default_gst_pos'] ?? 12), 2) }}%
+              </span>
+            </div>
+
+            <div>
+              <label for="select-default-gst-pos" class="block text-[11px] font-bold text-slate-600 mb-1.5">Select Default Slab</label>
+              <select id="select-default-gst-pos" onchange="handleDepartmentGstChange('default_gst_pos', this.value)" class="w-full h-9.5 px-3 text-xs font-bold rounded-xl border border-slate-200 bg-white text-slate-800 focus:outline-none focus:border-emerald-500 cursor-pointer">
+                @foreach($items as $slab)
+                  <option value="{{ (float)$slab->gst_percentage }}" {{ (float)($defaultGstSettings['default_gst_pos'] ?? 12) == (float)$slab->gst_percentage ? 'selected' : '' }}>
+                    {{ number_format((float)$slab->gst_percentage, 2) }}% {{ $slab->status === 'Inactive' ? '(Inactive Slab)' : '' }}
+                  </option>
+                @endforeach
+              </select>
+            </div>
+            <p class="text-[10px] text-slate-400 font-medium">Auto-applied on POS dining cart and KOT billing.</p>
+          </div>
+
+          <!-- Extra Services GST -->
+          <div class="p-4 rounded-xl border border-slate-200/80 bg-slate-50/40 hover:bg-white hover:border-amber-200 transition-all flex flex-col justify-between gap-3">
+            <div class="flex items-start justify-between gap-2">
+              <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center text-sm font-bold">
+                  <i class="fa-solid fa-bell-concierge"></i>
+                </div>
+                <div>
+                  <h3 class="text-xs font-extrabold text-slate-900">Extra Services</h3>
+                  <span class="text-[11px] text-slate-500 font-medium">Room Service &amp; Amenities</span>
+                </div>
+              </div>
+              <span id="badge-default-gst-extra-services" class="px-2 py-0.5 rounded-full text-[11px] font-extrabold font-mono bg-amber-50 text-amber-700 border border-amber-200">
+                {{ number_format((float)($defaultGstSettings['default_gst_extra_services'] ?? 5), 2) }}%
+              </span>
+            </div>
+
+            <div>
+              <label for="select-default-gst-extra-services" class="block text-[11px] font-bold text-slate-600 mb-1.5">Select Default Slab</label>
+              <select id="select-default-gst-extra-services" onchange="handleDepartmentGstChange('default_gst_extra_services', this.value)" class="w-full h-9.5 px-3 text-xs font-bold rounded-xl border border-slate-200 bg-white text-slate-800 focus:outline-none focus:border-amber-500 cursor-pointer">
+                @foreach($items as $slab)
+                  <option value="{{ (float)$slab->gst_percentage }}" {{ (float)($defaultGstSettings['default_gst_extra_services'] ?? 5) == (float)$slab->gst_percentage ? 'selected' : '' }}>
+                    {{ number_format((float)$slab->gst_percentage, 2) }}% {{ $slab->status === 'Inactive' ? '(Inactive Slab)' : '' }}
+                  </option>
+                @endforeach
+              </select>
+            </div>
+            <p class="text-[10px] text-slate-400 font-medium">Auto-applied on Extra Services order tax calculation.</p>
+          </div>
+
+          <!-- Banquet GST -->
+          <div class="p-4 rounded-xl border border-slate-200/80 bg-slate-50/40 hover:bg-white hover:border-purple-200 transition-all flex flex-col justify-between gap-3">
+            <div class="flex items-start justify-between gap-2">
+              <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center text-sm font-bold">
+                  <i class="fa-solid fa-champagne-glasses"></i>
+                </div>
+                <div>
+                  <h3 class="text-xs font-extrabold text-slate-900">Banquet &amp; Events</h3>
+                  <span class="text-[11px] text-slate-500 font-medium">Halls &amp; Event Booking</span>
+                </div>
+              </div>
+              <span id="badge-default-gst-banquet" class="px-2 py-0.5 rounded-full text-[11px] font-extrabold font-mono bg-purple-50 text-purple-700 border border-purple-200">
+                {{ number_format((float)($defaultGstSettings['default_gst_banquet'] ?? 5), 2) }}%
+              </span>
+            </div>
+
+            <div>
+              <label for="select-default-gst-banquet" class="block text-[11px] font-bold text-slate-600 mb-1.5">Select Default Slab</label>
+              <select id="select-default-gst-banquet" onchange="handleDepartmentGstChange('default_gst_banquet', this.value)" class="w-full h-9.5 px-3 text-xs font-bold rounded-xl border border-slate-200 bg-white text-slate-800 focus:outline-none focus:border-purple-500 cursor-pointer">
+                @foreach($items as $slab)
+                  <option value="{{ (float)$slab->gst_percentage }}" {{ (float)($defaultGstSettings['default_gst_banquet'] ?? 5) == (float)$slab->gst_percentage ? 'selected' : '' }}>
+                    {{ number_format((float)$slab->gst_percentage, 2) }}% {{ $slab->status === 'Inactive' ? '(Inactive Slab)' : '' }}
+                  </option>
+                @endforeach
+              </select>
+            </div>
+            <p class="text-[10px] text-slate-400 font-medium">Auto-applied on Banquet hall billing &amp; food orders.</p>
+          </div>
+        </div>
+      </div>
+
       <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
         
         <!-- Card Header -->
@@ -575,6 +721,82 @@
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#039;');
+  }
+
+  const defaultGstUpdateUrl = "{{ route('admin.utilities.frontoffice.gst-percentage.update-default-settings') }}";
+
+  async function handleDepartmentGstChange(key, value) {
+    const badgeMap = {
+      'default_gst_room': 'badge-default-gst-room',
+      'default_gst_pos': 'badge-default-gst-pos',
+      'default_gst_extra_services': 'badge-default-gst-extra-services',
+      'default_gst_banquet': 'badge-default-gst-banquet',
+    };
+    const badge = document.getElementById(badgeMap[key]);
+    if (badge) {
+      badge.textContent = parseFloat(value).toFixed(2) + '%';
+    }
+
+    try {
+      const payload = {};
+      payload[key] = value;
+      const res = await fetch(defaultGstUpdateUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (data.success) {
+        PmsAlert.toast('Default GST updated successfully!');
+      } else {
+        PmsAlert.error('Update Failed', data.message || 'Failed to update default GST.');
+      }
+    } catch (err) {
+      console.error(err);
+      PmsAlert.error('Error', 'An error occurred while saving default GST.');
+    }
+  }
+
+  async function saveAllDefaultGstRates() {
+    const payload = {
+      default_gst_room: document.getElementById('select-default-gst-room').value,
+      default_gst_pos: document.getElementById('select-default-gst-pos').value,
+      default_gst_extra_services: document.getElementById('select-default-gst-extra-services').value,
+      default_gst_banquet: document.getElementById('select-default-gst-banquet').value,
+    };
+
+    const btn = document.getElementById('btn-save-default-gst');
+    const origHtml = btn.innerHTML;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...';
+    btn.disabled = true;
+
+    try {
+      const res = await fetch(defaultGstUpdateUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (data.success) {
+        PmsAlert.toast('All department default GST rates saved!');
+      } else {
+        PmsAlert.error('Save Failed', data.message || 'Could not save default GST rates.');
+      }
+    } catch (err) {
+      console.error(err);
+      PmsAlert.error('Error', 'An error occurred while saving default GST rates.');
+    } finally {
+      btn.innerHTML = origHtml;
+      btn.disabled = false;
+    }
   }
 
   document.addEventListener('DOMContentLoaded', () => {

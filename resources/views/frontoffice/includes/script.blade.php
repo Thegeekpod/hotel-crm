@@ -3291,16 +3291,23 @@
       section.classList.remove('hidden');
       if (countLabel) countLabel.textContent = data.documents_count;
 
-      grid.innerHTML = data.documents.map(doc => `
+      grid.innerHTML = data.documents.map(doc => {
+        const rawUrl = doc.url || '';
+        const imgUrl = (rawUrl.startsWith('http://') || rawUrl.startsWith('https://') || rawUrl.startsWith('//'))
+          ? rawUrl
+          : ('/' + rawUrl.replace(/^\/+/, ''));
+
+        return `
         <div class="relative group rounded-lg overflow-hidden border border-emerald-300 bg-white p-1 text-center shadow-2xs">
-          <a href="${doc.url}" target="_blank" title="View Full Document">
-            <img src="${doc.url}" class="w-full h-14 object-cover rounded hover:opacity-90 transition-opacity">
+          <a href="${imgUrl}" target="_blank" title="View Full Document">
+            <img src="${imgUrl}" class="w-full h-14 object-cover rounded hover:opacity-90 transition-opacity">
           </a>
           <div class="text-[9px] font-bold text-slate-700 truncate mt-1" title="${doc.name || doc.type}">
             ${doc.type || 'Document'}
           </div>
         </div>
-      `).join('');
+      `;
+      }).join('');
     }
 
     // 4. Auto-populate Identity Card Type & Number in the check-in modal if empty
@@ -3338,13 +3345,45 @@
     }
   }
 
-  // Live Sync Primary Guest inputs to Pass Card
+  let syncSessionDebounce = null;
+  function syncGuestUploadSessionData() {
+    if (!window.currentGuestUploadToken) return;
+    clearTimeout(syncSessionDebounce);
+    syncSessionDebounce = setTimeout(() => {
+      const guestBlock = document.querySelector('.guest-block');
+      const gName = guestBlock?.querySelector('input[name="guest_name"]')?.value?.trim();
+      const gMobile = guestBlock?.querySelector('input[name="mobile"]')?.value?.trim();
+      const roomSelect = guestBlock?.querySelector('select[name="room_id"]');
+      const roomNo = roomSelect?.selectedOptions?.[0]?.dataset?.roomNo || roomSelect?.value;
+      const reserveIdInput = document.getElementById('input-reserve-id');
+      const reserveId = reserveIdInput?.value?.trim();
+
+      const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+      fetch(`/front-office/guest-upload/sync/${window.currentGuestUploadToken}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-CSRF-TOKEN': csrfToken || ''
+        },
+        body: JSON.stringify({
+          guest_name: gName,
+          mobile: gMobile,
+          room: roomNo,
+          reserve_id: reserveId
+        })
+      }).catch(() => {});
+    }, 500);
+  }
+
+  // Live Sync Primary Guest inputs to Pass Card and Session
   document.addEventListener('input', (e) => {
     if (e.target.matches('input[name="guest_name"]') || e.target.classList.contains('guest-name-input')) {
       const firstGuestBlock = document.querySelector('.guest-block');
       if (firstGuestBlock && firstGuestBlock.contains(e.target)) {
         const passName = document.getElementById('pass-guest-name-text');
         if (passName) passName.textContent = e.target.value.trim() || 'Guest Primary';
+        syncGuestUploadSessionData();
       }
     }
     if (e.target.matches('input[name="mobile"]') || e.target.classList.contains('guest-mobile-input')) {
@@ -3352,7 +3391,14 @@
       if (firstGuestBlock && firstGuestBlock.contains(e.target)) {
         const passMobile = document.getElementById('pass-guest-mobile-text');
         if (passMobile) passMobile.textContent = e.target.value.trim() ? `+91 ${e.target.value.trim()}` : '+91 --';
+        syncGuestUploadSessionData();
       }
+    }
+  });
+
+  document.addEventListener('change', (e) => {
+    if (e.target.matches('select[name="room_id"]') || e.target.classList.contains('select-room-no')) {
+      syncGuestUploadSessionData();
     }
   });
 

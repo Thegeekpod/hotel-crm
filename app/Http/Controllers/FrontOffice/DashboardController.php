@@ -1365,6 +1365,9 @@ class DashboardController extends Controller
                     $uploadSession = GuestUploadSession::where('token', $request->input('guest_upload_token'))->first();
                     if ($uploadSession) {
                         $uploadSession->reserve_id = $reserveId;
+                        $uploadSession->guest_name = $guestModel->guest_name ?: $uploadSession->guest_name;
+                        $uploadSession->mobile = $guestModel->mobile ?: $uploadSession->mobile;
+                        $uploadSession->room_number = $roomObj?->room_number ?: $uploadSession->room_number;
                         $uploadSession->save();
                         if (is_array($uploadSession->documents)) {
                             $attachedDocs = array_merge($attachedDocs, $uploadSession->documents);
@@ -1376,6 +1379,11 @@ class DashboardController extends Controller
                     $uniqueDocs = [];
                     $seenUrls = [];
                     foreach ($attachedDocs as $d) {
+                        if (is_array($d) && !empty($d['url'])) {
+                            // Strip any protocol/domain to store clean relative path
+                            $cleanUrl = preg_replace('#^https?://[^/]+/#i', '', $d['url']);
+                            $d['url'] = ltrim($cleanUrl, '/');
+                        }
                         $key = $d['url'] ?? ($d['id'] ?? json_encode($d));
                         if (!isset($seenUrls[$key])) {
                             $seenUrls[$key] = true;

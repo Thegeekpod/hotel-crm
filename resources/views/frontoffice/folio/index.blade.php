@@ -919,8 +919,8 @@
 <!-- ========================================================================= -->
 <!-- FOLIO GUEST DOCUMENT IMAGES VIEWER MODAL                                  -->
 <!-- ========================================================================= -->
-<div class="modal-backdrop" id="folio-documents-viewer-modal" style="z-index: 1050;">
-  <div class="modal-window max-w-4xl w-full max-h-[92vh] flex flex-col rounded-2xl overflow-hidden shadow-2xl border border-slate-200 bg-white">
+<div class="modal-backdrop" id="folio-documents-viewer-modal" style="z-index: 999999 !important;">
+  <div class="modal-window max-w-4xl w-full max-h-[92vh] flex flex-col rounded-2xl overflow-hidden shadow-2xl border border-slate-200 bg-white" style="z-index: 1000000 !important;">
     <!-- Header -->
     <div class="bg-linear-to-r from-indigo-600 to-indigo-700 text-white px-5 py-3.5 flex justify-between items-center shrink-0">
       <div class="flex items-center gap-2.5">
@@ -1488,11 +1488,33 @@
   }
 
   // Open Folio Document Images Viewer Modal
-  function openCurrentFolioDocsModal() {
+  async function openCurrentFolioDocsModal() {
     if (!activeFolioData) return;
     const f = activeFolioData;
     const pg = f.primary_guest || {};
-    const docs = Array.isArray(pg.documents) ? pg.documents : (Array.isArray(f.documents) ? f.documents : []);
+    let docs = Array.isArray(pg.documents) ? pg.documents : (Array.isArray(f.documents) ? f.documents : []);
+
+    // If 0 documents cached in browser, fetch fresh from backend details API immediately
+    if (docs.length === 0 && f.id) {
+      try {
+        const res = await fetch(`{{ url('front-office/folio') }}/${f.id}/details`, {
+          headers: { 'Accept': 'application/json' }
+        });
+        const data = await res.json();
+        if (data.success && data.folio) {
+          const freshPg = data.folio.primary_guest || {};
+          const freshDocs = Array.isArray(freshPg.documents) ? freshPg.documents : (Array.isArray(data.folio.documents) ? data.folio.documents : []);
+          if (freshDocs.length > 0) {
+            docs = freshDocs;
+            if (activeFolioData.primary_guest) activeFolioData.primary_guest.documents = docs;
+            activeFolioData.documents = docs;
+            document.querySelectorAll('.fmdl-docs-count-pill').forEach(el => el.textContent = docs.length);
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching folio documents:', err);
+      }
+    }
 
     const titleElem = document.getElementById('fmdl-doc-viewer-modal-title');
     const subElem = document.getElementById('fmdl-doc-viewer-modal-subtitle');
@@ -1512,11 +1534,17 @@
       empty.classList.remove('hidden');
     } else {
       empty.classList.add('hidden');
-      grid.innerHTML = docs.map((doc, idx) => `
+      grid.innerHTML = docs.map((doc, idx) => {
+        const rawUrl = doc.url || '';
+        const imgUrl = (rawUrl.startsWith('http://') || rawUrl.startsWith('https://') || rawUrl.startsWith('//'))
+          ? rawUrl
+          : ('/' + rawUrl.replace(/^\/+/, ''));
+
+        return `
         <div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-xs flex flex-col group hover:border-indigo-300 transition">
           <div class="relative bg-slate-900/5 aspect-4/3 overflow-hidden flex items-center justify-center p-2">
-            <a href="${doc.url}" target="_blank" title="Click to view full image in new tab" class="block w-full h-full flex items-center justify-center">
-              <img src="${doc.url}" alt="${escapeHtml(doc.name || 'Document')}" class="max-h-full max-w-full object-contain group-hover:scale-105 transition duration-300 rounded">
+            <a href="${imgUrl}" target="_blank" title="Click to view full image in new tab" class="block w-full h-full flex items-center justify-center">
+              <img src="${imgUrl}" alt="${escapeHtml(doc.name || 'Document')}" class="max-h-full max-w-full object-contain group-hover:scale-105 transition duration-300 rounded">
             </a>
             <span class="absolute top-2 left-2 px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-black/75 text-white backdrop-blur-xs">
               ${escapeHtml(doc.type || 'Document')}
@@ -1530,16 +1558,17 @@
               </div>
             </div>
             <div class="flex items-center gap-2 mt-2.5 pt-2 border-t border-slate-100">
-              <a href="${doc.url}" target="_blank" class="flex-1 py-1 px-2 text-[10px] font-bold text-center bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-md transition flex items-center justify-center gap-1">
+              <a href="${imgUrl}" target="_blank" class="flex-1 py-1 px-2 text-[10px] font-bold text-center bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-md transition flex items-center justify-center gap-1">
                 <i class="fa-solid fa-arrow-up-right-from-square"></i> Open Full View
               </a>
-              <a href="${doc.url}" download="${escapeHtml(doc.name || 'document')}" class="py-1 px-2.5 text-[10px] font-bold bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-md transition" title="Download Image">
+              <a href="${imgUrl}" download="${escapeHtml(doc.name || 'document')}" class="py-1 px-2.5 text-[10px] font-bold bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-md transition" title="Download Image">
                 <i class="fa-solid fa-download"></i>
               </a>
             </div>
           </div>
         </div>
-      `).join('');
+      `;
+      }).join('');
     }
 
     openModal('folio-documents-viewer-modal');

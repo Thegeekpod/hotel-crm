@@ -159,14 +159,14 @@ class GuestUploadController extends Controller
                     $ext = $file->getClientOriginalExtension() ?: 'jpg';
                     $filename = 'doc_' . Str::random(16) . '_' . time() . '.' . $ext;
                     $file->move($uploadPath, $filename);
-                    $webUrl = asset($uploadSubdir . '/' . $filename);
+                    $relUrl = $uploadSubdir . '/' . $filename;
                     $docType = $docTypes[$i] ?? $request->input('document_type', 'ID Proof / Document');
 
                     $newDocs[] = [
                         'id' => (string) Str::uuid(),
                         'name' => $file->getClientOriginalName() ?: 'Document Image',
                         'type' => $docType,
-                        'url' => $webUrl,
+                        'url' => $relUrl,
                         'uploaded_at' => now()->toIso8601String(),
                     ];
                 }
@@ -180,11 +180,12 @@ class GuestUploadController extends Controller
                 $ext = $file->getClientOriginalExtension() ?: 'jpg';
                 $filename = 'guest_photo_' . Str::random(16) . '_' . time() . '.' . $ext;
                 $file->move($uploadPath, $filename);
+                $relUrl = $uploadSubdir . '/' . $filename;
                 $newDocs[] = [
                     'id' => (string) Str::uuid(),
                     'name' => 'Guest Live Photo',
                     'type' => 'Guest Live Photo',
-                    'url' => asset($uploadSubdir . '/' . $filename),
+                    'url' => $relUrl,
                     'uploaded_at' => now()->toIso8601String(),
                 ];
             }
@@ -207,12 +208,13 @@ class GuestUploadController extends Controller
                         }
                         $filename = 'cam_' . Str::random(16) . '_' . time() . '.' . $ext;
                         File::put($uploadPath . '/' . $filename, $data);
+                        $relUrl = $uploadSubdir . '/' . $filename;
 
                         $newDocs[] = [
                             'id' => (string) Str::uuid(),
                             'name' => $docType,
                             'type' => $docType,
-                            'url' => asset($uploadSubdir . '/' . $filename),
+                            'url' => $relUrl,
                             'uploaded_at' => now()->toIso8601String(),
                         ];
                     }
@@ -241,5 +243,32 @@ class GuestUploadController extends Controller
             'count' => count($allDocs),
             'documents' => $allDocs,
         ]);
+    }
+
+    /**
+     * Live sync guest info (name, mobile, room) to active session.
+     */
+    public function syncSession(Request $request, $token)
+    {
+        $session = GuestUploadSession::where('token', $token)->first();
+        if (!$session) {
+            return response()->json(['success' => false, 'message' => 'Session not found.'], 404);
+        }
+
+        if ($request->has('guest_name') && $request->filled('guest_name')) {
+            $session->guest_name = $request->input('guest_name');
+        }
+        if ($request->has('mobile') && $request->filled('mobile')) {
+            $session->mobile = $request->input('mobile');
+        }
+        if ($request->has('room') && $request->filled('room')) {
+            $session->room_number = $request->input('room');
+        }
+        if ($request->has('reserve_id') && $request->filled('reserve_id')) {
+            $session->reserve_id = $request->input('reserve_id');
+        }
+        $session->save();
+
+        return response()->json(['success' => true, 'session' => $session]);
     }
 }

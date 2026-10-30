@@ -81,6 +81,7 @@ Route::prefix('front-office')->name('frontoffice.')->group(function () {
     // Guest Mobile Upload Sessions & QR code generation (5-minute security limit)
     Route::post('/guest-upload/init', [\App\Http\Controllers\FrontOffice\GuestUploadController::class, 'initSession'])->name('guest-upload.init');
     Route::get('/guest-upload/status/{token}', [\App\Http\Controllers\FrontOffice\GuestUploadController::class, 'checkStatus'])->name('guest-upload.status');
+    Route::post('/guest-upload/sync/{token}', [\App\Http\Controllers\FrontOffice\GuestUploadController::class, 'syncSession'])->name('guest-upload.sync');
 });
 
 

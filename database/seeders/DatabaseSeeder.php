@@ -18,6 +18,9 @@ class DatabaseSeeder extends Seeder
         $this->call([
             MasterUtilitiesSeeder::class,
             MenuCategorySeeder::class,
+            PosAndStoreSeeder::class,
+            RestaurantKitchenStoreSeeder::class,
+            TableManageSeeder::class,
         ]);
     }
 }

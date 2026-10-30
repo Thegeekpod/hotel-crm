@@ -24,6 +24,7 @@ class Guest extends Model
         'email',
         'id_card_type_id',
         'id_card_number',
+        'documents',
         'has_privilege_card',
         'privilege_card_no',
         'company_id',
@@ -35,6 +36,7 @@ class Guest extends Model
 
     protected $casts = [
         'has_privilege_card' => 'boolean',
+        'documents' => 'array',
     ];
 
     protected $appends = [

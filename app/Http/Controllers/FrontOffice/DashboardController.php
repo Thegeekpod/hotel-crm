@@ -26,6 +26,7 @@ use App\Models\RoomHousekeepingHistory;
 use App\Models\RoomOperationalHistory;
 use App\Models\GstPercentage;
 use App\Models\Plan;
+use App\Models\GuestUploadSession;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -1338,6 +1339,51 @@ class DashboardController extends Controller
                     );
                 } else {
                     $guestModel = Guest::create($guestFields);
+                }
+
+                // Attach multiple uploaded KYC documents from scan session
+                $attachedDocs = [];
+                if (!empty($guestModel->documents) && is_array($guestModel->documents)) {
+                    $attachedDocs = $guestModel->documents;
+                }
+
+                if (!empty($gData['documents'])) {
+                    $parsed = is_string($gData['documents']) ? json_decode($gData['documents'], true) : $gData['documents'];
+                    if (is_array($parsed)) {
+                        $attachedDocs = array_merge($attachedDocs, $parsed);
+                    }
+                }
+
+                if ($idx === 0 && $request->filled('uploaded_documents')) {
+                    $parsed = is_string($request->input('uploaded_documents')) ? json_decode($request->input('uploaded_documents'), true) : $request->input('uploaded_documents');
+                    if (is_array($parsed)) {
+                        $attachedDocs = array_merge($attachedDocs, $parsed);
+                    }
+                }
+
+                if ($idx === 0 && $request->filled('guest_upload_token')) {
+                    $uploadSession = GuestUploadSession::where('token', $request->input('guest_upload_token'))->first();
+                    if ($uploadSession) {
+                        $uploadSession->reserve_id = $reserveId;
+                        $uploadSession->save();
+                        if (is_array($uploadSession->documents)) {
+                            $attachedDocs = array_merge($attachedDocs, $uploadSession->documents);
+                        }
+                    }
+                }
+
+                if (!empty($attachedDocs)) {
+                    $uniqueDocs = [];
+                    $seenUrls = [];
+                    foreach ($attachedDocs as $d) {
+                        $key = $d['url'] ?? ($d['id'] ?? json_encode($d));
+                        if (!isset($seenUrls[$key])) {
+                            $seenUrls[$key] = true;
+                            $uniqueDocs[] = $d;
+                        }
+                    }
+                    $guestModel->documents = $uniqueDocs;
+                    $guestModel->save();
                 }
 
                 // 2. Create the Booking record linked with guest_id & room_id

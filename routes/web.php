@@ -1,10 +1,15 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\FrontOffice\GuestUploadController;
 
 Route::get('/', function () {
     return redirect()->route('frontoffice.dashboard');
 })->name('home');
+
+// Public Mobile Camera Scan & Upload Routes (5-minute security validity)
+Route::get('/guest-scan-upload/{token}', [GuestUploadController::class, 'showMobileUpload'])->name('guest.mobile-upload');
+Route::post('/guest-scan-upload/{token}', [GuestUploadController::class, 'submitMobileUpload'])->name('guest.mobile-upload.submit');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::view('dashboard', 'dashboard')->name('dashboard');

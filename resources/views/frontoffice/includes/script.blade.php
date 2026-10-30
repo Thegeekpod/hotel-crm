@@ -110,6 +110,7 @@
         if (typeof refreshPlanSelectDisplay === 'function') refreshPlanSelectDisplay();
         if (typeof calculateReservationBilling === 'function') calculateReservationBilling();
         if (typeof updateReservationStatusUI === 'function') updateReservationStatusUI();
+        if (typeof initGuestUploadSession === 'function') initGuestUploadSession();
       } catch (e) {
         console.error('Error in setInitialDateTime:', e);
       }
@@ -124,6 +125,7 @@
       if (conflictBox) conflictBox.style.display = 'none';
       const datesAlert = document.getElementById('dates-conflict-alert');
       if (datesAlert) datesAlert.style.display = 'none';
+      if (typeof stopGuestUploadSession === 'function') stopGuestUploadSession();
     }
   }
 
@@ -2708,6 +2710,18 @@
       return;
     }
 
+    // Auto-attach any mobile scanned uploaded documents to primary guest
+    const uploadedDocsJson = document.getElementById('reserve-uploaded-documents')?.value;
+    let parsedUploadedDocs = [];
+    if (uploadedDocsJson) {
+      try {
+        parsedUploadedDocs = JSON.parse(uploadedDocsJson);
+      } catch (err) {}
+    }
+    if (Array.isArray(parsedUploadedDocs) && parsedUploadedDocs.length > 0 && guests.length > 0) {
+      guests[0].documents = parsedUploadedDocs;
+    }
+
     // Collect Payment & Billing Breakdown
     const planId = form.querySelector('select[name="plan_id"]')?.value || null;
     const paymentModeId = form.querySelector('select[name="payment_mode_id"]')?.value;
@@ -2728,6 +2742,8 @@
     const paymentRemarks = form.querySelector('input[name="payment_remarks"]')?.value || '';
 
     const payload = {
+      guest_upload_token: document.getElementById('reserve-guest-upload-token')?.value || null,
+      uploaded_documents: parsedUploadedDocs,
       registration_type_id: registrationTypeId,
       res_type: resTypeSlug,
       reserve_date: reserveDate,
@@ -3084,4 +3100,264 @@
       });
     }
   });
+
+  /* ==========================================================================
+     Guest QR Code Mobile Document / Camera Upload (5-Minute Security Window)
+     ========================================================================== */
+  window.currentGuestUploadToken = null;
+  window.currentGuestUploadUrl = null;
+  window.guestUploadCountdownInterval = null;
+  window.guestUploadPollInterval = null;
+
+  async function initGuestUploadSession() {
+    stopGuestUploadSession();
+
+    // Reset card UI
+    const overlay = document.getElementById('qr-expired-overlay');
+    if (overlay) overlay.classList.add('hidden');
+    const timerText = document.getElementById('qr-countdown-text');
+    if (timerText) timerText.textContent = '05:00';
+    const statusPill = document.getElementById('qr-live-status-pill');
+    if (statusPill) {
+      statusPill.className = 'text-[10px] font-extrabold text-emerald-700 bg-emerald-100/80 px-2 py-0.5 rounded-full inline-flex items-center gap-1';
+      statusPill.innerHTML = '<i class="fa-solid fa-circle-check"></i> Live Ready';
+    }
+
+    // Read current primary guest inputs
+    const guestBlock = document.querySelector('.guest-block');
+    const gName = guestBlock?.querySelector('input[name="guest_name"]')?.value?.trim() || 'Guest #1';
+    const gMobile = guestBlock?.querySelector('input[name="mobile"]')?.value?.trim() || '';
+    const roomSelect = guestBlock?.querySelector('select[name="room_id"]');
+    const roomNo = roomSelect?.selectedOptions?.[0]?.dataset?.roomNo || roomSelect?.value || '';
+    const reserveIdInput = document.getElementById('input-reserve-id');
+    const reserveId = reserveIdInput?.value?.trim() || '';
+
+    // Update text labels on the card
+    const nameLabel = document.getElementById('pass-guest-name-text');
+    if (nameLabel) nameLabel.textContent = gName || 'Guest Primary';
+    const mobileLabel = document.getElementById('pass-guest-mobile-text');
+    if (mobileLabel) mobileLabel.textContent = gMobile ? `+91 ${gMobile}` : '+91 --';
+
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+    try {
+      const response = await fetch("{{ route('frontoffice.guest-upload.init') }}", {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-CSRF-TOKEN': csrfToken || ''
+        },
+        body: JSON.stringify({
+          guest_name: gName,
+          mobile: gMobile,
+          room: roomNo,
+          reserve_id: reserveId
+        })
+      });
+
+      const data = await response.json();
+      if (!data.success) return;
+
+      window.currentGuestUploadToken = data.token;
+      window.currentGuestUploadUrl = data.upload_url;
+
+      const tokenInput = document.getElementById('reserve-guest-upload-token');
+      if (tokenInput) tokenInput.value = data.token;
+
+      const qrImg = document.getElementById('guest-qr-image');
+      if (qrImg) qrImg.src = data.qr_image_url;
+
+      // Start 5-Minute Countdown
+      let secondsLeft = parseInt(data.expires_in_seconds) || 300;
+      window.guestUploadCountdownInterval = setInterval(() => {
+        if (secondsLeft <= 0) {
+          stopGuestUploadSession(false);
+          if (overlay) overlay.classList.remove('hidden');
+          if (timerText) timerText.textContent = '00:00 (Expired)';
+          if (statusPill) {
+            statusPill.className = 'text-[10px] font-extrabold text-amber-700 bg-amber-100/80 px-2 py-0.5 rounded-full inline-flex items-center gap-1';
+            statusPill.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Link Expired';
+          }
+          return;
+        }
+
+        const m = Math.floor(secondsLeft / 60);
+        const s = secondsLeft % 60;
+        if (timerText) {
+          timerText.textContent = String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+        }
+        secondsLeft--;
+      }, 1000);
+
+      // Start Polling for uploads every 2.5 seconds
+      window.guestUploadPollInterval = setInterval(async () => {
+        if (!window.currentGuestUploadToken) return;
+        try {
+          const pollRes = await fetch(`/front-office/guest-upload/status/${window.currentGuestUploadToken}`);
+          const pollData = await pollRes.json();
+
+          if (!pollData.success) return;
+
+          if (pollData.status === 'expired') {
+            stopGuestUploadSession(false);
+            if (overlay) overlay.classList.remove('hidden');
+            if (timerText) timerText.textContent = '00:00 (Expired)';
+            return;
+          }
+
+          if (pollData.status === 'completed' && Array.isArray(pollData.documents) && pollData.documents.length > 0) {
+            clearInterval(window.guestUploadPollInterval);
+            handleGuestUploadCompleted(pollData);
+          }
+        } catch (e) {
+          console.error('QR Poll Error:', e);
+        }
+      }, 2500);
+
+    } catch (err) {
+      console.error('Error initializing guest upload session:', err);
+    }
+  }
+
+  function stopGuestUploadSession(clearToken = true) {
+    if (window.guestUploadCountdownInterval) {
+      clearInterval(window.guestUploadCountdownInterval);
+      window.guestUploadCountdownInterval = null;
+    }
+    if (window.guestUploadPollInterval) {
+      clearInterval(window.guestUploadPollInterval);
+      window.guestUploadPollInterval = null;
+    }
+    if (clearToken) {
+      window.currentGuestUploadToken = null;
+      window.currentGuestUploadUrl = null;
+    }
+  }
+
+  function regenerateGuestQrSession() {
+    stopGuestUploadSession();
+    initGuestUploadSession();
+    if (typeof PmsAlert !== 'undefined' && PmsAlert.toast) {
+      PmsAlert.toast('New 5-minute QR scan link generated!', 'success');
+    }
+  }
+
+  function copyGuestUploadLink() {
+    if (!window.currentGuestUploadUrl) {
+      if (typeof PmsAlert !== 'undefined' && PmsAlert.toast) {
+        PmsAlert.toast('Upload QR link is still generating...', 'info');
+      }
+      return;
+    }
+    navigator.clipboard.writeText(window.currentGuestUploadUrl).then(() => {
+      if (typeof Swal !== 'undefined') {
+        const Toast = Swal.mixin({
+          toast: true,
+          position: 'top-end',
+          showConfirmButton: false,
+          timer: 2500,
+        });
+        Toast.fire({
+          icon: 'success',
+          title: '📋 Mobile KYC Link copied! Share with guest.'
+        });
+      } else {
+        alert('Upload link copied to clipboard!');
+      }
+    }).catch(err => {
+      prompt('Copy this link:', window.currentGuestUploadUrl);
+    });
+  }
+
+  function handleGuestUploadCompleted(data) {
+    // 1. Store in hidden form field
+    const docsInput = document.getElementById('reserve-uploaded-documents');
+    if (docsInput) docsInput.value = JSON.stringify(data.documents);
+
+    // 2. Update status badge
+    const statusPill = document.getElementById('qr-live-status-pill');
+    if (statusPill) {
+      statusPill.className = 'text-[10px] font-extrabold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full inline-flex items-center gap-1';
+      statusPill.innerHTML = `<i class="fa-solid fa-circle-check"></i> KYC Received (${data.documents_count})`;
+    }
+
+    // 3. Render thumbnails in Desktop Check-in modal
+    const section = document.getElementById('guest-uploaded-docs-section');
+    const grid = document.getElementById('guest-uploaded-docs-grid');
+    const countLabel = document.getElementById('uploaded-docs-count');
+
+    if (section && grid) {
+      section.classList.remove('hidden');
+      if (countLabel) countLabel.textContent = data.documents_count;
+
+      grid.innerHTML = data.documents.map(doc => `
+        <div class="relative group rounded-lg overflow-hidden border border-emerald-300 bg-white p-1 text-center shadow-2xs">
+          <a href="${doc.url}" target="_blank" title="View Full Document">
+            <img src="${doc.url}" class="w-full h-14 object-cover rounded hover:opacity-90 transition-opacity">
+          </a>
+          <div class="text-[9px] font-bold text-slate-700 truncate mt-1" title="${doc.name || doc.type}">
+            ${doc.type || 'Document'}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // 4. Auto-populate Identity Card Type & Number in the check-in modal if empty
+    if (data.id_card_type) {
+      const idSelect = document.querySelector('.pms-select-idtype');
+      if (idSelect && !idSelect.value) {
+        for (let opt of idSelect.options) {
+          if (opt.text.toLowerCase().includes(data.id_card_type.toLowerCase())) {
+            idSelect.value = opt.value;
+            break;
+          }
+        }
+      }
+    }
+    if (data.id_card_number) {
+      const idInput = document.querySelector('.guest-id-number');
+      if (idInput && !idInput.value) {
+        idInput.value = data.id_card_number;
+      }
+    }
+
+    // 5. Toast notification for receptionist
+    if (typeof Swal !== 'undefined') {
+      const Toast = Swal.mixin({
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 4000,
+        timerProgressBar: true
+      });
+      Toast.fire({
+        icon: 'success',
+        title: `📸 ${data.documents_count} KYC Document(s) Received from Mobile!`
+      });
+    }
+  }
+
+  // Live Sync Primary Guest inputs to Pass Card
+  document.addEventListener('input', (e) => {
+    if (e.target.matches('input[name="guest_name"]') || e.target.classList.contains('guest-name-input')) {
+      const firstGuestBlock = document.querySelector('.guest-block');
+      if (firstGuestBlock && firstGuestBlock.contains(e.target)) {
+        const passName = document.getElementById('pass-guest-name-text');
+        if (passName) passName.textContent = e.target.value.trim() || 'Guest Primary';
+      }
+    }
+    if (e.target.matches('input[name="mobile"]') || e.target.classList.contains('guest-mobile-input')) {
+      const firstGuestBlock = document.querySelector('.guest-block');
+      if (firstGuestBlock && firstGuestBlock.contains(e.target)) {
+        const passMobile = document.getElementById('pass-guest-mobile-text');
+        if (passMobile) passMobile.textContent = e.target.value.trim() ? `+91 ${e.target.value.trim()}` : '+91 --';
+      }
+    }
+  });
+
+  window.initGuestUploadSession = initGuestUploadSession;
+  window.stopGuestUploadSession = stopGuestUploadSession;
+  window.regenerateGuestQrSession = regenerateGuestQrSession;
+  window.copyGuestUploadLink = copyGuestUploadLink;
 </script>

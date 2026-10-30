@@ -579,31 +579,79 @@
               
               <div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
                 <span class="text-xs font-black text-indigo-600 uppercase tracking-wider flex items-center gap-2">
-                  <i class="fa-solid fa-qrcode"></i> Digital Passes
+                  <i class="fa-solid fa-qrcode"></i> Digital Passes & Mobile KYC
                 </span>
-                <span class="text-[10px] font-extrabold text-emerald-700 bg-emerald-100/80 px-2 py-0.5 rounded-full inline-flex items-center gap-1">
+                <span id="qr-live-status-pill" class="text-[10px] font-extrabold text-emerald-700 bg-emerald-100/80 px-2 py-0.5 rounded-full inline-flex items-center gap-1">
                   <i class="fa-solid fa-circle-check"></i> Live Ready
                 </span>
               </div>
 
-              <!-- Guest #1 QR Pass Card -->
-              <div class="bg-slate-50 border border-slate-200 rounded-xl p-3">
+              <!-- Guest QR Pass Card -->
+              <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 relative" id="guest-qr-pass-card">
                 <div class="flex justify-between items-center mb-1.5">
                   <span class="inline-flex items-center gap-1 text-[10px] font-extrabold text-indigo-700 bg-indigo-100 px-2 py-0.5 rounded uppercase tracking-wide">
-                    <i class="fa-solid fa-user"></i> Guest #1
+                    <i class="fa-solid fa-user"></i> <span id="pass-guest-badge">Guest #1</span>
                   </span>
-                  <span class="text-[9px] text-slate-400 font-mono font-bold">PASS-01</span>
+                  <div class="flex items-center gap-1.5">
+                    <span id="qr-timer-badge" class="text-[10px] font-mono font-bold text-amber-700 bg-amber-100/80 px-2 py-0.5 rounded flex items-center gap-1">
+                      <i class="fa-regular fa-clock"></i> <span id="qr-countdown-text">05:00</span>
+                    </span>
+                    <span class="text-[9px] text-slate-400 font-mono font-bold">PASS-01</span>
+                  </div>
                 </div>
                 
-                <div class="text-xs font-extrabold text-slate-800 leading-tight">Souvik Paul</div>
+                <div class="text-xs font-extrabold text-slate-800 leading-tight" id="pass-guest-name-text">Souvik Paul</div>
                 <div class="text-[11px] text-slate-500 font-mono font-semibold mt-0.5 flex items-center gap-1">
-                  <i class="fa-solid fa-phone text-[9px] text-indigo-500"></i> +91 62955 87845
+                  <i class="fa-solid fa-phone text-[9px] text-indigo-500"></i> <span id="pass-guest-mobile-text">+91 62955 87845</span>
                 </div>
 
-                <div class="bg-white border border-dashed border-slate-300 rounded-lg p-2 mt-2 flex items-center justify-center">
-                  <img src="https://api.qrserver.com/v1/create-qr-code/?size=90x90&data=Guest1_Souvik_Paul_6295587845" alt="Guest 1 QR" class="w-20 h-20 rounded block">
+                <!-- QR Container with Expiry Overlay -->
+                <div class="bg-white border border-dashed border-slate-300 rounded-lg p-2.5 mt-2 flex flex-col items-center justify-center relative">
+                  <div class="relative w-28 h-28 flex items-center justify-center">
+                    <img id="guest-qr-image" src="https://api.qrserver.com/v1/create-qr-code/?size=110x110&data=Initializing" alt="Scan QR" class="w-28 h-28 rounded block">
+                    <!-- Expired Overlay -->
+                    <div id="qr-expired-overlay" class="absolute inset-0 bg-white/95 backdrop-blur-xs rounded flex flex-col items-center justify-center text-center p-2 hidden">
+                      <i class="fa-solid fa-triangle-exclamation text-amber-500 text-lg mb-1"></i>
+                      <div class="text-[10px] font-black text-slate-800 leading-tight">Link Expired</div>
+                      <div class="text-[8px] text-slate-500 mb-1.5">5m Security Window</div>
+                      <button type="button" onclick="regenerateGuestQrSession()" class="text-[9px] bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-1 px-2 rounded flex items-center gap-1 shadow-xs cursor-pointer">
+                        <i class="fa-solid fa-rotate-right"></i> Refresh QR
+                      </button>
+                    </div>
+                  </div>
+
+                  <div class="text-[9px] font-bold text-slate-500 mt-2 flex items-center gap-1 text-center">
+                    <i class="fa-solid fa-camera text-indigo-600"></i> Scan to open mobile camera & upload KYC
+                  </div>
+                </div>
+
+                <!-- Actions: Copy Link & Regenerate QR -->
+                <div class="flex items-center gap-1.5 mt-2">
+                  <button type="button" onclick="copyGuestUploadLink()" class="flex-1 py-1 px-2 text-[10px] font-bold bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-lg flex items-center justify-center gap-1 transition-all cursor-pointer">
+                    <i class="fa-regular fa-copy"></i> Copy Link
+                  </button>
+                  <button type="button" onclick="regenerateGuestQrSession()" class="py-1 px-2 text-[10px] font-bold bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-700 rounded-lg flex items-center justify-center gap-1 transition-all cursor-pointer" title="Generate New QR">
+                    <i class="fa-solid fa-rotate"></i> Regenerate
+                  </button>
                 </div>
               </div>
+
+              <!-- Uploaded KYC Documents Preview Gallery in Desktop Modal -->
+              <div id="guest-uploaded-docs-section" class="border border-emerald-200 rounded-xl p-3 bg-emerald-50/40 hidden">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-[11px] font-black text-emerald-800 uppercase tracking-wide flex items-center gap-1.5">
+                    <i class="fa-solid fa-circle-check text-emerald-600"></i> Uploaded Documents (<span id="uploaded-docs-count">0</span>)
+                  </span>
+                  <span class="text-[9px] text-emerald-700 font-extrabold bg-emerald-100 px-2 py-0.5 rounded-full">Auto-Attached</span>
+                </div>
+                <div id="guest-uploaded-docs-grid" class="grid grid-cols-3 gap-2">
+                  <!-- Real-time uploaded thumbnail images appear here -->
+                </div>
+              </div>
+
+              <!-- Hidden token and uploaded documents JSON storage for submission -->
+              <input type="hidden" name="guest_upload_token" id="reserve-guest-upload-token" value="">
+              <input type="hidden" name="uploaded_documents" id="reserve-uploaded-documents" value="[]">
 
               <!-- Instant Dispatch Notice -->
               <div class="bg-indigo-50/60 border border-dashed border-indigo-200 rounded-lg p-2.5 text-[10px] text-slate-600 flex gap-2 items-start leading-snug">

@@ -31,7 +31,7 @@ class GuestUploadController extends Controller
             'upload_url' => $uploadUrl,
             'qr_image_url' => $qrImageUrl,
             'expires_at' => $session->expires_at->toIso8601String(),
-            'expires_in_seconds' => max(0, $session->expires_at->diffInSeconds(now())),
+            'expires_in_seconds' => $session->getRemainingSeconds(),
             'guest_name' => $session->guest_name,
             'mobile' => $session->mobile,
         ]);
@@ -77,7 +77,7 @@ class GuestUploadController extends Controller
             'id_card_number' => $session->id_card_number,
             'documents' => $session->documents ?? [],
             'documents_count' => is_array($session->documents) ? count($session->documents) : 0,
-            'expires_in_seconds' => max(0, $session->expires_at->diffInSeconds(now())),
+            'expires_in_seconds' => $session->getRemainingSeconds(),
         ]);
     }
 
@@ -106,7 +106,15 @@ class GuestUploadController extends Controller
             ]);
         }
 
-        $expiresInSeconds = max(0, $session->expires_at->diffInSeconds(now()));
+        $expiresInSeconds = $session->getRemainingSeconds();
+        if ($expiresInSeconds <= 0) {
+            return view('frontoffice.guest_upload.mobile', [
+                'session' => $session,
+                'isExpired' => true,
+                'isCompleted' => false,
+                'expiresInSeconds' => 0,
+            ]);
+        }
 
         return view('frontoffice.guest_upload.mobile', [
             'session' => $session,

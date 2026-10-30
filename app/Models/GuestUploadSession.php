@@ -37,7 +37,24 @@ class GuestUploadSession extends Model
      */
     public function isExpired(): bool
     {
-        return $this->expires_at->isPast() || $this->status === 'expired';
+        if ($this->status === 'expired') {
+            return true;
+        }
+        if (!$this->expires_at) {
+            return false;
+        }
+        return $this->expires_at->getTimestamp() <= now()->getTimestamp();
+    }
+
+    /**
+     * Get remaining validity in seconds (0 if expired).
+     */
+    public function getRemainingSeconds(): int
+    {
+        if ($this->isExpired() || !$this->expires_at) {
+            return 0;
+        }
+        return max(0, $this->expires_at->getTimestamp() - now()->getTimestamp());
     }
 
     /**

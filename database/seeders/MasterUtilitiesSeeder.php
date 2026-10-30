@@ -28,11 +28,12 @@ class MasterUtilitiesSeeder extends Seeder
     {
         // 1. Registration Types
         $registrationTypes = [
-            ['name' => 'Regular', 'status' => 'Active'],
-            ['name' => 'VIP', 'status' => 'Active'],
-            ['name' => 'Corporate', 'status' => 'Active'],
-            ['name' => 'Privilege', 'status' => 'Active'],
             ['name' => 'Walk-in', 'status' => 'Active'],
+            ['name' => 'Regular', 'status' => 'Active'],
+            ['name' => 'Privilege', 'status' => 'Active'],
+            ['name' => 'Company', 'status' => 'Active'],
+            ['name' => 'Booking.com', 'status' => 'Active'],
+            ['name' => 'MakeMyTrip', 'status' => 'Active'],
         ];
         foreach ($registrationTypes as $item) {
             RegistrationType::updateOrCreate(['name' => $item['name']], $item);

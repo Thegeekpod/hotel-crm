@@ -596,7 +596,6 @@
                     <span id="qr-timer-badge" class="text-[10px] font-mono font-bold text-amber-700 bg-amber-100/80 px-2 py-0.5 rounded flex items-center gap-1">
                       <i class="fa-regular fa-clock"></i> <span id="qr-countdown-text">05:00</span>
                     </span>
-                    <span class="text-[9px] text-slate-400 font-mono font-bold">PASS-01</span>
                   </div>
                 </div>
                 
@@ -652,12 +651,6 @@
               <!-- Hidden token and uploaded documents JSON storage for submission -->
               <input type="hidden" name="guest_upload_token" id="reserve-guest-upload-token" value="">
               <input type="hidden" name="uploaded_documents" id="reserve-uploaded-documents" value="[]">
-
-              <!-- Instant Dispatch Notice -->
-              <div class="bg-indigo-50/60 border border-dashed border-indigo-200 rounded-lg p-2.5 text-[10px] text-slate-600 flex gap-2 items-start leading-snug">
-                <i class="fa-solid fa-paper-plane text-indigo-500 mt-0.5 text-[10px]"></i>
-                <span>Passes sent to WhatsApp & SMS automatically after booking.</span>
-              </div>
               
               <!-- Payment & Advance Collection Section -->
               <div class="border-t border-slate-100 pt-3 flex flex-col gap-3">

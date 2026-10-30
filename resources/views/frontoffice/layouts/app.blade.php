@@ -11,7 +11,7 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css">
   <script>
-    window.APP_ASSET_BASE = "{{ asset('') }}".replace(/\/+$/, '') + '/';
+    window.APP_ASSET_BASE = "{{ rtrim(config('app.image_path') ?: asset(''), '/') }}/";
     window.resolveAppAsset = function(path) {
       if (!path) return '';
       if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('//')) {

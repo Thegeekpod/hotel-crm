@@ -3297,7 +3297,7 @@
           ? window.resolveAppAsset(rawUrl)
           : (rawUrl.startsWith('http://') || rawUrl.startsWith('https://') || rawUrl.startsWith('//')
               ? rawUrl
-              : (("{{ asset('') }}".replace(/\/+$/, '') + '/') + rawUrl.replace(/^\/+/, '')));
+              : (("{{ rtrim(config('app.image_path') ?: asset(''), '/') }}/") + rawUrl.replace(/^\/+/, '')));
 
         return `
         <div class="relative group rounded-lg overflow-hidden border border-emerald-300 bg-white p-1 text-center shadow-2xs">

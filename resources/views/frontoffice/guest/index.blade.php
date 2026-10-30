@@ -1200,7 +1200,7 @@
           ? window.resolveAppAsset(rawUrl)
           : (rawUrl.startsWith('http://') || rawUrl.startsWith('https://') || rawUrl.startsWith('//')
               ? rawUrl
-              : (("{{ asset('') }}".replace(/\/+$/, '') + '/') + rawUrl.replace(/^\/+/, '')));
+              : (("{{ rtrim(config('app.image_path') ?: asset(''), '/') }}/") + rawUrl.replace(/^\/+/, '')));
 
         return `
         <div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-xs flex flex-col group hover:border-indigo-300 transition">

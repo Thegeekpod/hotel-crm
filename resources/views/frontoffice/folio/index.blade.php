@@ -1536,9 +1536,11 @@
       empty.classList.add('hidden');
       grid.innerHTML = docs.map((doc, idx) => {
         const rawUrl = doc.url || '';
-        const imgUrl = (rawUrl.startsWith('http://') || rawUrl.startsWith('https://') || rawUrl.startsWith('//'))
-          ? rawUrl
-          : ('/' + rawUrl.replace(/^\/+/, ''));
+        const imgUrl = (typeof window.resolveAppAsset === 'function')
+          ? window.resolveAppAsset(rawUrl)
+          : (rawUrl.startsWith('http://') || rawUrl.startsWith('https://') || rawUrl.startsWith('//')
+              ? rawUrl
+              : (("{{ asset('') }}".replace(/\/+$/, '') + '/') + rawUrl.replace(/^\/+/, '')));
 
         return `
         <div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-xs flex flex-col group hover:border-indigo-300 transition">

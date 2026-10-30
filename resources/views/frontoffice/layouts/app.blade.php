@@ -10,6 +10,16 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css">
+  <script>
+    window.APP_ASSET_BASE = "{{ asset('') }}".replace(/\/+$/, '') + '/';
+    window.resolveAppAsset = function(path) {
+      if (!path) return '';
+      if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('//')) {
+        return path;
+      }
+      return window.APP_ASSET_BASE + path.replace(/^\/+/, '');
+    };
+  </script>
   @stack('styles')
 </head>
 <body class="min-h-full flex flex-col font-sans text-slate-800 bg-slate-100 antialiased overflow-x-hidden">

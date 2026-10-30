@@ -3293,9 +3293,11 @@
 
       grid.innerHTML = data.documents.map(doc => {
         const rawUrl = doc.url || '';
-        const imgUrl = (rawUrl.startsWith('http://') || rawUrl.startsWith('https://') || rawUrl.startsWith('//'))
-          ? rawUrl
-          : ('/' + rawUrl.replace(/^\/+/, ''));
+        const imgUrl = (typeof window.resolveAppAsset === 'function')
+          ? window.resolveAppAsset(rawUrl)
+          : (rawUrl.startsWith('http://') || rawUrl.startsWith('https://') || rawUrl.startsWith('//')
+              ? rawUrl
+              : (("{{ asset('') }}".replace(/\/+$/, '') + '/') + rawUrl.replace(/^\/+/, '')));
 
         return `
         <div class="relative group rounded-lg overflow-hidden border border-emerald-300 bg-white p-1 text-center shadow-2xs">

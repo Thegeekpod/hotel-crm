@@ -3194,7 +3194,7 @@
       window.guestUploadPollInterval = setInterval(async () => {
         if (!window.currentGuestUploadToken) return;
         try {
-          const pollRes = await fetch(`/front-office/guest-upload/status/${window.currentGuestUploadToken}`);
+          const pollRes = await fetch(`{{ url('front-office/guest-upload/status') }}/${window.currentGuestUploadToken}`);
           const pollData = await pollRes.json();
 
           if (!pollData.success) return;
@@ -3361,7 +3361,7 @@
       const reserveId = reserveIdInput?.value?.trim();
 
       const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-      fetch(`/front-office/guest-upload/sync/${window.currentGuestUploadToken}`, {
+      fetch(`{{ url('front-office/guest-upload/sync') }}/${window.currentGuestUploadToken}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -603,6 +603,16 @@
             <span class="dossier-val" id="crm-mdl-card-idproof">-</span>
           </div>
 
+          <!-- KYC Document Images Row -->
+          <div class="dossier-field-row" id="crm-mdl-card-docs-row">
+            <span class="dossier-label">KYC Documents</span>
+            <span class="dossier-val" id="crm-mdl-card-docs-val">
+              <button type="button" onclick="openCurrentGuestDocsModal()" class="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 px-2 py-0.5 rounded-lg transition cursor-pointer">
+                <i class="fa-solid fa-images text-indigo-600"></i> View Document Images (<span class="crm-docs-count-pill">0</span>)
+              </button>
+            </span>
+          </div>
+
           <div class="dossier-field-row hidden" id="crm-mdl-card-privilege-row">
             <span class="dossier-label">Privilege / VIP Card</span>
             <span class="dossier-val mono text-amber-700 font-bold" id="crm-mdl-card-privilege">-</span>
@@ -690,6 +700,9 @@
       </div>
 
       <div class="flex gap-2 items-center flex-wrap">
+        <button type="button" id="crm-mdl-footer-btn-docs" class="btn-ui-secondary px-3.5 py-1.5 rounded-lg border border-indigo-200 bg-indigo-50/80 text-xs font-bold text-indigo-700 hover:bg-indigo-100 inline-flex items-center gap-1.5 cursor-pointer shadow-2xs transition" onclick="openCurrentGuestDocsModal()">
+          <i class="fa-solid fa-images text-indigo-600"></i> View Document Images (<span class="crm-docs-count-pill">0</span>)
+        </button>
         <button type="button" class="btn-ui-secondary px-4 py-1.5 rounded-lg border border-slate-300 bg-white text-xs font-bold text-slate-700 hover:bg-slate-50 inline-flex items-center gap-1.5 cursor-pointer shadow-2xs transition" onclick="printCrmGuestDossier()">
           <i class="fa-solid fa-print"></i> Print Dossier
         </button>
@@ -699,6 +712,50 @@
       </div>
     </div>
 
+  </div>
+</div>
+
+<!-- ========================================== -->
+<!-- GUEST DOCUMENT IMAGES VIEWER MODAL -->
+<!-- ========================================== -->
+<div class="modal-backdrop" id="guest-documents-viewer-modal" style="z-index: 1050;">
+  <div class="modal-window max-w-4xl w-full max-h-[92vh] flex flex-col rounded-2xl overflow-hidden shadow-2xl border border-slate-200 bg-white">
+    <!-- Header -->
+    <div class="bg-linear-to-r from-indigo-600 to-indigo-700 text-white px-5 py-3.5 flex justify-between items-center shrink-0">
+      <div class="flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center text-sm shadow-xs">
+          <i class="fa-solid fa-images text-amber-300"></i>
+        </div>
+        <div>
+          <h3 class="m-0 text-sm font-black text-white" id="doc-viewer-modal-title">Guest Document Images</h3>
+          <p class="m-0 text-[11px] text-indigo-100 font-medium" id="doc-viewer-modal-subtitle">KYC &amp; Verification Documents</p>
+        </div>
+      </div>
+      <button type="button" class="modal-close bg-white/20 hover:bg-white/30 text-white w-8 h-8 rounded-full text-lg cursor-pointer flex items-center justify-center transition border-none" onclick="closeModal('guest-documents-viewer-modal')">&times;</button>
+    </div>
+
+    <!-- Content Area -->
+    <div class="p-5 overflow-y-auto flex-1 bg-slate-50" id="doc-viewer-content-area">
+      <!-- Grid of document cards or empty state injected dynamically -->
+      <div id="doc-viewer-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5"></div>
+      <div id="doc-viewer-empty" class="hidden py-12 text-center">
+        <div class="w-16 h-16 mx-auto bg-slate-100 text-slate-400 rounded-2xl flex items-center justify-center text-2xl mb-3">
+          <i class="fa-solid fa-folder-open"></i>
+        </div>
+        <div class="text-sm font-extrabold text-slate-700">No Document Images Uploaded</div>
+        <p class="text-xs text-slate-500 mt-1 max-w-xs mx-auto">No photos or identity document scans have been uploaded for this guest yet.</p>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="px-5 py-3 bg-white border-t border-slate-200 flex justify-between items-center shrink-0">
+      <span class="text-xs font-bold text-slate-600 flex items-center gap-1.5">
+        <i class="fa-solid fa-circle-check text-emerald-600"></i> Total Documents: <strong id="doc-viewer-total-count" class="text-slate-900">0</strong>
+      </span>
+      <button type="button" class="btn-ui-secondary px-4 py-1.5 rounded-lg border border-slate-300 bg-white text-xs font-bold text-slate-600 hover:bg-slate-100 cursor-pointer shadow-2xs" onclick="closeModal('guest-documents-viewer-modal')">
+        Close
+      </button>
+    </div>
   </div>
 </div>
 
@@ -974,6 +1031,12 @@
     const idProofNum = guest.id_card_number || 'N/A';
     document.getElementById('crm-mdl-card-idproof').textContent = `${idProofType} • ${idProofNum}`;
 
+    // KYC Documents Count
+    const docs = Array.isArray(guest.documents) ? guest.documents : [];
+    document.querySelectorAll('.crm-docs-count-pill').forEach(el => {
+      el.textContent = docs.length;
+    });
+
     const privRow = document.getElementById('crm-mdl-card-privilege-row');
     if (guest.has_privilege_card) {
       privRow.style.display = 'flex';
@@ -1080,6 +1143,63 @@
 
     // Show modal
     openModal('guest-crm-details-modal');
+  }
+
+  // Open Document Images Viewer Modal
+  function openCurrentGuestDocsModal() {
+    if (!currentActiveCrmGuest) return;
+    const g = currentActiveCrmGuest;
+    const docs = Array.isArray(g.documents) ? g.documents : [];
+
+    const titleElem = document.getElementById('doc-viewer-modal-title');
+    const subElem = document.getElementById('doc-viewer-modal-subtitle');
+    const countElem = document.getElementById('doc-viewer-total-count');
+
+    if (titleElem) titleElem.textContent = (g.guest_name || g.name || 'Guest') + ' - Document Images';
+    if (subElem) subElem.textContent = `Ref: ${g.reserve_id || ('RES-' + g.id)} • Folio: ${g.folio_number || '-'} • ${docs.length} Document(s)`;
+    if (countElem) countElem.textContent = docs.length;
+
+    const grid = document.getElementById('doc-viewer-grid');
+    const empty = document.getElementById('doc-viewer-empty');
+
+    if (!grid || !empty) return;
+
+    if (docs.length === 0) {
+      grid.innerHTML = '';
+      empty.classList.remove('hidden');
+    } else {
+      empty.classList.add('hidden');
+      grid.innerHTML = docs.map((doc, idx) => `
+        <div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-xs flex flex-col group hover:border-indigo-300 transition">
+          <div class="relative bg-slate-900/5 aspect-4/3 overflow-hidden flex items-center justify-center p-2">
+            <a href="${doc.url}" target="_blank" title="Click to view full image in new tab" class="block w-full h-full flex items-center justify-center">
+              <img src="${doc.url}" alt="${escapeHtml(doc.name || 'Document')}" class="max-h-full max-w-full object-contain group-hover:scale-105 transition duration-300 rounded">
+            </a>
+            <span class="absolute top-2 left-2 px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-black/75 text-white backdrop-blur-xs">
+              ${escapeHtml(doc.type || 'Document')}
+            </span>
+          </div>
+          <div class="p-3 bg-white border-t border-slate-100 flex-1 flex flex-col justify-between">
+            <div>
+              <div class="text-xs font-black text-slate-800 truncate" title="${escapeHtml(doc.name || 'Document Image')}">${escapeHtml(doc.name || 'Document Image')}</div>
+              <div class="text-[10px] text-slate-400 mt-0.5 flex items-center gap-1 font-mono">
+                <i class="fa-regular fa-clock text-[9px]"></i> ${doc.uploaded_at ? new Date(doc.uploaded_at).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) : 'Verified KYC'}
+              </div>
+            </div>
+            <div class="flex items-center gap-2 mt-2.5 pt-2 border-t border-slate-100">
+              <a href="${doc.url}" target="_blank" class="flex-1 py-1 px-2 text-[10px] font-bold text-center bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-md transition flex items-center justify-center gap-1">
+                <i class="fa-solid fa-arrow-up-right-from-square"></i> Open Full View
+              </a>
+              <a href="${doc.url}" download="${escapeHtml(doc.name || 'document')}" class="py-1 px-2.5 text-[10px] font-bold bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-md transition" title="Download Image">
+                <i class="fa-solid fa-download"></i>
+              </a>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    openModal('guest-documents-viewer-modal');
   }
 
   // Open Settlement Modal

@@ -237,6 +237,7 @@ class GuestController extends Controller
                 'raw_id_card_number' => $item->id_card_number ?? '',
                 'has_privilege_card' => (bool)$item->has_privilege_card,
                 'privilege_card_no' => $item->privilege_card_no ?: '',
+                'documents' => is_array($item->documents) ? $item->documents : (is_string($item->documents) ? json_decode($item->documents, true) : []),
                 'company_id' => $item->company_id,
                 'new_company_name' => $item->new_company_name ?? '',
                 'new_company_address' => $item->new_company_address ?? '',
@@ -428,6 +429,7 @@ class GuestController extends Controller
             'payment_mode' => $lb?->payments?->last()?->paymentMode?->name ?? ($guest->paymentMode?->name ?? 'Cash / Direct'),
             'payment_remarks' => $lb?->remarks ?: ($guest->payments?->last()?->payment_remarks ?? 'None'),
             'remarks' => $lb?->remarks ?: '',
+            'documents' => is_array($guest->documents) ? $guest->documents : (is_string($guest->documents) ? json_decode($guest->documents, true) : []),
             'all_rooms' => $allRooms,
         ];
 

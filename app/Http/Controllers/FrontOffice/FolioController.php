@@ -1099,6 +1099,7 @@ class FolioController extends Controller
                 'city' => $g?->city ?: 'N/A',
                 'id_card_type' => $g?->idCardType?->name ?? 'ID Proof',
                 'id_card_number' => $g?->id_card_number ?: 'N/A',
+                'documents' => is_array($g?->documents) ? $g->documents : (is_string($g?->documents) ? json_decode($g->documents, true) : []),
                 'status' => $b->status,
                 'is_checked_out' => ($b->status === 'Checked Out'),
                 'checkout_date' => $b->checkout_date ? Carbon::parse($b->checkout_date)->format('d M Y') : null,
@@ -1192,7 +1193,9 @@ class FolioController extends Controller
                 'id_card_number' => $primaryGuest?->id_card_number ?: 'N/A',
                 'has_privilege_card' => (bool)$primaryGuest?->has_privilege_card,
                 'privilege_card_no' => $primaryGuest?->privilege_card_no ?: '',
+                'documents' => is_array($primaryGuest?->documents) ? $primaryGuest->documents : (is_string($primaryGuest?->documents) ? json_decode($primaryGuest->documents, true) : []),
             ],
+            'documents' => is_array($primaryGuest?->documents) ? $primaryGuest->documents : (is_string($primaryGuest?->documents) ? json_decode($primaryGuest->documents, true) : []),
             'company' => $booking->company ? [
                 'name' => $booking->company->name,
                 'gstin' => $booking->company->gstin,

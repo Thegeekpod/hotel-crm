@@ -107,7 +107,7 @@
             </span>
           </div>
           <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-linear-to-br from-indigo-500 to-indigo-700 text-white flex items-center justify-center text-base font-bold shadow-xs">
+            <div class="w-10 h-10 rounded-xl bg-indigo-600 bg-gradient-to-br from-indigo-500 to-indigo-700 text-white flex items-center justify-center text-base font-bold shadow-xs">
               <i class="fa-solid fa-id-badge"></i>
             </div>
             <div class="flex-1">
@@ -229,9 +229,9 @@
         </div>
 
         <!-- Submit Button -->
-        <button type="submit" id="submit-btn" class="w-full bg-linear-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white font-black text-sm py-3.5 px-4 rounded-xl shadow-md flex items-center justify-center gap-2 active:scale-98 transition-all">
-          <i class="fa-solid fa-cloud-arrow-up text-base"></i>
-          <span id="submit-btn-text">Submit KYC Documents</span>
+        <button type="submit" id="submit-btn" class="w-full bg-indigo-600 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white font-black text-sm py-3.5 px-4 rounded-xl shadow-lg shadow-indigo-200 flex items-center justify-center gap-2 active:scale-98 transition-all cursor-pointer" style="background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%) !important; color: #ffffff !important;">
+          <i class="fa-solid fa-cloud-arrow-up text-base text-white"></i>
+          <span id="submit-btn-text" class="text-white">Submit KYC Documents</span>
         </button>
 
       </form>

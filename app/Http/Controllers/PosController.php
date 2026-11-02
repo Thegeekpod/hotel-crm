@@ -283,6 +283,9 @@ class PosController extends Controller
 
             // Food Advance allowance check for Company Registration Bookings
             $foodAdvImpact = null;
+            $advanceCoveredAmount = 0.00;
+            $folioChargedAmount = 0.00;
+
             if ($validated['billing_type'] === 'Charged to Room Folio' && $booking) {
                 $foodAdvImpact = FoodAdvanceService::calculateOrderImpact($booking, $subtotal);
             }
@@ -290,11 +293,16 @@ class PosController extends Controller
             if ($foodAdvImpact && $foodAdvImpact['has_food_advance']) {
                 $taxRate = $foodAdvImpact['gst_rate'];
                 $taxAmount = $foodAdvImpact['gst_amount'];
-                $totalAmount = $foodAdvImpact['charged_total'];
+                // Actual bill amount for the food consumed
+                $totalAmount = round($subtotal + $taxAmount, 2);
+                $advanceCoveredAmount = $foodAdvImpact['covered_amount'];
+                $folioChargedAmount = $foodAdvImpact['charged_total'];
             } else {
                 $taxRate = (float) AppSetting::get('default_gst_pos', 12.00);
                 $taxAmount = round($subtotal * ($taxRate / 100), 2);
                 $totalAmount = round($subtotal + $taxAmount, 2);
+                $advanceCoveredAmount = 0.00;
+                $folioChargedAmount = $totalAmount;
             }
 
             // Generate Order Reference: POS-YYYYMMDD-XXXX
@@ -331,9 +339,9 @@ class PosController extends Controller
 
                 if ($foodAdvImpact && $foodAdvImpact['has_food_advance']) {
                     if ($foodAdvImpact['excess_amount'] > 0) {
-                        $instructionsNote .= " [Food Advance: ₹{$foodAdvImpact['covered_amount']} covered. Excess ₹{$foodAdvImpact['excess_amount']} + 5% GST (₹{$taxAmount}) = ₹{$totalAmount} billed]";
+                        $instructionsNote .= " [Food Advance: ₹" . number_format($advanceCoveredAmount, 2) . " cut from advance | Excess: ₹" . number_format($foodAdvImpact['excess_amount'], 2) . " + 5% GST (₹" . number_format($taxAmount, 2) . ") = ₹" . number_format($folioChargedAmount, 2) . " Folio Due]";
                     } else {
-                        $instructionsNote .= " [Food Advance: 100% Covered (₹{$subtotal}). Folio charge: ₹0.00; balance credit adjusted at settlement]";
+                        $instructionsNote .= " [Food Advance: ₹" . number_format($advanceCoveredAmount, 2) . " cut from advance | 100% Covered (Net Folio Due: ₹0.00)]";
                     }
                 }
 
@@ -454,9 +462,9 @@ class PosController extends Controller
             if ($validated['billing_type'] === 'Charged to Room Folio') {
                 if ($foodAdvImpact && $foodAdvImpact['has_food_advance']) {
                     if ($foodAdvImpact['excess_amount'] > 0) {
-                        $successMsg = "Charge of ₹" . number_format($totalAmount, 2) . " posted to Room {$roomNumber} Folio! (₹" . number_format($foodAdvImpact['covered_amount'], 2) . " covered by Company Food Advance. Excess ₹" . number_format($foodAdvImpact['excess_amount'], 2) . " + 5% GST = ₹" . number_format($totalAmount, 2) . ")";
+                        $successMsg = "Order of ₹" . number_format($totalAmount, 2) . " placed! (₹" . number_format($advanceCoveredAmount, 2) . " cut from Food Advance. Excess ₹" . number_format($foodAdvImpact['excess_amount'], 2) . " + 5% GST = ₹" . number_format($folioChargedAmount, 2) . " charged to Room {$roomNumber} Folio).";
                     } else {
-                        $successMsg = "Order of ₹" . number_format($subtotal, 2) . " successfully linked to Room {$roomNumber}! Fully covered by Company Food Advance (Net folio charge ₹0.00; unused balance credited at settlement).";
+                        $successMsg = "Order of ₹" . number_format($totalAmount, 2) . " placed! ₹" . number_format($advanceCoveredAmount, 2) . " cut from Company Food Advance (Net folio charge now: ₹0.00; unspent advance credited at settlement).";
                     }
                 } else {
                     $successMsg = "Charge of ₹" . number_format($totalAmount, 2) . " successfully posted to Room {$roomNumber} Folio! Outstanding balance updated for final settlement.";

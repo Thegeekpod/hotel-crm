@@ -287,6 +287,17 @@
                       Tax: ₹ {{ number_format($order->tax_amount, 2) }}
                     </div>
                   @endif
+                  @if(!empty($order->special_instructions) && str_contains($order->special_instructions, 'Food Advance:'))
+                    @php
+                      preg_match('/\[Food Advance: (₹[0-9,.]+ cut from advance[^\]]*)\]/', $order->special_instructions, $fam);
+                      $faNote = $fam[1] ?? 'Cut from Food Advance';
+                    @endphp
+                    <div class="mt-1">
+                      <span class="inline-flex items-center gap-1 text-[9.5px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 rounded px-1.5 py-0.5 whitespace-nowrap" title="{{ $order->special_instructions }}">
+                        <i class="fa-solid fa-utensils text-[8px] text-emerald-600"></i> {{ $faNote }}
+                      </span>
+                    </div>
+                  @endif
                 </td>
 
                 <!-- Billing Mode -->
@@ -298,6 +309,11 @@
                   @if($order->room_number)
                     <div class="text-[10px] font-bold mt-1 {{ $order->billing_type === 'Charged to Room Folio' ? 'text-indigo-600' : 'text-emerald-700' }}">
                       Room {{ $order->room_number }} ({{ $order->billing_type === 'Charged to Room Folio' ? 'Folio Due' : 'Paid Direct' }})
+                    </div>
+                  @endif
+                  @if(!empty($order->special_instructions) && str_contains($order->special_instructions, 'Food Advance:'))
+                    <div class="text-[9.5px] font-bold text-emerald-700 mt-1 flex items-center gap-1">
+                      <i class="fa-solid fa-circle-check text-emerald-600 text-[8px]"></i> Paid via Company Food Allowance
                     </div>
                   @endif
                 </td>

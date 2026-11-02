@@ -299,13 +299,21 @@
               <span>Subtotal:</span>
               <span id="sub-val" class="font-mono font-bold text-slate-800">₹ 0</span>
             </div>
-            <div class="flex items-center justify-between text-slate-500 font-medium">
+            <div id="row-food-adv-cut" class="flex items-center justify-between text-emerald-700 font-bold hidden">
+              <span><i class="fa-solid fa-utensils text-emerald-600 mr-1"></i> Cut from Food Advance:</span>
+              <span id="food-adv-cut-val" class="font-mono">- ₹ 0</span>
+            </div>
+            <div class="flex items-center justify-between text-slate-500 font-medium" id="row-pos-gst">
               <span>GST (<span id="pos-gst-label-rate">{{ rtrim(rtrim(number_format($defaultGstPos ?? 12, 2), '0'), '.') }}</span>%):</span>
               <span id="tax-val" class="font-mono text-slate-500">₹ 0</span>
             </div>
             <div class="flex items-center justify-between pt-2 border-t border-slate-100 text-sm font-black text-slate-900">
-              <span>Total Bill:</span>
+              <span id="tot-label">Actual Order Bill:</span>
               <span id="tot-val" class="font-mono text-emerald-600">₹ 0</span>
+            </div>
+            <div id="row-folio-charge-due" class="flex items-center justify-between text-xs font-black text-indigo-700 bg-indigo-50/70 p-1.5 rounded-lg border border-indigo-200 hidden">
+              <span>Net Charge to Room Folio:</span>
+              <span id="folio-charge-due-val" class="font-mono">₹ 0</span>
             </div>
           </div>
 
@@ -544,23 +552,27 @@
 
     let subtotal = cart.reduce((acc, i) => acc + (i.price * i.qty), 0);
     let tax = 0;
-    let grand = 0;
+    let actualTotal = 0;
+    let folioDue = 0;
 
     if (currentBillingType === 'Charged to Room Folio' && hasFoodAdv && foodAdvTotal > 0) {
       if (subtotal <= remAdv) {
         tax = 0;
-        grand = 0;
+        actualTotal = subtotal;
+        folioDue = 0;
       } else {
         const excess = subtotal - remAdv;
         tax = Math.round(((excess * 0.05)) * 100) / 100;
-        grand = Math.round((excess + tax) * 100) / 100;
+        actualTotal = Math.round((subtotal + tax) * 100) / 100;
+        folioDue = Math.round((excess + tax) * 100) / 100;
       }
     } else {
       tax = Math.round(((subtotal * posGstRate) / 100) * 100) / 100;
-      grand = Math.round((subtotal + tax) * 100) / 100;
+      actualTotal = Math.round((subtotal + tax) * 100) / 100;
+      folioDue = actualTotal;
     }
 
-    const grandFmt = '₹ ' + grand.toLocaleString();
+    const grandFmt = '₹ ' + actualTotal.toLocaleString();
     const btnLabel = document.getElementById('btn-order-label');
 
     const isTakeaway = (currentOrderType === 'Takeaway');
@@ -592,7 +604,17 @@
           badge.className = 'text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-bold';
         }
       }
-      if (btnLabel) btnLabel.textContent = `Post Bill to Room Folio (${grandFmt})`;
+      if (btnLabel) {
+        if (hasFoodAdv && foodAdvTotal > 0) {
+          if (subtotal <= remAdv) {
+            btnLabel.textContent = `Post Order (₹${subtotal.toLocaleString()} - Covered by Advance)`;
+          } else {
+            btnLabel.textContent = `Post Bill to Room Folio (Excess: ₹${folioDue.toLocaleString()})`;
+          }
+        } else {
+          btnLabel.textContent = `Post Bill to Room Folio (${grandFmt})`;
+        }
+      }
 
       if (note) {
         if (roomId && roomNo) {
@@ -613,7 +635,7 @@
                 <div class="mt-1 text-[11px] leading-tight">
                   Food subtotal: ₹${subtotal.toLocaleString()} | Covered by advance: <strong>₹${remAdv.toLocaleString()}</strong><br>
                   Excess food: <strong>₹${excess.toLocaleString()}</strong> + <strong>5% GST (₹${tax.toLocaleString()})</strong><br>
-                  <strong class="text-indigo-800">Net excess bill added to Room Folio: ₹${grand.toLocaleString()}</strong>
+                  <strong class="text-indigo-800">Net excess bill added to Room Folio: ₹${folioDue.toLocaleString()}</strong>
                 </div>
               </div>`;
             }
@@ -867,6 +889,10 @@
       document.getElementById('sub-val').textContent = '₹ 0';
       document.getElementById('tax-val').textContent = '₹ 0';
       document.getElementById('tot-val').textContent = '₹ 0';
+      const cutRow = document.getElementById('row-food-adv-cut');
+      const folioDueRow = document.getElementById('row-folio-charge-due');
+      if (cutRow) cutRow.classList.add('hidden');
+      if (folioDueRow) folioDueRow.classList.add('hidden');
       return;
     }
 
@@ -909,33 +935,66 @@
     const remAdv = hasFoodAdv ? (parseFloat(selectedOpt.getAttribute('data-rem-adv')) || 0) : 0;
 
     let tax = 0;
-    let grand = 0;
+    let actualTotal = 0;
+    let cutAmount = 0;
+    let folioDue = 0;
     const gstRateLabel = document.getElementById('pos-gst-label-rate');
+    const cutRow = document.getElementById('row-food-adv-cut');
+    const cutVal = document.getElementById('food-adv-cut-val');
+    const folioDueRow = document.getElementById('row-folio-charge-due');
+    const folioDueVal = document.getElementById('folio-charge-due-val');
+    const totLabel = document.getElementById('tot-label');
 
     if (currentBillingType === 'Charged to Room Folio' && hasFoodAdv) {
       if (subtotal <= remAdv) {
         tax = 0;
-        grand = 0;
-        if (gstRateLabel) gstRateLabel.textContent = '0% (Covered by Allowance)';
+        cutAmount = subtotal;
+        actualTotal = subtotal;
+        folioDue = 0;
+
+        if (gstRateLabel) gstRateLabel.textContent = '0% (Exempt / Covered)';
+        if (cutRow) {
+          cutRow.classList.remove('hidden');
+          cutVal.textContent = `- ₹ ${cutAmount.toLocaleString()}`;
+        }
+        if (folioDueRow) {
+          folioDueRow.classList.remove('hidden');
+          folioDueVal.textContent = '₹ 0.00 (100% Covered by Advance)';
+        }
       } else {
         const excess = subtotal - remAdv;
         tax = Math.round(((excess * 0.05)) * 100) / 100;
-        grand = Math.round((excess + tax) * 100) / 100;
+        cutAmount = remAdv;
+        actualTotal = Math.round((subtotal + tax) * 100) / 100;
+        folioDue = Math.round((excess + tax) * 100) / 100;
+
         if (gstRateLabel) gstRateLabel.textContent = '5% on Excess Food';
+        if (cutRow) {
+          cutRow.classList.remove('hidden');
+          cutVal.textContent = `- ₹ ${cutAmount.toLocaleString()}`;
+        }
+        if (folioDueRow) {
+          folioDueRow.classList.remove('hidden');
+          folioDueVal.textContent = `₹ ${folioDue.toLocaleString()} (Excess ₹${excess.toLocaleString()} + 5% GST)`;
+        }
       }
+      if (totLabel) totLabel.textContent = 'Actual Order Bill:';
     } else {
       tax = Math.round(((subtotal * posGstRate) / 100) * 100) / 100;
-      grand = Math.round((subtotal + tax) * 100) / 100;
+      actualTotal = Math.round((subtotal + tax) * 100) / 100;
+      folioDue = actualTotal;
+
       if (gstRateLabel) gstRateLabel.textContent = `${posGstRate}`;
+      if (cutRow) cutRow.classList.add('hidden');
+      if (folioDueRow) folioDueRow.classList.add('hidden');
+      if (totLabel) totLabel.textContent = 'Total Bill:';
     }
 
     document.getElementById('sub-val').textContent = `₹ ${subtotal.toLocaleString()}`;
     document.getElementById('tax-val').textContent = (currentBillingType === 'Charged to Room Folio' && hasFoodAdv && subtotal <= remAdv)
       ? '₹ 0 (Covered)'
       : `₹ ${tax.toLocaleString()}`;
-    document.getElementById('tot-val').textContent = (currentBillingType === 'Charged to Room Folio' && hasFoodAdv && subtotal <= remAdv)
-      ? '₹ 0 (100% Covered)'
-      : `₹ ${grand.toLocaleString()}`;
+    document.getElementById('tot-val').textContent = `₹ ${actualTotal.toLocaleString()}`;
 
     updateRoomPickerNote();
   }

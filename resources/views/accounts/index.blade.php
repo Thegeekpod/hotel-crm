@@ -603,6 +603,17 @@
                 </td>
                 <td class="py-3 px-3 text-right font-mono font-black text-slate-900 text-xs">
                   ₹ {{ number_format($po['total_amount'], 2) }}
+                  @if(!empty($po['special_instructions']) && str_contains($po['special_instructions'], 'Food Advance:'))
+                    @php
+                      preg_match('/\[Food Advance: (₹[0-9,.]+ cut from advance[^\]]*)\]/', $po['special_instructions'], $fam);
+                      $faCutText = $fam[1] ?? 'Cut from Food Advance';
+                    @endphp
+                    <div class="mt-0.5">
+                      <span class="inline-block text-[9px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 rounded px-1.5 py-0.2 whitespace-nowrap" title="{{ $po['special_instructions'] }}">
+                        {{ $faCutText }}
+                      </span>
+                    </div>
+                  @endif
                 </td>
                 <td class="py-3 px-3 text-center whitespace-nowrap">
                   @if($po['billing_type'] === 'Cash Paid')
@@ -617,6 +628,11 @@
                     <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200/80">
                       <i class="fa-solid fa-file-invoice"></i> Room Folio
                     </span>
+                    @if(!empty($po['special_instructions']) && str_contains($po['special_instructions'], 'Food Advance:'))
+                      <div class="text-[9.5px] font-bold text-emerald-700 mt-1 flex items-center justify-center gap-1">
+                        <i class="fa-solid fa-circle-check text-emerald-600 text-[8px]"></i> Co. Food Advance
+                      </div>
+                    @endif
                   @endif
                 </td>
                 <td class="py-3 px-3 text-center">

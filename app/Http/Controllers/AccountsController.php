@@ -293,6 +293,7 @@ class AccountsController extends Controller
                 'billing_type' => $po->billing_type,
                 'payment_status' => $po->payment_status,
                 'status' => $po->status,
+                'special_instructions' => $po->special_instructions,
                 'total_plates' => $totalPlates,
                 'items_summary' => $itemsSummary,
                 'created_at' => $po->created_at ? $po->created_at->format('d M Y, h:i A') : '-',

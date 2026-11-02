@@ -740,6 +740,12 @@
             </span>
             <span class="dossier-val mono text-amber-700 font-extrabold" id="fmdl-services-row">₹ 0.00</span>
           </div>
+          <div class="dossier-field-row hidden" id="fmdl-food-advance-field-row">
+            <span class="dossier-label flex items-center gap-1.5 text-emerald-800 font-bold">
+              <i class="fa-solid fa-receipt text-emerald-600"></i> Company Food Advance
+            </span>
+            <span class="dossier-val mono text-emerald-800 font-extrabold" id="fmdl-food-advance-row">₹ 0.00</span>
+          </div>
           <div class="dossier-field-row">
             <span class="dossier-label">Discount</span>
             <span class="dossier-val mono text-emerald-600 font-bold" id="fmdl-discount-row">-</span>
@@ -1787,6 +1793,23 @@
       if (servicesRow) servicesRow.style.display = 'none';
     }
 
+    // Company Food Advance breakdown row
+    const foodAdvRow = document.getElementById('fmdl-food-advance-field-row');
+    const foodAdvVal = document.getElementById('fmdl-food-advance-row');
+    if (foodAdvRow && foodAdvVal) {
+      if (folio.food_advance && folio.food_advance.has_food_advance) {
+        foodAdvRow.style.display = 'flex';
+        const fa = folio.food_advance;
+        if (fa.excess_food > 0) {
+          foodAdvVal.innerHTML = `<span class="text-amber-700 font-bold">${formatINR(fa.advance_amount)} (+${formatINR(fa.excess_total)} excess + 5% GST)</span>`;
+        } else {
+          foodAdvVal.innerHTML = `<span class="text-emerald-700 font-bold">${formatINR(fa.advance_amount)} (${formatINR(fa.used_amount)} used, -${formatINR(fa.unused_advance)} credited)</span>`;
+        }
+      } else {
+        foodAdvRow.style.display = 'none';
+      }
+    }
+
     // Render itemized In-Room Dining orders list
     if (folio.room_service_orders && folio.room_service_orders.length > 0) {
       if (servicesBox) servicesBox.style.display = 'block';
@@ -2041,6 +2064,35 @@
           <div class="flex justify-between pt-1 pb-0.5 font-bold text-amber-700 text-[11px]">
             <span>Total Extra Services:</span>
             <span class="font-mono">+ ${formatINR(serviceCost)}</span>
+          </div>
+        </div>
+      `;
+    }
+
+    if (folio.food_advance && folio.food_advance.has_food_advance) {
+      const fa = folio.food_advance;
+      html += `
+        <div class="mt-2 p-2.5 rounded-lg border border-emerald-300 bg-white">
+          <div class="flex justify-between items-center text-emerald-800 font-extrabold text-[11px] mb-1">
+            <span><i class="fa-solid fa-utensils text-emerald-600 mr-1"></i> Company Food Advance:</span>
+            <span class="font-mono">${formatINR(fa.advance_amount)}</span>
+          </div>
+          <div class="text-[10.5px] text-slate-600 space-y-0.5">
+            <div class="flex justify-between">
+              <span>Total Food Orders Consumed:</span>
+              <span class="font-mono font-semibold">${formatINR(fa.total_food_subtotal)}</span>
+            </div>
+            ${fa.excess_food > 0 ? `
+            <div class="flex justify-between text-amber-700 font-bold">
+              <span>Excess Food (+5% GST of ${formatINR(fa.excess_gst)}):</span>
+              <span class="font-mono">+ ${formatINR(fa.excess_total)}</span>
+            </div>
+            ` : `
+            <div class="flex justify-between text-emerald-700 font-bold border-t border-dashed border-emerald-200 pt-1 mt-1">
+              <span>Unused Food Advance Credited to Pending Balance:</span>
+              <span class="font-mono text-emerald-700">- ${formatINR(fa.unused_advance)}</span>
+            </div>
+            `}
           </div>
         </div>
       `;

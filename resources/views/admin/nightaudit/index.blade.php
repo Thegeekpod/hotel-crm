@@ -1693,9 +1693,9 @@
       doc.write(s.outerHTML);
     });
     doc.write(getAdminNightAuditReportStyles());
-    doc.write('</head><body>');
+    doc.write('</' + 'head><' + 'body>');
     doc.write(reportHtml);
-    doc.write('</body></html>');
+    doc.write('</' + 'body></' + 'html>');
     doc.close();
 
     setTimeout(function() {

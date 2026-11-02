@@ -1439,9 +1439,9 @@
       doc.write(s.outerHTML);
     });
     doc.write(getNightAuditReportStyles());
-    doc.write('</head><body><div class="pdf-container">');
+    doc.write('</' + 'head><' + 'body><div class="pdf-container">');
     doc.write(report.innerHTML);
-    doc.write('</div></body></html>');
+    doc.write('</div></' + 'body></' + 'html>');
     doc.close();
 
     setTimeout(function() {

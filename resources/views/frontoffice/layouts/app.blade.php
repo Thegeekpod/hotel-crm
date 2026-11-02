@@ -357,6 +357,26 @@
                       </div>
                     </div>
                   </div>
+
+                  <!-- Company Food Advance / Food Allowance -->
+                  <div class="mt-3 p-3 bg-white border border-emerald-300 rounded-lg">
+                    <div class="flex items-center justify-between mb-1.5">
+                      <label class="block text-[10px] font-black text-emerald-800 uppercase tracking-wider">
+                        <i class="fa-solid fa-utensils text-emerald-600 mr-1"></i> Food (Company Food Advance ₹)
+                      </label>
+                      <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 uppercase tracking-wider">Company Only</span>
+                    </div>
+                    <div class="relative">
+                      <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs pointer-events-none">₹</span>
+                      <input type="number" name="food_advance_amount" id="company-food-advance-input" min="0" step="any"
+                        oninput="calculateReservationBilling()"
+                        class="pms-input-field w-full pl-6 font-bold text-emerald-700" placeholder="e.g. 500.00">
+                    </div>
+                    <p class="text-[10px] text-slate-500 mt-1.5 leading-tight">
+                      <i class="fa-solid fa-circle-info text-emerald-600 mr-0.5"></i>
+                      Pre-allocated company food budget. When food is ordered in POS, it deducts from this amount. Unspent amount is deducted (-₹) at settlement; food orders exceeding this limit attract 5% GST on the excess amount.
+                    </p>
+                  </div>
                 </div>
               </div>
 
@@ -815,6 +835,18 @@
                     <span class="text-[10px] font-black text-indigo-700 uppercase tracking-wider">Payable Amount:</span>
                     <span id="calc-payable-display" class="text-sm font-black text-indigo-800 font-mono">₹ 4,500.00</span>
                     <input type="hidden" name="payable_amount" id="calc-payable-amount" value="4500">
+                  </div>
+
+                  <!-- Company Food Allowance Card (Tracking) -->
+                  <div id="calc-food-advance-card" class="hidden bg-emerald-50 border border-emerald-300 rounded-lg p-2.5 flex justify-between items-center">
+                    <div class="flex items-center gap-1.5">
+                      <span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
+                      <div>
+                        <span class="block text-[10px] font-black text-emerald-800 uppercase tracking-wider">Food (Company Allowance):</span>
+                        <span class="block text-[9px] text-emerald-600 font-semibold">POS food orders auto-deducted</span>
+                      </div>
+                    </div>
+                    <span id="calc-food-advance-display" class="text-xs font-black text-emerald-800 font-mono">₹ 0.00</span>
                   </div>
 
                   <!-- Advance Amount Input -->

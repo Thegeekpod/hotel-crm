@@ -13,6 +13,7 @@ use App\Models\PosOrderItem;
 use App\Models\PosItem;
 use App\Models\StoreMovement;
 use App\Models\RoomServiceOrder;
+use App\Services\FoodAdvanceService;
 
 class AccountsController extends Controller
 {
@@ -177,6 +178,10 @@ class AccountsController extends Controller
                 ->get();
 
             $rsFolioCharged = (float)$rsOrders->where('payment_status', 'Charged to Room Folio')->sum('total_amount');
+            $faSummary = FoodAdvanceService::calculateSummary($b, $allResBookingIds, $rsOrders);
+            $effectiveExtra = $faSummary['has_food_advance'] ? $faSummary['excess_total'] : $rsFolioCharged;
+            $unusedAdvanceCredit = $faSummary['has_food_advance'] ? $faSummary['unused_advance'] : 0.00;
+
             $rsPaidDirect = (float)$rsOrders->where('payment_status', '!=', 'Charged to Room Folio')->sum('total_amount');
             $rsOrdersCount = $rsOrders->count();
 
@@ -196,7 +201,7 @@ class AccountsController extends Controller
                 ];
             }
 
-            $grandBill = round($roomBill + $rsFolioCharged, 2);
+            $grandBill = round($roomBill + $effectiveExtra - $unusedAdvanceCredit, 2);
 
             $paid = (float)Payment::whereIn('booking_id', $allResBookingIds)->sum('amount');
             if ($paid <= 0 && (float)$b->advance_amount > 0) {
@@ -206,7 +211,7 @@ class AccountsController extends Controller
             $rem = max(0, round($grandBill - $paid, 2));
 
             $foTotalRoomTariffs += $roomBill;
-            $foTotalExtraCharged += $rsFolioCharged;
+            $foTotalExtraCharged += $effectiveExtra;
             $foTotalExtraPaid += $rsPaidDirect;
             $foTotalGrossBill += $grandBill;
             $foTotalPaidOverall += $paid;
@@ -224,7 +229,9 @@ class AccountsController extends Controller
                 'checkout_date' => $b->checkout_date ? Carbon::parse($b->checkout_date)->format('d M Y') : '-',
                 'status' => $b->status ?: 'Confirmed',
                 'room_charges' => $roomBill,
-                'extra_charged' => $rsFolioCharged,
+                'extra_charged' => $effectiveExtra,
+                'unused_food_advance_credit' => $unusedAdvanceCredit,
+                'food_advance' => $faSummary,
                 'extra_paid_direct' => $rsPaidDirect,
                 'extra_orders_count' => $rsOrdersCount,
                 'extra_orders_detailed' => $extraOrdersDetailed,

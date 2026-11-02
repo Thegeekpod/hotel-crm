@@ -746,6 +746,10 @@
             <span class="dossier-label text-orange-700 font-medium"><i class="fa-solid fa-utensils text-orange-500"></i> Restaurant &amp; Room Dining (Folio)</span>
             <span class="dossier-val mono font-mono font-extrabold text-orange-600" id="fmdl-services-row">+ ₹ 0.00</span>
           </div>
+          <div class="dossier-field-row flex justify-between items-center py-1.5 border-b border-slate-100 text-xs hidden" id="fmdl-food-advance-field-row">
+            <span class="dossier-label text-emerald-800 font-medium"><i class="fa-solid fa-receipt text-emerald-600"></i> Company Food Advance</span>
+            <span class="dossier-val mono font-mono font-extrabold text-emerald-800" id="fmdl-food-advance-row">₹ 0.00</span>
+          </div>
           <div class="dossier-field-row flex justify-between items-center py-1.5 border-b border-slate-100 text-xs">
             <span class="dossier-label text-slate-700 font-bold">Net Payable Amount</span>
             <span class="dossier-val mono font-mono text-sm font-black text-slate-900" id="fmdl-payable-amount">-</span>
@@ -1427,6 +1431,23 @@
       if (servicesVal) servicesVal.textContent = `+ ${formatINR(totalServiceCost)}`;
     } else {
       if (servicesRow) servicesRow.style.display = 'none';
+    }
+
+    // Company Food Advance breakdown row
+    const foodAdvRow = document.getElementById('fmdl-food-advance-field-row');
+    const foodAdvVal = document.getElementById('fmdl-food-advance-row');
+    if (foodAdvRow && foodAdvVal) {
+      if (folio.food_advance && folio.food_advance.has_food_advance) {
+        foodAdvRow.style.display = 'flex';
+        const fa = folio.food_advance;
+        if (fa.excess_food > 0) {
+          foodAdvVal.innerHTML = `<span class="text-amber-700 font-bold">${formatINR(fa.advance_amount)} (+${formatINR(fa.excess_total)} excess + 5% GST)</span>`;
+        } else {
+          foodAdvVal.innerHTML = `<span class="text-emerald-700 font-bold">${formatINR(fa.advance_amount)} (${formatINR(fa.used_amount)} used, -${formatINR(fa.unused_advance)} credited)</span>`;
+        }
+      } else {
+        foodAdvRow.style.display = 'none';
+      }
     }
 
     // Render itemized In-Room Dining / Restaurant orders list

@@ -13,6 +13,7 @@ use App\Models\Checkout;
 use App\Models\RoomHousekeepingHistory;
 use App\Models\HousekeepingState;
 use App\Models\RoomTransfer;
+use App\Services\FoodAdvanceService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
@@ -169,12 +170,35 @@ class FolioController extends Controller
             ? Booking::whereIn('primary_booking_id', $filteredIds)->pluck('id')->concat($filteredIds)->unique()->all()
             : [];
 
-        $totalExtraServices = !empty($allAssociatedIds)
-            ? (float)\App\Models\RoomServiceOrder::whereIn('booking_id', $allAssociatedIds)
+        // Pre-fetch Room Service Orders grouped by booking_id
+        $allOrdersGrouped = !empty($allAssociatedIds)
+            ? \App\Models\RoomServiceOrder::whereIn('booking_id', $allAssociatedIds)
                 ->where('payment_status', 'Charged to Room Folio')
                 ->where('order_status', '!=', 'Cancelled')
-                ->sum('total_amount')
-            : 0.0;
+                ->get()
+                ->groupBy('booking_id')
+            : collect();
+
+        $totalExtraServices = 0.0;
+        $totalFoodAdvanceCredits = 0.0;
+
+        foreach ($filteredBookings as $fb) {
+            $associatedIds = Booking::where('primary_booking_id', $fb->id)->pluck('id')->concat([$fb->id])->unique()->all();
+            $fbOrders = collect();
+            foreach ($associatedIds as $aid) {
+                if ($allOrdersGrouped->has($aid)) {
+                    $fbOrders = $fbOrders->concat($allOrdersGrouped->get($aid));
+                }
+            }
+
+            $faSummary = FoodAdvanceService::calculateSummary($fb, $associatedIds, $fbOrders);
+            if ($faSummary['has_food_advance']) {
+                $totalExtraServices += $faSummary['excess_total'];
+                $totalFoodAdvanceCredits += $faSummary['unused_advance'];
+            } else {
+                $totalExtraServices += (float)$fbOrders->sum('total_amount');
+            }
+        }
 
         $totalReceivable = round((float)$filteredBookings->sum('payable_amount') + $totalExtraServices, 2);
         $totalAdvance = (float)$filteredBookings->sum('advance_amount');
@@ -182,7 +206,7 @@ class FolioController extends Controller
             ? (float)Settlement::whereIn('booking_id', $filteredIds)->sum('paid_amount') 
             : 0.0;
         $totalPaid = round($totalAdvance + $totalSettled, 2);
-        $totalOutstanding = round((float)$filteredBookings->sum('balance') + $totalExtraServices, 2);
+        $totalOutstanding = max(0, round((float)$filteredBookings->sum('balance') + $totalExtraServices - $totalFoodAdvanceCredits, 2));
         $settledCount = $filteredBookings->filter(function ($b) {
             return (float)$b->balance <= 0.01 || in_array(strtolower($b->status ?? ''), ['settlement done', 'settled']);
         })->count();
@@ -299,7 +323,16 @@ class FolioController extends Controller
             ->where('order_status', '!=', 'Cancelled')
             ->sum('total_amount');
 
-        $currentBalance = round((float)$booking->balance + $totalExtra, 2);
+        $faSummary = FoodAdvanceService::calculateSummary($booking, $allBookingIds);
+        if ($faSummary['has_food_advance']) {
+            $effectiveExtra = $faSummary['excess_total'];
+            $unusedAdvanceCredit = $faSummary['unused_advance'];
+            $currentBalance = max(0, round((float)$booking->balance + $effectiveExtra - $unusedAdvanceCredit, 2));
+        } else {
+            $effectiveExtra = $totalExtra;
+            $unusedAdvanceCredit = 0.00;
+            $currentBalance = round((float)$booking->balance + $totalExtra, 2);
+        }
 
         if ($currentBalance <= 0) {
             return response()->json(['success' => false, 'error' => 'This booking balance has already been fully settled.'], 400);
@@ -387,6 +420,11 @@ class FolioController extends Controller
 
             // 4. Create Settlement Record
             $settlementNumber = 'SET-' . date('Ymd') . '-' . sprintf('%04d', $booking->id) . '-' . rand(10, 99);
+            $settleRemarks = $request->input('remarks', 'Settlement received');
+            if ($unusedAdvanceCredit > 0) {
+                $settleRemarks .= " [Includes -₹" . number_format($unusedAdvanceCredit, 2) . " credit for unspent Company Food Advance]";
+            }
+
             Settlement::create([
                 'settlement_number' => $settlementNumber,
                 'settle_number' => $booking->settle_number ?: $booking->folio_number,
@@ -394,17 +432,17 @@ class FolioController extends Controller
                 'booking_id' => $booking->id,
                 'payment_mode_id' => $paymentModeId,
                 'total_room_charges' => $booking->total_amount,
-                'total_extra_charges' => $totalExtra,
+                'total_extra_charges' => $effectiveExtra,
                 'discount_amount' => $booking->discount_amount,
                 'tax_amount' => $booking->gst_amount,
-                'payable_amount' => round((float)$booking->payable_amount + $totalExtra, 2),
+                'payable_amount' => round((float)$booking->payable_amount + $effectiveExtra - $unusedAdvanceCredit, 2),
                 'advance_adjusted' => (float)$booking->advance_amount,
                 'paid_amount' => $settleAmount,
                 'balance_amount' => $newBalance,
                 'settlement_date' => now()->toDateString(),
                 'settlement_time' => now()->format('H:i:s'),
                 'status' => $newBalance <= 0 ? 'Settled' : 'Partial',
-                'remarks' => $request->input('remarks', 'Settlement received'),
+                'remarks' => $settleRemarks,
             ]);
 
             DB::commit();
@@ -1062,9 +1100,21 @@ class FolioController extends Controller
             ->where('order_status', '!=', 'Cancelled')
             ->sum('total_amount');
 
-        $effectiveBalance = round($balance + $totalRoomServiceCharges, 2);
-        $effectivePayable = round((float)$booking->payable_amount + $totalRoomServiceCharges, 2);
-        $effectiveGross = round((float)$booking->total_amount + $totalRoomServiceCharges, 2);
+        $faSummary = FoodAdvanceService::calculateSummary($booking, $allBookingIds, $roomServiceOrders);
+
+        if ($faSummary['has_food_advance']) {
+            $effectiveExtra = $faSummary['excess_total'];
+            $unusedAdvanceCredit = $faSummary['unused_advance'];
+            $effectiveBalance = max(0, round($balance + $effectiveExtra - $unusedAdvanceCredit, 2));
+            $effectivePayable = max(0, round((float)$booking->payable_amount + $effectiveExtra - $unusedAdvanceCredit, 2));
+            $effectiveGross = max(0, round((float)$booking->total_amount + $effectiveExtra - $unusedAdvanceCredit, 2));
+        } else {
+            $effectiveExtra = $totalRoomServiceCharges;
+            $unusedAdvanceCredit = 0.00;
+            $effectiveBalance = round($balance + $totalRoomServiceCharges, 2);
+            $effectivePayable = round((float)$booking->payable_amount + $totalRoomServiceCharges, 2);
+            $effectiveGross = round((float)$booking->total_amount + $totalRoomServiceCharges, 2);
+        }
 
         // Group rooms and their occupants
         $roomsMap = [];
@@ -1239,7 +1289,10 @@ class FolioController extends Controller
             'checkout_time_fmt' => $checkoutTimeFmt,
             'settlements_history' => $settlementsHistory,
             'room_service_orders' => $serviceOrdersList,
-            'total_room_service_charges' => $totalRoomServiceCharges,
+            'total_room_service_charges' => $effectiveExtra,
+            'raw_room_service_charges' => $totalRoomServiceCharges,
+            'food_advance' => $faSummary,
+            'unused_food_advance_credit' => $unusedAdvanceCredit,
             'room_transfers' => $roomTransfersHistory,
         ];
     }

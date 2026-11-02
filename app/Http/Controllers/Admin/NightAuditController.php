@@ -10,6 +10,7 @@ use App\Models\Room;
 use App\Models\RoomMaintenance;
 use App\Models\RoomHousekeepingHistory;
 use App\Models\RoomOperationalHistory;
+use App\Services\FoodAdvanceService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
@@ -369,6 +370,10 @@ class NightAuditController extends Controller
                 ->get();
 
             $extraServicesCharge = (float)$extraOrders->where('payment_status', 'Charged to Room Folio')->sum('total_amount');
+            $faSummary = FoodAdvanceService::calculateSummary($master, $allResBookingIds, $extraOrders);
+            $effectiveExtra = $faSummary['has_food_advance'] ? $faSummary['excess_total'] : $extraServicesCharge;
+            $unusedAdvanceCredit = $faSummary['has_food_advance'] ? $faSummary['unused_advance'] : 0.00;
+
             $extraPaidCharges = (float)$extraOrders->where('payment_status', '!=', 'Charged to Room Folio')->sum('total_amount');
             $extraOrdersCount = $extraOrders->count();
             $extraOrdersDetailed = [];
@@ -393,7 +398,7 @@ class NightAuditController extends Controller
                 ];
             }
 
-            $grandTotal = round($roomCharges + $extraServicesCharge, 2);
+            $grandTotal = round($roomCharges + $effectiveExtra - $unusedAdvanceCredit, 2);
 
             $paid = (float)\App\Models\Payment::whereIn('booking_id', $allResBookingIds)->sum('amount');
             if ($paid <= 0 && (float)$master->advance_amount > 0) {
@@ -453,7 +458,9 @@ class NightAuditController extends Controller
                 'stay_status' => $stayStatus,
                 'status' => $stayStatus,
                 'room_charges' => $roomCharges,
-                'extra_service_charges' => $extraServicesCharge,
+                'extra_service_charges' => $effectiveExtra,
+                'unused_food_advance_credit' => $unusedAdvanceCredit,
+                'food_advance' => $faSummary,
                 'extra_paid_charges' => $extraPaidCharges,
                 'extra_orders_count' => $extraOrdersCount,
                 'extra_orders_detailed' => $extraOrdersDetailed,

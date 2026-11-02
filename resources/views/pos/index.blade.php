@@ -97,8 +97,8 @@
           <span class="font-bold text-xs text-slate-500 whitespace-nowrap">Bill To Room:</span>
           <select class="h-9.5 text-xs font-medium rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-indigo-500 min-w-[240px]" id="pos-room-select">
             @forelse($selectableRooms as $rm)
-              <option value="{{ $rm->id }}" data-room="{{ $rm->room_number }}" data-guest="{{ $rm->guest_name }}">
-                Room {{ $rm->room_number }} - {{ $rm->guest_name }}
+              <option value="{{ $rm->id }}" data-room="{{ $rm->room_number }}" data-guest="{{ $rm->guest_name }}" data-has-food-adv="{{ $rm->has_food_advance ? 1 : 0 }}" data-food-adv="{{ $rm->food_advance_amount ?? 0 }}" data-rem-adv="{{ $rm->remaining_advance ?? 0 }}" data-used-adv="{{ $rm->used_food_advance ?? 0 }}">
+                Room {{ $rm->room_number }} - {{ $rm->guest_name }}{{ $rm->has_food_advance ? ' [Food Allowance: ₹' . number_format($rm->food_advance_amount, 0) . ']' : '' }}
               </option>
             @empty
               <option value="">No Checked In Guests</option>
@@ -261,8 +261,8 @@
               <select class="w-full h-9 text-xs font-medium rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-indigo-500" id="cart-room-folio-select">
                 <option value="">-- Direct Walk-in / No Room --</option>
                 @forelse($selectableRooms as $rm)
-                  <option value="{{ $rm->id }}" data-room="{{ $rm->room_number }}" data-guest="{{ $rm->guest_name }}">
-                    Room {{ $rm->room_number }} - {{ $rm->guest_name }}
+                  <option value="{{ $rm->id }}" data-room="{{ $rm->room_number }}" data-guest="{{ $rm->guest_name }}" data-has-food-adv="{{ $rm->has_food_advance ? 1 : 0 }}" data-food-adv="{{ $rm->food_advance_amount ?? 0 }}" data-rem-adv="{{ $rm->remaining_advance ?? 0 }}" data-used-adv="{{ $rm->used_food_advance ?? 0 }}">
+                    Room {{ $rm->room_number }} - {{ $rm->guest_name }}{{ $rm->has_food_advance ? ' [Food Allowance: ₹' . number_format($rm->food_advance_amount, 0) . ']' : '' }}
                   </option>
                 @empty
                   <option value="">No Checked In Guests Found</option>
@@ -523,6 +523,7 @@
       if (headRm && headRm.value !== val) headRm.value = val;
       if (cartRm && cartRm.value !== val) cartRm.value = val;
     }
+    renderCart();
     updateRoomPickerNote();
   }
 
@@ -537,12 +538,29 @@
     const roomId = cartRm ? cartRm.value : '';
     const roomNo = selectedOpt ? selectedOpt.getAttribute('data-room') : '';
     const guestName = selectedOpt ? selectedOpt.getAttribute('data-guest') : '';
+    const hasFoodAdv = selectedOpt && selectedOpt.getAttribute('data-has-food-adv') === '1';
+    const foodAdvTotal = hasFoodAdv ? (parseFloat(selectedOpt.getAttribute('data-food-adv')) || 0) : 0;
+    const remAdv = hasFoodAdv ? (parseFloat(selectedOpt.getAttribute('data-rem-adv')) || 0) : 0;
 
     let subtotal = cart.reduce((acc, i) => acc + (i.price * i.qty), 0);
-    let tax = Math.round((subtotal * posGstRate) / 100);
-    let grand = subtotal + tax;
-    const grandFmt = '₹ ' + grand.toLocaleString();
+    let tax = 0;
+    let grand = 0;
 
+    if (currentBillingType === 'Charged to Room Folio' && hasFoodAdv && foodAdvTotal > 0) {
+      if (subtotal <= remAdv) {
+        tax = 0;
+        grand = 0;
+      } else {
+        const excess = subtotal - remAdv;
+        tax = Math.round(((excess * 0.05)) * 100) / 100;
+        grand = Math.round((excess + tax) * 100) / 100;
+      }
+    } else {
+      tax = Math.round(((subtotal * posGstRate) / 100) * 100) / 100;
+      grand = Math.round((subtotal + tax) * 100) / 100;
+    }
+
+    const grandFmt = '₹ ' + grand.toLocaleString();
     const btnLabel = document.getElementById('btn-order-label');
 
     const isTakeaway = (currentOrderType === 'Takeaway');
@@ -566,14 +584,42 @@
       }
       if (title) title.innerHTML = '<span class="flex items-center gap-1.5"><i class="fa-solid fa-door-open text-emerald-600"></i> Select Room to Charge Folio: *</span>';
       if (badge) {
-        badge.textContent = 'In-House Folio (Adds to Balance)';
-        badge.className = 'text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-bold';
+        if (hasFoodAdv) {
+          badge.textContent = `Company Food Advance (₹${foodAdvTotal.toLocaleString()})`;
+          badge.className = 'text-[10px] bg-emerald-200 text-emerald-900 px-2 py-0.5 rounded-full font-bold border border-emerald-300';
+        } else {
+          badge.textContent = 'In-House Folio (Adds to Balance)';
+          badge.className = 'text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-bold';
+        }
       }
       if (btnLabel) btnLabel.textContent = `Post Bill to Room Folio (${grandFmt})`;
 
       if (note) {
         if (roomId && roomNo) {
-          note.innerHTML = `<span class="text-emerald-800 font-semibold text-xs flex items-center gap-1.5"><i class="fa-solid fa-file-invoice-dollar text-emerald-600"></i> Total ${grandFmt} will be added to <strong>Room ${roomNo} (${guestName})</strong> Folio remaining balance and settled at checkout.</span>`;
+          if (hasFoodAdv && foodAdvTotal > 0) {
+            if (subtotal <= remAdv) {
+              const unusedAfter = Math.max(0, remAdv - subtotal);
+              note.innerHTML = `<div class="bg-emerald-100/80 border border-emerald-300 rounded-lg p-2.5 text-emerald-900 text-xs">
+                <div class="font-extrabold flex items-center gap-1.5"><i class="fa-solid fa-utensils text-emerald-700"></i> Company Food Advance: ₹${foodAdvTotal.toLocaleString()} (Remaining: ₹${remAdv.toLocaleString()})</div>
+                <div class="mt-1 text-[11px] leading-tight">
+                  ✓ Order of <strong>₹${subtotal.toLocaleString()}</strong> is <strong>100% covered</strong> by Company Food Advance!<br>
+                  <span class="text-emerald-800 font-bold">Folio bill charged now: ₹0.00</span>. Unused credit of <strong>₹${unusedAfter.toLocaleString()}</strong> will be deducted at settlement.
+                </div>
+              </div>`;
+            } else {
+              const excess = subtotal - remAdv;
+              note.innerHTML = `<div class="bg-amber-50 border border-amber-300 rounded-lg p-2.5 text-amber-900 text-xs">
+                <div class="font-extrabold flex items-center gap-1.5"><i class="fa-solid fa-triangle-exclamation text-amber-600"></i> Company Food Advance Exceeded:</div>
+                <div class="mt-1 text-[11px] leading-tight">
+                  Food subtotal: ₹${subtotal.toLocaleString()} | Covered by advance: <strong>₹${remAdv.toLocaleString()}</strong><br>
+                  Excess food: <strong>₹${excess.toLocaleString()}</strong> + <strong>5% GST (₹${tax.toLocaleString()})</strong><br>
+                  <strong class="text-indigo-800">Net excess bill added to Room Folio: ₹${grand.toLocaleString()}</strong>
+                </div>
+              </div>`;
+            }
+          } else {
+            note.innerHTML = `<span class="text-emerald-800 font-semibold text-xs flex items-center gap-1.5"><i class="fa-solid fa-file-invoice-dollar text-emerald-600"></i> Total ${grandFmt} will be added to <strong>Room ${roomNo} (${guestName})</strong> Folio remaining balance and settled at checkout.</span>`;
+          }
         } else {
           note.innerHTML = `<span class="text-rose-600 font-semibold text-xs flex items-center gap-1.5"><i class="fa-solid fa-circle-exclamation"></i> Please select a Room to link this bill to the residing guest folio.</span>`;
         }
@@ -857,12 +903,39 @@
     badge.textContent = totalQty;
     elem.innerHTML = html;
 
-    const tax = Math.round((subtotal * posGstRate) / 100);
-    const grand = subtotal + tax;
+    const cartRm = document.getElementById('cart-room-folio-select');
+    const selectedOpt = (cartRm && cartRm.selectedIndex >= 0) ? cartRm.options[cartRm.selectedIndex] : null;
+    const hasFoodAdv = selectedOpt && selectedOpt.getAttribute('data-has-food-adv') === '1';
+    const remAdv = hasFoodAdv ? (parseFloat(selectedOpt.getAttribute('data-rem-adv')) || 0) : 0;
+
+    let tax = 0;
+    let grand = 0;
+    const gstRateLabel = document.getElementById('pos-gst-label-rate');
+
+    if (currentBillingType === 'Charged to Room Folio' && hasFoodAdv) {
+      if (subtotal <= remAdv) {
+        tax = 0;
+        grand = 0;
+        if (gstRateLabel) gstRateLabel.textContent = '0% (Covered by Allowance)';
+      } else {
+        const excess = subtotal - remAdv;
+        tax = Math.round(((excess * 0.05)) * 100) / 100;
+        grand = Math.round((excess + tax) * 100) / 100;
+        if (gstRateLabel) gstRateLabel.textContent = '5% on Excess Food';
+      }
+    } else {
+      tax = Math.round(((subtotal * posGstRate) / 100) * 100) / 100;
+      grand = Math.round((subtotal + tax) * 100) / 100;
+      if (gstRateLabel) gstRateLabel.textContent = `${posGstRate}`;
+    }
 
     document.getElementById('sub-val').textContent = `₹ ${subtotal.toLocaleString()}`;
-    document.getElementById('tax-val').textContent = `₹ ${tax.toLocaleString()}`;
-    document.getElementById('tot-val').textContent = `₹ ${grand.toLocaleString()}`;
+    document.getElementById('tax-val').textContent = (currentBillingType === 'Charged to Room Folio' && hasFoodAdv && subtotal <= remAdv)
+      ? '₹ 0 (Covered)'
+      : `₹ ${tax.toLocaleString()}`;
+    document.getElementById('tot-val').textContent = (currentBillingType === 'Charged to Room Folio' && hasFoodAdv && subtotal <= remAdv)
+      ? '₹ 0 (100% Covered)'
+      : `₹ ${grand.toLocaleString()}`;
 
     updateRoomPickerNote();
   }

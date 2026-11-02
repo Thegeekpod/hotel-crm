@@ -1688,6 +1688,10 @@
     } else {
       const noticeWrap = document.getElementById('company-discount-applied-text');
       if (noticeWrap) noticeWrap.style.display = 'none';
+      const foodAdvInp = document.getElementById('company-food-advance-input');
+      if (foodAdvInp) foodAdvInp.value = '';
+      const faCard = document.getElementById('calc-food-advance-card');
+      if (faCard) faCard.style.display = 'none';
       if (typeof refreshPlanSelectDisplay === 'function') refreshPlanSelectDisplay();
       calculateReservationBilling();
     }
@@ -2347,6 +2351,22 @@
     const balanceInp = document.getElementById('calc-balance-amount');
     if (balanceInp) balanceInp.value = remainingBalance.toFixed(2);
 
+    // Company Food Advance Allowance display update
+    const checkedResRadio = document.querySelector('input[name="res_type"]:checked');
+    const isCompanyRes = (checkedResRadio?.dataset?.slug || checkedResRadio?.value || '').toLowerCase() === 'company';
+    const foodAdvInp = document.getElementById('company-food-advance-input');
+    const foodAdvVal = (isCompanyRes && foodAdvInp) ? (parseFloat(foodAdvInp.value) || 0) : 0;
+    const foodAdvCard = document.getElementById('calc-food-advance-card');
+    const foodAdvDisplay = document.getElementById('calc-food-advance-display');
+    if (foodAdvCard && foodAdvDisplay) {
+      if (isCompanyRes && foodAdvVal > 0) {
+        foodAdvCard.style.display = 'flex';
+        foodAdvDisplay.textContent = `₹ ${foodAdvVal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      } else {
+        foodAdvCard.style.display = 'none';
+      }
+    }
+
     const balanceBox = document.getElementById('calc-balance-box');
     if (balanceBox) {
       const boxLabel = balanceBox.querySelector('span');
@@ -2758,6 +2778,9 @@
       new_company_phone: newCompanyPhone,
       new_company_discount_type: newCompDiscType,
       new_company_discount_value: newCompDiscValue,
+      food_advance_amount: (resTypeSlug === 'company' || (registrationTypeId && document.querySelector('input[name="res_type"]:checked')?.dataset?.slug === 'company'))
+        ? (parseFloat(form.querySelector('input[name="food_advance_amount"]')?.value) || 0)
+        : 0,
       guests: guests,
       payment_mode_id: paymentModeId,
       plan_id: planId,

@@ -272,6 +272,11 @@ class Booking extends Model
         return $this->belongsTo(Company::class, 'company_id');
     }
 
+    public function foodAdvance(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(FoodAdvance::class, 'booking_id');
+    }
+
     public function plan(): BelongsTo
     {
         return $this->belongsTo(Plan::class, 'plan_id');

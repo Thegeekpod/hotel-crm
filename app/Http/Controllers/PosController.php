@@ -15,6 +15,7 @@ use App\Models\RoomServiceOrderItem;
 use App\Models\StoreItem;
 use App\Models\StoreMovement;
 use App\Models\TableManage;
+use App\Services\FoodAdvanceService;
 
 class PosController extends Controller
 {
@@ -66,12 +67,19 @@ class PosController extends Controller
             $primaryGuest = $primaryBooking->primaryBooking?->guest ?? $primaryBooking->guest;
             if (!$primaryGuest) continue;
 
+            $faSummary = FoodAdvanceService::calculateSummary($primaryBooking);
+
             $selectableRooms->push((object)[
                 'id' => $room->id,
                 'room_number' => $room->room_number,
                 'guest_name' => trim($primaryGuest->guest_name),
                 'booking_id' => $primaryBooking->id,
                 'status' => $primaryBooking->status,
+                'has_food_advance' => $faSummary['has_food_advance'],
+                'food_advance_amount' => $faSummary['advance_amount'],
+                'remaining_advance' => $faSummary['remaining_advance'],
+                'used_food_advance' => $faSummary['used_amount'],
+                'fa_summary' => $faSummary,
             ]);
         }
 
@@ -267,15 +275,27 @@ class PosController extends Controller
                 }
             }
 
-            // Calculate Subtotal & 12% F&B GST
+            // Calculate Subtotal & F&B Taxes
             $subtotal = 0;
             foreach ($validated['items'] as $item) {
                 $subtotal += ($item['price'] * $item['quantity']);
             }
 
-            $taxRate = (float) AppSetting::get('default_gst_pos', 12.00);
-            $taxAmount = round($subtotal * ($taxRate / 100), 2);
-            $totalAmount = round($subtotal + $taxAmount, 2);
+            // Food Advance allowance check for Company Registration Bookings
+            $foodAdvImpact = null;
+            if ($validated['billing_type'] === 'Charged to Room Folio' && $booking) {
+                $foodAdvImpact = FoodAdvanceService::calculateOrderImpact($booking, $subtotal);
+            }
+
+            if ($foodAdvImpact && $foodAdvImpact['has_food_advance']) {
+                $taxRate = $foodAdvImpact['gst_rate'];
+                $taxAmount = $foodAdvImpact['gst_amount'];
+                $totalAmount = $foodAdvImpact['charged_total'];
+            } else {
+                $taxRate = (float) AppSetting::get('default_gst_pos', 12.00);
+                $taxAmount = round($subtotal * ($taxRate / 100), 2);
+                $totalAmount = round($subtotal + $taxAmount, 2);
+            }
 
             // Generate Order Reference: POS-YYYYMMDD-XXXX
             $orderSequence = PosOrder::whereDate('created_at', today())->count() + 1;
@@ -308,6 +328,14 @@ class PosController extends Controller
                     ? 'POS Dining (Folio): '
                     : 'POS Dining (' . $validated['billing_type'] . ' - Settled on Spot): ';
                 $instructionsNote .= (!empty($finalTableString) ? '[' . $finalTableString . '] ' : '') . ($validated['special_instructions'] ?? 'None');
+
+                if ($foodAdvImpact && $foodAdvImpact['has_food_advance']) {
+                    if ($foodAdvImpact['excess_amount'] > 0) {
+                        $instructionsNote .= " [Food Advance: ₹{$foodAdvImpact['covered_amount']} covered. Excess ₹{$foodAdvImpact['excess_amount']} + 5% GST (₹{$taxAmount}) = ₹{$totalAmount} billed]";
+                    } else {
+                        $instructionsNote .= " [Food Advance: 100% Covered (₹{$subtotal}). Folio charge: ₹0.00; balance credit adjusted at settlement]";
+                    }
+                }
 
                 $rsOrder = RoomServiceOrder::create([
                     'order_number' => $rsOrderNumber,
@@ -422,13 +450,28 @@ class PosController extends Controller
 
             $posOrder->load('items');
 
+            $successMsg = '';
+            if ($validated['billing_type'] === 'Charged to Room Folio') {
+                if ($foodAdvImpact && $foodAdvImpact['has_food_advance']) {
+                    if ($foodAdvImpact['excess_amount'] > 0) {
+                        $successMsg = "Charge of ₹" . number_format($totalAmount, 2) . " posted to Room {$roomNumber} Folio! (₹" . number_format($foodAdvImpact['covered_amount'], 2) . " covered by Company Food Advance. Excess ₹" . number_format($foodAdvImpact['excess_amount'], 2) . " + 5% GST = ₹" . number_format($totalAmount, 2) . ")";
+                    } else {
+                        $successMsg = "Order of ₹" . number_format($subtotal, 2) . " successfully linked to Room {$roomNumber}! Fully covered by Company Food Advance (Net folio charge ₹0.00; unused balance credited at settlement).";
+                    }
+                } else {
+                    $successMsg = "Charge of ₹" . number_format($totalAmount, 2) . " successfully posted to Room {$roomNumber} Folio! Outstanding balance updated for final settlement.";
+                }
+            } elseif ($validated['order_type'] === 'Takeaway') {
+                $successMsg = "Takeaway Order {$orderNumber} (₹" . number_format($totalAmount, 2) . ") successfully placed and settled via {$validated['billing_type']} for {$customerName}!";
+            } else {
+                $successMsg = $room
+                    ? "Order {$orderNumber} (₹" . number_format($totalAmount, 2) . ") settled via {$validated['billing_type']} and recorded under Room {$roomNumber} ({$customerName}) in Settlement!"
+                    : "Order {$orderNumber} successfully placed and settled via {$validated['billing_type']}! KOT generated.";
+            }
+
             return response()->json([
                 'success' => true,
-                'message' => ($validated['billing_type'] === 'Charged to Room Folio')
-                    ? "Charge of ₹" . number_format($totalAmount, 2) . " successfully posted to Room {$roomNumber} Folio! Outstanding balance updated for final settlement."
-                    : ($validated['order_type'] === 'Takeaway'
-                        ? "Takeaway Order {$orderNumber} (₹" . number_format($totalAmount, 2) . ") successfully placed and settled via {$validated['billing_type']} for {$customerName}!"
-                        : ($room ? "Order {$orderNumber} (₹" . number_format($totalAmount, 2) . ") settled via {$validated['billing_type']} and recorded under Room {$roomNumber} ({$customerName}) in Settlement!" : "Order {$orderNumber} successfully placed and settled via {$validated['billing_type']}! KOT generated.")),
+                'message' => $successMsg,
                 'order' => $posOrder,
             ]);
         });

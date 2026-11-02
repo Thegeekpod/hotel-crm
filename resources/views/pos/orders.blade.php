@@ -594,8 +594,8 @@
 
     const doc = iframe.contentWindow.document;
     doc.open();
-    doc.write('<html><head><title>Kitchen Order Ticket</title>');
-    doc.write('<style>');
+    doc.write('<' + 'html><' + 'head><title>Kitchen Order Ticket</title>');
+    doc.write('<' + 'style>');
     doc.write('@page { size: 80mm auto; margin: 3mm; }');
     doc.write('body { font-family: monospace, -apple-system, sans-serif; font-size: 11px; margin: 0; padding: 2mm; color: #000; }');
     doc.write('h3 { margin: 0 0 4px 0; font-size: 14px; text-align: center; }');
@@ -606,9 +606,9 @@
     doc.write('th { border-bottom: 1px solid #000; }');
     doc.write('.text-right { text-align: right; }');
     doc.write('.text-center { text-align: center; }');
-    doc.write('</style></head><body>');
+    doc.write('</' + 'style></' + 'head><' + 'body>');
     doc.write(printArea.innerHTML);
-    doc.write('</body></html>');
+    doc.write('</' + 'body></' + 'html>');
     doc.close();
 
     setTimeout(() => {

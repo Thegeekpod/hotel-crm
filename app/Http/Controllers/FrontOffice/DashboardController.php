@@ -27,6 +27,8 @@ use App\Models\RoomOperationalHistory;
 use App\Models\GstPercentage;
 use App\Models\Plan;
 use App\Models\GuestUploadSession;
+use App\Models\FoodAdvance;
+use App\Services\FoodAdvanceService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -174,6 +176,11 @@ class DashboardController extends Controller
                         ->get();
 
                     $extraServiceCharges = (float) $roomServiceOrders->where('payment_status', 'Charged to Room Folio')->sum('total_amount');
+                    $faSummary = FoodAdvanceService::calculateSummary($gModel, $resBookingIds->all(), $roomServiceOrders);
+                    $effectiveExtra = $faSummary['has_food_advance'] ? $faSummary['excess_total'] : $extraServiceCharges;
+                    $unusedFoodAdvanceCredit = $faSummary['has_food_advance'] ? $faSummary['unused_advance'] : 0.00;
+                    $effectiveBalance = max(0, round((float)$gModel->balance + $effectiveExtra - $unusedFoodAdvanceCredit, 2));
+
                     $serviceOrdersList = $roomServiceOrders->map(function ($ro) {
                         return [
                             'id' => $ro->id,
@@ -240,7 +247,10 @@ class DashboardController extends Controller
                         'checkin_display' => $checkinDisplay,
                         'checkout_display' => $checkoutDisplay,
                         'total_nights' => $gModel->total_nights,
-                        'extra_service_charges' => $extraServiceCharges,
+                        'extra_service_charges' => $effectiveExtra,
+                        'unused_food_advance_credit' => $unusedFoodAdvanceCredit,
+                        'effective_balance' => $effectiveBalance,
+                        'food_advance' => $faSummary,
                         'room_service_orders' => $serviceOrdersList,
                     ];
                 }
@@ -1092,6 +1102,17 @@ class DashboardController extends Controller
                 $registrationTypeId = null;
             }
 
+            $isCompanyRegistration = false;
+            if ($registrationTypeId) {
+                $regObj = RegistrationType::find($registrationTypeId);
+                if ($regObj && (stripos($regObj->name, 'company') !== false || stripos($regObj->name, 'corporate') !== false)) {
+                    $isCompanyRegistration = true;
+                }
+            }
+            if (!$isCompanyRegistration && (strtolower($request->input('res_type', '')) === 'company' || $request->filled('company_id'))) {
+                $isCompanyRegistration = true;
+            }
+
             $companyId = $request->input('company_id');
             if ($companyId === 'new' || ($request->filled('new_company_name') && !$companyId)) {
                 $newComp = Company::create([
@@ -1441,6 +1462,15 @@ class DashboardController extends Controller
                 // 3. Create Payment record if advance paid
                 if ($idx === 0) {
                     $primaryBooking = $bookingModel;
+
+                    // 3b. Store Food Advance for Company registration type if provided
+                    $foodAdvanceAmt = (float)$request->input('food_advance_amount', 0);
+                    if ($isCompanyRegistration && $foodAdvanceAmt > 0) {
+                        FoodAdvance::updateOrCreate(
+                            ['booking_id' => $primaryBooking->id],
+                            ['advance_amount' => $foodAdvanceAmt]
+                        );
+                    }
 
                     if ($advanceAmount > 0 || $paymentModeId) {
                         Payment::create([

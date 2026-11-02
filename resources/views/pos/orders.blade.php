@@ -410,58 +410,137 @@
 
 <!-- Thermal KOT Ticket Modal -->
 <div class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 hidden" id="kot-modal">
-  <div class="bg-white w-full max-w-sm rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
+  <div class="bg-white w-full max-w-lg rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
     <div class="bg-slate-900 text-white px-5 py-3.5 flex items-center justify-between">
-      <h3 class="text-sm font-extrabold text-white flex items-center gap-2">
-        <i class="fa-solid fa-print text-indigo-400"></i> Kitchen Order Ticket (KOT)
-      </h3>
+      <div>
+        <h3 class="text-sm font-extrabold text-white flex items-center gap-2">
+          <i class="fa-solid fa-print text-indigo-400"></i> KOT Ticket &amp; POS Guest Bill
+        </h3>
+        <p class="text-[11px] text-slate-400 mt-0.5">Original Copy (Guest) &amp; Duplicate Copy (Kitchen)</p>
+      </div>
       <button type="button" onclick="closeKotModal()" class="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center text-base cursor-pointer transition-colors">&times;</button>
     </div>
-    <div class="p-5 bg-slate-50 overflow-y-auto max-h-[70vh]">
-      <div class="thermal-ticket-card bg-white p-4 border border-dashed border-slate-300 rounded-lg font-mono text-xs shadow-xs text-slate-900" id="printable-kot-area">
-        <h3 class="text-center font-black text-sm tracking-wide">HOTEL SAGAR SONNET</h3>
-        <div class="text-center text-[11px] text-slate-500 font-semibold my-1">
-          Sea Breeze Dining &amp; Room Dining<br>*** KITCHEN ORDER TICKET (KOT) ***
-        </div>
-        <div class="border-b border-dashed border-slate-300 my-2"></div>
-        <div class="flex justify-between text-[11px]">
-          <span id="kot-order-num"><strong>KOT: --</strong></span>
-          <span id="kot-time">Time: --:--</span>
-        </div>
-        <div class="text-[11px] mt-0.5"><strong>Type:</strong> <span id="kot-dest">--</span></div>
-        <div class="text-[11px] mt-0.5"><strong>Guest / Host:</strong> <span id="kot-guest">--</span></div>
-        <div class="text-[11px] mt-0.5"><strong>Billing Mode:</strong> <span id="kot-billing" class="font-bold text-indigo-700">--</span></div>
-        <div class="border-b border-dashed border-slate-300 my-2"></div>
-        <table class="w-full border-collapse text-left text-[11px]">
-          <thead>
-            <tr class="border-b border-slate-300">
-              <th class="py-1">Item</th>
-              <th class="text-center w-10 py-1">Qty</th>
-              <th class="text-right w-16 py-1">Amount</th>
-            </tr>
-          </thead>
-          <tbody id="kot-items-table" class="divide-y divide-slate-100">
-            <!-- Dynamic KOT Items -->
-          </tbody>
-        </table>
-        <div class="border-b border-dashed border-slate-300 my-2"></div>
-        <div class="flex justify-between font-black text-xs">
-          <span>Total Qty: <span id="kot-total-qty">0</span></span>
-          <span>Grand Total: ₹ <span id="kot-grand-total">0</span></span>
-        </div>
-        <div class="border-b border-dashed border-slate-300 my-2"></div>
-        <div id="kot-notes-line" class="italic text-[10px] text-slate-600">
-          Instructions: None
-        </div>
-        <div class="border-b border-dashed border-slate-300 my-2"></div>
-        <div class="text-center text-[10px] text-slate-400 mt-1">Served by: Debashis Roy | System Printed</div>
+
+    <!-- Copy Filter Switcher -->
+    <div class="flex items-center justify-between px-5 py-2.5 bg-slate-100 border-b border-slate-200 text-xs">
+      <span class="font-bold text-slate-600"><i class="fa-solid fa-copy text-slate-400 mr-1"></i> Preview Copies:</span>
+      <div class="inline-flex p-0.5 bg-white border border-slate-200 rounded-lg shadow-2xs">
+        <button type="button" id="tab-kot-both" onclick="switchKotPreview('both')" class="px-2.5 py-1 rounded-md text-[11px] font-bold bg-indigo-600 text-white shadow-xs cursor-pointer transition-all">Both Copies</button>
+        <button type="button" id="tab-kot-guest" onclick="switchKotPreview('guest')" class="px-2.5 py-1 rounded-md text-[11px] font-bold text-slate-600 hover:text-slate-900 cursor-pointer transition-all">Guest Copy</button>
+        <button type="button" id="tab-kot-kitchen" onclick="switchKotPreview('kitchen')" class="px-2.5 py-1 rounded-md text-[11px] font-bold text-slate-600 hover:text-slate-900 cursor-pointer transition-all">Kitchen Copy</button>
       </div>
     </div>
-    <div class="px-5 py-3.5 bg-white border-t border-slate-200 flex justify-end items-center gap-2">
+
+    <div class="p-5 bg-slate-50 overflow-y-auto max-h-[68vh]">
+      <div id="printable-kot-area" class="space-y-4">
+        
+        <!-- 1. ORIGINAL COPY (FOR GUEST) -->
+        <div id="kot-ticket-guest" class="kot-ticket-slip bg-white p-4 border border-dashed border-slate-300 rounded-xl font-mono text-xs shadow-xs text-slate-900">
+          <h3 class="text-center font-black text-sm tracking-wide">HOTEL SAGAR SONNET</h3>
+          <div class="center-sub text-center text-[11px] text-slate-500 font-semibold my-1">
+            Sea Breeze Dining &amp; Room Dining<br>
+            <strong class="text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200 inline-block mt-0.5">*** ORIGINAL COPY (FOR GUEST) ***</strong>
+          </div>
+          <div class="divider-line border-b border-dashed border-slate-300 my-2"></div>
+          <div class="flex justify-between text-[11px]">
+            <span id="kot-guest-order-num"><strong>KOT: --</strong></span>
+            <span id="kot-guest-time">Time: --:--</span>
+          </div>
+          <div class="text-[11px] mt-0.5"><strong>Type:</strong> <span id="kot-guest-dest">--</span></div>
+          <div class="text-[11px] mt-0.5"><strong>Guest / Host:</strong> <span id="kot-guest-name">--</span></div>
+          <div class="text-[11px] mt-0.5"><strong>Billing Mode:</strong> <span id="kot-guest-billing" class="font-bold text-indigo-700">--</span></div>
+          <div class="divider-line border-b border-dashed border-slate-300 my-2"></div>
+          <table class="w-full border-collapse text-left text-[11px]">
+            <thead>
+              <tr class="border-b border-slate-300">
+                <th class="py-1">Item</th>
+                <th class="text-center w-12 py-1">Qty</th>
+                <th class="text-right w-16 py-1">Amount</th>
+              </tr>
+            </thead>
+            <tbody id="kot-guest-items-table" class="divide-y divide-slate-100">
+              <!-- Dynamic Guest Items -->
+            </tbody>
+          </table>
+          <div class="divider-line border-b border-dashed border-slate-300 my-2"></div>
+          <div class="flex justify-between font-black text-xs">
+            <span>Total Qty: <span id="kot-guest-total-qty">0</span></span>
+            <span>Grand Total: ₹ <span id="kot-guest-grand-total">0.00</span></span>
+          </div>
+          <div class="divider-line border-b border-dashed border-slate-300 my-2"></div>
+          <div id="kot-guest-notes-line" class="italic text-[10px] text-slate-600">
+            Instructions: None
+          </div>
+          <div class="divider-line border-b border-dashed border-slate-300 my-2"></div>
+          <div class="center-sub text-center text-[10px] text-slate-400 mt-1">Served by: Debashis Roy | ORIGINAL GUEST COPY</div>
+        </div>
+
+        <!-- Perforation / Tear Strip -->
+        <div id="kot-tear-strip" class="kot-tear-strip text-center py-2 text-[10px] text-slate-400 font-mono select-none">
+          - - - - - - - - - - - - - - - - - - - - - - - - - - -<br>
+          ✂ TEAR / CUT HERE (KITCHEN COPY BELOW) ✂<br>
+          - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        </div>
+
+        <!-- 2. DUPLICATE COPY (FOR KITCHEN) -->
+        <div id="kot-ticket-kitchen" class="kot-ticket-slip bg-white p-4 border border-dashed border-amber-300 rounded-xl font-mono text-xs shadow-xs text-slate-900 bg-amber-50/20">
+          <h3 class="text-center font-black text-sm tracking-wide">HOTEL SAGAR SONNET</h3>
+          <div class="center-sub text-center text-[11px] text-slate-500 font-semibold my-1">
+            Kitchen Order Routing (KOT)<br>
+            <strong class="text-rose-700 bg-rose-50 px-2 py-0.5 rounded border border-rose-200 inline-block mt-0.5">*** DUPLICATE COPY (FOR KITCHEN) ***</strong>
+          </div>
+          <div class="divider-line border-b border-dashed border-amber-300 my-2"></div>
+          <div class="flex justify-between text-[11px]">
+            <span id="kot-kitchen-order-num"><strong>KOT: --</strong></span>
+            <span id="kot-kitchen-time">Time: --:--</span>
+          </div>
+          <div class="text-[11px] mt-0.5"><strong>Destination:</strong> <span id="kot-kitchen-dest" class="font-extrabold text-indigo-800">--</span></div>
+          <div class="text-[11px] mt-0.5"><strong>Guest / Host:</strong> <span id="kot-kitchen-name">--</span></div>
+          <div class="text-[11px] mt-0.5"><strong>Billing Mode:</strong> <span id="kot-kitchen-billing">--</span></div>
+          <div class="divider-line border-b border-dashed border-amber-300 my-2"></div>
+          <table class="w-full border-collapse text-left text-[11px]">
+            <thead>
+              <tr class="border-b border-slate-300">
+                <th class="py-1">Kitchen Preparation Item</th>
+                <th class="text-center w-12 py-1">Qty</th>
+                <th class="text-right w-16 py-1">Amount</th>
+              </tr>
+            </thead>
+            <tbody id="kot-kitchen-items-table" class="divide-y divide-slate-100">
+              <!-- Dynamic Kitchen Items -->
+            </tbody>
+          </table>
+          <div class="divider-line border-b border-dashed border-amber-300 my-2"></div>
+          <div class="flex justify-between font-black text-xs">
+            <span>Total Qty: <span id="kot-kitchen-total-qty">0</span></span>
+            <span>Total Bill: ₹ <span id="kot-kitchen-grand-total">0.00</span></span>
+          </div>
+          <div class="divider-line border-b border-dashed border-amber-300 my-2"></div>
+          <div id="kot-kitchen-notes-line" class="text-[10.5px] font-bold text-amber-900 bg-amber-50 p-2 rounded-lg border border-amber-200">
+            Kitchen Instructions: None
+          </div>
+          <div class="divider-line border-b border-dashed border-amber-300 my-2"></div>
+          <div class="center-sub text-center text-[10px] text-slate-400 mt-1">Kitchen Order Routing | DUPLICATE KITCHEN COPY</div>
+        </div>
+
+      </div>
+    </div>
+    
+    <!-- Modal Footer Actions -->
+    <div class="px-5 py-3.5 bg-white border-t border-slate-200 flex justify-between items-center flex-wrap gap-2">
       <button type="button" class="inline-flex items-center h-9 px-4 text-xs font-bold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200/80 rounded-xl transition-all shadow-xs cursor-pointer" onclick="closeKotModal()">Close</button>
-      <button type="button" class="inline-flex items-center gap-1.5 h-9 px-4 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-all shadow-xs cursor-pointer" onclick="printThermalTicket()">
-        <i class="fa-solid fa-print text-[11px]"></i> Print KOT Ticket
-      </button>
+      
+      <div class="flex items-center gap-2 flex-wrap">
+        <button type="button" class="inline-flex items-center gap-1.5 h-9 px-3 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all shadow-xs cursor-pointer" onclick="printThermalTicket('guest')">
+          <i class="fa-solid fa-receipt text-indigo-600"></i> Guest Copy
+        </button>
+        <button type="button" class="inline-flex items-center gap-1.5 h-9 px-3 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all shadow-xs cursor-pointer" onclick="printThermalTicket('kitchen')">
+          <i class="fa-solid fa-kitchen-set text-rose-600"></i> Kitchen Copy
+        </button>
+        <button type="button" class="inline-flex items-center gap-1.5 h-9 px-4 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-all shadow-xs cursor-pointer" onclick="printThermalTicket('both')">
+          <i class="fa-solid fa-print text-[11px]"></i> Print Both (Guest + Kitchen)
+        </button>
+      </div>
     </div>
   </div>
 </div>
@@ -542,10 +621,12 @@
     }
   }
 
+  let activeKotOrder = null;
+
   function showKotModal(order) {
-    document.getElementById('kot-order-num').innerHTML = '<strong>KOT: ' + (order.order_number || 'POS') + '</strong>';
-    const createdAt = new Date(order.created_at);
-    document.getElementById('kot-time').textContent = createdAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    activeKotOrder = order;
+    const createdAt = order.created_at ? new Date(order.created_at) : new Date();
+    const timeStr = createdAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     
     let dest = order.order_type;
     if (order.order_type === 'Room Dining') {
@@ -555,35 +636,103 @@
     } else if (order.order_type === 'Takeaway') {
       dest = 'Takeaway Counter' + (order.table_number ? ' (' + order.table_number + ')' : '');
     }
-    document.getElementById('kot-dest').textContent = dest;
-    document.getElementById('kot-guest').textContent = order.customer_name || 'Guest';
-    document.getElementById('kot-billing').textContent = order.billing_type || 'Cash Paid';
 
-    const tbody = document.getElementById('kot-items-table');
-    tbody.innerHTML = '';
-    let totalQty = 0;
+    const guestName = order.customer_name || 'Guest';
+    const billingType = order.billing_type || 'Cash Paid';
+    const grandTotalFmt = Number(order.total_amount).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const notesStr = order.special_instructions ? `Instructions: ${order.special_instructions}` : 'Instructions: None';
+
+    let guestItemsHtml = '';
+    let kitchenItemsHtml = '';
+    let totQty = 0;
+
     (order.items || []).forEach(it => {
-      totalQty += parseInt(it.quantity, 10);
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td class="py-1">
-          <div class="font-bold">${escapeHtml(it.item_name)}</div>
-          ${it.instructions ? '<div class="text-[9.5px] italic text-slate-500">' + escapeHtml(it.instructions) + '</div>' : ''}
-        </td>
-        <td class="text-center py-1 font-bold font-mono">${it.quantity}</td>
-        <td class="text-right py-1 font-mono">₹ ${(parseFloat(it.line_total || (it.unit_price * it.quantity))).toFixed(2)}</td>
+      const q = parseInt(it.quantity, 10);
+      totQty += q;
+      const lineTotal = Number(it.line_total || (it.unit_price * q)).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      
+      guestItemsHtml += `
+        <tr>
+          <td class="py-1">
+            <div class="font-bold text-slate-900">${escapeHtml(it.item_name)}</div>
+            ${it.instructions ? `<div class="text-[9.5px] italic text-slate-500">${escapeHtml(it.instructions)}</div>` : ''}
+          </td>
+          <td class="text-center font-bold font-mono py-1">${q}</td>
+          <td class="text-right font-mono py-1">₹ ${lineTotal}</td>
+        </tr>
       `;
-      tbody.appendChild(tr);
+
+      kitchenItemsHtml += `
+        <tr>
+          <td class="py-1">
+            <div class="font-bold text-slate-900">${escapeHtml(it.item_name)}</div>
+            ${it.instructions ? `<div class="text-[10px] font-bold text-rose-700 bg-rose-50 px-1 rounded inline-block mt-0.5">Note: ${escapeHtml(it.instructions)}</div>` : ''}
+          </td>
+          <td class="text-center font-black text-xs font-mono py-1 text-slate-900">${q}</td>
+          <td class="text-right font-mono text-[10px] text-slate-600 py-1">₹ ${lineTotal}</td>
+        </tr>
+      `;
     });
 
-    document.getElementById('kot-total-qty').textContent = totalQty;
-    document.getElementById('kot-grand-total').textContent = parseFloat(order.total_amount).toFixed(2);
-    document.getElementById('kot-notes-line').textContent = 'Instructions: ' + (order.special_instructions || 'None');
+    // Populate Guest Ticket
+    document.getElementById('kot-guest-order-num').innerHTML = `<strong>KOT: ${order.order_number || 'POS'}</strong>`;
+    document.getElementById('kot-guest-time').textContent = `Time: ${timeStr}`;
+    document.getElementById('kot-guest-dest').textContent = dest;
+    document.getElementById('kot-guest-name').textContent = guestName;
+    document.getElementById('kot-guest-billing').textContent = billingType;
+    document.getElementById('kot-guest-items-table').innerHTML = guestItemsHtml;
+    document.getElementById('kot-guest-total-qty').textContent = totQty;
+    document.getElementById('kot-guest-grand-total').textContent = grandTotalFmt;
+    document.getElementById('kot-guest-notes-line').textContent = notesStr;
+
+    // Populate Kitchen Ticket
+    document.getElementById('kot-kitchen-order-num').innerHTML = `<strong>KOT: ${order.order_number || 'POS'}</strong>`;
+    document.getElementById('kot-kitchen-time').textContent = `Time: ${timeStr}`;
+    document.getElementById('kot-kitchen-dest').textContent = dest;
+    document.getElementById('kot-kitchen-name').textContent = guestName;
+    document.getElementById('kot-kitchen-billing').textContent = billingType;
+    document.getElementById('kot-kitchen-items-table').innerHTML = kitchenItemsHtml;
+    document.getElementById('kot-kitchen-total-qty').textContent = totQty;
+    document.getElementById('kot-kitchen-grand-total').textContent = grandTotalFmt;
+    document.getElementById('kot-kitchen-notes-line').textContent = notesStr;
+
+    switchKotPreview('both');
 
     const m = document.getElementById('kot-modal');
     if (m) {
       m.classList.remove('hidden');
       m.style.display = 'flex';
+    }
+  }
+
+  function switchKotPreview(mode) {
+    const tGuest = document.getElementById('kot-ticket-guest');
+    const tKitchen = document.getElementById('kot-ticket-kitchen');
+    const strip = document.getElementById('kot-tear-strip');
+    const bBoth = document.getElementById('tab-kot-both');
+    const bGuest = document.getElementById('tab-kot-guest');
+    const bKitchen = document.getElementById('tab-kot-kitchen');
+
+    [bBoth, bGuest, bKitchen].forEach(b => {
+      if (b) b.className = 'px-2.5 py-1 rounded-md text-[11px] font-bold text-slate-600 hover:text-slate-900 cursor-pointer transition-all';
+    });
+
+    if (mode === 'guest') {
+      if (tGuest) tGuest.style.display = 'block';
+      if (tKitchen) tKitchen.style.display = 'none';
+      if (strip) strip.style.display = 'none';
+      if (bGuest) bGuest.className = 'px-2.5 py-1 rounded-md text-[11px] font-bold bg-indigo-600 text-white shadow-xs cursor-pointer transition-all';
+    } else if (mode === 'kitchen') {
+      if (tGuest) tGuest.style.display = 'none';
+      if (tKitchen) tKitchen.style.display = 'block';
+      if (strip) strip.style.display = 'none';
+      if (bKitchen) bKitchen.className = 'px-2.5 py-1 rounded-md text-[11px] font-bold bg-indigo-600 text-white shadow-xs cursor-pointer transition-all';
+    } else {
+      // both
+      if (tGuest) tGuest.style.display = 'block';
+      if (tKitchen) tKitchen.style.display = 'block';
+      if (strip) strip.style.display = 'block';
+      if (bBoth) bBoth.className = 'px-2.5 py-1 rounded-md text-[11px] font-bold bg-indigo-600 text-white shadow-xs cursor-pointer transition-all';
     }
   }
 
@@ -595,44 +744,68 @@
     }
   }
 
-  function printThermalTicket() {
-    const printArea = document.getElementById('printable-kot-area');
-    if (!printArea) return;
+  function printThermalTicket(mode = 'both') {
+    const tGuest = document.getElementById('kot-ticket-guest');
+    const tKitchen = document.getElementById('kot-ticket-kitchen');
+    if (!tGuest || !tKitchen) return;
 
-    const iframe = document.createElement('iframe');
-    iframe.style.position = 'fixed';
-    iframe.style.right = '0';
-    iframe.style.bottom = '0';
-    iframe.style.width = '0';
-    iframe.style.height = '0';
-    iframe.style.border = '0';
-    document.body.appendChild(iframe);
+    let printHtml = '';
+    if (mode === 'guest') {
+      printHtml = tGuest.outerHTML;
+    } else if (mode === 'kitchen') {
+      printHtml = tKitchen.outerHTML;
+    } else {
+      printHtml = `
+        ${tGuest.outerHTML}
+        <div class="print-cut-line">
+          - - - - - - - - - - - - - - - - - - - -<br>
+          ✂ CUT / TEAR HERE (KITCHEN COPY) ✂<br>
+          - - - - - - - - - - - - - - - - - - - -
+        </div>
+        ${tKitchen.outerHTML}
+      `;
+    }
 
+    let iframe = document.getElementById('kot-print-frame');
+    if (!iframe) {
+      iframe = document.createElement('iframe');
+      iframe.id = 'kot-print-frame';
+      iframe.style.position = 'fixed';
+      iframe.style.right = '0';
+      iframe.style.bottom = '0';
+      iframe.style.width = '0';
+      iframe.style.height = '0';
+      iframe.style.border = '0';
+      document.body.appendChild(iframe);
+    }
     const doc = iframe.contentWindow.document;
     doc.open();
-    doc.write('<' + 'html><' + 'head><title>Kitchen Order Ticket</title>');
-    doc.write('<' + 'style>');
-    doc.write('@page { size: 80mm auto; margin: 3mm; }');
-    doc.write('body { font-family: monospace, -apple-system, sans-serif; font-size: 11px; margin: 0; padding: 2mm; color: #000; }');
-    doc.write('h3 { margin: 0 0 4px 0; font-size: 14px; text-align: center; }');
-    doc.write('.center-sub { text-align: center; font-size: 10px; margin-bottom: 6px; }');
-    doc.write('.divider-line { border-bottom: 1px dashed #000; margin: 6px 0; }');
-    doc.write('table { width: 100%; border-collapse: collapse; font-size: 10.5px; }');
-    doc.write('th, td { padding: 3px 0; }');
-    doc.write('th { border-bottom: 1px solid #000; }');
-    doc.write('.text-right { text-align: right; }');
-    doc.write('.text-center { text-align: center; }');
+    doc.write('<!DOCTYPE html><html><' + 'head><title>Kitchen Order Ticket</title><style>');
+    doc.write(`
+      @page { size: 80mm auto; margin: 2mm; }
+      body { font-family: monospace, -apple-system, sans-serif; padding: 2mm; font-size: 11.5px; color: #000; margin: 0; background: #fff; }
+      .kot-ticket-slip { width: 100%; max-width: 310px; margin: 0 auto; page-break-inside: avoid; }
+      h3 { text-align: center; margin: 0 0 3px; font-size: 14px; font-weight: 900; }
+      .center-sub { text-align: center; font-size: 10.5px; margin: 3px 0; }
+      .divider-line { border-bottom: 1px dashed #000; margin: 6px 0; }
+      table { width: 100%; border-collapse: collapse; margin: 5px 0; font-size: 11px; }
+      th, td { padding: 3px 0; vertical-align: top; }
+      th { border-bottom: 1px solid #000; }
+      .text-center { text-align: center; }
+      .text-right { text-align: right; }
+      .font-bold { font-weight: bold; }
+      .font-black { font-weight: 900; }
+      .font-mono { font-family: monospace; }
+      .print-cut-line { text-align: center; font-size: 9.5px; margin: 10px 0; page-break-after: always; padding: 6px 0; border-top: 1px dashed #000; border-bottom: 1px dashed #000; }
+    `);
     doc.write('</' + 'style></' + 'head><' + 'body>');
-    doc.write(printArea.innerHTML);
+    doc.write(printHtml);
     doc.write('</' + 'body></' + 'html>');
     doc.close();
 
     setTimeout(() => {
       iframe.contentWindow.focus();
       iframe.contentWindow.print();
-      setTimeout(() => {
-        document.body.removeChild(iframe);
-      }, 1000);
     }, 250);
   }
 

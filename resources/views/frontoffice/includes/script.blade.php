@@ -869,10 +869,24 @@
     `;
 
     // Action Buttons Footer
-    footerEl.innerHTML = `
-      <button type="button" class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 rounded-lg shadow-xs transition-colors cursor-pointer" onclick="checkInFromRoomModal('${roomNo}')"><i class="fa-solid fa-key"></i> New Check-In</button>
-      <button type="button" class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-lg shadow-xs transition-colors cursor-pointer" onclick="closeModal('room-modal')">Close</button>
-    `;
+    if (isOccupied && guestsList.length > 0) {
+      const primaryGuest = guestsList[0];
+      const bookingId = primaryGuest.id || (roomData && roomData.booking_id) || '';
+      footerEl.innerHTML = `
+        <button type="button" class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-lg shadow-xs transition-colors cursor-pointer" onclick="printFolioInvoiceForBooking('${bookingId}')">
+          <i class="fa-solid fa-print"></i> Print Pre-Settlement Bill (A4)
+        </button>
+        <a href="{{ url('front-office/folio') }}?search=R${roomNo}" class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 rounded-lg shadow-xs transition-colors cursor-pointer">
+          <i class="fa-solid fa-file-invoice-dollar"></i> Settle Folio
+        </a>
+        <button type="button" class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-lg shadow-xs transition-colors cursor-pointer" onclick="closeModal('room-modal')">Close</button>
+      `;
+    } else {
+      footerEl.innerHTML = `
+        <button type="button" class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 rounded-lg shadow-xs transition-colors cursor-pointer" onclick="checkInFromRoomModal('${roomNo}')"><i class="fa-solid fa-key"></i> New Check-In</button>
+        <button type="button" class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-lg shadow-xs transition-colors cursor-pointer" onclick="closeModal('room-modal')">Close</button>
+      `;
+    }
 
     openModal('room-modal');
   }
@@ -1338,6 +1352,363 @@
     `;
     window.print();
   }
+
+  async function printFolioInvoiceForBooking(bookingId) {
+    if (!bookingId) {
+      if (typeof PmsAlert !== 'undefined') {
+        PmsAlert.toast('Booking ID not available for this room.', 'warning');
+      } else {
+        alert('Booking ID not available for this room.');
+      }
+      return;
+    }
+
+    try {
+      if (typeof PmsAlert !== 'undefined') {
+        PmsAlert.toast('Generating comprehensive A4 bill...', 'info');
+      }
+      const res = await fetch(`{{ url('front-office/folio') }}/${bookingId}/details`, {
+        headers: { 'Accept': 'application/json' }
+      });
+      const data = await res.json();
+      if (!data.success || !data.folio) {
+        throw new Error(data.error || 'Failed to retrieve folio details');
+      }
+
+      const f = data.folio;
+      const pg = f.primary_guest || {};
+      const balance = Number(f.balance || 0);
+      const isPreSettlement = balance > 0.01 && !['settlement done', 'settled', 'checked out'].includes((f.status || '').toLowerCase());
+      const formatINR = num => '₹ ' + Number(num || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      const esc = s => (typeof escapeHtml === 'function' ? escapeHtml(s) : String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'));
+
+      // 1. Room rows
+      let roomRowsHtml = '';
+      (f.rooms || []).forEach(r => {
+        const occupantNames = (r.occupants || []).map(o => o.name).join(', ');
+        const nights = Number(f.total_nights || 1);
+        const roomRate = Number(r.rate || 0);
+        const roomTotal = roomRate * nights;
+        roomRowsHtml += `
+          <tr>
+            <td class="p-2 border border-slate-200 font-bold">${esc(r.room_number)} (Floor ${esc(r.floor)})</td>
+            <td class="p-2 border border-slate-200">${esc(r.category)} &bull; ${esc(r.bedding)}</td>
+            <td class="p-2 border border-slate-200">${esc(occupantNames || pg.name || 'Primary Guest')}</td>
+            <td class="p-2 border border-slate-200 text-right font-mono">${formatINR(roomRate)} &times; ${nights}N</td>
+            <td class="p-2 border border-slate-200 text-right font-mono font-bold">${formatINR(roomTotal)}</td>
+          </tr>
+        `;
+      });
+
+      // 2. Extra Services & Food Orders rows (ALL THINGS INCLUDED)
+      let serviceRowsHtml = '';
+      let serviceTableHtml = '';
+      const serviceOrders = f.room_service_orders || [];
+      if (serviceOrders.length > 0) {
+        serviceOrders.forEach(ro => {
+          const itemsList = (ro.items || []).map(i => `${i.quantity}x ${esc(i.item_name)}`).join(', ');
+          const dest = ro.table_number ? `Table: ${esc(ro.table_number)}` : (ro.room_number ? `Room ${esc(ro.room_number)}` : 'POS Dining');
+          serviceRowsHtml += `
+            <tr>
+              <td class="p-1.5 px-2 border border-slate-200 font-mono font-bold text-slate-800">${esc(ro.order_number)}</td>
+              <td class="p-1.5 px-2 border border-slate-200 text-slate-600">${esc(ro.date || '-')}</td>
+              <td class="p-1.5 px-2 border border-slate-200 font-semibold text-slate-700">${dest}</td>
+              <td class="p-1.5 px-2 border border-slate-200 text-slate-800">${itemsList || 'Kitchen Provision'}</td>
+              <td class="p-1.5 px-2 border border-slate-200 text-right font-mono font-bold">${formatINR(ro.total_amount)}</td>
+            </tr>
+          `;
+        });
+        serviceTableHtml = `
+          <div class="section-title">2. In-Room Dining, Restaurant POS &amp; Extra Services (${serviceOrders.length} Order(s))</div>
+          <table class="data-table mb-3">
+            <thead>
+              <tr>
+                <th style="width: 110px;">Order #</th>
+                <th style="width: 140px;">Date &amp; Time</th>
+                <th style="width: 120px;">Destination</th>
+                <th>Ordered Items &amp; Service</th>
+                <th style="width: 110px;" class="text-right">Amount</th>
+              </tr>
+            </thead>
+            <tbody>${serviceRowsHtml}</tbody>
+          </table>
+        `;
+      }
+
+      // 3. Company Food Advance Allowance Box
+      let foodAdvBoxHtml = '';
+      if (f.food_advance && f.food_advance.has_food_advance) {
+        const fa = f.food_advance;
+        foodAdvBoxHtml = `
+          <div class="food-adv-card">
+            <div class="food-adv-header">
+              <strong><i class="fa-solid fa-utensils"></i> Company Pre-Allocated Food Advance Allowance</strong>
+              <span class="font-mono font-bold">${formatINR(fa.advance_amount)}</span>
+            </div>
+            <div class="food-adv-body">
+              <div>Total Food Consumed: <strong>${formatINR(fa.total_food_subtotal)}</strong></div>
+              <div>Covered by Food Advance: <strong class="text-emerald-700 font-mono">- ${formatINR(fa.used_amount)}</strong></div>
+              ${fa.unused_advance > 0 ? `<div class="food-adv-note credit">✓ Unused Food Advance Credit of <strong>${formatINR(fa.unused_advance)}</strong> will be deducted from remaining settlement bill.</div>` : ''}
+              ${fa.excess_total > 0 ? `<div class="food-adv-note excess">! Excess Food of ${formatINR(fa.excess_food)} + 5% GST (${formatINR(fa.excess_gst)}) = <strong>+ ${formatINR(fa.excess_total)}</strong> added to Room Folio.</div>` : ''}
+            </div>
+          </div>
+        `;
+      }
+
+      // 4. Financial Calculations
+      const grossRoom      = Number(f.room_total_amount !== undefined ? f.room_total_amount : (f.total_amount || 0));
+      const serviceChrg    = Number(f.total_room_service_charges || 0);
+      const rawServiceChrg = Number(f.raw_room_service_charges || serviceChrg);
+      const discAmt        = Number(f.discount_amount || 0);
+      const discPct        = Number(f.discount_percentage || 0);
+      const gstAmt         = Number(f.gst_amount || 0);
+      const gstPct         = Number(f.gst_percentage || 0);
+      const roomPayable    = Number(f.room_payable_amount !== undefined ? f.room_payable_amount : (f.payable_amount || 0));
+      const advancePaid    = Number(f.advance_amount || 0);
+      const settlePaid     = Number(f.settlement_paid || 0);
+      const totalPaid      = Number(f.total_paid || 0);
+      const netPayable     = Number(f.effective_payable !== undefined ? f.effective_payable : (roomPayable + serviceChrg));
+
+      // 5. Settlements History
+      let settlementsHtml = '';
+      if (f.settlements_history && f.settlements_history.length > 0) {
+        let sRows = '';
+        f.settlements_history.forEach(s => {
+          sRows += `
+            <tr>
+              <td class="p-1 px-2 border border-slate-200 font-mono font-bold">${esc(s.settlement_number || s.id)}</td>
+              <td class="p-1 px-2 border border-slate-200">${esc(s.date || '')} ${esc(s.time || '')}</td>
+              <td class="p-1 px-2 border border-slate-200">${esc(s.payment_mode || 'Cash')}</td>
+              <td class="p-1 px-2 border border-slate-200 font-mono">${esc(s.txn_id || '-')}</td>
+              <td class="p-1 px-2 border border-slate-200 text-right font-mono font-bold">${formatINR(s.amount || s.paid_amount)}</td>
+            </tr>
+          `;
+        });
+        settlementsHtml = `
+          <div class="section-title">Settlement &amp; Partial Payment History</div>
+          <table class="data-table mb-3">
+            <thead>
+              <tr>
+                <th style="width: 120px;">Settlement #</th>
+                <th style="width: 140px;">Date &amp; Time</th>
+                <th style="width: 120px;">Payment Mode</th>
+                <th>Txn Reference</th>
+                <th style="width: 120px;" class="text-right">Amount Paid</th>
+              </tr>
+            </thead>
+            <tbody>${sRows}</tbody>
+          </table>
+        `;
+      }
+
+      const invoiceBodyContent = `
+<div class="inv-wrap">
+  <div class="inv-header">
+    <div>
+      <div class="hotel-name">HOTEL SAGAR SONNET</div>
+      <div class="hotel-sub">Luxury Sea Beach Resort &amp; Suites &bull; Sea Breeze Dining</div>
+      <div class="hotel-contact">Phone: +91 98765 43210 &bull; Email: reservations@hotelsagarsonnet.com &bull; GSTIN: 19AAGCS7712K1Z9</div>
+    </div>
+    <div style="text-align: right;">
+      <div class="inv-title">${isPreSettlement ? 'PROFORMA TAX INVOICE &amp; PRE-SETTLEMENT BILL' : 'TAX INVOICE &amp; SETTLEMENT RECEIPT'}</div>
+      <div class="inv-ref">Folio #: <strong>${esc(f.folio_number || 'FOL-' + f.id)}</strong></div>
+      <div class="inv-ref">Booking Ref: <strong>${esc(f.reserve_id || ('RES-' + f.id))}</strong></div>
+      <div class="inv-ref">Generated: <strong>${new Date().toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</strong></div>
+      <div class="inv-ref" style="margin-top: 4px;">
+        Status: <span class="status-chip ${isPreSettlement ? 'unsettled' : 'settled'}">
+          ${isPreSettlement ? 'PRE-SETTLEMENT (DUE: ' + formatINR(balance) + ')' : esc(f.status || 'Settled')}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <div class="info-grid">
+    <div class="info-block">
+      <span class="info-label">Guest Information</span>
+      <div class="info-content">
+        <strong>${esc(pg.name || 'In-House Guest')}</strong><br>
+        ${pg.company ? `Company: <strong>${esc(pg.company)}</strong> (${esc(pg.registration_type || 'Corporate')})<br>` : ''}
+        Phone: ${esc(pg.mobile || 'N/A')}<br>
+        Email: ${esc(pg.email || 'N/A')}<br>
+        Address: ${esc(pg.address || 'N/A')}<br>
+        ID Proof: ${esc(pg.id_card_type || 'ID Card')} &ndash; ${esc(pg.id_card_number || 'On File')}
+      </div>
+    </div>
+    <div class="info-block right">
+      <span class="info-label">Stay Details</span>
+      <div class="info-content">
+        Check-In: <strong>${esc(f.checkin_date_fmt || '')} ${esc(f.checkin_time_fmt || '')}</strong><br>
+        Check-Out: <strong>${esc(f.checkout_date_fmt || '')} ${esc(f.checkout_time_fmt || '')}</strong><br>
+        Duration: <strong>${esc(String(f.total_nights || 1))} Night(s)</strong><br>
+        Meal Plan: <strong>${esc(f.plan_name || 'Room Only (EP)')}</strong><br>
+        Total Occupants: <strong>${esc(String(f.total_guests_count || 1))} Guest(s)</strong><br>
+        Booking Mode: <strong>${esc(f.reservation_mode || 'Front Desk')}</strong>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-title">1. Room Stay Charges</div>
+  <table class="data-table mb-3">
+    <thead>
+      <tr>
+        <th>Room / Floor</th>
+        <th>Category &amp; Bedding</th>
+        <th>Occupants</th>
+        <th class="text-right">Tariff &times; Nights</th>
+        <th class="text-right">Room Total</th>
+      </tr>
+    </thead>
+    <tbody class="bill-table">${roomRowsHtml}</tbody>
+  </table>
+
+  ${serviceTableHtml}
+  ${foodAdvBoxHtml}
+  ${settlementsHtml}
+
+  <div class="summary-wrap">
+    <div class="summary-box">
+      <table>
+        <tr class="s-head"><td colspan="2">Financial Summary Breakdown</td></tr>
+        <tr>
+          <td>Gross Room Tariff</td>
+          <td class="text-right font-mono">${formatINR(grossRoom)}</td>
+        </tr>
+        ${serviceChrg > 0 ? `
+        <tr>
+          <td>In-Room Dining &amp; Restaurant Services</td>
+          <td class="text-right font-mono">+ ${formatINR(rawServiceChrg)}</td>
+        </tr>` : ''}
+        ${f.food_advance && f.food_advance.has_food_advance && f.food_advance.used_amount > 0 ? `
+        <tr style="color: #047857; font-weight: bold;">
+          <td>Less: Company Food Advance Covered</td>
+          <td class="text-right font-mono">- ${formatINR(f.food_advance.used_amount)}</td>
+        </tr>` : ''}
+        ${f.food_advance && f.food_advance.has_food_advance && f.food_advance.unused_advance > 0 ? `
+        <tr style="color: #047857; font-weight: bold;">
+          <td>Less: Unused Food Credit Adjustment</td>
+          <td class="text-right font-mono">- ${formatINR(f.food_advance.unused_advance)}</td>
+        </tr>` : ''}
+        ${discAmt > 0 ? `
+        <tr style="color: #059669;">
+          <td>Less: Special Discount (${discPct}%)</td>
+          <td class="text-right font-mono">- ${formatINR(discAmt)}</td>
+        </tr>` : ''}
+        ${gstAmt > 0 ? `
+        <tr style="color: #4338ca;">
+          <td>Taxes (Room GST ${gstPct}%)</td>
+          <td class="text-right font-mono">+ ${formatINR(gstAmt)}</td>
+        </tr>` : ''}
+        <tr class="s-total">
+          <td>Net Payable Amount</td>
+          <td class="text-right font-mono font-bold">${formatINR(netPayable)}</td>
+        </tr>
+        <tr class="s-paid">
+          <td>Less: Advance Deposit Paid (Check-in)</td>
+          <td class="text-right font-mono">- ${formatINR(advancePaid)}</td>
+        </tr>
+        ${settlePaid > 0 ? `
+        <tr class="s-paid">
+          <td>Less: Previous Settlements Paid</td>
+          <td class="text-right font-mono">- ${formatINR(settlePaid)}</td>
+        </tr>` : ''}
+        <tr class="s-paid">
+          <td>Total Amount Paid So Far</td>
+          <td class="text-right font-mono font-bold">${formatINR(totalPaid)}</td>
+        </tr>
+        <tr class="s-bal">
+          <td>Net Balance Due (To Pay)</td>
+          <td class="text-right font-mono font-black">${formatINR(balance)}</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="footer-notice">
+    ${isPreSettlement ? '<strong>PROFORMA NOTICE:</strong> This is a computer-generated pre-settlement folio statement provided for guest review prior to final payment settlement and checkout. All included room charges, meals, POS restaurant dining orders and advance adjustments are subject to final cashier confirmation.' : '<strong>TAX INVOICE:</strong> Thank you for staying with Hotel Sagar Sonnet. We hope you had a pleasant stay!'}
+  </div>
+
+  <div class="footer">
+    <div>Guest Signature: ________________________</div>
+    <div>Authorized Front Desk / Cashier: ________________________</div>
+  </div>
+</div>`;
+
+      const printStyles = `
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        @page { size: A4 portrait; margin: 10mm 12mm; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; color: #0f172a; background: #fff; padding: 0; font-size: 11px; line-height: 1.4; }
+        .inv-wrap { width: 100%; max-width: 800px; margin: 0 auto; }
+        .inv-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2.5px solid #4f46e5; padding-bottom: 10px; margin-bottom: 12px; }
+        .hotel-name { font-size: 20px; font-weight: 900; color: #1e1b4b; text-transform: uppercase; letter-spacing: 0.5px; }
+        .hotel-sub { font-size: 10.5px; font-weight: 600; color: #475569; margin-top: 2px; }
+        .hotel-contact { font-size: 9.5px; color: #64748b; margin-top: 2px; }
+        .inv-title { font-size: 13.5px; font-weight: 900; color: #4f46e5; text-transform: uppercase; }
+        .inv-ref { font-size: 10.5px; font-family: monospace; color: #334155; margin-top: 2px; }
+        .status-chip { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 9.5px; font-weight: 800; text-transform: uppercase; }
+        .status-chip.unsettled { background: #ffe4e6; color: #be123c; border: 1px solid #fecdd3; }
+        .status-chip.settled { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
+        .info-grid { display: flex; justify-content: space-between; margin-bottom: 12px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 14px; }
+        .info-block { flex: 1; font-size: 10.5px; line-height: 1.6; }
+        .info-block.right { text-align: right; }
+        .info-label { font-weight: 800; color: #4f46e5; font-size: 10.5px; display: block; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .section-title { font-weight: 800; font-size: 11px; color: #334155; text-transform: uppercase; letter-spacing: 0.5px; border-left: 3.5px solid #4f46e5; padding-left: 6px; margin: 12px 0 6px; }
+        .data-table { width: 100%; border-collapse: collapse; font-size: 10.5px; margin-bottom: 10px; page-break-inside: avoid; }
+        .data-table thead tr { background: #f1f5f9; }
+        .data-table th { padding: 6px 8px; border: 1px solid #cbd5e1; text-align: left; font-size: 10px; font-weight: 800; color: #334155; text-transform: uppercase; }
+        .data-table td { padding: 5px 8px; border: 1px solid #e2e8f0; }
+        .text-right { text-align: right; }
+        .font-mono { font-family: monospace, Courier, monospace; }
+        .food-adv-card { background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px; padding: 8px 12px; margin-bottom: 10px; font-size: 10.5px; page-break-inside: avoid; }
+        .food-adv-header { display: flex; justify-content: space-between; font-size: 11px; color: #065f46; border-bottom: 1px dashed #6ee7b7; padding-bottom: 4px; margin-bottom: 6px; }
+        .food-adv-body { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; color: #047857; }
+        .food-adv-note { grid-column: span 2; font-weight: bold; margin-top: 3px; font-size: 10px; }
+        .food-adv-note.credit { color: #065f46; }
+        .food-adv-note.excess { color: #9a3412; }
+        .summary-wrap { display: flex; justify-content: flex-end; margin: 8px 0 14px; page-break-inside: avoid; }
+        .summary-box { width: 360px; font-size: 11px; border: 1px solid #cbd5e1; border-radius: 6px; overflow: hidden; }
+        .summary-box table { width: 100%; border-collapse: collapse; margin: 0; }
+        .summary-box td { border: 1px solid #e2e8f0; padding: 5px 10px; }
+        .s-head td { background: #f1f5f9; font-weight: 800; font-size: 10.5px; color: #334155; text-transform: uppercase; }
+        .s-total td { background: #f8fafc; font-weight: 800; font-size: 11.5px; color: #0f172a; border-top: 2px solid #cbd5e1; border-bottom: 2px solid #cbd5e1; }
+        .s-paid td { color: #059669; }
+        .s-bal td { font-weight: 900; font-size: 13px; background: ${balance > 0.01 ? '#fff1f2' : '#f0fdf4'}; color: ${balance > 0.01 ? '#be123c' : '#15803d'}; }
+        .footer-notice { font-size: 9.5px; color: #64748b; background: #f8fafc; border: 1px dashed #cbd5e1; padding: 6px 10px; border-radius: 6px; margin-top: 8px; line-height: 1.4; }
+        .footer { border-top: 1px dashed #94a3b8; padding-top: 14px; display: flex; justify-content: space-between; align-items: center; font-size: 10px; color: #475569; margin-top: 18px; }
+        @media print {
+          body { padding: 0; }
+          .no-print { display: none !important; }
+        }
+      `;
+
+      let iframe = document.getElementById('folio-print-frame');
+      if (iframe) iframe.remove();
+
+      iframe = document.createElement('iframe');
+      iframe.id = 'folio-print-frame';
+      iframe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;border:none;opacity:0;';
+      document.body.appendChild(iframe);
+
+      const doc = iframe.contentWindow.document;
+      doc.open();
+      doc.write('<!DOCTYPE html><html><' + 'head><title>A4 Bill - ' + esc(f.folio_number) + '</title><style>' + printStyles + '</style></' + 'head><' + 'body>' + invoiceBodyContent + '</' + 'body></html>');
+      doc.close();
+
+      setTimeout(() => {
+        iframe.contentWindow.focus();
+        iframe.contentWindow.print();
+        setTimeout(() => iframe.remove(), 1000);
+      }, 250);
+
+    } catch (err) {
+      console.error('Error generating pre-settlement bill:', err);
+      if (typeof PmsAlert !== 'undefined') {
+        PmsAlert.toast('Failed to generate A4 bill: ' + err.message, 'error');
+      } else {
+        alert('Failed to generate A4 bill: ' + err.message);
+      }
+    }
+  }
+  window.printFolioInvoiceForBooking = printFolioInvoiceForBooking;
 
   // Master Rooms, Floors, Statuses & Categories JSON Data for Dynamic Front Office Controls
   (function() {

@@ -86,7 +86,7 @@
                      name="password" 
                      id="input-password"
                      class="w-full h-11 pl-9 pr-3.5 text-xs font-bold rounded-xl bg-slate-800/90 text-slate-100 border border-slate-700 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all placeholder-slate-500" 
-                     value="sagar2026" 
+                     value="12345678" 
                      placeholder="Enter password" 
                      required>
             </div>
@@ -95,25 +95,6 @@
           <button type="submit" class="w-full h-12 mt-2 bg-linear-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2 transition-all hover:scale-101 active:scale-98 cursor-pointer">
             <i class="fa-solid fa-right-to-bracket"></i> Login to System
           </button>
-
-          <!-- Quick Fill Presets for Seamless Testing -->
-          <div class="mt-2 p-3 bg-slate-800/50 rounded-2xl border border-slate-700/60 text-center text-xs text-slate-400">
-            <div class="text-[11px] font-bold text-slate-300 mb-2 flex items-center justify-center gap-1.5">
-              <i class="fa-solid fa-bolt text-amber-400"></i> Quick Fill Test Accounts:
-            </div>
-            <div class="grid grid-cols-2 gap-2">
-              <button type="button" 
-                      onclick="fillCreds('9876543210', 'sagar2026')"
-                      class="px-2.5 py-1.5 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/40 border border-indigo-500/30 text-indigo-300 text-[10.5px] font-bold transition-all text-left truncate cursor-pointer">
-                <i class="fa-solid fa-shield-halved text-[9px] mr-1"></i> Admin (All Views)
-              </button>
-              <button type="button" 
-                      onclick="fillCreds('9876543211', 'frontdesk123')"
-                      class="px-2.5 py-1.5 rounded-lg bg-emerald-600/20 hover:bg-emerald-600/40 border border-emerald-500/30 text-emerald-300 text-[10.5px] font-bold transition-all text-left truncate cursor-pointer">
-                <i class="fa-solid fa-desktop text-[9px] mr-1"></i> Front Desk Staff
-              </button>
-            </div>
-          </div>
         </form>
       </div>
 

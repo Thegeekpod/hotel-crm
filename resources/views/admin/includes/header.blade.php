@@ -32,7 +32,7 @@
       <i class="fa-solid fa-user-tie text-indigo-600"></i>
       <span class="hidden sm:inline">{{ $adminUser ? $adminUser->name : 'Super Admin' }} <span class="text-slate-400 font-medium text-[11px]">({{ $roleLabel }})</span></span>
     </div>
-    <a href="{{ route('logout') }}" class="inline-flex items-center gap-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 px-2.5 py-1 rounded-lg text-xs font-bold transition-all hover:scale-102 pms-btn-exit" title="Sign out of PMS">
+    <a href="{{ route('admin.logout') }}" class="inline-flex items-center gap-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 px-2.5 py-1 rounded-lg text-xs font-bold transition-all hover:scale-102 pms-btn-exit" title="Sign out of PMS">
       <i class="fa-solid fa-power-off"></i>
       <span class="hidden sm:inline">Logout</span>
     </a>

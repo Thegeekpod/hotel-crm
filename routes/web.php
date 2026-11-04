@@ -15,7 +15,7 @@ Route::get('/', function () {
 // Unified Authentication Routes for both Admin & Staff/Employees
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
-Route::match(['get', 'post'], '/logout', [AuthController::class, 'logout'])->name('logout');
+Route::get('/logout', [AuthController::class, 'logout'])->name('logout.perform');
 
 // Public Mobile Camera Scan & Upload Routes (5-minute security validity)
 Route::get('/guest-scan-upload/{token}', [GuestUploadController::class, 'showMobileUpload'])->name('guest.mobile-upload');

@@ -21,28 +21,41 @@ use App\Http\Controllers\Admin\RoomManagementController;
 use App\Http\Controllers\Admin\RoomMaintainController;
 use App\Http\Controllers\Admin\NightAuditController as AdminNightAuditController;
 use App\Http\Controllers\Admin\HotelServiceController;
+use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\AuthController;
 
 Route::prefix('admin')->name('admin.')->group(function () {
-    Route::get('/', function () {
-        return redirect()->route('admin.dashboard');
-    })->name('index');
+    Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
+    Route::post('/login', [AuthController::class, 'login'])->name('login.post');
+    Route::match(['get', 'post'], '/logout', [AuthController::class, 'logout'])->name('logout');
 
-    Route::get('/dashboard', function () {
-        return redirect()->route('admin.utilities.frontoffice.registration-type.index');
-    })->name('dashboard');
+    Route::middleware('section:admin')->group(function () {
+        Route::get('/', function () {
+            return redirect()->route('admin.dashboard');
+        })->name('index');
 
-    Route::get('/login', function () {
-        return view('admin.auth.login');
-    })->name('login');
+        Route::get('/dashboard', function () {
+            return redirect()->route('admin.utilities.frontoffice.registration-type.index');
+        })->name('dashboard');
 
-    // Night Audit History Master in Admin
-    Route::prefix('nightaudit')->name('nightaudit.')->group(function () {
-        Route::get('/', [AdminNightAuditController::class, 'index'])->name('index');
-        Route::get('/{id}', [AdminNightAuditController::class, 'show'])->name('show');
-    });
-    Route::get('/night-audit', function () {
-        return redirect()->route('admin.nightaudit.index');
-    });
+        // User & Employee Access Management CRUD
+        Route::prefix('users')->name('users.')->group(function () {
+            Route::get('/', [UserController::class, 'index'])->name('index');
+            Route::post('/', [UserController::class, 'store'])->name('store');
+            Route::get('/{user}', [UserController::class, 'show'])->name('show');
+            Route::put('/{user}', [UserController::class, 'update'])->name('update');
+            Route::delete('/{user}', [UserController::class, 'destroy'])->name('destroy');
+            Route::post('/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('toggle-status');
+        });
+
+        // Night Audit History Master in Admin
+        Route::prefix('nightaudit')->name('nightaudit.')->group(function () {
+            Route::get('/', [AdminNightAuditController::class, 'index'])->name('index');
+            Route::get('/{id}', [AdminNightAuditController::class, 'show'])->name('show');
+        });
+        Route::get('/night-audit', function () {
+            return redirect()->route('admin.nightaudit.index');
+        });
 
     // Room Management Core CRUD & Operations
     Route::prefix('room-management')->name('roommanagement.')->group(function () {
@@ -135,6 +148,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::put('/{id}', [HotelServiceController::class, 'update'])->name('update');
         Route::delete('/{id}', [HotelServiceController::class, 'destroy'])->name('destroy');
         Route::post('/{id}/toggle-status', [HotelServiceController::class, 'toggleStatus'])->name('toggle-status');
+    });
     });
 });
 

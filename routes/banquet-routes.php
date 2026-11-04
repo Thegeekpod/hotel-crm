@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\BanquetController;
 
-Route::prefix('banquet')->name('banquet.')->group(function () {
+Route::prefix('banquet')->name('banquet.')->middleware('section:banquet')->group(function () {
     Route::get('/', [BanquetController::class, 'index'])->name('index');
     
     // Room Service Orders (In-Room dining & guest amenities)

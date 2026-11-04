@@ -249,16 +249,16 @@
       <span class="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded {{ request()->routeIs('admin.nightaudit.*') ? 'bg-white/20 text-white' : 'bg-purple-50 text-purple-700 border border-purple-200/60' }}">Dossier</span>
     </a>
 
-    <!-- System & Roles Placeholder -->
-    <div class="flex items-center justify-between px-3 py-2.5 text-xs font-bold rounded-xl transition-all border border-slate-100 select-none cursor-pointer bg-slate-50/60 text-slate-600 hover:bg-slate-100/80 hover:text-slate-800 admin-nav-flat group" onclick="PmsAlert.toast('System & Roles master module queued for client review.', 'info')">
+    <!-- Main Item: User & Employee Management CRUD -->
+    <a href="{{ route('admin.users.index') }}" class="flex items-center justify-between px-3 py-2.5 text-xs font-bold rounded-xl transition-all border border-slate-100 select-none admin-nav-flat group {{ request()->routeIs('admin.users.*') ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs active' : 'bg-slate-50/60 text-slate-700 hover:bg-indigo-50/60 hover:text-indigo-700 hover:border-indigo-100' }}">
       <div class="flex items-center gap-2.5 min-w-0">
-        <div class="w-7 h-7 rounded-lg bg-slate-200/70 text-slate-500 flex items-center justify-center text-xs shrink-0 group-hover:scale-105 transition-transform shadow-2xs">
-          <i class="fa-solid fa-shield-halved"></i>
+        <div class="w-7 h-7 rounded-lg flex items-center justify-center text-xs shrink-0 group-hover:scale-105 transition-transform shadow-2xs {{ request()->routeIs('admin.users.*') ? 'bg-white/20 text-white' : 'bg-indigo-100/80 text-indigo-600' }}">
+          <i class="fa-solid fa-users-gear"></i>
         </div>
-        <span class="truncate font-bold">System &amp; Roles</span>
+        <span class="truncate font-bold">User Management</span>
       </div>
-      <span class="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-slate-200/60 text-slate-600">Admin</span>
-    </div>
+      <span class="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded {{ request()->routeIs('admin.users.*') ? 'bg-white/20 text-white' : 'bg-indigo-50 text-indigo-700 border border-indigo-200/60' }}">Access</span>
+    </a>
 
   </div>
 

@@ -57,11 +57,16 @@
     </div>
 
     <div class="flex items-center gap-3 pms-header-right">
-      <div class="inline-flex items-center gap-2 bg-slate-100/90 border border-slate-200 px-3 py-1 rounded-full text-xs font-bold text-slate-700 pms-user-tag">
+      @php
+        $authUser = Auth::user();
+        $isSuperAdmin = $authUser && $authUser->isAdmin();
+        $roleLabel = $isSuperAdmin ? 'Administrator' : ($authUser ? (!empty($authUser->assigned_sections) ? implode(', ', array_map('ucwords', $authUser->assigned_sections)) : 'Staff') : 'Front Desk');
+      @endphp
+      <div class="inline-flex items-center gap-2 bg-slate-100/90 border border-slate-200 px-3 py-1 rounded-full text-xs font-bold text-slate-700 pms-user-tag" title="Logged in as {{ $authUser->name ?? 'Guest' }}">
         <i class="fa-solid fa-user-tie text-indigo-600"></i>
-        <span class="hidden sm:inline">Debashis Roy (Front Desk)</span>
+        <span class="hidden sm:inline">{{ $authUser ? $authUser->name : 'Debashis Roy' }} <span class="text-slate-400 font-medium text-[11px]">({{ $roleLabel }})</span></span>
       </div>
-      <a href="{{ route('admin.login') }}" class="inline-flex items-center gap-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 px-2.5 py-1 rounded-lg text-xs font-bold transition-all hover:scale-102 btn-pms-logout">
+      <a href="{{ route('logout') }}" class="inline-flex items-center gap-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 px-2.5 py-1 rounded-lg text-xs font-bold transition-all hover:scale-102 btn-pms-logout" title="Sign out of PMS">
         <i class="fa-solid fa-power-off"></i>
         <span class="hidden sm:inline">Logout</span>
       </a>
@@ -74,22 +79,43 @@
       $tabBase = "inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap pms-tab-link";
       $tabActive = "bg-indigo-50 text-indigo-700 shadow-2xs border border-indigo-200/80 active";
       $tabInactive = "text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 border border-transparent";
+      
+      $canFrontOffice = $isSuperAdmin || ($authUser && $authUser->hasSection('frontoffice'));
+      $canPos = $isSuperAdmin || ($authUser && ($authUser->hasSection('pos') || $authUser->hasSection('stores')));
+      $canAccounts = $isSuperAdmin || ($authUser && $authUser->hasSection('accounts'));
+      $canNightAudit = $isSuperAdmin || ($authUser && ($authUser->hasSection('frontoffice') || $authUser->hasSection('accounts')));
+      $canAdmin = $isSuperAdmin;
     @endphp
-    <a href="{{ route('frontoffice.dashboard') }}" class="{{ $tabBase }} {{ (((request()->routeIs('frontoffice.*') && !request()->routeIs('frontoffice.nightaudit*')) || (request()->is('front-office*') && !request()->is('front-office/night-audit*'))) || request()->routeIs('banquet*')) ? $tabActive : $tabInactive }}">
-      <i class="fa-solid fa-desktop text-indigo-600 tab-ico"></i> Front Office
-    </a>
-    <a href="{{ route('pos.index') }}" class="{{ $tabBase }} {{ (request()->routeIs('pos.*') || request()->routeIs('stores.*')) ? $tabActive : $tabInactive }}">
-      <i class="fa-solid fa-utensils text-emerald-600 tab-ico"></i> POS Sales
-    </a>
-    <a href="{{ route('accounts.index') }}" class="{{ $tabBase }} {{ request()->routeIs('accounts.*') ? $tabActive : $tabInactive }}">
-      <i class="fa-solid fa-file-invoice-dollar text-purple-600 tab-ico"></i> Accounts
-    </a>
-    <a href="{{ route('frontoffice.nightaudit') }}" class="{{ $tabBase }} {{ (request()->routeIs('frontoffice.nightaudit*') || request()->is('front-office/night-audit*') || request()->routeIs('admin.nightaudit*')) ? $tabActive : $tabInactive }}">
-      <i class="fa-solid fa-moon text-purple-600 tab-ico"></i> Night Audit
-    </a>
-    <a href="{{ route('admin.dashboard') }}" class="{{ $tabBase }} {{ (request()->routeIs('admin.*') && !request()->routeIs('admin.nightaudit*')) ? $tabActive : $tabInactive }}">
-      <i class="fa-solid fa-user-gear text-slate-500 tab-ico"></i> Administrator
-    </a>
+
+    @if($canFrontOffice)
+      <a href="{{ route('frontoffice.dashboard') }}" class="{{ $tabBase }} {{ (((request()->routeIs('frontoffice.*') && !request()->routeIs('frontoffice.nightaudit*')) || (request()->is('front-office*') && !request()->is('front-office/night-audit*'))) || request()->routeIs('banquet*')) ? $tabActive : $tabInactive }}">
+        <i class="fa-solid fa-desktop text-indigo-600 tab-ico"></i> Front Office
+      </a>
+    @endif
+
+    @if($canPos)
+      <a href="{{ route('pos.index') }}" class="{{ $tabBase }} {{ (request()->routeIs('pos.*') || request()->routeIs('stores.*')) ? $tabActive : $tabInactive }}">
+        <i class="fa-solid fa-utensils text-emerald-600 tab-ico"></i> POS Sales
+      </a>
+    @endif
+
+    @if($canAccounts)
+      <a href="{{ route('accounts.index') }}" class="{{ $tabBase }} {{ request()->routeIs('accounts.*') ? $tabActive : $tabInactive }}">
+        <i class="fa-solid fa-file-invoice-dollar text-purple-600 tab-ico"></i> Accounts
+      </a>
+    @endif
+
+    @if($canNightAudit)
+      <a href="{{ route('frontoffice.nightaudit') }}" class="{{ $tabBase }} {{ (request()->routeIs('frontoffice.nightaudit*') || request()->is('front-office/night-audit*') || request()->routeIs('admin.nightaudit*')) ? $tabActive : $tabInactive }}">
+        <i class="fa-solid fa-moon text-purple-600 tab-ico"></i> Night Audit
+      </a>
+    @endif
+
+    @if($canAdmin)
+      <a href="{{ route('admin.dashboard') }}" class="{{ $tabBase }} {{ (request()->routeIs('admin.*') && !request()->routeIs('admin.nightaudit*')) ? $tabActive : $tabInactive }}">
+        <i class="fa-solid fa-user-gear text-slate-500 tab-ico"></i> Administrator
+      </a>
+    @endif
   </nav>
 
   <!-- Subheader Component -->

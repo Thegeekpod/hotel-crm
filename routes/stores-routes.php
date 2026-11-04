@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\StoreController;
 
-Route::prefix('stores')->name('stores.')->group(function () {
+Route::prefix('stores')->name('stores.')->middleware('section:stores')->group(function () {
     Route::get('/', [StoreController::class, 'index'])->name('index');
     
     // Menu Category Management (Store creates Menus)

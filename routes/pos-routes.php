@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PosController;
 
-Route::prefix('pos')->name('pos.')->group(function () {
+Route::prefix('pos')->name('pos.')->middleware('section:pos')->group(function () {
     Route::get('/', [PosController::class, 'index'])->name('index');
     Route::get('/orders', [PosController::class, 'ordersIndex'])->name('orders.index');
     Route::get('/orders/history', [PosController::class, 'ordersIndex'])->name('orders.history');

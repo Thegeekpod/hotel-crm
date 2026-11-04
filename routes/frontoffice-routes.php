@@ -12,7 +12,7 @@ use App\Http\Controllers\FrontOffice\HousekeepingController;
 use App\Http\Controllers\FrontOffice\ServiceController;
 
 // Front Office Module Routes (Arrivals, Guest CRM, In-House, Reservations)
-Route::prefix('front-office')->name('frontoffice.')->group(function () {
+Route::prefix('front-office')->name('frontoffice.')->middleware('section:frontoffice')->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('index');
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/fdesk', [DashboardController::class, 'index'])->name('fdesk');

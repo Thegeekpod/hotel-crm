@@ -23,11 +23,16 @@
   </div>
 
   <div class="flex items-center gap-3 pms-header-right">
-    <div class="inline-flex items-center gap-2 bg-slate-100/90 border border-slate-200 px-3 py-1 rounded-full text-xs font-bold text-slate-700 pms-user-tag">
+    @php
+      $adminUser = Auth::user();
+      $isAdminRole = $adminUser && $adminUser->isAdmin();
+      $roleLabel = $isAdminRole ? 'Administrator' : ($adminUser ? (!empty($adminUser->assigned_sections) ? implode(', ', array_map('ucwords', $adminUser->assigned_sections)) : 'Staff') : 'Super Admin');
+    @endphp
+    <div class="inline-flex items-center gap-2 bg-slate-100/90 border border-slate-200 px-3 py-1 rounded-full text-xs font-bold text-slate-700 pms-user-tag" title="Logged in as {{ $adminUser->name ?? 'Admin' }}">
       <i class="fa-solid fa-user-tie text-indigo-600"></i>
-      <span class="hidden sm:inline">Super Admin</span>
+      <span class="hidden sm:inline">{{ $adminUser ? $adminUser->name : 'Super Admin' }} <span class="text-slate-400 font-medium text-[11px]">({{ $roleLabel }})</span></span>
     </div>
-    <a href="{{ route('admin.login') }}" class="inline-flex items-center gap-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 px-2.5 py-1 rounded-lg text-xs font-bold transition-all hover:scale-102 pms-btn-exit">
+    <a href="{{ route('logout') }}" class="inline-flex items-center gap-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 px-2.5 py-1 rounded-lg text-xs font-bold transition-all hover:scale-102 pms-btn-exit" title="Sign out of PMS">
       <i class="fa-solid fa-power-off"></i>
       <span class="hidden sm:inline">Logout</span>
     </a>
@@ -40,22 +45,43 @@
     $tabBase = "inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap pms-tab-link";
     $tabActive = "bg-indigo-50 text-indigo-700 shadow-2xs border border-indigo-200/80 active";
     $tabInactive = "text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 border border-transparent";
+
+    $canFrontOffice = $isAdminRole || ($adminUser && $adminUser->hasSection('frontoffice'));
+    $canPos = $isAdminRole || ($adminUser && ($adminUser->hasSection('pos') || $adminUser->hasSection('stores')));
+    $canAccounts = $isAdminRole || ($adminUser && $adminUser->hasSection('accounts'));
+    $canNightAudit = $isAdminRole || ($adminUser && ($adminUser->hasSection('frontoffice') || $adminUser->hasSection('accounts')));
+    $canAdmin = $isAdminRole;
   @endphp
-  <a href="{{ route('frontoffice.dashboard') }}" class="{{ $tabBase }} {{ (((request()->routeIs('frontoffice.*') && !request()->routeIs('frontoffice.nightaudit*')) || (request()->is('front-office*') && !request()->is('front-office/night-audit*'))) || request()->routeIs('banquet*')) ? $tabActive : $tabInactive }}">
-    <i class="fa-solid fa-desktop text-indigo-600 tab-ico"></i> Front Office
-  </a>
-  <a href="{{ route('pos.index') }}" class="{{ $tabBase }} {{ (request()->routeIs('pos.*') || request()->routeIs('stores.*')) ? $tabActive : $tabInactive }}">
-    <i class="fa-solid fa-utensils text-emerald-600 tab-ico"></i> POS Sales
-  </a>
-  <a href="{{ route('accounts.index') }}" class="{{ $tabBase }} {{ request()->routeIs('accounts.*') ? $tabActive : $tabInactive }}">
-    <i class="fa-solid fa-file-invoice-dollar text-purple-600 tab-ico"></i> Accounts
-  </a>
-  <a href="{{ route('admin.nightaudit.index') }}" class="{{ $tabBase }} {{ (request()->routeIs('admin.nightaudit.*') || request()->routeIs('frontoffice.nightaudit*') || request()->is('front-office/night-audit*')) ? $tabActive : $tabInactive }}">
-    <i class="fa-solid fa-moon text-purple-600 tab-ico"></i> Night Audit
-  </a>
-  <a href="{{ route('admin.dashboard') }}" class="{{ $tabBase }} {{ ((request()->routeIs('admin.utilities.*') || request()->routeIs('admin.roommanagement.*') || request()->routeIs('admin.roommaintain.*') || request()->routeIs('admin.services.*') || request()->routeIs('admin.dashboard')) && !request()->routeIs('admin.nightaudit*')) ? $tabActive : $tabInactive }}">
-    <i class="fa-solid fa-user-gear text-slate-500 tab-ico"></i> Administrator
-  </a>
+
+  @if($canFrontOffice)
+    <a href="{{ route('frontoffice.dashboard') }}" class="{{ $tabBase }} {{ (((request()->routeIs('frontoffice.*') && !request()->routeIs('frontoffice.nightaudit*')) || (request()->is('front-office*') && !request()->is('front-office/night-audit*'))) || request()->routeIs('banquet*')) ? $tabActive : $tabInactive }}">
+      <i class="fa-solid fa-desktop text-indigo-600 tab-ico"></i> Front Office
+    </a>
+  @endif
+
+  @if($canPos)
+    <a href="{{ route('pos.index') }}" class="{{ $tabBase }} {{ (request()->routeIs('pos.*') || request()->routeIs('stores.*')) ? $tabActive : $tabInactive }}">
+      <i class="fa-solid fa-utensils text-emerald-600 tab-ico"></i> POS Sales
+    </a>
+  @endif
+
+  @if($canAccounts)
+    <a href="{{ route('accounts.index') }}" class="{{ $tabBase }} {{ request()->routeIs('accounts.*') ? $tabActive : $tabInactive }}">
+      <i class="fa-solid fa-file-invoice-dollar text-purple-600 tab-ico"></i> Accounts
+    </a>
+  @endif
+
+  @if($canNightAudit)
+    <a href="{{ route('admin.nightaudit.index') }}" class="{{ $tabBase }} {{ (request()->routeIs('admin.nightaudit.*') || request()->routeIs('frontoffice.nightaudit*') || request()->is('front-office/night-audit*')) ? $tabActive : $tabInactive }}">
+      <i class="fa-solid fa-moon text-purple-600 tab-ico"></i> Night Audit
+    </a>
+  @endif
+
+  @if($canAdmin)
+    <a href="{{ route('admin.dashboard') }}" class="{{ $tabBase }} {{ ((request()->routeIs('admin.utilities.*') || request()->routeIs('admin.roommanagement.*') || request()->routeIs('admin.roommaintain.*') || request()->routeIs('admin.services.*') || request()->routeIs('admin.users.*') || request()->routeIs('admin.dashboard')) && !request()->routeIs('admin.nightaudit*')) ? $tabActive : $tabInactive }}">
+      <i class="fa-solid fa-user-gear text-slate-500 tab-ico"></i> Administrator
+    </a>
+  @endif
 </nav>
 
 <!-- Dynamic Action Sub-Ribbon (Hidden when Administrator tab is active) -->

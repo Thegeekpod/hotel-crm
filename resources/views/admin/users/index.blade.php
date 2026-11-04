@@ -111,7 +111,7 @@
           <div class="flex items-center gap-2.5 flex-1 min-w-[280px]">
             <div class="relative flex-1 max-w-sm">
               <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-              <input type="text" name="search" class="h-9.5 pl-8 pr-3 text-xs font-medium rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-indigo-500 w-full" placeholder="Search by name, phone or email..." value="{{ request('search') }}">
+              <input type="text" name="search" class="h-9.5 pl-8 pr-3 text-xs font-medium rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-indigo-500 w-full" placeholder="Search by name or email..." value="{{ request('search') }}">
             </div>
 
             <!-- Role Filter -->
@@ -156,7 +156,7 @@
               <tr class="bg-slate-50/80 border-b border-slate-200/80 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                 <th class="py-3 px-4 w-12 text-center">#</th>
                 <th class="py-3 px-4 min-w-[200px]">Employee / User</th>
-                <th class="py-3 px-4 min-w-[130px]">Phone (Login)</th>
+                <th class="py-3 px-4 min-w-[180px]">Email Address (Login ID)</th>
                 <th class="py-3 px-4 min-w-[120px]">Role</th>
                 <th class="py-3 px-4 min-w-[280px]">Assigned Sections (Allowed Views)</th>
                 <th class="py-3 px-4 w-28 text-center">Status</th>
@@ -189,16 +189,16 @@
                             <span class="text-[9px] font-black uppercase px-1.5 py-0.2 rounded bg-indigo-100 text-indigo-700 border border-indigo-200">You</span>
                           @endif
                         </div>
-                        <div class="text-[11px] text-slate-400 font-mono mt-0.5">
-                          {{ $u->email ?? 'No email configured' }}
+                        <div class="text-[11px] text-slate-400 font-medium mt-0.5">
+                          Staff ID: #{{ $u->id }}
                         </div>
                       </div>
                     </div>
                   </td>
                   <td class="py-3 px-4 font-mono font-bold text-slate-800">
                     <div class="inline-flex items-center gap-1.5">
-                      <i class="fa-solid fa-phone text-slate-400 text-[10px]"></i>
-                      <span>{{ $u->phone ?? '—' }}</span>
+                      <i class="fa-solid fa-envelope text-indigo-500 text-xs"></i>
+                      <span>{{ $u->email }}</span>
                     </div>
                   </td>
                   <td class="py-3 px-4">
@@ -350,16 +350,16 @@
           </div>
         </div>
 
-        <!-- Phone (Primary Login) -->
+        <!-- Email (Primary Login) -->
         <div>
           <label class="block text-[11px] font-black uppercase tracking-wider text-slate-700 mb-1.5">
-            Phone Number (Login ID) <span class="text-rose-500">*</span>
+            Email Address (Login ID) <span class="text-rose-500">*</span>
           </label>
           <div class="relative">
-            <i class="fa-solid fa-phone absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-            <input type="text" id="user-phone" name="phone" required placeholder="e.g. 9876543210" class="w-full h-10 pl-9 pr-3.5 text-xs font-mono font-bold rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none transition-all">
+            <i class="fa-solid fa-envelope absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+            <input type="email" id="user-email" name="email" required placeholder="e.g. staff@hotelsagarsonnet.com" class="w-full h-10 pl-9 pr-3.5 text-xs font-bold rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none transition-all">
           </div>
-          <p class="text-[10px] text-slate-400 mt-1">Staff will use this phone number to log in.</p>
+          <p class="text-[10px] text-slate-400 mt-1">Staff will use this email address to log in.</p>
         </div>
 
         <!-- Password -->
@@ -394,17 +394,6 @@
             <option value="Active" selected>Active (Can Login)</option>
             <option value="Inactive">Inactive (Disabled)</option>
           </select>
-        </div>
-
-        <!-- Email (Optional) -->
-        <div class="sm:col-span-2">
-          <label class="block text-[11px] font-black uppercase tracking-wider text-slate-700 mb-1.5">
-            Email Address <span class="text-slate-400 font-normal lowercase">(optional)</span>
-          </label>
-          <div class="relative">
-            <i class="fa-solid fa-envelope absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-            <input type="email" id="user-email" name="email" placeholder="e.g. employee@hotelsagarsonnet.com" class="w-full h-10 pl-9 pr-3.5 text-xs font-bold rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none transition-all">
-          </div>
         </div>
       </div>
 
@@ -474,9 +463,8 @@
     
     // Reset form fields
     document.getElementById('user-name').value = '';
-    document.getElementById('user-phone').value = '';
-    document.getElementById('user-password').value = '';
     document.getElementById('user-email').value = '';
+    document.getElementById('user-password').value = '';
     document.getElementById('user-role').value = 'staff';
     document.getElementById('user-status').value = 'Active';
 
@@ -508,9 +496,8 @@
       document.getElementById('password-help-text').textContent = 'Leave empty to keep existing password.';
 
       document.getElementById('user-name').value = u.name || '';
-      document.getElementById('user-phone').value = u.phone || '';
+      document.getElementById('user-email').value = u.email || '';
       document.getElementById('user-password').value = '';
-      document.getElementById('user-email').value = u.email && !u.email.endsWith('@hotelsagarsonnet.local') ? u.email : '';
       document.getElementById('user-role').value = u.role || 'staff';
       document.getElementById('user-status').value = u.status || 'Active';
 
@@ -568,11 +555,10 @@
     const isEdit = Boolean(id);
 
     const name = document.getElementById('user-name').value.trim();
-    const phone = document.getElementById('user-phone').value.trim();
+    const email = document.getElementById('user-email').value.trim();
     const password = document.getElementById('user-password').value;
     const role = document.getElementById('user-role').value;
     const status = document.getElementById('user-status').value;
-    const email = document.getElementById('user-email').value.trim();
 
     const sections = [];
     document.querySelectorAll('.section-checkbox:checked').forEach(cb => sections.push(cb.value));
@@ -584,11 +570,10 @@
 
     const payload = {
       name,
-      phone,
+      email,
       password: password || undefined,
       role,
       status,
-      email: email || undefined,
       assigned_sections: sections
     };
 

@@ -60,15 +60,15 @@
           @csrf
 
           <div>
-            <label class="block text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5">Phone Number / Staff ID / Email</label>
+            <label class="block text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5">Email Address (Login ID)</label>
             <div class="relative">
-              <i class="fa-solid fa-user-tie absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
-              <input type="text" 
-                     name="login" 
+              <i class="fa-solid fa-envelope absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
+              <input type="email" 
+                     name="email" 
                      id="input-login"
                      class="w-full h-11 pl-9 pr-3.5 text-xs font-bold rounded-xl bg-slate-800/90 text-slate-100 border border-slate-700 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all placeholder-slate-500" 
-                     value="{{ old('login', '9876543210') }}" 
-                     placeholder="Enter phone or email" 
+                     value="{{ old('email', old('login', 'admin@hotelsagarsonnet.com')) }}" 
+                     placeholder="e.g. admin@hotelsagarsonnet.com" 
                      required>
             </div>
           </div>
@@ -76,7 +76,7 @@
           <div>
             <div class="flex items-center justify-between mb-1.5">
               <label class="block text-[10px] font-black uppercase tracking-wider text-slate-400">Password</label>
-              <button type="button" class="text-[10px] font-bold text-indigo-400 hover:text-indigo-300" onclick="togglePassVisibility()">
+              <button type="button" class="text-[10px] font-bold text-indigo-400 hover:text-indigo-300 cursor-pointer" onclick="togglePassVisibility()">
                 <i class="fa-regular fa-eye" id="pass-eye-icon"></i> <span id="pass-eye-text">Show</span>
               </button>
             </div>
@@ -89,6 +89,24 @@
                      value="12345678" 
                      placeholder="Enter password" 
                      required>
+            </div>
+          </div>
+
+          <!-- Quick Test Credential Pills -->
+          <div class="pt-1">
+            <p class="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1.5 flex items-center gap-1">
+              <i class="fa-solid fa-bolt text-amber-400"></i> Quick Select Role (Demo)
+            </p>
+            <div class="grid grid-cols-3 gap-1.5">
+              <button type="button" onclick="fillCreds('admin@hotelsagarsonnet.com', '12345678')" class="px-2 py-1.5 text-[10px] font-extrabold rounded-lg bg-slate-800 border border-slate-700 text-indigo-300 hover:bg-indigo-600 hover:text-white transition-all text-center truncate cursor-pointer">
+                Admin
+              </button>
+              <button type="button" onclick="fillCreds('frontdesk@hotelsagarsonnet.com', '12345678')" class="px-2 py-1.5 text-[10px] font-extrabold rounded-lg bg-slate-800 border border-slate-700 text-emerald-300 hover:bg-emerald-600 hover:text-white transition-all text-center truncate cursor-pointer">
+                Front Desk
+              </button>
+              <button type="button" onclick="fillCreds('pos@hotelsagarsonnet.com', '12345678')" class="px-2 py-1.5 text-[10px] font-extrabold rounded-lg bg-slate-800 border border-slate-700 text-amber-300 hover:bg-amber-600 hover:text-white transition-all text-center truncate cursor-pointer">
+                POS Staff
+              </button>
             </div>
           </div>
 
@@ -127,9 +145,6 @@
       document.getElementById('input-password').value = pass;
     }
   </script>
-
-    </div>
-  </div>
 
 </body>
 </html>

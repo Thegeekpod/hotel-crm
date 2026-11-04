@@ -26,18 +26,18 @@ class AuthController extends Controller
      */
     public function login(Request $request)
     {
-        $validated = $request->validate([
-            'login'    => 'required|string',
-            'password' => 'required|string',
-        ]);
+        $loginInput = trim($request->input('email') ?? $request->input('login') ?? '');
+        $password   = $request->input('password') ?? '';
 
-        $loginInput = trim($validated['login']);
-        $password   = $validated['password'];
+        if (empty($loginInput) || empty($password)) {
+            return back()->withInput()->withErrors([
+                'email' => 'Please provide your email address and password.',
+            ]);
+        }
 
-        // Find user by Phone, Email, or Name/Username
+        // Find user by Email or Name/Username
         $user = User::where(function ($q) use ($loginInput) {
-            $q->where('phone', $loginInput)
-              ->orWhere('email', $loginInput)
+            $q->where('email', $loginInput)
               ->orWhere('name', $loginInput);
         })->first();
 
@@ -48,13 +48,13 @@ class AuthController extends Controller
 
         if (!$user) {
             return back()->withInput()->withErrors([
-                'login' => 'No account found with this phone number or email.',
+                'email' => 'No account found with this email address.',
             ]);
         }
 
         if (strtolower($user->status ?? '') === 'inactive') {
             return back()->withInput()->withErrors([
-                'login' => 'Your account is currently inactive. Please contact the administrator.',
+                'email' => 'Your account is currently inactive. Please contact the administrator.',
             ]);
         }
 

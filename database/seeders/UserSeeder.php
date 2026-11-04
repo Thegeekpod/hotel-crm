@@ -18,8 +18,7 @@ class UserSeeder extends Seeder
         $users = [
             [
                 'name'              => 'Debashis Roy',
-                'phone'             => '9876543210',
-                'email'             => 'admin@hotelsagarsonnet.com',
+                'email'             => 'admin@mail.com',
                 'password'          => $defaultPassword,
                 'role'              => 'admin',
                 'assigned_sections' => ['frontoffice', 'pos', 'stores', 'banquet', 'accounts', 'admin'],
@@ -27,8 +26,7 @@ class UserSeeder extends Seeder
             ],
             [
                 'name'              => 'Front Desk Executive',
-                'phone'             => '9876543211',
-                'email'             => 'frontdesk@hotelsagarsonnet.com',
+                'email'             => 'frontdesk@mail.com',
                 'password'          => $defaultPassword,
                 'role'              => 'staff',
                 'assigned_sections' => ['frontoffice'],
@@ -36,8 +34,7 @@ class UserSeeder extends Seeder
             ],
             [
                 'name'              => 'Housekeeping Supervisor',
-                'phone'             => '9876543212',
-                'email'             => 'housekeeping@hotelsagarsonnet.com',
+                'email'             => 'housekeeping@mail.com',
                 'password'          => $defaultPassword,
                 'role'              => 'staff',
                 'assigned_sections' => ['frontoffice'],
@@ -45,8 +42,7 @@ class UserSeeder extends Seeder
             ],
             [
                 'name'              => 'Amit Sen (POS Staff)',
-                'phone'             => '9876543299',
-                'email'             => 'pos@hotelsagarsonnet.com',
+                'email'             => 'pos@mail.com',
                 'password'          => $defaultPassword,
                 'role'              => 'staff',
                 'assigned_sections' => ['pos'],
@@ -54,8 +50,7 @@ class UserSeeder extends Seeder
             ],
             [
                 'name'              => 'Tanmoy Das (Banquet Manager)',
-                'phone'             => '9876543213',
-                'email'             => 'banquet@hotelsagarsonnet.com',
+                'email'             => 'banquet@mail.com',
                 'password'          => $defaultPassword,
                 'role'              => 'staff',
                 'assigned_sections' => ['banquet'],
@@ -63,8 +58,7 @@ class UserSeeder extends Seeder
             ],
             [
                 'name'              => 'Subir Ghosh (Store In-Charge)',
-                'phone'             => '9876543214',
-                'email'             => 'stores@hotelsagarsonnet.com',
+                'email'             => 'stores@mail.com',
                 'password'          => $defaultPassword,
                 'role'              => 'staff',
                 'assigned_sections' => ['stores'],
@@ -74,7 +68,7 @@ class UserSeeder extends Seeder
 
         foreach ($users as $userData) {
             User::updateOrCreate(
-                ['phone' => $userData['phone']],
+                ['email' => $userData['email']],
                 $userData
             );
         }

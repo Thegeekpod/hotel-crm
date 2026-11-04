@@ -18,12 +18,11 @@ class UserController extends Controller
     {
         $query = User::query();
 
-        // Search by Name, Phone, or Email
+        // Search by Name or Email
         if ($request->filled('search')) {
             $search = trim($request->search);
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('phone', 'like', "%{$search}%")
                   ->orWhere('email', 'like', "%{$search}%");
             });
         }
@@ -117,8 +116,7 @@ class UserController extends Controller
     {
         $validated = $request->validate([
             'name'              => 'required|string|max:255',
-            'phone'             => 'required|string|max:20|unique:users,phone',
-            'email'             => 'nullable|email|max:255|unique:users,email',
+            'email'             => 'required|email|max:255|unique:users,email',
             'password'          => 'required|string|min:4',
             'role'              => 'required|in:admin,staff',
             'assigned_sections' => 'nullable|array',
@@ -135,17 +133,9 @@ class UserController extends Controller
         // Normalize sections to lowercase
         $sections = array_values(array_unique(array_map('strtolower', $sections)));
 
-        $email = $validated['email'] ?? null;
-        if (empty($email)) {
-            // Auto fallback email
-            $cleanPhone = preg_replace('/[^0-9]/', '', $validated['phone']);
-            $email = "user_{$cleanPhone}@hotelsagarsonnet.local";
-        }
-
         $user = User::create([
             'name'              => $validated['name'],
-            'phone'             => $validated['phone'],
-            'email'             => $email,
+            'email'             => strtolower(trim($validated['email'])),
             'password'          => Hash::make($validated['password']),
             'role'              => $validated['role'],
             'assigned_sections' => $sections,
@@ -181,8 +171,7 @@ class UserController extends Controller
     {
         $validated = $request->validate([
             'name'              => 'required|string|max:255',
-            'phone'             => ['required', 'string', 'max:20', Rule::unique('users', 'phone')->ignore($user->id)],
-            'email'             => ['nullable', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
+            'email'             => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
             'password'          => 'nullable|string|min:4',
             'role'              => 'required|in:admin,staff',
             'assigned_sections' => 'nullable|array',
@@ -197,10 +186,7 @@ class UserController extends Controller
         $sections = array_values(array_unique(array_map('strtolower', $sections)));
 
         $user->name = $validated['name'];
-        $user->phone = $validated['phone'];
-        if (!empty($validated['email'])) {
-            $user->email = $validated['email'];
-        }
+        $user->email = strtolower(trim($validated['email']));
         $user->role = $validated['role'];
         $user->assigned_sections = $sections;
         $user->status = $validated['status'];

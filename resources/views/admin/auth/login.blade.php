@@ -67,8 +67,7 @@
                      name="email" 
                      id="input-login"
                      class="w-full h-11 pl-9 pr-3.5 text-xs font-bold rounded-xl bg-slate-800/90 text-slate-100 border border-slate-700 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all placeholder-slate-500" 
-                     value="{{ old('email', old('login', 'admin@hotelsagarsonnet.com')) }}" 
-                     placeholder="e.g. admin@hotelsagarsonnet.com" 
+                     value="{{ old('email') }}" 
                      required>
             </div>
           </div>
@@ -86,27 +85,9 @@
                      name="password" 
                      id="input-password"
                      class="w-full h-11 pl-9 pr-3.5 text-xs font-bold rounded-xl bg-slate-800/90 text-slate-100 border border-slate-700 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all placeholder-slate-500" 
-                     value="12345678" 
+                     value="" 
                      placeholder="Enter password" 
                      required>
-            </div>
-          </div>
-
-          <!-- Quick Test Credential Pills -->
-          <div class="pt-1">
-            <p class="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1.5 flex items-center gap-1">
-              <i class="fa-solid fa-bolt text-amber-400"></i> Quick Select Role (Demo)
-            </p>
-            <div class="grid grid-cols-3 gap-1.5">
-              <button type="button" onclick="fillCreds('admin@hotelsagarsonnet.com', '12345678')" class="px-2 py-1.5 text-[10px] font-extrabold rounded-lg bg-slate-800 border border-slate-700 text-indigo-300 hover:bg-indigo-600 hover:text-white transition-all text-center truncate cursor-pointer">
-                Admin
-              </button>
-              <button type="button" onclick="fillCreds('frontdesk@hotelsagarsonnet.com', '12345678')" class="px-2 py-1.5 text-[10px] font-extrabold rounded-lg bg-slate-800 border border-slate-700 text-emerald-300 hover:bg-emerald-600 hover:text-white transition-all text-center truncate cursor-pointer">
-                Front Desk
-              </button>
-              <button type="button" onclick="fillCreds('pos@hotelsagarsonnet.com', '12345678')" class="px-2 py-1.5 text-[10px] font-extrabold rounded-lg bg-slate-800 border border-slate-700 text-amber-300 hover:bg-amber-600 hover:text-white transition-all text-center truncate cursor-pointer">
-                POS Staff
-              </button>
             </div>
           </div>
 

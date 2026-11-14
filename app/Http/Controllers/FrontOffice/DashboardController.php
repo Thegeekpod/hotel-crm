@@ -334,12 +334,33 @@ class DashboardController extends Controller
             }
         }
 
+        // Unassigned confirmed/active arrivals for selectedDate (arrivals holding inventory)
+        $unassignedArrivals = Booking::where(function ($q) use ($selectedDate) {
+            $q->whereDate('reserve_date', '<=', $selectedDate)
+              ->where(function ($co) use ($selectedDate) {
+                  $co->whereDate('checkout_date', '>=', $selectedDate)
+                     ->orWhereNull('checkout_date');
+              });
+        })
+        ->whereNull('room_id')
+        ->whereIn('status', ['Confirmed', 'Arrived', 'Stay Over'])
+        ->get();
+
+        $unassignedArrivalsCount = $unassignedArrivals->count();
+
         $totalRooms = count($rackRooms);
-        $occupiedCount = count(array_filter($rackRooms, fn($rm) => $rm['status'] === 'occupied'));
+        $physicalOccupiedCount = count(array_filter($rackRooms, fn($rm) => $rm['status'] === 'occupied'));
         $blockedCount = count(array_filter($rackRooms, fn($rm) => $rm['status'] === 'blocked'));
         $dirtyCount = count(array_filter($rackRooms, fn($rm) => $rm['status'] === 'dirty'));
-        $availableCount = count(array_filter($rackRooms, fn($rm) => $rm['status'] === 'available'));
-        $vacantCount = $availableCount + $dirtyCount;
+        $physicalAvailableCount = count(array_filter($rackRooms, fn($rm) => $rm['status'] === 'available'));
+        $physicalVacantCount = $physicalAvailableCount + $dirtyCount;
+
+        // Dynamic Inventory Protection:
+        // Each unassigned confirmed arrival reserves/holds 1 room from available/vacant inventory,
+        // and counts towards total occupied/reserved rooms until cancelled or checked in.
+        $occupiedCount = $physicalOccupiedCount + $unassignedArrivalsCount;
+        $availableCount = max(0, $physicalAvailableCount - $unassignedArrivalsCount);
+        $vacantCount = max(0, $physicalVacantCount - $unassignedArrivalsCount);
 
         $totalPax = 0;
         foreach ($rackRooms as $rm) {
@@ -347,6 +368,7 @@ class DashboardController extends Controller
                 $totalPax += !empty($rm['guest']) ? 2 : 1;
             }
         }
+        $totalPax += ($unassignedArrivalsCount * 2);
 
         $cleanedCount = $availableCount + $occupiedCount;
         $cleanRatio = ($dirtyCount + $cleanedCount > 0) ? ($cleanedCount . '/' . ($dirtyCount + $cleanedCount)) : '0/0';
@@ -354,10 +376,14 @@ class DashboardController extends Controller
         $stats = [
             'total' => $totalRooms,
             'occupied' => $occupiedCount,
+            'physical_occupied' => $physicalOccupiedCount,
             'blocked' => $blockedCount,
             'dirty' => $dirtyCount,
             'available' => $availableCount,
+            'physical_available' => $physicalAvailableCount,
             'vacant' => $vacantCount,
+            'physical_vacant' => $physicalVacantCount,
+            'arrival_hold' => $unassignedArrivalsCount,
             'expected_arrival' => Booking::whereDate('reserve_date', $selectedDate)->where('status', 'Confirmed')->count(),
             'expected_departure' => Booking::whereDate('checkout_date', $selectedDate)->whereIn('status', ['Stay Over', 'Arrived', 'Checked In', 'Settlement Done'])->count(),
             'rooms_to_sale' => $vacantCount,
@@ -1048,6 +1074,20 @@ class DashboardController extends Controller
                 ];
             });
 
+        // Query unassigned confirmed/active arrivals for this stay window
+        $unassignedArrivalsCount = Booking::whereNull('room_id')
+            ->whereIn('status', ['Confirmed', 'Arrived', 'Stay Over'])
+            ->where(function ($q) use ($checkInDate, $checkOutDate) {
+                $q->whereDate('reserve_date', '<', $checkOutDate)
+                  ->where(function ($sub) use ($checkInDate) {
+                      $sub->whereDate('checkout_date', '>', $checkInDate)
+                          ->orWhereNull('checkout_date');
+                  });
+            })
+            ->count();
+
+        $freeSaleCount = max(0, $availableRooms->count() - $unassignedArrivalsCount);
+
         if ($isConflict && $targetConflict) {
             $cInStr = $targetConflict->reserve_date ? \Carbon\Carbon::parse($targetConflict->reserve_date)->format('d M Y') : $checkInDate;
             $cOutStr = $targetConflict->checkout_date ? \Carbon\Carbon::parse($targetConflict->checkout_date)->format('d M Y') : $checkOutDate;
@@ -1065,16 +1105,34 @@ class DashboardController extends Controller
                     'status' => $targetConflict->status ?? 'Booked',
                 ],
                 'message' => "Room #{$targetRoom->room_number} is already booked from {$cInStr} to {$cOutStr} by {$guestName}.",
+                'unassigned_arrivals_count' => $unassignedArrivalsCount,
+                'free_sale_count' => $freeSaleCount,
                 'available_rooms' => $availableRooms,
-                'available_count' => $availableRooms->count(),
+                'available_count' => $freeSaleCount,
+            ]);
+        }
+
+        // Inventory Protection: If all remaining vacant rooms are held for unassigned arrivals
+        if ($freeSaleCount === 0 && $unassignedArrivalsCount > 0) {
+            return response()->json([
+                'available' => false,
+                'arrival_hold' => true,
+                'room' => $targetRoom ? (string)$targetRoom->room_number : (string)$roomId,
+                'unassigned_arrivals_count' => $unassignedArrivalsCount,
+                'free_sale_count' => 0,
+                'message' => "All remaining vacant rooms ({$availableRooms->count()}) are held for {$unassignedArrivalsCount} confirmed arrival(s) arriving on these dates. No additional walk-in rooms can be booked until arrivals are assigned or cancelled.",
+                'available_rooms' => $availableRooms,
+                'available_count' => 0,
             ]);
         }
 
         return response()->json([
             'available' => true,
             'message' => 'Room is available for the selected dates.',
+            'unassigned_arrivals_count' => $unassignedArrivalsCount,
+            'free_sale_count' => $freeSaleCount,
             'available_rooms' => $availableRooms,
-            'available_count' => $availableRooms->count(),
+            'available_count' => $freeSaleCount,
         ]);
     }
 
@@ -1183,6 +1241,70 @@ class DashboardController extends Controller
             }
             if (!$hasAnyRoomAssigned && !$request->filled('room_id')) {
                 $autoStatus = 'Confirmed';
+            }
+
+            // Inventory Protection Check:
+            // Ensure assigning room(s) does not violate the unassigned arrivals hold quota
+            $assignedRoomCount = 0;
+            foreach ($rawGuests as $gCheck) {
+                if (!empty($gCheck['room_id'])) {
+                    $assignedRoomCount++;
+                }
+            }
+            if ($assignedRoomCount === 0 && $request->filled('room_id')) {
+                $assignedRoomCount = 1;
+            }
+
+            $conflictingRoomIds = Booking::whereNotNull('room_id')
+                ->whereIn('status', ['Confirmed', 'Checked In', 'Arrived', 'Stay Over'])
+                ->where(function ($q) use ($reserveDateOnly, $checkoutDate) {
+                    $q->whereDate('reserve_date', '<', $checkoutDate)
+                      ->where(function ($sub) use ($reserveDateOnly) {
+                          $sub->whereDate('checkout_date', '>', $reserveDateOnly)
+                              ->orWhereNull('checkout_date');
+                      });
+                })
+                ->pluck('room_id')
+                ->unique()
+                ->toArray();
+
+            $totalActiveRoomsCount = Room::where('status', 'Active')->count();
+            $vacantRoomsCount = Room::where('status', 'Active')
+                ->whereNotIn('id', $conflictingRoomIds)
+                ->count();
+
+            $unassignedArrivalsCount = Booking::whereNull('room_id')
+                ->whereIn('status', ['Confirmed', 'Arrived', 'Stay Over'])
+                ->where(function ($q) use ($reserveDateOnly, $checkoutDate) {
+                    $q->whereDate('reserve_date', '<', $checkoutDate)
+                      ->where(function ($sub) use ($reserveDateOnly) {
+                          $sub->whereDate('checkout_date', '>', $reserveDateOnly)
+                              ->orWhereNull('checkout_date');
+                      });
+                })
+                ->count();
+
+            if ($assignedRoomCount > 0) {
+                // Booking specific room(s):
+                // Ensure remaining vacant rooms will not fall below the unassigned arrivals count
+                $freeSaleAvailable = max(0, $vacantRoomsCount - $unassignedArrivalsCount);
+                if ($assignedRoomCount > $freeSaleAvailable) {
+                    DB::rollBack();
+                    return response()->json([
+                        'success' => false,
+                        'message' => "Cannot complete booking: {$unassignedArrivalsCount} room(s) are held for confirmed arrival(s) arriving on these dates. Only {$freeSaleAvailable} room(s) can be booked for new walk-ins.",
+                    ], 422);
+                }
+            } else {
+                // Adding an unassigned arrival without room:
+                // Ensure hotel has at least 1 free room in total inventory capacity to accommodate it
+                if ($vacantRoomsCount <= $unassignedArrivalsCount) {
+                    DB::rollBack();
+                    return response()->json([
+                        'success' => false,
+                        'message' => "Cannot accept new arrival: Hotel has reached 100% capacity for these dates. All {$totalActiveRoomsCount} rooms are either booked or held for pending arrivals.",
+                    ], 422);
+                }
             }
 
             // Calculate stay duration (nights)

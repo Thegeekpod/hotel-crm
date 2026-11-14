@@ -3041,6 +3041,28 @@
         if (typeof PmsAlert !== 'undefined' && PmsAlert.toast) {
           PmsAlert.toast(`Room #${data.room} is already booked for these dates! Alternative matching rooms are listed below.`, 'warning');
         }
+      } else if (!data.available && data.arrival_hold) {
+        // Display arrival hold alert box
+        conflictBox.style.display = 'block';
+        const msgEl = conflictBox.querySelector('.conflict-message-text');
+        const subEl = conflictBox.querySelector('.conflict-sub-text');
+        const altContainer = conflictBox.querySelector('.conflict-alt-rooms-list');
+        if (msgEl) {
+          msgEl.innerHTML = `<span class="text-xs font-black text-amber-700"><i class="fa-solid fa-shield-halved mr-1"></i> Inventory Protection Active</span> &bull; All remaining vacant rooms are held for <strong>${data.unassigned_arrivals_count}</strong> confirmed arrival(s) today.`;
+        }
+        if (subEl) {
+          subEl.innerHTML = `No additional walk-in rooms can be booked. Please assign rooms to the pending arrivals in <a href="/front-office/arrivals" class="underline font-bold text-indigo-600">Guest Arrivals</a> or cancel them to free up rooms.`;
+        }
+        if (altContainer) altContainer.innerHTML = '';
+        const datesAlert = document.getElementById('dates-conflict-alert');
+        const datesAlertText = document.getElementById('dates-conflict-text');
+        if (datesAlert && datesAlertText) {
+          datesAlert.style.display = 'block';
+          datesAlertText.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-amber-600 mr-1"></i> All remaining rooms are reserved for <strong>${data.unassigned_arrivals_count} confirmed arrival(s)</strong>.`;
+        }
+        if (typeof PmsAlert !== 'undefined' && PmsAlert.toast) {
+          PmsAlert.toast(`All remaining vacant rooms are held for ${data.unassigned_arrivals_count} confirmed arrival(s)!`, 'warning');
+        }
       } else {
         // Room is available with no conflict!
         conflictBox.style.display = 'none';

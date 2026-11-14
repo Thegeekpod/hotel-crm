@@ -71,6 +71,22 @@
     </div>
 
     <div class="flex-1 overflow-y-auto p-4 bg-slate-50/50 rack-grid-viewport">
+      @if(!empty($stats['arrival_hold']) && $stats['arrival_hold'] > 0)
+        <div class="mb-3 px-3.5 py-2.5 bg-linear-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl flex items-center justify-between gap-2 shadow-2xs">
+          <div class="flex items-center gap-2.5 text-xs text-amber-950 font-bold">
+            <span class="w-6 h-6 rounded-full bg-amber-500 text-white flex items-center justify-center text-[10px] shrink-0 shadow-2xs">
+              <i class="fa-solid fa-shield-halved"></i>
+            </span>
+            <span>
+              <strong>Inventory Protection Active:</strong>
+              {{ $stats['arrival_hold'] }} Confirmed Arrival(s) are holding rooms today. You can book any vacant room, but at least {{ $stats['arrival_hold'] }} room(s) will remain held for these arrivals.
+            </span>
+          </div>
+          <a href="{{ url('front-office/arrivals') }}" class="btn-ui-secondary text-[11px] font-extrabold px-3 py-1 rounded-lg border border-amber-300 bg-white text-amber-900 hover:bg-amber-100 transition inline-flex items-center gap-1.5 no-underline shrink-0 shadow-2xs">
+            <i class="fa-solid fa-list-check"></i> View Arrivals
+          </a>
+        </div>
+      @endif
       <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6 2xl:grid-cols-8 gap-2.5 rack-rooms-container" id="rooms-grid">
         
         @foreach($rackRooms as $rm)
@@ -143,6 +159,12 @@
         <span class="flex items-center gap-2 text-slate-600 lbl"><i class="fa-solid fa-bed text-rose-500"></i>Occupied</span>
         <span class="font-mono text-slate-900 val">{{ $stats['occupied'] }}</span>
       </div>
+      @if(!empty($stats['arrival_hold']) && $stats['arrival_hold'] > 0)
+      <div class="flex items-center justify-between px-3 py-1.5 rounded-lg bg-amber-50 border border-amber-200 text-xs font-bold stat-strip" title="{{ $stats['arrival_hold'] }} unassigned arrival(s) holding room inventory">
+        <span class="flex items-center gap-2 text-amber-800 lbl"><i class="fa-solid fa-clock text-amber-600"></i>Arrivals Hold</span>
+        <span class="font-mono text-amber-900 font-extrabold val">{{ $stats['arrival_hold'] }}</span>
+      </div>
+      @endif
       <div class="flex items-center justify-between px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-100 text-xs font-bold stat-strip">
         <span class="flex items-center gap-2 text-slate-600 lbl"><i class="fa-solid fa-plane-arrival text-cyan-500"></i>Expected Arrival</span>
         <span class="font-mono text-slate-900 val">{{ $stats['expected_arrival'] }}</span>

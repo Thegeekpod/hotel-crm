@@ -140,6 +140,29 @@
     </div>
   </div>
 
+  @if(($activeDiningTablesCount ?? 0) > 0)
+    <!-- Active Dining Tables / Running KOTs Notification Banner -->
+    <div class="bg-amber-50 border border-amber-200/90 rounded-2xl p-4 shadow-2xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-amber-100 border border-amber-300 text-amber-700 flex items-center justify-center text-base shrink-0">
+          <i class="fa-solid fa-utensils"></i>
+        </div>
+        <div>
+          <div class="text-xs font-bold text-amber-900 flex items-center gap-2">
+            <span>Restaurant Dining Sessions Active</span>
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-200/80 text-amber-900">{{ $activeDiningTablesCount }} Table(s) • {{ $activeDiningKotsCount }} Running KOT(s)</span>
+          </div>
+          <div class="text-[11px] text-amber-700 mt-0.5">
+            Running unbilled food tokens total: <strong class="font-mono font-bold text-amber-900">₹ {{ number_format($activeDiningTotal, 2) }}</strong>. Settle dining tables in POS before finalizing Night Audit.
+          </div>
+        </div>
+      </div>
+      <a href="{{ route('pos.index') }}" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-amber-700 hover:bg-amber-800 text-white text-xs font-bold shadow-2xs transition-all whitespace-nowrap cursor-pointer">
+        <i class="fa-solid fa-cash-register text-[11px]"></i> Manage POS &rarr;
+      </a>
+    </div>
+  @endif
+
   <!-- 3. Navigation Tabs -->
   <div class="flex items-center gap-2 border-b border-slate-200/80 pb-3 overflow-x-auto scrollbar-none">
     <button type="button" class="audit-nav-tab active inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all bg-slate-900 text-white shadow-sm cursor-pointer" onclick="switchAuditTab('tab-payments', this)">
@@ -880,6 +903,16 @@
               <strong class="font-mono font-bold text-slate-900">₹ {{ number_format($totalBookingsBill, 2) }}</strong>
             </div>
           </div>
+
+          @if(($activeDiningTablesCount ?? 0) > 0)
+            <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-800 flex items-start gap-2.5">
+              <i class="fa-solid fa-triangle-exclamation text-amber-600 text-sm mt-0.5 shrink-0"></i>
+              <div>
+                <strong class="font-bold text-amber-900">Active Dining Notice:</strong>
+                <div>{{ $activeDiningTablesCount }} table(s) have {{ $activeDiningKotsCount }} unbilled running KOT(s) (₹ {{ number_format($activeDiningTotal, 2) }}). Unsettled running KOTs will remain pending until billed in POS.</div>
+              </div>
+            </div>
+          @endif
 
           <form id="form-complete-audit" onsubmit="submitNightAudit(event)" class="space-y-4">
             <input type="hidden" name="audit_date" value="{{ $today }}">

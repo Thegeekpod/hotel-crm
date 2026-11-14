@@ -105,13 +105,10 @@ class NightAuditController extends Controller
             ];
         }
 
-        // 2b. Direct Walk-in / Takeaway POS Payments
-        $posTakeaways = \App\Models\PosOrder::with('items')
+        // 2b. Direct Settled POS Payments (Bills only - exclude running KOTs)
+        $posTakeaways = \App\Models\PosOrder::with(['items', 'tableManage', 'booking.guest', 'room'])
             ->whereDate('created_at', $selectedDate)
-            ->where(function($q) {
-                $q->where('order_type', 'Takeaway')
-                  ->orWhereNull('booking_id');
-            })
+            ->where('is_kot', false)
             ->where('status', '!=', 'Cancelled')
             ->whereIn('billing_type', ['Cash Paid', 'Digital UPI / Card Paid'])
             ->orderBy('id', 'asc')
@@ -132,7 +129,7 @@ class NightAuditController extends Controller
         }
         if ($takeawayCash > 0 || $takeawayUpi > 0) {
             $modeBreakdown[] = [
-                'name' => 'POS Walk-in / Takeaway',
+                'name' => 'POS Restaurant Direct Collections',
                 'amount' => round($takeawayCash + $takeawayUpi, 2),
                 'count' => $posTakeaways->count()
             ];
@@ -315,6 +312,17 @@ class NightAuditController extends Controller
         $unsettledBookingsCount = $ledgerData['unsettledCount'];
         $settledBookingsCount = $ledgerData['settledCount'];
 
+        // 5.2. Active Dining Tables & Running KOTs (POS restaurant dining sessions in progress)
+        $activeDiningKots = \App\Models\PosOrder::where('is_kot', true)
+            ->whereNull('parent_order_id')
+            ->where('status', '!=', 'Cancelled')
+            ->where('payment_status', 'Pending')
+            ->with(['tableManage', 'booking.guest', 'room', 'items'])
+            ->get();
+        $activeDiningKotsCount = $activeDiningKots->count();
+        $activeDiningTablesCount = $activeDiningKots->pluck('table_id')->filter()->unique()->count();
+        $activeDiningTotal = (float)$activeDiningKots->sum('total_amount');
+
         // 6. Pre-Audit Checklist Warnings
         $checklist = [
             [
@@ -330,6 +338,15 @@ class NightAuditController extends Controller
                 'passed' => ($pendingDeparturesCount === 0),
                 'count' => $pendingDeparturesCount,
                 'type' => 'warning'
+            ],
+            [
+                'title' => 'Restaurant Dining Tables & KOTs',
+                'description' => $activeDiningTablesCount > 0
+                    ? "{$activeDiningTablesCount} table(s) have {$activeDiningKotsCount} running KOT(s) (₹ " . number_format($activeDiningTotal, 2) . ") pending bill settlement."
+                    : "All dining tables are settled and available. No pending running KOTs.",
+                'passed' => ($activeDiningTablesCount === 0),
+                'count' => $activeDiningTablesCount,
+                'type' => $activeDiningTablesCount > 0 ? 'warning' : 'success'
             ],
             [
                 'title' => 'Housekeeping Dirty Rooms',
@@ -456,7 +473,11 @@ class NightAuditController extends Controller
             'unsettledBookingsCount',
             'settledBookingsCount',
             'inwardStockMovements',
-            'totalInwardAmount'
+            'totalInwardAmount',
+            'activeDiningKotsCount',
+            'activeDiningTablesCount',
+            'activeDiningTotal',
+            'activeDiningKots'
         ));
     }
 
@@ -540,13 +561,10 @@ class NightAuditController extends Controller
                 ];
             })->values()->all();
 
-            // 1b. Direct Walk-in / Takeaway POS Payments
-            $posTakeaways = \App\Models\PosOrder::with('items')
+            // 1b. Direct Settled POS Payments (Bills only - exclude running KOTs)
+            $posTakeaways = \App\Models\PosOrder::with(['items', 'tableManage', 'booking.guest', 'room'])
                 ->whereDate('created_at', $auditDate)
-                ->where(function($q) {
-                    $q->where('order_type', 'Takeaway')
-                      ->orWhereNull('booking_id');
-                })
+                ->where('is_kot', false)
                 ->where('status', '!=', 'Cancelled')
                 ->whereIn('billing_type', ['Cash Paid', 'Digital UPI / Card Paid'])
                 ->orderBy('id', 'asc')
@@ -562,20 +580,20 @@ class NightAuditController extends Controller
                 }
 
                 $tableLabel = !empty($pwi->table_number) ? $pwi->table_number : null;
-                $custName = $pwi->customer_name ?: ($tableLabel ? "{$tableLabel} Guest" : 'Takeaway Customer');
+                $custName = $pwi->customer_name ?: ($tableLabel ? "{$tableLabel} Guest" : 'Restaurant Customer');
                 $custPhone = $pwi->customer_phone ? ' (' . $pwi->customer_phone . ')' : '';
                 $modeDesc = ($pwi->billing_type === 'Cash Paid') ? 'Cash' : 'UPI / Card';
                 $orderTypeDesc = $pwi->order_type === 'Table Dine-in'
                     ? ($tableLabel ? "Table Dine-in [{$tableLabel}]" : 'Table Dine-in')
-                    : ($tableLabel ? "Takeaway [{$tableLabel}]" : 'Takeaway POS');
+                    : ($pwi->order_type === 'Room Dining' ? "Room Dining [Room {$pwi->room_number}]" : ($tableLabel ? "Takeaway [{$tableLabel}]" : 'Takeaway POS'));
 
                 $paymentsListItems[] = [
                     'id' => 'pos_' . $pwi->id,
                     'time' => $pwi->created_at ? $pwi->created_at->format('h:i A') : '-',
                     'guest_name' => $custName . $custPhone . ' [' . ($tableLabel ?: $pwi->order_type) . ']',
                     'room_number' => $pwi->room_number ? 'Room ' . $pwi->room_number : ($tableLabel ?: '-'),
-                    'settle_number' => '-',
-                    'folio_number' => '-',
+                    'settle_number' => $pwi->order_number,
+                    'folio_number' => $pwi->order_number,
                     'total_bill' => (float)$pwi->total_amount,
                     'paid_amount' => (float)$pwi->total_amount,
                     'remaining_amount' => 0.00,
@@ -1134,8 +1152,9 @@ class NightAuditController extends Controller
         }
 
         // Append POS Walk-in / Takeaway orders with '-' for hotel room/folio fields
-        $posTakeaways = \App\Models\PosOrder::with('items')
+        $posTakeaways = \App\Models\PosOrder::with(['items', 'tableManage'])
             ->whereDate('created_at', $date)
+            ->where('is_kot', false)
             ->where(function($q) {
                 $q->where('order_type', 'Takeaway')
                   ->orWhereNull('booking_id');
@@ -1171,8 +1190,8 @@ class NightAuditController extends Controller
                 'id' => 'pos_' . $pwi->id,
                 'booking_id' => null,
                 'booking_number' => 'N/A',
-                'settle_number' => 'N/A',
-                'folio_number' => 'N/A',
+                'settle_number' => $pwi->order_number,
+                'folio_number' => $pwi->order_number,
                 'primary_guest_name' => $custName,
                 'guest_name' => $custName,
                 'primary_mobile' => ($custPhone && $custPhone !== '-') ? $custPhone : 'N/A',

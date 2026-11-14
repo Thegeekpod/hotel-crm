@@ -130,13 +130,10 @@ class NightAuditController extends Controller
             ];
         })->values()->all();
 
-        // 1b. Direct Walk-in / Takeaway POS Payments
-        $posTakeaways = \App\Models\PosOrder::with('items')
+        // 1b. Direct Settled POS Payments (Bills only - exclude running KOTs)
+        $posTakeaways = \App\Models\PosOrder::with(['items', 'tableManage', 'booking.guest', 'room'])
             ->whereDate('created_at', $auditDate)
-            ->where(function($q) {
-                $q->where('order_type', 'Takeaway')
-                  ->orWhereNull('booking_id');
-            })
+            ->where('is_kot', false)
             ->where('status', '!=', 'Cancelled')
             ->whereIn('billing_type', ['Cash Paid', 'Digital UPI / Card Paid'])
             ->orderBy('id', 'asc')
@@ -144,20 +141,20 @@ class NightAuditController extends Controller
 
         foreach ($posTakeaways as $pwi) {
             $tableLabel = !empty($pwi->table_number) ? $pwi->table_number : null;
-            $custName = $pwi->customer_name ?: ($tableLabel ? "{$tableLabel} Guest" : 'Takeaway Customer');
+            $custName = $pwi->customer_name ?: ($tableLabel ? "{$tableLabel} Guest" : 'Restaurant Customer');
             $custPhone = $pwi->customer_phone ? ' (' . $pwi->customer_phone . ')' : '';
             $modeDesc = ($pwi->billing_type === 'Cash Paid') ? 'Cash' : 'UPI / Card';
             $orderTypeDesc = $pwi->order_type === 'Table Dine-in'
                 ? ($tableLabel ? "Table Dine-in [{$tableLabel}]" : 'Table Dine-in')
-                : ($tableLabel ? "Takeaway [{$tableLabel}]" : 'Takeaway POS');
+                : ($pwi->order_type === 'Room Dining' ? "Room Dining [Room {$pwi->room_number}]" : ($tableLabel ? "Takeaway [{$tableLabel}]" : 'Takeaway POS'));
 
             $paymentsListItems[] = [
                 'id' => 'pos_' . $pwi->id,
                 'time' => $pwi->created_at ? $pwi->created_at->format('h:i A') : 'N/A',
                 'guest_name' => $custName . $custPhone . ' [' . ($tableLabel ?: $pwi->order_type) . ']',
-                'room_number' => 'N/A',
-                'settle_number' => 'N/A',
-                'folio_number' => 'N/A',
+                'room_number' => $pwi->room_number ? 'Room ' . $pwi->room_number : ($tableLabel ?: 'N/A'),
+                'settle_number' => $pwi->order_number,
+                'folio_number' => $pwi->order_number,
                 'total_bill' => (float)$pwi->total_amount,
                 'paid_amount' => (float)$pwi->total_amount,
                 'remaining_amount' => 0.00,
@@ -473,8 +470,12 @@ class NightAuditController extends Controller
             ];
         }
 
-        // Append POS Walk-in / Takeaway orders with '-' for hotel room/folio fields
-        foreach ($posTakeaways as $pwi) {
+        // Append standalone POS orders (walk-in dining & takeaway without a room) to the ledger
+        $posStandAlone = $posTakeaways->filter(function($pwi) {
+            return $pwi->order_type === 'Takeaway' || empty($pwi->booking_id);
+        });
+
+        foreach ($posStandAlone as $pwi) {
             $tableLabel = !empty($pwi->table_number) ? $pwi->table_number : null;
             $custName = $pwi->customer_name ?: ($tableLabel ? "{$tableLabel} Guest" : 'Takeaway Customer');
             $custPhone = $pwi->customer_phone ?: '-';
@@ -498,8 +499,8 @@ class NightAuditController extends Controller
                 'id' => 'pos_' . $pwi->id,
                 'booking_id' => null,
                 'booking_number' => 'N/A',
-                'settle_number' => 'N/A',
-                'folio_number' => 'N/A',
+                'settle_number' => $pwi->order_number,
+                'folio_number' => $pwi->order_number,
                 'primary_guest_name' => $custName,
                 'guest_name' => $custName,
                 'mobile_no' => ($custPhone && $custPhone !== '-') ? $custPhone : 'N/A',

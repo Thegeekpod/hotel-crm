@@ -585,6 +585,18 @@
                 </div>
               </div>
 
+              ${(snapshot.summary && snapshot.summary.active_dining_tables_count > 0) ? `
+                <div class="bg-amber-50 border border-amber-200/90 rounded-2xl p-3.5 shadow-xs flex items-center gap-3">
+                  <div class="w-9 h-9 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center shrink-0">
+                    <i class="fa-solid fa-utensils text-sm"></i>
+                  </div>
+                  <div class="text-xs">
+                    <div class="font-bold text-amber-900">Active Restaurant Dining Sessions at Audit Time</div>
+                    <div class="text-amber-700 mt-0.5">${snapshot.summary.active_dining_tables_count} table(s) had ${snapshot.summary.active_dining_kots_count || 0} active running KOT(s) pending settlement.</div>
+                  </div>
+                </div>
+              ` : ''}
+
               <!-- Remarks -->
               ${a.remarks ? `
                 <div class="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-xs">

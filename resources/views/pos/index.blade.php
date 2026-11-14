@@ -2,7 +2,6 @@
 
 @section('title', 'POS Sales - Dining & In-Room Dining - Hotel Sagar Sonnet')
 
-
 @section('content')
 <main class="flex-1 w-full p-3 sm:p-4 lg:p-5 flex flex-col gap-4 pms-main-viewport">
   <div class="w-full flex flex-col gap-4 pms-page-container">
@@ -15,7 +14,7 @@
         <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Today's Orders</span>
         <div class="text-2xl font-black font-mono text-emerald-600 mt-1">{{ $todayOrdersCount }}</div>
         <div class="text-[11px] font-semibold text-slate-500 flex items-center gap-1.5 mt-1">
-          <i class="fa-solid fa-receipt text-emerald-500 text-[10px]"></i> Total Kitchen Orders
+          <i class="fa-solid fa-receipt text-emerald-500 text-[10px]"></i> Total Orders Placed
         </div>
       </div>
       <div class="w-12 h-12 rounded-xl bg-emerald-50 border border-emerald-200/80 text-emerald-600 flex items-center justify-center text-lg shrink-0">
@@ -29,7 +28,7 @@
         <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Today's POS Sales</span>
         <div class="text-2xl font-black font-mono text-cyan-600 mt-1">₹ {{ number_format($todaySalesTotal, 2) }}</div>
         <div class="text-[11px] font-semibold text-slate-500 flex items-center gap-1.5 mt-1">
-          <i class="fa-solid fa-indian-rupee-sign text-cyan-500 text-[10px]"></i> Total Dining Revenue
+          <i class="fa-solid fa-indian-rupee-sign text-cyan-500 text-[10px]"></i> Settled Dining Revenue
         </div>
       </div>
       <div class="w-12 h-12 rounded-xl bg-cyan-50 border border-cyan-200/80 text-cyan-600 flex items-center justify-center text-lg shrink-0">
@@ -75,7 +74,10 @@
         <div class="w-9 h-9 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center text-base shrink-0">
           <i class="fa-solid fa-utensils"></i>
         </div>
-        <h2 class="text-base font-extrabold text-slate-900">Sea Breeze Dining &amp; In-Room Dining POS</h2>
+        <div>
+          <h2 class="text-base font-extrabold text-slate-900">Sea Breeze Dining &amp; In-Room Dining POS</h2>
+          <p class="text-[11px] text-slate-500 font-medium">Multiple KOT Kitchen Routing with Single Final Bill Reconciliation</p>
+        </div>
       </div>
 
       <div class="flex items-center gap-3 flex-wrap">
@@ -92,10 +94,9 @@
           </button>
         </div>
 
-        <!-- Room Selector (Hidden in top bar as room is selected in the Billing section) -->
+        <!-- Room Selector (Used for syncing) -->
         <div id="room-select-group" class="hidden" style="display: none !important;">
-          <span class="font-bold text-xs text-slate-500 whitespace-nowrap">Bill To Room:</span>
-          <select class="h-9.5 text-xs font-medium rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-indigo-500 min-w-[240px]" id="pos-room-select">
+          <select class="h-9.5 text-xs font-medium rounded-xl border border-slate-200 bg-white min-w-[240px]" id="pos-room-select">
             @forelse($selectableRooms as $rm)
               <option value="{{ $rm->id }}" data-room="{{ $rm->room_number }}" data-guest="{{ $rm->guest_name }}" data-has-food-adv="{{ $rm->has_food_advance ? 1 : 0 }}" data-food-adv="{{ $rm->food_advance_amount ?? 0 }}" data-rem-adv="{{ $rm->remaining_advance ?? 0 }}" data-used-adv="{{ $rm->used_food_advance ?? 0 }}">
                 Room {{ $rm->room_number }} - {{ $rm->guest_name }}{{ $rm->has_food_advance ? ' [Food Allowance: ₹' . number_format($rm->food_advance_amount, 0) . ']' : '' }}
@@ -108,12 +109,21 @@
 
         <!-- Table Selector (Visible for Table Dine-in & Takeaway) -->
         <div id="table-select-group" class="items-center gap-2 hidden">
-          <span class="font-bold text-xs text-slate-500 whitespace-nowrap">Table / Host:</span>
-          <select class="h-9.5 text-xs font-semibold rounded-xl border border-slate-200 bg-white text-slate-700 px-3 focus:outline-none focus:border-indigo-500 min-w-[220px]" id="pos-table-select">
-            <option value="">-- Select Available Table --</option>
-            @foreach($availableTables as $tbl)
-              <option value="{{ $tbl->table_number }} ({{ $tbl->table_name }})" data-table-id="{{ $tbl->id }}" data-table-num="{{ $tbl->table_number }}" data-table-name="{{ $tbl->table_name }}">
-                {{ $tbl->table_number }} ({{ $tbl->table_name }})
+          <span class="font-bold text-xs text-slate-500 whitespace-nowrap"><i class="fa-solid fa-chair text-purple-600 mr-1"></i> Table:</span>
+          <select class="h-9.5 text-xs font-semibold rounded-xl border border-slate-200 bg-white text-slate-700 px-3 focus:outline-none focus:border-indigo-500 min-w-[240px]" id="pos-table-select" onchange="onTableSelectDropdownChange(this.value)">
+            <option value="">-- Select Dining Table --</option>
+            @foreach($allTables as $tbl)
+              @php
+                $sess = $tableSessions[$tbl->id] ?? null;
+                $isBooked = ($tbl->status === 'booked' || $sess !== null);
+              @endphp
+              <option value="{{ $tbl->id }}" 
+                      data-table-id="{{ $tbl->id }}" 
+                      data-table-num="{{ $tbl->table_number }}" 
+                      data-table-name="{{ $tbl->table_name }}"
+                      data-status="{{ $tbl->status }}"
+                      data-is-booked="{{ $isBooked ? '1' : '0' }}">
+                {{ $tbl->table_number }} ({{ $tbl->table_name }}) - {{ $isBooked ? '[Occupied - ' . ($sess['kots_count'] ?? 1) . ' KOTs]' : '[Available]' }}
               </option>
             @endforeach
           </select>
@@ -125,13 +135,54 @@
           <input type="text" id="pos-takeaway-name" class="h-9.5 px-3 text-xs font-medium rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-indigo-500 w-44" placeholder="Guest Name / Phone">
         </div>
 
-        <!-- Quick Modals Buttons -->
+        <!-- Quick Action Buttons -->
+        <button type="button" onclick="openTableManageModal()" class="inline-flex items-center gap-1.5 h-9.5 px-3.5 text-xs font-bold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200/80 rounded-xl transition-all shadow-xs cursor-pointer" title="Manage Tables">
+          <i class="fa-solid fa-chair text-purple-600"></i> Tables
+        </button>
         <a href="{{ route('stores.index') }}" class="inline-flex items-center gap-1.5 h-9.5 px-3.5 text-xs font-bold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200/80 rounded-xl transition-all shadow-xs" title="Manage Store & Menus">
-          <i class="fa-solid fa-boxes-stacked text-emerald-600"></i> Manage Store
+          <i class="fa-solid fa-boxes-stacked text-emerald-600"></i> Store
         </a>
         <a href="{{ route('pos.orders.index') }}" class="inline-flex items-center gap-1.5 h-9.5 px-3.5 text-xs font-bold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200/80 rounded-xl transition-all shadow-xs" title="View All KOT Tickets & Orders">
           <i class="fa-solid fa-clock-rotate-left text-cyan-600"></i> KOT History
         </a>
+      </div>
+    </div>
+
+    <!-- Live Table Quick-Bar (Visible for Table Dine-In and Takeaway) -->
+    <div id="pos-live-table-bar" class="bg-slate-100/80 px-5 py-2.5 border-b border-slate-200/80 flex items-center justify-between gap-3 overflow-x-auto hidden">
+      <div class="flex items-center gap-2 shrink-0">
+        <span class="text-xs font-black text-slate-700 flex items-center gap-1.5 uppercase tracking-wider">
+          <i class="fa-solid fa-chair text-purple-600"></i> Active Tables:
+        </span>
+      </div>
+      <div class="flex items-center gap-2 overflow-x-auto pb-0.5" id="pos-table-pills-container">
+        @foreach($allTables as $tbl)
+          @php
+            $sess = $tableSessions[$tbl->id] ?? null;
+            $isBooked = ($tbl->status === 'booked' || $sess !== null);
+          @endphp
+          <button type="button" 
+                  onclick="onTablePillClick({{ $tbl->id }})" 
+                  id="tbl-pill-{{ $tbl->id }}"
+                  class="pos-table-pill px-3 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap {{ $isBooked ? 'bg-amber-50 text-amber-900 border-amber-300 hover:bg-amber-100 shadow-2xs' : 'bg-white text-slate-700 border-slate-200 hover:border-emerald-500 hover:text-emerald-700' }}">
+            <span class="w-2 h-2 rounded-full {{ $isBooked ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500' }}"></span>
+            <span>{{ $tbl->table_number }}</span>
+            <span class="text-[10px] font-medium opacity-75">({{ $tbl->table_name }})</span>
+            @if($isBooked && $sess)
+              <span class="bg-amber-200/80 text-amber-900 text-[10px] font-black px-1.5 py-0.2 rounded-md">
+                {{ $sess['kots_count'] }} KOT{{ $sess['kots_count'] > 1 ? 's' : '' }}
+              </span>
+              @if(!empty($sess['room_number']))
+                <span class="text-[10px] font-bold text-indigo-700">R-{{ $sess['room_number'] }}</span>
+              @endif
+            @else
+              <span class="text-[10px] font-semibold text-emerald-600">Free</span>
+            @endif
+          </button>
+        @endforeach
+      </div>
+      <div class="shrink-0 text-[11px] text-slate-500 font-medium">
+        Click any table to view or add orders
       </div>
     </div>
 
@@ -171,7 +222,7 @@
             <div class="pos-dish-card bg-white rounded-xl border border-slate-200 hover:border-emerald-500 hover:shadow-md transition-all p-3.5 flex flex-col justify-between cursor-pointer group {{ $isSoldOut ? 'opacity-55 border-rose-200 bg-rose-50/20' : '' }}" 
                  data-cat="{{ $dish->category }}" 
                  data-name="{{ strtolower($dish->name) }}"
-                 onclick="{{ $isSoldOut ? 'PmsAlert.toast(\'This dish is OUT OF STOCK in kitchen store!\', \'warning\')' : 'addToCart(' . $dish->id . ', \'' . addslashes($dish->name) . '\', ' . $dish->price . ', ' . $plates . ')' }}">
+                 onclick="{{ $isSoldOut ? 'if(typeof PmsAlert!==\'undefined\'){PmsAlert.toast(\'This dish is OUT OF STOCK in kitchen store!\', \'warning\');}else{alert(\'This dish is OUT OF STOCK in kitchen store!\');}' : 'addToCart(' . $dish->id . ', \'' . addslashes($dish->name) . '\', ' . $dish->price . ', ' . $plates . ')' }}">
               <div>
                 <div class="text-3xl text-center py-1 group-hover:scale-110 transition-transform">{{ $dish->emoji ?: '🍽️' }}</div>
                 <div class="font-bold text-xs text-slate-800 truncate group-hover:text-emerald-700 transition-colors mt-1" title="{{ $dish->name }}">{{ $dish->name }}</div>
@@ -209,14 +260,44 @@
         </div>
       </div>
 
-      <!-- Right Column: Active Cart / KOT Ticket -->
+      <!-- Right Column: Active Cart / KOT Ticket / Table Session -->
       <div class="lg:col-span-5 xl:col-span-4 p-5 bg-slate-50/50 flex flex-col justify-between">
         <div>
+          
+          <!-- Active Table Session Summary Box (Shown when occupied table is selected) -->
+          <div id="active-table-session-box" class="mb-3 bg-linear-to-r from-amber-50 to-orange-50 border border-amber-300 rounded-2xl p-3.5 space-y-2.5 hidden shadow-xs">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse"></span>
+                <span class="font-extrabold text-xs text-amber-950" id="sess-table-title">Table Active Dining Session</span>
+                <span class="bg-amber-200 text-amber-900 text-[10px] font-black px-2 py-0.5 rounded-full border border-amber-300" id="sess-kot-count-badge">0 KOTs</span>
+              </div>
+              <div class="text-right">
+                <span class="text-[10px] font-bold uppercase tracking-wider text-amber-700 block">Running Bill:</span>
+                <span class="text-sm font-mono font-black text-amber-900" id="sess-running-subtotal">₹ 0.00</span>
+              </div>
+            </div>
+
+            <div class="text-[11px] text-amber-900 flex items-center justify-between flex-wrap gap-1 bg-white/70 p-2 rounded-xl border border-amber-200">
+              <span id="sess-guest-line"><i class="fa-solid fa-user text-amber-600 mr-1"></i> Guest: In-House Guest</span>
+              <span id="sess-room-line" class="font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200">Room --</span>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2 pt-1">
+              <button type="button" onclick="openRunningKotsModal()" class="h-8.5 text-[11px] font-bold text-amber-900 bg-white hover:bg-amber-100 border border-amber-300 rounded-xl transition-colors flex items-center justify-center gap-1.5 cursor-pointer">
+                <i class="fa-solid fa-list-check text-amber-600"></i> View Running Items
+              </button>
+              <button type="button" onclick="openTableSettleModal()" class="h-8.5 text-[11px] font-black text-white bg-linear-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 rounded-xl shadow-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer">
+                <i class="fa-solid fa-receipt"></i> Settle &amp; Print Bill
+              </button>
+            </div>
+          </div>
+
           <!-- Cart Header -->
           <div class="flex items-center justify-between pb-3 border-b border-slate-200">
             <div class="flex items-center gap-2">
               <i class="fa-solid fa-cart-shopping text-emerald-600"></i>
-              <span class="font-extrabold text-xs text-slate-900">Active Order / KOT Ticket</span>
+              <span class="font-extrabold text-xs text-slate-900" id="cart-header-title">Active Order / KOT Items</span>
               <span id="cart-count-badge" class="bg-emerald-600 text-white text-[10px] font-black px-2 py-0.5 rounded-full">0</span>
             </div>
             <button type="button" class="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200/80 rounded-lg transition-all cursor-pointer" onclick="clearCart()">
@@ -225,7 +306,7 @@
           </div>
 
           <!-- Scrollable Cart Line Items -->
-          <div id="cart-items" class="h-64 overflow-y-auto divide-y divide-slate-100 pr-1 my-2">
+          <div id="cart-items" class="h-60 overflow-y-auto divide-y divide-slate-100 pr-1 my-2">
             <div class="text-center text-slate-400 py-12 text-xs">
               <i class="fa-solid fa-basket-shopping text-3xl block mb-2 text-slate-300"></i>
               Cart is empty.<br>Click any food card on the left to add items.
@@ -237,29 +318,46 @@
             <input type="text" id="order-instructions" class="h-9 px-3 text-xs font-medium rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-indigo-500 w-full placeholder:text-slate-400" placeholder="Kitchen instructions (e.g., Less spicy, no onion)...">
           </div>
 
-          <!-- Billing Mode Selector -->
-          <div class="mt-4">
-            <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Billing &amp; Payment Mode</label>
-            <div class="grid grid-cols-3 gap-2">
-              <div class="billing-pill active px-3 py-2 rounded-xl text-xs font-bold text-center cursor-pointer transition-all border border-emerald-300 bg-emerald-50 text-emerald-700 shadow-xs" id="bill-folio" onclick="setBillingType('Charged to Room Folio')">
-                <i class="fa-solid fa-door-closed mr-1"></i> Room Folio
-              </div>
-              <div class="billing-pill px-3 py-2 rounded-xl text-xs font-semibold text-slate-600 text-center cursor-pointer transition-all border border-slate-200 bg-white hover:bg-slate-50" id="bill-cash" onclick="setBillingType('Cash Paid')">
-                <i class="fa-solid fa-money-bill-wave mr-1"></i> Cash Paid
-              </div>
-              <div class="billing-pill px-3 py-2 rounded-xl text-xs font-semibold text-slate-600 text-center cursor-pointer transition-all border border-slate-200 bg-white hover:bg-slate-50" id="bill-digital" onclick="setBillingType('Digital UPI / Card Paid')">
-                <i class="fa-solid fa-qrcode mr-1"></i> UPI / Card
+          <!-- Section: Billing Mode Selector (Visible for Room Dining, or informative for Dine-in) -->
+          <div class="mt-4" id="billing-mode-container">
+            <!-- Room Dining Immediate Billing Mode -->
+            <div id="room-dining-billing-options">
+              <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Billing &amp; Payment Mode</label>
+              <div class="grid grid-cols-3 gap-2">
+                <div class="billing-pill active px-3 py-2 rounded-xl text-xs font-bold text-center cursor-pointer transition-all border border-emerald-300 bg-emerald-50 text-emerald-700 shadow-xs" id="bill-folio" onclick="setBillingType('Charged to Room Folio')">
+                  <i class="fa-solid fa-door-closed mr-1"></i> Room Folio
+                </div>
+                <div class="billing-pill px-3 py-2 rounded-xl text-xs font-semibold text-slate-600 text-center cursor-pointer transition-all border border-slate-200 bg-white hover:bg-slate-50" id="bill-cash" onclick="setBillingType('Cash Paid')">
+                  <i class="fa-solid fa-money-bill-wave mr-1"></i> Cash Paid
+                </div>
+                <div class="billing-pill px-3 py-2 rounded-xl text-xs font-semibold text-slate-600 text-center cursor-pointer transition-all border border-slate-200 bg-white hover:bg-slate-50" id="bill-digital" onclick="setBillingType('Digital UPI / Card Paid')">
+                  <i class="fa-solid fa-qrcode mr-1"></i> UPI / Card
+                </div>
               </div>
             </div>
 
-            <!-- Room Folio Picker (Visible for Room Folio [Required] or Cash/UPI [Optional]) -->
+            <!-- Table Dine-In / Takeaway Multiple KOT Guide Note -->
+            <div id="table-kot-mode-note" class="bg-indigo-50/80 border border-indigo-200 rounded-xl p-3 text-[11px] text-indigo-900 hidden space-y-1">
+              <div class="font-extrabold flex items-center gap-1.5 text-xs text-indigo-950">
+                <i class="fa-solid fa-kitchen-set text-indigo-600"></i> Running Table KOT Mode
+              </div>
+              <div>
+                Order items to generate a <strong>KOT ticket</strong> for the kitchen. Guests can order multiple times during their stay.
+              </div>
+              <div class="text-[10.5px] text-indigo-800 font-semibold pt-0.5">
+                • <strong>Table Dine-in:</strong> Room Attach (unpaid folio), Cash, or UPI selected during final bill settlement.<br>
+                • <strong>Takeaway:</strong> Cash or UPI selected during final bill settlement.
+              </div>
+            </div>
+
+            <!-- Room Folio Picker -->
             <div id="room-folio-picker-box" class="mt-3 bg-emerald-50/70 border border-emerald-200 rounded-xl p-3 space-y-2">
               <label id="room-picker-label" class="text-xs font-bold text-emerald-800 flex items-center justify-between">
-                <span id="room-picker-title" class="flex items-center gap-1.5"><i class="fa-solid fa-door-open text-emerald-600"></i> Select Room to Charge Folio: *</span>
-                <span id="room-picker-badge" class="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-bold">In-House Folio</span>
+                <span id="room-picker-title" class="flex items-center gap-1.5"><i class="fa-solid fa-door-open text-emerald-600"></i> Select Residing Guest Room: *</span>
+                <span id="room-picker-badge" class="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-bold">In-House Guest</span>
               </label>
-              <select class="w-full h-9 text-xs font-medium rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-indigo-500" id="cart-room-folio-select">
-                <option value="">-- Direct Walk-in / No Room --</option>
+              <select class="w-full h-9 text-xs font-medium rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-indigo-500" id="cart-room-folio-select" onchange="onCartRoomChange(this.value)">
+                <option value="">-- Select Checked-In Room --</option>
                 @forelse($selectableRooms as $rm)
                   <option value="{{ $rm->id }}" data-room="{{ $rm->room_number }}" data-guest="{{ $rm->guest_name }}" data-has-food-adv="{{ $rm->has_food_advance ? 1 : 0 }}" data-food-adv="{{ $rm->food_advance_amount ?? 0 }}" data-rem-adv="{{ $rm->remaining_advance ?? 0 }}" data-used-adv="{{ $rm->used_food_advance ?? 0 }}">
                     Room {{ $rm->room_number }} - {{ $rm->guest_name }}{{ $rm->has_food_advance ? ' [Food Allowance: ₹' . number_format($rm->food_advance_amount, 0) . ']' : '' }}
@@ -274,8 +372,8 @@
             <!-- Takeaway Customer Form (Visible ONLY for Takeaway) -->
             <div id="takeaway-customer-box" class="mt-3 bg-amber-50/70 border border-amber-200 rounded-xl p-3 space-y-2 hidden">
               <label class="text-xs font-bold text-amber-800 flex items-center justify-between">
-                <span class="flex items-center gap-1.5"><i class="fa-solid fa-user-tag text-amber-600"></i> Walk-in Takeaway Guest Details: *</span>
-                <span class="text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full font-bold">Takeaway Customer</span>
+                <span class="flex items-center gap-1.5"><i class="fa-solid fa-user-tag text-amber-600"></i> Outside Takeaway Guest Details: *</span>
+                <span class="text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full font-bold">Outside Customer</span>
               </label>
               <div class="grid grid-cols-2 gap-2">
                 <div>
@@ -286,7 +384,7 @@
                 </div>
               </div>
               <div class="text-[10px] text-amber-700 font-medium flex items-center gap-1 mt-1">
-                <i class="fa-solid fa-circle-info"></i> Direct restaurant walk-in order. Recorded in Night Audit payments with direct Cash/UPI settlement.
+                <i class="fa-solid fa-circle-info"></i> Direct restaurant walk-in order. Settle via Cash or UPI when dining concludes.
               </div>
             </div>
           </div>
@@ -308,7 +406,7 @@
               <span id="tax-val" class="font-mono text-slate-500">₹ 0</span>
             </div>
             <div class="flex items-center justify-between pt-2 border-t border-slate-100 text-sm font-black text-slate-900">
-              <span id="tot-label">Actual Order Bill:</span>
+              <span id="tot-label">Order Total:</span>
               <span id="tot-val" class="font-mono text-emerald-600">₹ 0</span>
             </div>
             <div id="row-folio-charge-due" class="flex items-center justify-between text-xs font-black text-indigo-700 bg-indigo-50/70 p-1.5 rounded-lg border border-indigo-200 hidden">
@@ -319,14 +417,14 @@
 
           <!-- Main Submission Button -->
           <button type="button" class="w-full h-11 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer mt-3" id="btn-post-order" onclick="postOrder()">
-            <i class="fa-solid fa-check"></i> <span id="btn-order-label">Post Bill to Room Folio</span>
+            <i class="fa-solid fa-check" id="btn-order-icon"></i> <span id="btn-order-label">Post Bill to Room Folio</span>
           </button>
         </div>
       </div>
 
     </div>
 
-    <!-- Footer Bar matching static -->
+    <!-- Footer Bar -->
     <div class="px-5 py-3 bg-slate-50/80 border-t border-slate-200/80 text-xs font-semibold text-slate-500 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
       <div class="flex items-center gap-2">
         <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
@@ -342,15 +440,15 @@
   </div>
 </main>
 
-<!-- MODAL 1: KOT / Thermal Invoice Slip Modal -->
+<!-- MODAL 1: KOT & POS Thermal Slip Modal (Supports KOT tickets and Final Bills) -->
 <div class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 hidden" id="kot-modal">
   <div class="bg-white w-full max-w-lg rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col">
     <div class="bg-slate-900 text-white px-5 py-3.5 flex items-center justify-between">
       <div>
-        <h3 class="text-sm font-extrabold text-white flex items-center gap-2">
+        <h3 class="text-sm font-extrabold text-white flex items-center gap-2" id="kot-modal-title">
           <i class="fa-solid fa-print text-indigo-400"></i> KOT Ticket &amp; POS Guest Bill
         </h3>
-        <p class="text-[11px] text-slate-400 mt-0.5">Original Copy (Guest) &amp; Duplicate Copy (Kitchen)</p>
+        <p class="text-[11px] text-slate-400 mt-0.5" id="kot-modal-subtitle">Original Copy (Guest) &amp; Duplicate Copy (Kitchen)</p>
       </div>
       <button type="button" onclick="closeKotModal()" class="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center text-base cursor-pointer transition-colors">&times;</button>
     </div>
@@ -368,19 +466,19 @@
     <div class="p-5 bg-slate-50 overflow-y-auto max-h-[68vh]">
       <div id="printable-kot-area" class="space-y-4">
         
-        <!-- 1. ORIGINAL COPY (FOR GUEST) -->
+        <!-- 1. ORIGINAL COPY (FOR GUEST / INVOICE) -->
         <div id="kot-ticket-guest" class="kot-ticket-slip bg-white p-4 border border-dashed border-slate-300 rounded-xl font-mono text-xs shadow-xs text-slate-900">
           <h3 class="text-center font-black text-sm tracking-wide">HOTEL SAGAR SONNET</h3>
           <div class="center-sub text-center text-[11px] text-slate-500 font-semibold my-1">
             Sea Breeze Dining &amp; Room Dining<br>
-            <strong class="text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200 inline-block mt-0.5">*** ORIGINAL COPY (FOR GUEST) ***</strong>
+            <strong class="text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200 inline-block mt-0.5" id="kot-guest-badge-header">*** ORIGINAL COPY (FOR GUEST) ***</strong>
           </div>
           <div class="divider-line border-b border-dashed border-slate-300 my-2"></div>
           <div class="flex justify-between text-[11px]">
-            <span id="kot-guest-order-num"><strong>KOT: POS-2026-0001</strong></span>
+            <span id="kot-guest-order-num"><strong>BILL: POS-2026-0001</strong></span>
             <span id="kot-guest-time">Time: --:--</span>
           </div>
-          <div class="text-[11px] mt-0.5"><strong>Type:</strong> <span id="kot-guest-dest">Room 102</span></div>
+          <div class="text-[11px] mt-0.5"><strong>Destination:</strong> <span id="kot-guest-dest">Room 102</span></div>
           <div class="text-[11px] mt-0.5"><strong>Guest / Host:</strong> <span id="kot-guest-name">In-House Guest</span></div>
           <div class="text-[11px] mt-0.5"><strong>Billing Mode:</strong> <span id="kot-guest-billing" class="font-bold text-indigo-700">Charged to Room Folio</span></div>
           <div class="divider-line border-b border-dashed border-slate-300 my-2"></div>
@@ -406,7 +504,7 @@
             Instructions: None
           </div>
           <div class="divider-line border-b border-dashed border-slate-300 my-2"></div>
-          <div class="center-sub text-center text-[10px] text-slate-400 mt-1">Served by: Debashis Roy | ORIGINAL GUEST COPY</div>
+          <div class="center-sub text-center text-[10px] text-slate-400 mt-1">Served by: Debashis Roy | Hotel Sagar Sonnet Dining</div>
         </div>
 
         <!-- Perforation / Tear Strip -->
@@ -421,7 +519,7 @@
           <h3 class="text-center font-black text-sm tracking-wide">HOTEL SAGAR SONNET</h3>
           <div class="center-sub text-center text-[11px] text-slate-500 font-semibold my-1">
             Kitchen Order Routing (KOT)<br>
-            <strong class="text-rose-700 bg-rose-50 px-2 py-0.5 rounded border border-rose-200 inline-block mt-0.5">*** DUPLICATE COPY (FOR KITCHEN) ***</strong>
+            <strong class="text-rose-700 bg-rose-50 px-2 py-0.5 rounded border border-rose-200 inline-block mt-0.5" id="kot-kitchen-badge-header">*** DUPLICATE COPY (FOR KITCHEN) ***</strong>
           </div>
           <div class="divider-line border-b border-dashed border-amber-300 my-2"></div>
           <div class="flex justify-between text-[11px]">
@@ -430,7 +528,7 @@
           </div>
           <div class="text-[11px] mt-0.5"><strong>Destination:</strong> <span id="kot-kitchen-dest" class="font-extrabold text-indigo-800">Room 102</span></div>
           <div class="text-[11px] mt-0.5"><strong>Guest / Host:</strong> <span id="kot-kitchen-name">In-House Guest</span></div>
-          <div class="text-[11px] mt-0.5"><strong>Billing Mode:</strong> <span id="kot-kitchen-billing">Charged to Room Folio</span></div>
+          <div class="text-[11px] mt-0.5"><strong>Billing Mode:</strong> <span id="kot-kitchen-billing">Pending Settlement</span></div>
           <div class="divider-line border-b border-dashed border-amber-300 my-2"></div>
           <table class="w-full border-collapse text-left text-[11px]">
             <thead>
@@ -447,7 +545,7 @@
           <div class="divider-line border-b border-dashed border-amber-300 my-2"></div>
           <div class="flex justify-between font-black text-xs">
             <span>Total Qty: <span id="kot-kitchen-total-qty">0</span></span>
-            <span>Total Bill: ₹ <span id="kot-kitchen-grand-total">0.00</span></span>
+            <span>Total: ₹ <span id="kot-kitchen-grand-total">0.00</span></span>
           </div>
           <div class="divider-line border-b border-dashed border-amber-300 my-2"></div>
           <div id="kot-kitchen-notes-line" class="text-[10.5px] font-bold text-amber-900 bg-amber-50 p-2 rounded-lg border border-amber-200">
@@ -472,14 +570,178 @@
           <i class="fa-solid fa-kitchen-set text-rose-600"></i> Kitchen Copy
         </button>
         <button type="button" class="inline-flex items-center gap-1.5 h-9 px-4 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-all shadow-xs cursor-pointer" onclick="printThermalTicket('both')">
-          <i class="fa-solid fa-print text-[11px]"></i> Print Both (Guest + Kitchen)
+          <i class="fa-solid fa-print text-[11px]"></i> Print Both Copies
         </button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- MODAL 3: Live Table Management & Status -->
+<!-- MODAL 2: Single Final Bill Settlement Modal for Table Dine-In & Takeaway -->
+<div class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 hidden" id="table-settle-modal">
+  <div class="bg-white w-full max-w-xl rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
+    <!-- Header -->
+    <div class="bg-slate-900 text-white px-6 py-4 flex items-center justify-between">
+      <div>
+        <h3 class="text-sm font-extrabold text-white flex items-center gap-2">
+          <i class="fa-solid fa-receipt text-emerald-400"></i> Final Table Bill Settlement
+        </h3>
+        <p class="text-xs text-slate-400 mt-0.5" id="settle-modal-subtitle">
+          Consolidate all running KOTs into a single bill and release table.
+        </p>
+      </div>
+      <button type="button" onclick="closeTableSettleModal()" class="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center text-base cursor-pointer">&times;</button>
+    </div>
+
+    <!-- Body -->
+    <div class="p-6 overflow-y-auto space-y-4">
+      <!-- Session Destination Info Card -->
+      <div class="bg-slate-50 border border-slate-200 rounded-xl p-3.5 flex items-center justify-between flex-wrap gap-2">
+        <div>
+          <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Dining Table</span>
+          <span class="text-xs font-black text-slate-900" id="settle-dest-label">Table 1</span>
+        </div>
+        <div id="settle-room-block">
+          <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Guest / Attached Room</span>
+          <span class="text-xs font-bold text-indigo-700" id="settle-guest-label">Room 102 - Saklin Mustak</span>
+        </div>
+        <div>
+          <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">KOTs Consolidated</span>
+          <span class="text-xs font-mono font-black text-amber-700" id="settle-kots-badge">2 KOT Tickets</span>
+        </div>
+      </div>
+
+      <!-- Itemized Table of ALL dishes across all KOTs -->
+      <div>
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs font-bold text-slate-700 uppercase tracking-wider">Consolidated Ordered Dishes (All KOTs):</span>
+          <span class="text-[11px] text-slate-400 font-medium" id="settle-items-total-qty">0 items</span>
+        </div>
+        <div class="border border-slate-200 rounded-xl overflow-hidden max-h-48 overflow-y-auto">
+          <table class="w-full text-left text-xs border-collapse">
+            <thead class="sticky top-0 bg-slate-100/90 text-slate-600 font-bold border-b border-slate-200">
+              <tr>
+                <th class="px-3 py-2">Dish Item</th>
+                <th class="px-3 py-2 text-center w-16">Qty</th>
+                <th class="px-3 py-2 text-right w-20">Rate</th>
+                <th class="px-3 py-2 text-right w-24">Amount</th>
+              </tr>
+            </thead>
+            <tbody id="settle-items-tbody" class="divide-y divide-slate-100">
+              <!-- Rendered dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Bill Breakdown Card -->
+      <div class="bg-slate-50/80 border border-slate-200 rounded-xl p-3.5 space-y-1.5 text-xs">
+        <div class="flex justify-between text-slate-500 font-medium">
+          <span>Subtotal:</span>
+          <span id="settle-subtotal-val" class="font-mono font-bold text-slate-800">₹ 0.00</span>
+        </div>
+        <div class="flex justify-between text-slate-500 font-medium">
+          <span>GST (<span id="settle-gst-rate-val">12</span>%):</span>
+          <span id="settle-tax-val" class="font-mono">₹ 0.00</span>
+        </div>
+        <div class="flex justify-between pt-2 border-t border-slate-200 text-sm font-black text-slate-900">
+          <span>Final Bill Amount:</span>
+          <span id="settle-grand-total-val" class="font-mono text-emerald-600 text-base">₹ 0.00</span>
+        </div>
+      </div>
+
+      <!-- Payment / Settlement Mode Selection -->
+      <div>
+        <label class="block text-xs font-black text-slate-800 uppercase tracking-wider mb-2">
+          Choose Settlement Mode: *
+        </label>
+        
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5" id="settle-mode-grid">
+          <!-- Option 1: Room Attach (Available for Table Dine-In with room) -->
+          <label id="opt-settle-folio" class="settle-mode-card border-2 border-indigo-500 bg-indigo-50/60 rounded-xl p-3 cursor-pointer transition-all flex flex-col justify-between">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-black text-indigo-900 flex items-center gap-1.5">
+                <i class="fa-solid fa-door-closed text-indigo-600"></i> Room Attach
+              </span>
+              <input type="radio" name="settle_billing_type" value="Charged to Room Folio" checked class="text-indigo-600">
+            </div>
+            <div class="mt-2 text-[10.5px] text-indigo-800/90 leading-tight">
+              <strong>Unpaid Bill:</strong> Attached to guest room folio. Settle during room checkout.
+            </div>
+          </label>
+
+          <!-- Option 2: Cash -->
+          <label id="opt-settle-cash" class="settle-mode-card border border-slate-200 bg-white hover:bg-slate-50 rounded-xl p-3 cursor-pointer transition-all flex flex-col justify-between">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-black text-slate-800 flex items-center gap-1.5">
+                <i class="fa-solid fa-money-bill-wave text-emerald-600"></i> Cash Paid
+              </span>
+              <input type="radio" name="settle_billing_type" value="Cash Paid" class="text-emerald-600">
+            </div>
+            <div class="mt-2 text-[10.5px] text-slate-500 leading-tight" id="settle-cash-note">
+              Paid in Cash on spot. Attached to room as Paid.
+            </div>
+          </label>
+
+          <!-- Option 3: UPI -->
+          <label id="opt-settle-upi" class="settle-mode-card border border-slate-200 bg-white hover:bg-slate-50 rounded-xl p-3 cursor-pointer transition-all flex flex-col justify-between">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-black text-slate-800 flex items-center gap-1.5">
+                <i class="fa-solid fa-qrcode text-cyan-600"></i> Digital UPI
+              </span>
+              <input type="radio" name="settle_billing_type" value="Digital UPI / Card Paid" class="text-cyan-600">
+            </div>
+            <div class="mt-2 text-[10.5px] text-slate-500 leading-tight" id="settle-upi-note">
+              Paid via UPI / Card on spot. Attached to room as Paid.
+            </div>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between gap-3">
+      <button type="button" onclick="closeTableSettleModal()" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:text-slate-900 bg-white border border-slate-200 hover:bg-slate-100 transition-colors cursor-pointer">
+        Cancel
+      </button>
+      <button type="button" onclick="confirmTableSettlement()" id="btn-confirm-settlement" class="px-5 py-2.5 rounded-xl text-xs font-extrabold text-white bg-emerald-600 hover:bg-emerald-700 shadow-md transition-all flex items-center gap-2 cursor-pointer">
+        <i class="fa-solid fa-check"></i> Confirm Settlement &amp; Print Final Bill
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL 3: Running KOTs Viewer Modal -->
+<div class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 hidden" id="running-kots-modal">
+  <div class="bg-white w-full max-w-xl rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[85vh]">
+    <div class="bg-slate-900 text-white px-6 py-4 flex items-center justify-between">
+      <div>
+        <h3 class="text-sm font-extrabold text-white flex items-center gap-2">
+          <i class="fa-solid fa-list-check text-amber-400"></i> Active KOT Tickets on Table
+        </h3>
+        <p class="text-xs text-slate-400 mt-0.5" id="running-kots-modal-subtitle">
+          Breakdown of individual kitchen tokens punched for this dining session.
+        </p>
+      </div>
+      <button type="button" onclick="closeRunningKotsModal()" class="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center text-base cursor-pointer">&times;</button>
+    </div>
+
+    <div class="p-6 overflow-y-auto space-y-4" id="running-kots-modal-content">
+      <!-- Dynamic KOT cards rendered here -->
+    </div>
+
+    <div class="px-6 py-3.5 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
+      <button type="button" onclick="closeRunningKotsModal()" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 cursor-pointer">
+        Close
+      </button>
+      <button type="button" onclick="closeRunningKotsModal(); openTableSettleModal();" class="px-4 py-2 rounded-xl text-xs font-extrabold text-white bg-emerald-600 hover:bg-emerald-700 cursor-pointer">
+        Proceed to Final Settlement
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL 4: Live Table Management & Status -->
 <div class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 hidden" id="table-manage-modal">
   <div class="bg-white w-full max-w-4xl rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[85vh]">
     <div class="bg-slate-50/80 px-6 py-4 border-b border-slate-200/80 flex items-center justify-between">
@@ -596,8 +858,13 @@
   let cart = [];
   let currentOrderType = 'Room Dining';
   let currentBillingType = 'Charged to Room Folio';
+  let selectedTableId = null;
 
-  // Helper to sync room selectors between Header and Cart
+  // Active table sessions data provided from backend
+  let tableSessions = @json($tableSessions ?? []);
+  let allTablesData = @json($allTables ?? []);
+
+  // Sync room selectors between Header and Cart
   function syncRoomSelectors(val) {
     if (typeof $ !== 'undefined') {
       if ($('#pos-room-select').val() !== val) {
@@ -616,6 +883,10 @@
     updateRoomPickerNote();
   }
 
+  function onCartRoomChange(val) {
+    syncRoomSelectors(val);
+  }
+
   // Live note updating for Room Folio vs Cash/UPI Direct
   function updateRoomPickerNote() {
     const box = document.getElementById('room-folio-picker-box');
@@ -632,131 +903,85 @@
     const remAdv = hasFoodAdv ? (parseFloat(selectedOpt.getAttribute('data-rem-adv')) || 0) : 0;
 
     let subtotal = cart.reduce((acc, i) => acc + (i.price * i.qty), 0);
-    let tax = 0;
-    let actualTotal = 0;
-    let folioDue = 0;
-
-    if (currentBillingType === 'Charged to Room Folio' && hasFoodAdv && foodAdvTotal > 0) {
-      if (subtotal <= remAdv) {
-        tax = 0;
-        actualTotal = subtotal;
-        folioDue = 0;
-      } else {
-        const excess = subtotal - remAdv;
-        tax = Math.round(((excess * 0.05)) * 100) / 100;
-        actualTotal = Math.round((subtotal + tax) * 100) / 100;
-        folioDue = Math.round((excess + tax) * 100) / 100;
-      }
-    } else {
-      tax = Math.round(((subtotal * posGstRate) / 100) * 100) / 100;
-      actualTotal = Math.round((subtotal + tax) * 100) / 100;
-      folioDue = actualTotal;
-    }
-
-    const grandFmt = '₹ ' + actualTotal.toLocaleString();
+    let tax = Math.round(((subtotal * posGstRate) / 100) * 100) / 100;
+    let actualTotal = Math.round((subtotal + tax) * 100) / 100;
+    const grandFmt = '₹ ' + actualTotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     const btnLabel = document.getElementById('btn-order-label');
+    const btnIcon = document.getElementById('btn-order-icon');
 
-    const isTakeaway = (currentOrderType === 'Takeaway');
-    const takeawayCustBox = document.getElementById('takeaway-customer-box');
+    // 1. Scenario: Table Dine-in & Takeaway (Multiple KOT flow)
+    if (currentOrderType === 'Table Dine-in' || currentOrderType === 'Takeaway') {
+      const sess = selectedTableId ? tableSessions[selectedTableId] : null;
+      const kotSeq = sess ? (sess.kots_count + 1) : 1;
 
-    if (isTakeaway) {
-      if (box) box.style.display = 'none';
-      if (takeawayCustBox) takeawayCustBox.style.display = 'block';
-      const isCash = (currentBillingType === 'Cash Paid');
-      const modeName = isCash ? 'Cash' : 'UPI / Card';
-      if (btnLabel) btnLabel.textContent = `Settle Takeaway (${modeName} ${grandFmt}) & Print KOT`;
+      if (btnIcon) btnIcon.className = 'fa-solid fa-kitchen-set';
+
+      if (cart.length > 0) {
+        if (btnLabel) btnLabel.textContent = `Send KOT #${kotSeq} to Kitchen (${cart.length} item${cart.length > 1 ? 's' : ''})`;
+      } else if (sess) {
+        if (btnLabel) btnLabel.textContent = `Settle Table Bill & Free Table (${sess.kots_count} KOTs • ₹${Number(sess.total_amount).toLocaleString('en-IN')})`;
+      } else {
+        if (btnLabel) btnLabel.textContent = `Send KOT #1 to Kitchen`;
+      }
+
+      if (currentOrderType === 'Table Dine-in') {
+        if (box) box.style.display = 'block';
+        if (title) title.innerHTML = '<span class="flex items-center gap-1.5"><i class="fa-solid fa-door-open text-emerald-600"></i> Residing Guest Room (for Table KOT): *</span>';
+        if (badge) {
+          badge.textContent = sess ? 'Active Session Room' : 'Select Room';
+          badge.className = 'text-[10px] bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded-full font-bold';
+        }
+        if (note) {
+          if (roomId && roomNo) {
+            note.innerHTML = `<span class="text-emerald-800 font-semibold text-xs flex items-center gap-1.5"><i class="fa-solid fa-circle-check text-emerald-600"></i> Linked to <strong>Room ${roomNo} (${guestName})</strong>. Multiple KOTs can be placed. Single bill will be settled at conclusion.</span>`;
+          } else {
+            note.innerHTML = `<span class="text-amber-700 font-semibold text-xs flex items-center gap-1.5"><i class="fa-solid fa-circle-info text-amber-500"></i> Select guest room to tag dining KOTs to their stay.</span>`;
+          }
+        }
+      }
       return;
     }
 
-    if (takeawayCustBox) takeawayCustBox.style.display = 'none';
+    // 2. Scenario: Room Dining (Immediate direct billing)
+    if (btnIcon) btnIcon.className = 'fa-solid fa-check';
 
     if (currentBillingType === 'Charged to Room Folio') {
-      if (box) {
-        box.style.display = 'block';
-        box.className = 'mt-3 bg-emerald-50/70 border border-emerald-200 rounded-xl p-3 space-y-2 block transition-all';
-      }
+      if (box) box.style.display = 'block';
       if (title) title.innerHTML = '<span class="flex items-center gap-1.5"><i class="fa-solid fa-door-open text-emerald-600"></i> Select Room to Charge Folio: *</span>';
       if (badge) {
         if (hasFoodAdv) {
-          badge.textContent = `Company Food Advance (₹${foodAdvTotal.toLocaleString()})`;
+          badge.textContent = `Food Advance (₹${foodAdvTotal.toLocaleString()})`;
           badge.className = 'text-[10px] bg-emerald-200 text-emerald-900 px-2 py-0.5 rounded-full font-bold border border-emerald-300';
         } else {
-          badge.textContent = 'In-House Folio (Adds to Balance)';
+          badge.textContent = 'Room Folio Ledger';
           badge.className = 'text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-bold';
         }
       }
-      if (btnLabel) {
-        if (hasFoodAdv && foodAdvTotal > 0) {
-          if (subtotal <= remAdv) {
-            btnLabel.textContent = `Post Order (₹${subtotal.toLocaleString()} - Covered by Advance)`;
-          } else {
-            btnLabel.textContent = `Post Bill to Room Folio (Excess: ₹${folioDue.toLocaleString()})`;
-          }
-        } else {
-          btnLabel.textContent = `Post Bill to Room Folio (${grandFmt})`;
-        }
-      }
+      if (btnLabel) btnLabel.textContent = `Post Bill to Room Folio (${grandFmt})`;
 
       if (note) {
         if (roomId && roomNo) {
-          if (hasFoodAdv && foodAdvTotal > 0) {
-            if (subtotal <= remAdv) {
-              const unusedAfter = Math.max(0, remAdv - subtotal);
-              note.innerHTML = `<div class="bg-emerald-100/80 border border-emerald-300 rounded-lg p-2.5 text-emerald-900 text-xs">
-                <div class="font-extrabold flex items-center gap-1.5"><i class="fa-solid fa-utensils text-emerald-700"></i> Company Food Advance: ₹${foodAdvTotal.toLocaleString()} (Remaining: ₹${remAdv.toLocaleString()})</div>
-                <div class="mt-1 text-[11px] leading-tight">
-                  ✓ Order of <strong>₹${subtotal.toLocaleString()}</strong> is <strong>100% covered</strong> by Company Food Advance!<br>
-                  <span class="text-emerald-800 font-bold">Folio bill charged now: ₹0.00</span>. Unused credit of <strong>₹${unusedAfter.toLocaleString()}</strong> will be deducted at settlement.
-                </div>
-              </div>`;
-            } else {
-              const excess = subtotal - remAdv;
-              note.innerHTML = `<div class="bg-amber-50 border border-amber-300 rounded-lg p-2.5 text-amber-900 text-xs">
-                <div class="font-extrabold flex items-center gap-1.5"><i class="fa-solid fa-triangle-exclamation text-amber-600"></i> Company Food Advance Exceeded:</div>
-                <div class="mt-1 text-[11px] leading-tight">
-                  Food subtotal: ₹${subtotal.toLocaleString()} | Covered by advance: <strong>₹${remAdv.toLocaleString()}</strong><br>
-                  Excess food: <strong>₹${excess.toLocaleString()}</strong> + <strong>5% GST (₹${tax.toLocaleString()})</strong><br>
-                  <strong class="text-indigo-800">Net excess bill added to Room Folio: ₹${folioDue.toLocaleString()}</strong>
-                </div>
-              </div>`;
-            }
-          } else {
-            note.innerHTML = `<span class="text-emerald-800 font-semibold text-xs flex items-center gap-1.5"><i class="fa-solid fa-file-invoice-dollar text-emerald-600"></i> Total ${grandFmt} will be added to <strong>Room ${roomNo} (${guestName})</strong> Folio remaining balance and settled at checkout.</span>`;
-          }
+          note.innerHTML = `<span class="text-emerald-800 font-semibold text-xs flex items-center gap-1.5"><i class="fa-solid fa-file-invoice-dollar text-emerald-600"></i> Total ${grandFmt} will be added to <strong>Room ${roomNo} (${guestName})</strong> Folio remaining balance and settled at checkout.</span>`;
         } else {
-          note.innerHTML = `<span class="text-rose-600 font-semibold text-xs flex items-center gap-1.5"><i class="fa-solid fa-circle-exclamation"></i> Please select a Room to link this bill to the residing guest folio.</span>`;
+          note.innerHTML = `<span class="text-rose-600 font-semibold text-xs flex items-center gap-1.5"><i class="fa-solid fa-circle-exclamation"></i> Please select a Room to link this bill.</span>`;
         }
       }
     } else {
-      // Cash Paid or Digital UPI / Card Paid
+      // Cash or UPI
       const isCash = (currentBillingType === 'Cash Paid');
       const modeName = isCash ? 'Cash' : 'UPI / Card';
-
-      if (box) {
-        box.style.display = 'block';
-        box.className = 'mt-3 bg-slate-50/70 border border-slate-200 rounded-xl p-3 space-y-2 block transition-all';
-      }
-      if (title) title.innerHTML = `<span class="flex items-center gap-1.5"><i class="fa-solid fa-link text-slate-500"></i> Link to Room Bill (Optional):</span>`;
-      if (badge) {
-        badge.textContent = `Optional (${modeName} Paid)`;
-        badge.className = 'text-[10px] bg-slate-200 text-slate-700 px-2 py-0.5 rounded-full font-bold';
-      }
-      if (btnLabel) btnLabel.textContent = `Settle ${modeName} (${grandFmt}) & Print KOT`;
-
+      if (btnLabel) btnLabel.textContent = `Settle ${modeName} (${grandFmt}) & Print Bill`;
       if (note) {
         if (roomId && roomNo) {
-          note.innerHTML = `<div class="bg-emerald-50 border border-emerald-200 rounded-lg p-2 text-emerald-800 text-[11px]">
-            <i class="fa-solid fa-circle-check text-emerald-600"></i> <strong>Linked to Room ${roomNo} (${guestName})</strong><br>
-            <span class="opacity-90">Bill of <strong>${grandFmt}</strong> will be marked as <strong class="text-emerald-700">PAID (${modeName})</strong> under this booking in Settlement. Does NOT increase remaining balance.</span>
-          </div>`;
+          note.innerHTML = `<span class="text-emerald-800 font-semibold text-xs flex items-center gap-1.5"><i class="fa-solid fa-circle-check text-emerald-600"></i> Linked to <strong>Room ${roomNo} (${guestName})</strong> as PAID on spot.</span>`;
         } else {
-          note.innerHTML = `<span class="text-slate-500 text-[11px]"><i class="fa-solid fa-circle-info"></i> Direct Walk-in settlement. Select a room above if this is an in-house guest paying on the spot.</span>`;
+          note.innerHTML = `<span class="text-slate-500 text-[11px]"><i class="fa-solid fa-circle-info"></i> Direct settlement via ${modeName}.</span>`;
         }
       }
     }
   }
 
-  // Initialize Searchable Select2 Dropdowns
+  // Initialize Select2 Dropdowns
   $(document).ready(function() {
     if (typeof $.fn.select2 !== 'undefined') {
       $('#pos-room-select').select2({
@@ -769,8 +994,10 @@
       });
 
       $('#pos-table-select').select2({
-        width: '220px',
+        width: '240px',
         placeholder: 'Select Dining Table'
+      }).on('change', function() {
+        onTableSelectDropdownChange($(this).val());
       });
 
       $('#cart-room-folio-select').select2({
@@ -783,13 +1010,14 @@
       });
     }
 
-    // Auto-select room from URL query param if present (e.g. from Room Details modal)
     const urlParams = new URLSearchParams(window.location.search);
     const qRoomId = urlParams.get('room_id');
     if (qRoomId) {
       syncRoomSelectors(qRoomId);
     }
-    updateRoomPickerNote();
+
+    // Default to Room Dining
+    selectOrderType('Room Dining');
   });
 
   // 1. Order Type Switching
@@ -799,103 +1027,165 @@
       b.className = 'pos-order-type-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 transition-all cursor-pointer';
     });
     
-    const roomGrp = document.getElementById('room-select-group');
     const tableGrp = document.getElementById('table-select-group');
+    const tableBar = document.getElementById('pos-live-table-bar');
     const takeawayGrp = document.getElementById('takeaway-name-group');
-    const folioPill = document.getElementById('bill-folio');
     const folioBox = document.getElementById('room-folio-picker-box');
     const takeawayCustBox = document.getElementById('takeaway-customer-box');
+    const roomDiningBillingOpts = document.getElementById('room-dining-billing-options');
+    const tableKotNote = document.getElementById('table-kot-mode-note');
 
     if (type === 'Room Dining') {
+      // Scenario 1: Immediate direct bill, no multiple KOTs
       const btn = document.getElementById('type-room');
       if (btn) btn.className = 'pos-order-type-btn px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-white text-emerald-700 shadow-xs cursor-pointer';
-      if (roomGrp) roomGrp.style.display = 'none';
-      tableGrp.style.display = 'none';
+      
+      if (tableGrp) tableGrp.style.display = 'none';
+      if (tableBar) tableBar.style.display = 'none';
       if (takeawayGrp) takeawayGrp.style.display = 'none';
-      if (folioPill) folioPill.style.display = 'block';
       if (takeawayCustBox) takeawayCustBox.style.display = 'none';
       if (folioBox) folioBox.style.display = 'block';
+      if (roomDiningBillingOpts) roomDiningBillingOpts.style.display = 'block';
+      if (tableKotNote) tableKotNote.style.display = 'none';
+      
+      selectedTableId = null;
+      renderActiveTableSessionBox();
       setBillingType('Charged to Room Folio');
+
     } else if (type === 'Table Dine-in') {
+      // Scenario 2: Room-wise guest with table, supports multiple KOTs, settled at end
       const btn = document.getElementById('type-dinein');
       if (btn) btn.className = 'pos-order-type-btn px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-white text-emerald-700 shadow-xs cursor-pointer';
-      tableGrp.style.display = 'flex';
-      const tblSelect = document.getElementById('pos-table-select');
-      if (tblSelect && tblSelect.options.length > 0) {
-        tblSelect.options[0].text = '-- Select Available Table --';
-      }
+      
+      if (tableGrp) tableGrp.style.display = 'flex';
+      if (tableBar) tableBar.style.display = 'flex';
       if (takeawayGrp) takeawayGrp.style.display = 'none';
-      if (folioPill) folioPill.style.display = 'block';
       if (takeawayCustBox) takeawayCustBox.style.display = 'none';
       if (folioBox) folioBox.style.display = 'block';
-      if (roomGrp) roomGrp.style.display = 'none';
-      if (currentBillingType === 'Charged to Room Folio') {
-        setBillingType('Charged to Room Folio');
-      } else {
-        setBillingType(currentBillingType || 'Cash Paid');
-      }
+      if (roomDiningBillingOpts) roomDiningBillingOpts.style.display = 'none';
+      if (tableKotNote) tableKotNote.style.display = 'block';
+
+      renderActiveTableSessionBox();
+      updateRoomPickerNote();
+
     } else if (type === 'Takeaway') {
+      // Scenario 3: Outside guest with table, supports multiple KOTs, settled via Cash/UPI
       const btn = document.getElementById('type-takeaway');
       if (btn) btn.className = 'pos-order-type-btn px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-white text-emerald-700 shadow-xs cursor-pointer';
-      if (roomGrp) roomGrp.style.display = 'none';
-      tableGrp.style.display = 'flex';
-      const tblSelect = document.getElementById('pos-table-select');
-      if (tblSelect && tblSelect.options.length > 0) {
-        tblSelect.options[0].text = '-- No Table / Takeaway Counter (Optional) --';
-      }
+      
+      if (tableGrp) tableGrp.style.display = 'flex';
+      if (tableBar) tableBar.style.display = 'flex';
       if (takeawayGrp) takeawayGrp.style.display = 'none';
-      if (folioPill) folioPill.style.display = 'none';
       if (folioBox) folioBox.style.display = 'none';
       if (takeawayCustBox) takeawayCustBox.style.display = 'block';
-      if (currentBillingType === 'Charged to Room Folio') {
-        setBillingType('Cash Paid');
-      } else {
-        setBillingType(currentBillingType || 'Cash Paid');
-      }
+      if (roomDiningBillingOpts) roomDiningBillingOpts.style.display = 'none';
+      if (tableKotNote) tableKotNote.style.display = 'block';
+
+      renderActiveTableSessionBox();
+      updateRoomPickerNote();
     }
   }
 
-  // 2. Billing Type Switching
+  // 2. Billing Type Switching (for Room Dining)
   function setBillingType(bType) {
     currentBillingType = bType;
     document.querySelectorAll('.billing-pill').forEach(p => {
       p.className = 'billing-pill px-3 py-2 rounded-xl text-xs font-semibold text-slate-600 text-center cursor-pointer transition-all border border-slate-200 bg-white hover:bg-slate-50';
     });
     
-    const headerRoomGrp = document.getElementById('room-select-group');
-    const folioBox = document.getElementById('room-folio-picker-box');
-    const takeawayCustBox = document.getElementById('takeaway-customer-box');
-
     const activePillClass = 'billing-pill active px-3 py-2 rounded-xl text-xs font-bold text-center cursor-pointer transition-all border border-emerald-300 bg-emerald-50 text-emerald-700 shadow-xs';
 
-    if (currentOrderType === 'Takeaway') {
-      if (folioBox) folioBox.style.display = 'none';
-      if (headerRoomGrp) headerRoomGrp.style.display = 'none';
-      if (takeawayCustBox) takeawayCustBox.style.display = 'block';
-      if (bType === 'Cash Paid') {
-        document.getElementById('bill-cash').className = activePillClass;
-      } else {
-        document.getElementById('bill-digital').className = activePillClass;
-      }
-    } else {
-      if (takeawayCustBox) takeawayCustBox.style.display = 'none';
-      if (folioBox) folioBox.style.display = 'block';
-
-      if (bType === 'Charged to Room Folio') {
-        document.getElementById('bill-folio').className = activePillClass;
-        if (headerRoomGrp) headerRoomGrp.style.display = 'none';
-      } else if (bType === 'Cash Paid') {
-        document.getElementById('bill-cash').className = activePillClass;
-        if (headerRoomGrp) headerRoomGrp.style.display = 'none';
-      } else if (bType === 'Digital UPI / Card Paid') {
-        document.getElementById('bill-digital').className = activePillClass;
-        if (headerRoomGrp) headerRoomGrp.style.display = 'none';
-      }
+    if (bType === 'Charged to Room Folio') {
+      const el = document.getElementById('bill-folio');
+      if (el) el.className = activePillClass;
+    } else if (bType === 'Cash Paid') {
+      const el = document.getElementById('bill-cash');
+      if (el) el.className = activePillClass;
+    } else if (bType === 'Digital UPI / Card Paid') {
+      const el = document.getElementById('bill-digital');
+      if (el) el.className = activePillClass;
     }
     updateRoomPickerNote();
   }
 
-  // 3. Cart Operations
+  // 3. Table Pill / Dropdown Interaction
+  function onTablePillClick(tableId) {
+    if (currentOrderType === 'Room Dining') {
+      selectOrderType('Table Dine-in');
+    }
+    selectedTableId = tableId;
+
+    // Sync select dropdown
+    const sel = document.getElementById('pos-table-select');
+    if (sel) {
+      sel.value = tableId;
+      if (typeof $ !== 'undefined') {
+        $(sel).val(tableId).trigger('change.select2Sync');
+      }
+    }
+
+    highlightSelectedTablePill();
+    renderActiveTableSessionBox();
+    updateRoomPickerNote();
+  }
+
+  function onTableSelectDropdownChange(val) {
+    selectedTableId = val ? parseInt(val, 10) : null;
+    highlightSelectedTablePill();
+    renderActiveTableSessionBox();
+    updateRoomPickerNote();
+  }
+
+  function highlightSelectedTablePill() {
+    document.querySelectorAll('.pos-table-pill').forEach(btn => {
+      btn.classList.remove('ring-2', 'ring-indigo-600', 'scale-105');
+    });
+    if (selectedTableId) {
+      const activePill = document.getElementById('tbl-pill-' + selectedTableId);
+      if (activePill) {
+        activePill.classList.add('ring-2', 'ring-indigo-600', 'scale-105');
+      }
+    }
+  }
+
+  function renderActiveTableSessionBox() {
+    const box = document.getElementById('active-table-session-box');
+    if (!box) return;
+
+    if (!selectedTableId || (currentOrderType !== 'Table Dine-in' && currentOrderType !== 'Takeaway')) {
+      box.style.display = 'none';
+      return;
+    }
+
+    const sess = tableSessions[selectedTableId];
+    if (!sess || sess.kots_count === 0) {
+      box.style.display = 'none';
+      return;
+    }
+
+    box.style.display = 'block';
+    document.getElementById('sess-table-title').textContent = `${sess.table_number} (${sess.table_name})`;
+    document.getElementById('sess-kot-count-badge').textContent = `${sess.kots_count} KOT${sess.kots_count > 1 ? 's' : ''} Active`;
+    document.getElementById('sess-running-subtotal').textContent = '₹ ' + Number(sess.total_amount).toLocaleString('en-IN', { minimumFractionDigits: 2 });
+    
+    if (sess.room_number) {
+      document.getElementById('sess-guest-line').innerHTML = `<i class="fa-solid fa-user text-amber-600 mr-1"></i> Guest: <strong>${escapeHtml(sess.customer_name || 'Guest')}</strong>`;
+      document.getElementById('sess-room-line').textContent = `Room ${sess.room_number}`;
+      document.getElementById('sess-room-line').style.display = 'inline-block';
+      // Sync room select
+      if (sess.room_id) {
+        syncRoomSelectors(sess.room_id.toString());
+      }
+    } else {
+      document.getElementById('sess-guest-line').innerHTML = `<i class="fa-solid fa-user-tag text-amber-600 mr-1"></i> Outside Guest: <strong>${escapeHtml(sess.customer_name || 'Walk-in Guest')}</strong>`;
+      document.getElementById('sess-room-line').style.display = 'none';
+      if (document.getElementById('takeaway-customer-name') && sess.customer_name) {
+        document.getElementById('takeaway-customer-name').value = sess.customer_name;
+      }
+    }
+  }
+
+  // 4. Cart Operations
   function addToCart(id, name, price, maxPlates) {
     if (maxPlates !== undefined && maxPlates <= 0) {
       if (typeof PmsAlert !== 'undefined') {
@@ -950,144 +1240,77 @@
   }
 
   function clearCart() {
-    if (cart.length === 0) return;
     cart = [];
     renderCart();
   }
 
   function renderCart() {
-    const elem = document.getElementById('cart-items');
+    const container = document.getElementById('cart-items');
     const badge = document.getElementById('cart-count-badge');
+    const subVal = document.getElementById('sub-val');
+    const taxVal = document.getElementById('tax-val');
+    const totVal = document.getElementById('tot-val');
+
+    const totalItems = cart.reduce((acc, i) => acc + i.qty, 0);
+    if (badge) badge.textContent = totalItems;
 
     if (cart.length === 0) {
-      badge.textContent = '0';
-      elem.innerHTML = `
+      container.innerHTML = `
         <div class="text-center text-slate-400 py-12 text-xs">
           <i class="fa-solid fa-basket-shopping text-3xl block mb-2 text-slate-300"></i>
           Cart is empty.<br>Click any food card on the left to add items.
         </div>
       `;
-      document.getElementById('sub-val').textContent = '₹ 0';
-      document.getElementById('tax-val').textContent = '₹ 0';
-      document.getElementById('tot-val').textContent = '₹ 0';
-      const cutRow = document.getElementById('row-food-adv-cut');
-      const folioDueRow = document.getElementById('row-folio-charge-due');
-      if (cutRow) cutRow.classList.add('hidden');
-      if (folioDueRow) folioDueRow.classList.add('hidden');
+      if (subVal) subVal.textContent = '₹ 0';
+      if (taxVal) taxVal.textContent = '₹ 0';
+      if (totVal) totVal.textContent = '₹ 0';
+      updateRoomPickerNote();
       return;
     }
 
-    let totalQty = 0;
-    let subtotal = 0;
     let html = '';
+    let subtotal = 0;
 
-    cart.forEach((i, idx) => {
-      totalQty += i.qty;
-      const lineTot = i.price * i.qty;
-      subtotal += lineTot;
-
+    cart.forEach((item, idx) => {
+      const lineTotal = item.price * item.qty;
+      subtotal += lineTotal;
       html += `
-        <div class="py-2.5 flex items-center justify-between gap-2 border-b border-slate-100 last:border-b-0">
-          <div class="min-w-0 flex-1">
-            <div class="font-bold text-xs text-slate-800 truncate">${i.name}</div>
-            <div class="text-[11px] text-slate-400 font-mono mt-0.5">₹ ${i.price.toLocaleString()} × ${i.qty}</div>
+        <div class="py-2.5 flex items-center justify-between gap-2">
+          <div class="flex-1 min-w-0">
+            <div class="font-bold text-xs text-slate-900 truncate" title="${escapeHtml(item.name)}">${escapeHtml(item.name)}</div>
+            <div class="text-[11px] font-mono text-slate-500">₹ ${item.price.toLocaleString()} × ${item.qty}</div>
           </div>
-          <div class="flex items-center gap-2 shrink-0">
-            <div class="inline-flex items-center border border-slate-200 rounded-lg bg-white overflow-hidden shadow-2xs">
-              <button type="button" class="w-6 h-6 flex items-center justify-center text-slate-500 hover:bg-slate-100 text-xs font-bold cursor-pointer" onclick="changeCartQty(${idx}, -1)">&minus;</button>
-              <span class="w-7 text-center font-mono font-bold text-xs text-slate-800">${i.qty}</span>
-              <button type="button" class="w-6 h-6 flex items-center justify-center text-slate-500 hover:bg-slate-100 text-xs font-bold cursor-pointer" onclick="changeCartQty(${idx}, 1)">&plus;</button>
-            </div>
-            <strong class="font-bold font-mono text-xs text-emerald-600 w-16 text-right">
-              ₹ ${lineTot.toLocaleString()}
-            </strong>
-            <button type="button" class="w-6 h-6 rounded-md bg-rose-50 hover:bg-rose-100 text-rose-600 flex items-center justify-center text-xs font-bold cursor-pointer transition-colors" onclick="removeFromCart(${idx})">&times;</button>
+          <div class="flex items-center gap-1.5 shrink-0">
+            <button type="button" class="w-6 h-6 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center text-xs font-bold transition-colors cursor-pointer" onclick="changeCartQty(${idx}, -1)">-</button>
+            <span class="w-6 text-center text-xs font-bold font-mono text-slate-900">${item.qty}</span>
+            <button type="button" class="w-6 h-6 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center text-xs font-bold transition-colors cursor-pointer" onclick="changeCartQty(${idx}, 1)">+</button>
+            <span class="w-16 text-right font-bold font-mono text-xs text-slate-900 ml-1">₹ ${lineTotal.toLocaleString()}</span>
+            <button type="button" class="w-6 h-6 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 flex items-center justify-center text-xs transition-colors cursor-pointer ml-1" onclick="removeFromCart(${idx})" title="Remove">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
           </div>
         </div>
       `;
     });
 
-    badge.textContent = totalQty;
-    elem.innerHTML = html;
+    container.innerHTML = html;
 
-    const cartRm = document.getElementById('cart-room-folio-select');
-    const selectedOpt = (cartRm && cartRm.selectedIndex >= 0) ? cartRm.options[cartRm.selectedIndex] : null;
-    const hasFoodAdv = selectedOpt && selectedOpt.getAttribute('data-has-food-adv') === '1';
-    const remAdv = hasFoodAdv ? (parseFloat(selectedOpt.getAttribute('data-rem-adv')) || 0) : 0;
+    const tax = Math.round(((subtotal * posGstRate) / 100) * 100) / 100;
+    const grandTotal = Math.round((subtotal + tax) * 100) / 100;
 
-    let tax = 0;
-    let actualTotal = 0;
-    let cutAmount = 0;
-    let folioDue = 0;
-    const gstRateLabel = document.getElementById('pos-gst-label-rate');
-    const cutRow = document.getElementById('row-food-adv-cut');
-    const cutVal = document.getElementById('food-adv-cut-val');
-    const folioDueRow = document.getElementById('row-folio-charge-due');
-    const folioDueVal = document.getElementById('folio-charge-due-val');
-    const totLabel = document.getElementById('tot-label');
-
-    if (currentBillingType === 'Charged to Room Folio' && hasFoodAdv) {
-      if (subtotal <= remAdv) {
-        tax = 0;
-        cutAmount = subtotal;
-        actualTotal = subtotal;
-        folioDue = 0;
-
-        if (gstRateLabel) gstRateLabel.textContent = '0% (Exempt / Covered)';
-        if (cutRow) {
-          cutRow.classList.remove('hidden');
-          cutVal.textContent = `- ₹ ${cutAmount.toLocaleString()}`;
-        }
-        if (folioDueRow) {
-          folioDueRow.classList.remove('hidden');
-          folioDueVal.textContent = '₹ 0.00 (100% Covered by Advance)';
-        }
-      } else {
-        const excess = subtotal - remAdv;
-        tax = Math.round(((excess * 0.05)) * 100) / 100;
-        cutAmount = remAdv;
-        actualTotal = Math.round((subtotal + tax) * 100) / 100;
-        folioDue = Math.round((excess + tax) * 100) / 100;
-
-        if (gstRateLabel) gstRateLabel.textContent = '5% on Excess Food';
-        if (cutRow) {
-          cutRow.classList.remove('hidden');
-          cutVal.textContent = `- ₹ ${cutAmount.toLocaleString()}`;
-        }
-        if (folioDueRow) {
-          folioDueRow.classList.remove('hidden');
-          folioDueVal.textContent = `₹ ${folioDue.toLocaleString()} (Excess ₹${excess.toLocaleString()} + 5% GST)`;
-        }
-      }
-      if (totLabel) totLabel.textContent = 'Actual Order Bill:';
-    } else {
-      tax = Math.round(((subtotal * posGstRate) / 100) * 100) / 100;
-      actualTotal = Math.round((subtotal + tax) * 100) / 100;
-      folioDue = actualTotal;
-
-      if (gstRateLabel) gstRateLabel.textContent = `${posGstRate}`;
-      if (cutRow) cutRow.classList.add('hidden');
-      if (folioDueRow) folioDueRow.classList.add('hidden');
-      if (totLabel) totLabel.textContent = 'Total Bill:';
-    }
-
-    document.getElementById('sub-val').textContent = `₹ ${subtotal.toLocaleString()}`;
-    document.getElementById('tax-val').textContent = (currentBillingType === 'Charged to Room Folio' && hasFoodAdv && subtotal <= remAdv)
-      ? '₹ 0 (Covered)'
-      : `₹ ${tax.toLocaleString()}`;
-    document.getElementById('tot-val').textContent = `₹ ${actualTotal.toLocaleString()}`;
+    if (subVal) subVal.textContent = '₹ ' + subtotal.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+    if (taxVal) taxVal.textContent = '₹ ' + tax.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+    if (totVal) totVal.textContent = '₹ ' + grandTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 });
 
     updateRoomPickerNote();
   }
 
-  // 4. Menu Filter by Category
+  // 5. Menu Filters and Search
   function filterMenu(cat, btn) {
     document.querySelectorAll('.pos-cat-pill').forEach(b => {
       b.className = 'pos-cat-pill inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-all cursor-pointer whitespace-nowrap';
     });
-    if (btn) {
-      btn.className = 'pos-cat-pill inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap bg-emerald-600 text-white shadow-xs';
-    }
+    btn.className = 'pos-cat-pill inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap bg-emerald-600 text-white shadow-xs';
 
     const cards = document.querySelectorAll('.pos-dish-card');
     cards.forEach(card => {
@@ -1100,7 +1323,6 @@
     });
   }
 
-  // 5. Instant Text Search
   function searchMenu(query) {
     const q = query.trim().toLowerCase();
     const cards = document.querySelectorAll('.pos-dish-card');
@@ -1115,21 +1337,25 @@
     });
   }
 
-  // 6. Post Order to Server & Generate KOT
+  // 6. Post Order or KOT Ticket
   async function postOrder() {
+    // If cart is empty and table has active session in Dine-In/Takeaway, clicking button settles table
     if (cart.length === 0) {
+      if ((currentOrderType === 'Table Dine-in' || currentOrderType === 'Takeaway') && selectedTableId && tableSessions[selectedTableId]) {
+        openTableSettleModal();
+        return;
+      }
       if (typeof Swal !== 'undefined') {
-        Swal.fire({ icon: 'warning', title: 'Cart is empty', text: 'Please add at least one dish or beverage before posting!' });
+        Swal.fire({ icon: 'warning', title: 'Cart is empty', text: 'Please add dishes or beverages before placing an order!' });
       } else {
-        alert('Please add at least one dish or beverage before posting.');
+        alert('Please add dishes or beverages before placing an order.');
       }
       return;
     }
 
     const payload = {
       order_type: currentOrderType,
-      billing_type: currentBillingType,
-      special_instructions: document.getElementById('order-instructions').value.trim() || null,
+      special_instructions: document.getElementById('order-instructions')?.value?.trim() || null,
       items: cart.map(i => ({
         pos_item_id: i.id,
         name: i.name,
@@ -1138,33 +1364,11 @@
       }))
     };
 
-    if (currentOrderType === 'Takeaway') {
-      const custName = document.getElementById('takeaway-customer-name')?.value?.trim();
-      const custPhone = document.getElementById('takeaway-customer-phone')?.value?.trim();
-      if (!custName) {
-        if (typeof Swal !== 'undefined') {
-          Swal.fire({ icon: 'warning', title: 'Customer Name Required', text: 'Please enter Customer Name for Takeaway order!' });
-        } else {
-          alert('Please enter Customer Name for Takeaway order!');
-        }
-        document.getElementById('takeaway-customer-name')?.focus();
-        return;
-      }
-      payload.customer_name = custName;
-      payload.customer_phone = custPhone || null;
-      payload.room_id = null;
-
-      // Optional table for Takeaway
-      const tblSelect = document.getElementById('pos-table-select');
-      if (tblSelect && tblSelect.value) {
-        payload.table_number = tblSelect.value;
-        const selectedOpt = tblSelect.options[tblSelect.selectedIndex];
-        if (selectedOpt && selectedOpt.getAttribute('data-table-id')) {
-          payload.table_id = selectedOpt.getAttribute('data-table-id');
-        }
-      }
-    } else {
-      // Room Dining or Table Dine-in
+    if (currentOrderType === 'Room Dining') {
+      // Scenario 1: Immediate direct bill to room folio or cash/upi
+      payload.action = 'bill';
+      payload.billing_type = currentBillingType;
+      
       const cartRm = document.getElementById('cart-room-folio-select');
       const headRm = document.getElementById('pos-room-select');
       const chosenRoomId = (cartRm && cartRm.value) ? cartRm.value : (headRm ? headRm.value : null);
@@ -1172,43 +1376,65 @@
       if (currentBillingType === 'Charged to Room Folio') {
         if (!chosenRoomId) {
           if (typeof Swal !== 'undefined') {
-            Swal.fire({ icon: 'warning', title: 'Room Required', text: 'Please select an active Room to charge this bill to the Room Folio!' });
+            Swal.fire({ icon: 'warning', title: 'Room Required', text: 'Please select an active Checked-In Room to charge this bill to Room Folio!' });
           } else {
-            alert('Please select an active Room to charge this bill to the Room Folio!');
+            alert('Please select an active Checked-In Room to charge this bill to Room Folio!');
           }
           return;
         }
         payload.room_id = chosenRoomId;
       } else {
-        // Cash Paid or Digital UPI / Card Paid: room selection is optional
-        if (chosenRoomId) {
-          payload.room_id = chosenRoomId;
-        }
+        if (chosenRoomId) payload.room_id = chosenRoomId;
       }
 
-      if (currentOrderType === 'Table Dine-in') {
-        const tblSelect = document.getElementById('pos-table-select');
-        if (!tblSelect || !tblSelect.value) {
-          if (typeof Swal !== 'undefined') {
-            Swal.fire({ icon: 'warning', title: 'Table Required', text: 'Please select an available dining table for Dine-in!' });
-          } else {
-            alert('Please select an available dining table for Dine-in!');
-          }
-          tblSelect?.focus();
-          return;
+    } else if (currentOrderType === 'Table Dine-in') {
+      // Scenario 2: Room-wise guest with table -> Send KOT
+      payload.action = 'kot';
+      payload.is_kot = true;
+
+      if (!selectedTableId) {
+        if (typeof Swal !== 'undefined') {
+          Swal.fire({ icon: 'warning', title: 'Table Required', text: 'Please select a dining table for Dine-in!' });
+        } else {
+          alert('Please select a dining table for Dine-in!');
         }
-        payload.table_number = tblSelect.value;
-        const selectedOpt = tblSelect.options[tblSelect.selectedIndex];
-        if (selectedOpt && selectedOpt.getAttribute('data-table-id')) {
-          payload.table_id = selectedOpt.getAttribute('data-table-id');
-        }
-        if (!payload.room_id) {
-          payload.customer_name = payload.table_number + ' Guest';
-        }
+        return;
       }
+      payload.table_id = selectedTableId;
+
+      const cartRm = document.getElementById('cart-room-folio-select');
+      const headRm = document.getElementById('pos-room-select');
+      const chosenRoomId = (cartRm && cartRm.value) ? cartRm.value : (headRm ? headRm.value : null);
+
+      if (!chosenRoomId && (!tableSessions[selectedTableId] || !tableSessions[selectedTableId].room_id)) {
+        if (typeof Swal !== 'undefined') {
+          Swal.fire({ icon: 'warning', title: 'Room Required', text: 'Please select residing guest Room for Table Dine-In!' });
+        } else {
+          alert('Please select residing guest Room for Table Dine-In!');
+        }
+        return;
+      }
+      payload.room_id = chosenRoomId || tableSessions[selectedTableId]?.room_id;
+
+    } else if (currentOrderType === 'Takeaway') {
+      // Scenario 3: Outside guest with table -> Send KOT
+      payload.action = 'kot';
+      payload.is_kot = true;
+
+      const custName = document.getElementById('takeaway-customer-name')?.value?.trim();
+      const custPhone = document.getElementById('takeaway-customer-phone')?.value?.trim();
+
+      if (selectedTableId) {
+        payload.table_id = selectedTableId;
+      }
+      payload.customer_name = custName || 'Outside Walk-in Guest';
+      payload.customer_phone = custPhone || null;
     }
 
     try {
+      const btn = document.getElementById('btn-post-order');
+      if (btn) btn.disabled = true;
+
       const res = await fetch("{{ route('pos.orders.store') }}", {
         method: "POST",
         headers: {
@@ -1220,41 +1446,300 @@
       });
 
       const data = await res.json();
+      if (btn) btn.disabled = false;
+
       if (data.success) {
-        orderJustPlaced = true;
         if (typeof Swal !== 'undefined') {
           Swal.fire({
             icon: 'success',
-            title: 'Order Placed Successfully!',
+            title: data.is_kot ? `KOT #${data.kot_sequence} Sent to Kitchen!` : 'Order Placed Successfully!',
             text: data.message,
-            timer: 2500,
+            timer: 2000,
             showConfirmButton: false
           });
         }
 
-        // Open KOT preview modal
+        // Show KOT thermal slip modal
         showKotModal(data.order);
 
-        // Reset cart & inputs
+        // Reset cart
         cart = [];
         renderCart();
         document.getElementById('order-instructions').value = '';
-        if (document.getElementById('takeaway-customer-name')) document.getElementById('takeaway-customer-name').value = '';
-        if (document.getElementById('takeaway-customer-phone')) document.getElementById('takeaway-customer-phone').value = '';
-        
-        // Refresh tables to ensure booked table is no longer selectable
-        fetchAndSyncAvailableTables();
+
+        // If table was used, refresh local session
+        if (data.table_id) {
+          await refreshTableSessionFromServer(data.table_id);
+        }
       } else {
         alert(data.message || 'Error posting order.');
       }
     } catch (e) {
       console.error(e);
       alert('Network or server error while placing order.');
+      const btn = document.getElementById('btn-post-order');
+      if (btn) btn.disabled = false;
     }
   }
 
-  // 7. KOT Thermal Slip Modal Handling
-  let orderJustPlaced = false;
+  // Fetch updated table session from server
+  async function refreshTableSessionFromServer(tableId) {
+    try {
+      const res = await fetch(`{{ url('pos/tables') }}/${tableId}/session`, {
+        headers: { 'Accept': 'application/json' }
+      });
+      const data = await res.json();
+      if (data.success && data.has_active_session) {
+        tableSessions[tableId] = {
+          table_id: data.table.id,
+          table_number: data.table.table_number,
+          table_name: data.table.table_name,
+          order_type: data.order_type,
+          room_id: data.room_id,
+          room_number: data.room_number,
+          customer_name: data.customer_name,
+          customer_phone: data.customer_phone,
+          kots_count: data.kots_count,
+          kots: data.kots,
+          raw_items: data.raw_items,
+          consolidated_items: data.consolidated_items,
+          subtotal: data.subtotal,
+          gst_rate: data.gst_rate,
+          tax_amount: data.tax_amount,
+          total_amount: data.total_amount,
+        };
+      } else {
+        delete tableSessions[tableId];
+      }
+      updateTablePillsDom();
+      renderActiveTableSessionBox();
+      updateRoomPickerNote();
+    } catch(e) {
+      console.error('Error refreshing table session', e);
+    }
+  }
+
+  // Update UI table pills with latest session info
+  function updateTablePillsDom() {
+    allTablesData.forEach(tbl => {
+      const pill = document.getElementById('tbl-pill-' + tbl.id);
+      if (!pill) return;
+      const sess = tableSessions[tbl.id];
+      const isBooked = (sess && sess.kots_count > 0);
+
+      if (isBooked) {
+        pill.className = 'pos-table-pill px-3 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap bg-amber-50 text-amber-900 border-amber-300 hover:bg-amber-100 shadow-2xs';
+        pill.innerHTML = `
+          <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+          <span>${escapeHtml(tbl.table_number)}</span>
+          <span class="text-[10px] font-medium opacity-75">(${escapeHtml(tbl.table_name)})</span>
+          <span class="bg-amber-200/80 text-amber-900 text-[10px] font-black px-1.5 py-0.2 rounded-md">
+            ${sess.kots_count} KOT${sess.kots_count > 1 ? 's' : ''}
+          </span>
+          ${sess.room_number ? `<span class="text-[10px] font-bold text-indigo-700">R-${escapeHtml(sess.room_number)}</span>` : ''}
+        `;
+      } else {
+        pill.className = 'pos-table-pill px-3 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap bg-white text-slate-700 border-slate-200 hover:border-emerald-500 hover:text-emerald-700';
+        pill.innerHTML = `
+          <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+          <span>${escapeHtml(tbl.table_number)}</span>
+          <span class="text-[10px] font-medium opacity-75">(${escapeHtml(tbl.table_name)})</span>
+          <span class="text-[10px] font-semibold text-emerald-600">Free</span>
+        `;
+      }
+    });
+    highlightSelectedTablePill();
+  }
+
+  // 7. Settlement Modal Logic (Single Bill from Multiple KOTs)
+  function openTableSettleModal() {
+    if (!selectedTableId) {
+      alert('Please select a table to settle.');
+      return;
+    }
+    const sess = tableSessions[selectedTableId];
+    if (!sess || sess.kots_count === 0) {
+      alert('No active running KOTs found on this table.');
+      return;
+    }
+
+    document.getElementById('settle-dest-label').textContent = `${sess.table_number} (${sess.table_name})`;
+    document.getElementById('settle-kots-badge').textContent = `${sess.kots_count} KOT Ticket${sess.kots_count > 1 ? 's' : ''}`;
+
+    const roomBlock = document.getElementById('settle-room-block');
+    const optFolio = document.getElementById('opt-settle-folio');
+    const cashNote = document.getElementById('settle-cash-note');
+    const upiNote = document.getElementById('settle-upi-note');
+
+    if (sess.room_number) {
+      // Table Dine-In: Room attached
+      if (roomBlock) roomBlock.style.display = 'block';
+      document.getElementById('settle-guest-label').textContent = `Room ${sess.room_number} - ${sess.customer_name || 'Guest'}`;
+      if (optFolio) optFolio.style.display = 'flex';
+      if (cashNote) cashNote.textContent = `Paid in Cash now. Attached to Room ${sess.room_number} as Paid.`;
+      if (upiNote) upiNote.textContent = `Paid via UPI now. Attached to Room ${sess.room_number} as Paid.`;
+      
+      // Default to Room Attach for room guests
+      const folioRadio = document.querySelector('input[name="settle_billing_type"][value="Charged to Room Folio"]');
+      if (folioRadio) folioRadio.checked = true;
+    } else {
+      // Takeaway: Outside guest without room
+      if (roomBlock) roomBlock.style.display = 'none';
+      if (optFolio) optFolio.style.display = 'none';
+      if (cashNote) cashNote.textContent = `Paid in Cash at restaurant counter.`;
+      if (upiNote) upiNote.textContent = `Paid via UPI / Card at counter.`;
+      
+      // Default to Cash for takeaway
+      const cashRadio = document.querySelector('input[name="settle_billing_type"][value="Cash Paid"]');
+      if (cashRadio) cashRadio.checked = true;
+    }
+
+    // Populate Consolidated Items
+    const tbody = document.getElementById('settle-items-tbody');
+    let itemsHtml = '';
+    let totalQty = 0;
+
+    (sess.consolidated_items || []).forEach(it => {
+      totalQty += it.quantity;
+      itemsHtml += `
+        <tr>
+          <td class="px-3 py-2 font-bold text-slate-900">${escapeHtml(it.item_name)}</td>
+          <td class="px-3 py-2 text-center font-mono font-bold">${it.quantity}</td>
+          <td class="px-3 py-2 text-right font-mono text-slate-600">₹ ${Number(it.unit_price).toFixed(2)}</td>
+          <td class="px-3 py-2 text-right font-mono font-bold text-slate-900">₹ ${Number(it.line_total).toFixed(2)}</td>
+        </tr>
+      `;
+    });
+    tbody.innerHTML = itemsHtml;
+    document.getElementById('settle-items-total-qty').textContent = `${totalQty} items total`;
+
+    // Totals
+    document.getElementById('settle-subtotal-val').textContent = '₹ ' + Number(sess.subtotal).toLocaleString('en-IN', { minimumFractionDigits: 2 });
+    document.getElementById('settle-gst-rate-val').textContent = sess.gst_rate;
+    document.getElementById('settle-tax-val').textContent = '₹ ' + Number(sess.tax_amount).toLocaleString('en-IN', { minimumFractionDigits: 2 });
+    document.getElementById('settle-grand-total-val').textContent = '₹ ' + Number(sess.total_amount).toLocaleString('en-IN', { minimumFractionDigits: 2 });
+
+    document.getElementById('table-settle-modal').style.display = 'flex';
+  }
+
+  function closeTableSettleModal() {
+    document.getElementById('table-settle-modal').style.display = 'none';
+  }
+
+  async function confirmTableSettlement() {
+    if (!selectedTableId) return;
+    const selectedMode = document.querySelector('input[name="settle_billing_type"]:checked')?.value;
+    if (!selectedMode) {
+      alert('Please choose a settlement mode.');
+      return;
+    }
+
+    try {
+      const btn = document.getElementById('btn-confirm-settlement');
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing Settlement...';
+      }
+
+      const res = await fetch(`{{ url('pos/tables') }}/${selectedTableId}/settle`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRF-TOKEN": "{{ csrf_token() }}",
+          "Accept": "application/json"
+        },
+        body: JSON.stringify({ billing_type: selectedMode })
+      });
+
+      const data = await res.json();
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-check"></i> Confirm Settlement & Print Final Bill';
+      }
+
+      if (data.success) {
+        closeTableSettleModal();
+
+        if (typeof Swal !== 'undefined') {
+          Swal.fire({
+            icon: 'success',
+            title: 'Table Settled & Bill Generated!',
+            text: data.message,
+            timer: 2500,
+            showConfirmButton: false
+          });
+        }
+
+        // Show Single Consolidated Final Bill
+        showKotModal(data.bill);
+
+        // Clear local table session (Table is now Available!)
+        delete tableSessions[selectedTableId];
+        updateTablePillsDom();
+        renderActiveTableSessionBox();
+        updateRoomPickerNote();
+
+      } else {
+        alert(data.message || 'Settlement failed.');
+      }
+    } catch(e) {
+      console.error(e);
+      alert('Network or server error during table settlement.');
+      const btn = document.getElementById('btn-confirm-settlement');
+      if (btn) btn.disabled = false;
+    }
+  }
+
+  // 8. View Running KOTs Viewer Modal
+  function openRunningKotsModal() {
+    if (!selectedTableId || !tableSessions[selectedTableId]) return;
+    const sess = tableSessions[selectedTableId];
+
+    document.getElementById('running-kots-modal-subtitle').textContent = 
+      `Running KOT breakdown for ${sess.table_number} (${sess.table_name}) • Total: ₹${Number(sess.total_amount).toLocaleString('en-IN')}`;
+
+    const container = document.getElementById('running-kots-modal-content');
+    let html = '';
+
+    (sess.kots || []).forEach((k, idx) => {
+      // Find raw items for this KOT
+      const kotItems = (sess.raw_items || []).filter(ri => ri.kot_id === k.id);
+      html += `
+        <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-2xs space-y-2">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+            <div class="flex items-center gap-2">
+              <span class="w-6 h-6 rounded-lg bg-amber-100 text-amber-800 text-xs font-black flex items-center justify-center">#${idx + 1}</span>
+              <span class="font-mono font-bold text-xs text-slate-900">${escapeHtml(k.order_number)}</span>
+            </div>
+            <div class="text-[11px] text-slate-500 font-medium">
+              <i class="fa-regular fa-clock text-[10px]"></i> ${k.time}
+            </div>
+          </div>
+          <div class="divide-y divide-slate-100 text-xs">
+            ${kotItems.map(it => `
+              <div class="py-1.5 flex justify-between items-center">
+                <span>${escapeHtml(it.item_name)} × <strong class="font-mono">${it.quantity}</strong></span>
+                <span class="font-mono font-bold text-slate-800">₹ ${(it.line_total).toFixed(2)}</span>
+              </div>
+            `).join('')}
+          </div>
+          <div class="flex justify-between items-center pt-2 border-t border-slate-100 text-xs font-bold text-slate-700">
+            <span>KOT Subtotal:</span>
+            <span class="font-mono">₹ ${Number(k.subtotal).toFixed(2)}</span>
+          </div>
+        </div>
+      `;
+    });
+
+    container.innerHTML = html;
+    document.getElementById('running-kots-modal').style.display = 'flex';
+  }
+
+  function closeRunningKotsModal() {
+    document.getElementById('running-kots-modal').style.display = 'none';
+  }
+
+  // 9. KOT Thermal Slip Modal Handling (Supports KOT tickets and Final Bills)
   let activeKotOrder = null;
 
   function showKotModal(order) {
@@ -1272,9 +1757,23 @@
     }
 
     const guestName = order.customer_name || 'Guest';
-    const billingType = order.billing_type || 'Paid';
+    const isKot = (order.is_kot === true || order.is_kot === 1);
+    const billingType = isKot ? 'Pending Settlement' : (order.billing_type || 'Paid');
     const grandTotalFmt = Number(order.total_amount).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     const notesStr = order.special_instructions ? `Instructions: ${order.special_instructions}` : 'Instructions: None';
+
+    // Update Modal Title & Badge
+    if (isKot) {
+      document.getElementById('kot-modal-title').innerHTML = '<i class="fa-solid fa-kitchen-set text-amber-400"></i> Kitchen Order Token (KOT Slip)';
+      document.getElementById('kot-modal-subtitle').textContent = `Kitchen copy for order #${order.order_number}`;
+      document.getElementById('kot-guest-badge-header').textContent = '*** KOT ORDER SUMMARY ***';
+      document.getElementById('kot-kitchen-badge-header').textContent = `*** DUPLICATE COPY (FOR KITCHEN) - KOT #${order.kot_sequence || 1} ***`;
+    } else {
+      document.getElementById('kot-modal-title').innerHTML = '<i class="fa-solid fa-receipt text-emerald-400"></i> Final POS Guest Bill &amp; Tax Invoice';
+      document.getElementById('kot-modal-subtitle').textContent = `Consolidated bill #${order.order_number} for customer`;
+      document.getElementById('kot-guest-badge-header').textContent = '*** ORIGINAL BILL (FOR GUEST) ***';
+      document.getElementById('kot-kitchen-badge-header').textContent = '*** DUPLICATE COPY (RESTAURANT AUDIT) ***';
+    }
 
     let guestItemsHtml = '';
     let kitchenItemsHtml = '';
@@ -1309,7 +1808,7 @@
     });
 
     // Populate Guest Ticket
-    document.getElementById('kot-guest-order-num').innerHTML = `<strong>KOT: ${order.order_number}</strong>`;
+    document.getElementById('kot-guest-order-num').innerHTML = `<strong>${isKot ? 'KOT' : 'BILL'}: ${order.order_number}</strong>`;
     document.getElementById('kot-guest-time').textContent = `Time: ${timeStr}`;
     document.getElementById('kot-guest-dest').textContent = dest;
     document.getElementById('kot-guest-name').textContent = guestName;
@@ -1320,7 +1819,7 @@
     document.getElementById('kot-guest-notes-line').textContent = notesStr;
 
     // Populate Kitchen Ticket
-    document.getElementById('kot-kitchen-order-num').innerHTML = `<strong>KOT: ${order.order_number}</strong>`;
+    document.getElementById('kot-kitchen-order-num').innerHTML = `<strong>${isKot ? 'KOT' : 'BILL'}: ${order.order_number}</strong>`;
     document.getElementById('kot-kitchen-time').textContent = `Time: ${timeStr}`;
     document.getElementById('kot-kitchen-dest').textContent = dest;
     document.getElementById('kot-kitchen-name').textContent = guestName;
@@ -1330,7 +1829,12 @@
     document.getElementById('kot-kitchen-grand-total').textContent = grandTotalFmt;
     document.getElementById('kot-kitchen-notes-line').textContent = notesStr;
 
-    switchKotPreview('both');
+    // If KOT: default preview to Kitchen Copy. If Bill: default to Guest Copy
+    if (isKot) {
+      switchKotPreview('kitchen');
+    } else {
+      switchKotPreview('guest');
+    }
     document.getElementById('kot-modal').style.display = 'flex';
   }
 
@@ -1357,7 +1861,6 @@
       if (strip) strip.style.display = 'none';
       if (bKitchen) bKitchen.className = 'px-2.5 py-1 rounded-md text-[11px] font-bold bg-indigo-600 text-white shadow-xs cursor-pointer transition-all';
     } else {
-      // both
       if (tGuest) tGuest.style.display = 'block';
       if (tKitchen) tKitchen.style.display = 'block';
       if (strip) strip.style.display = 'block';
@@ -1367,9 +1870,6 @@
 
   function closeKotModal() {
     document.getElementById('kot-modal').style.display = 'none';
-    if (orderJustPlaced) {
-      window.location.reload();
-    }
   }
 
   function printThermalTicket(mode = 'both') {
@@ -1408,7 +1908,7 @@
     }
     const doc = iframe.contentWindow.document;
     doc.open();
-    doc.write('<!DOCTYPE html><html><' + 'head><title>KOT Ticket</title><style>');
+    doc.write('<!DOCTYPE html><html><' + 'head><title>Thermal Ticket</title><style>');
     doc.write(`
       @page { size: 80mm auto; margin: 2mm; }
       body { font-family: 'Courier New', Courier, monospace, -apple-system; padding: 2mm; font-size: 11.5px; color: #000; margin: 0; background: #fff; }
@@ -1418,251 +1918,57 @@
       .divider-line { border-bottom: 1px dashed #000; margin: 6px 0; }
       table { width: 100%; border-collapse: collapse; margin: 5px 0; font-size: 11px; }
       th, td { padding: 3px 0; vertical-align: top; }
-      th { border-bottom: 1px solid #000; }
-      .text-center { text-align: center; }
-      .text-right { text-align: right; }
-      .font-bold { font-weight: bold; }
-      .font-black { font-weight: 900; }
-      .font-mono { font-family: monospace; }
-      .print-cut-line { text-align: center; font-size: 9.5px; margin: 10px 0; page-break-after: always; padding: 6px 0; border-top: 1px dashed #000; border-bottom: 1px dashed #000; }
+      th { border-bottom: 1px dashed #000; font-weight: 800; }
+      .print-cut-line { text-align: center; font-family: monospace; font-size: 10px; margin: 12px 0; color: #555; }
     `);
-    doc.write('</' + 'style></' + 'head><' + 'body>');
+    doc.write('</style></' + 'head><body>');
     doc.write(printHtml);
-    doc.write('</' + 'body></' + 'html>');
+    doc.write('</body></html>');
     doc.close();
 
     setTimeout(() => {
       iframe.contentWindow.focus();
       iframe.contentWindow.print();
-    }, 250);
+    }, 350);
   }
 
-  // 8. Table Management Modal & Real-time Status Switching
+  // 10. Table Manage Modal functions
   function openTableManageModal() {
-    const m = document.getElementById('table-manage-modal');
-    if (m) {
-      m.classList.remove('hidden');
-      m.style.display = 'flex';
-    }
-    fetchAndSyncAvailableTables();
+    document.getElementById('table-manage-modal').style.display = 'flex';
   }
 
   function closeTableManageModal() {
-    const m = document.getElementById('table-manage-modal');
-    if (m) {
-      m.classList.add('hidden');
-      m.style.display = 'none';
-    }
+    document.getElementById('table-manage-modal').style.display = 'none';
   }
 
-  async function updateOrderStatus(orderId, newStatus) {
+  async function updateLiveTableStatus(tableId, status) {
     try {
-      const url = "{{ url('pos/orders') }}/" + orderId + "/status";
-      const res = await fetch(url, {
-        method: 'POST',
+      const res = await fetch(`{{ url('pos/tables') }}/${tableId}/status`, {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'X-CSRF-TOKEN': '{{ csrf_token() }}',
-          'Accept': 'application/json'
+          "Content-Type": "application/json",
+          "X-CSRF-TOKEN": "{{ csrf_token() }}",
+          "Accept": "application/json"
         },
-        body: JSON.stringify({ status: newStatus })
+        body: JSON.stringify({ status })
       });
-
       const data = await res.json();
-      if (res.ok && data.success) {
-        if (typeof Swal !== 'undefined') {
-          Swal.fire({
-            toast: true,
-            position: 'top-end',
-            icon: 'success',
-            title: data.message || 'Order status updated',
-            showConfirmButton: false,
-            timer: 2000
-          });
-        } else if (typeof PmsAlert !== 'undefined') {
+      if (data.success) {
+        if (typeof PmsAlert !== 'undefined') {
           PmsAlert.toast(data.message, 'success');
         } else {
           alert(data.message);
         }
-      } else {
-        if (typeof Swal !== 'undefined') {
-          Swal.fire({
-            icon: 'error',
-            title: 'Update Failed',
-            text: data.message || 'Failed to update order status.'
-          });
-        } else {
-          alert(data.message || 'Error updating order status.');
+        allTablesData = data.tables;
+        updateTablePillsDom();
+        if (status === 'available') {
+          delete tableSessions[tableId];
+          renderActiveTableSessionBox();
         }
       }
     } catch(e) {
-      console.error('Error updating order status:', e);
-      if (typeof Swal !== 'undefined') {
-        Swal.fire({
-          icon: 'error',
-          title: 'Update Error',
-          text: 'Network or server error while updating status.'
-        });
-      } else {
-        alert('Error updating order status.');
-      }
+      alert('Failed to update table status.');
     }
-  }
-
-  async function updateLiveTableStatus(tableId, newStatus) {
-    try {
-      const url = "{{ url('pos/tables') }}/" + tableId + "/status";
-      const res = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRF-TOKEN': '{{ csrf_token() }}',
-          'Accept': 'application/json'
-        },
-        body: JSON.stringify({ status: newStatus })
-      });
-
-      const data = await res.json();
-      if (res.ok && data.success) {
-        if (typeof Swal !== 'undefined') {
-          Swal.fire({
-            toast: true,
-            position: 'top-end',
-            icon: 'success',
-            title: data.message,
-            showConfirmButton: false,
-            timer: 2000
-          });
-        } else if (typeof PmsAlert !== 'undefined') {
-          PmsAlert.toast(data.message, 'success');
-        }
-
-        const all = data.tables || [];
-        const avail = data.availableTables || [];
-        const booked = all.filter(t => t.status === 'booked');
-        const inactive = all.filter(t => t.status === 'inactive');
-
-        const totEl = document.getElementById('tm-total-count');
-        const avEl = document.getElementById('tm-available-count');
-        const bkEl = document.getElementById('tm-booked-count');
-        const inEl = document.getElementById('tm-inactive-count');
-        if (totEl) totEl.textContent = all.length;
-        if (avEl) avEl.textContent = avail.length;
-        if (bkEl) bkEl.textContent = booked.length;
-        if (inEl) inEl.textContent = inactive.length;
-
-        renderTableManageRows(all);
-        refreshPosTableSelectDropdown(avail);
-      } else {
-        if (typeof Swal !== 'undefined') {
-          Swal.fire({ icon: 'error', title: 'Update Failed', text: data.message || 'Could not update table status.' });
-        } else {
-          alert(data.message || 'Could not update table status.');
-        }
-      }
-    } catch(err) {
-      console.error(err);
-      if (typeof Swal !== 'undefined') {
-        Swal.fire({ icon: 'error', title: 'Error', text: 'Server or network error updating table status.' });
-      } else {
-        alert('Server or network error updating table status.');
-      }
-    }
-  }
-
-  async function fetchAndSyncAvailableTables() {
-    try {
-      const url = "{{ route('pos.tables.index') }}";
-      const res = await fetch(url, {
-        headers: { 'Accept': 'application/json' }
-      });
-      const data = await res.json();
-      if (data.success) {
-        const all = data.tables || [];
-        const avail = data.availableTables || [];
-        const booked = all.filter(t => t.status === 'booked');
-        const inactive = all.filter(t => t.status === 'inactive');
-
-        const totEl = document.getElementById('tm-total-count');
-        const avEl = document.getElementById('tm-available-count');
-        const bkEl = document.getElementById('tm-booked-count');
-        const inEl = document.getElementById('tm-inactive-count');
-        if (totEl) totEl.textContent = all.length;
-        if (avEl) avEl.textContent = avail.length;
-        if (bkEl) bkEl.textContent = booked.length;
-        if (inEl) inEl.textContent = inactive.length;
-
-        renderTableManageRows(all);
-        refreshPosTableSelectDropdown(avail);
-      }
-    } catch(e) {
-      console.error('Failed to sync tables:', e);
-    }
-  }
-
-  function renderTableManageRows(tables) {
-    const tbody = document.getElementById('pos-table-manage-tbody');
-    if (!tbody) return;
-    if (tables.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="4" class="text-center text-slate-400 py-8">No tables found.</td></tr>';
-      return;
-    }
-    tbody.innerHTML = tables.map(t => {
-      const isAvail = (t.status === 'available');
-      const isBooked = (t.status === 'booked');
-      const iconColor = isAvail ? 'text-emerald-500' : (isBooked ? 'text-amber-500' : 'text-slate-400');
-      const badge = isAvail
-        ? '<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Available</span>'
-        : (isBooked
-          ? '<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Booked</span>'
-          : '<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200"><span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> Inactive</span>');
-
-      const actionBtn = isBooked
-        ? `<button type="button" class="inline-flex items-center gap-1 h-8 px-2.5 text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition-colors cursor-pointer" onclick="updateLiveTableStatus(${t.id}, 'available')"><i class="fa-solid fa-check text-[10px]"></i> Free Table</button>`
-        : (isAvail
-          ? `<button type="button" class="inline-flex items-center gap-1 h-8 px-2.5 text-xs font-bold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-lg transition-colors cursor-pointer" onclick="updateLiveTableStatus(${t.id}, 'booked')"><i class="fa-solid fa-chair text-[10px]"></i> Mark Booked</button>`
-          : '');
-
-      return `
-        <tr data-table-id="${t.id}" class="hover:bg-slate-50/80 transition-colors">
-          <td class="px-4 py-3 font-extrabold text-slate-900 flex items-center gap-2">
-            <i class="fa-solid fa-chair text-xs ${iconColor}"></i>
-            ${escapeHtml(t.table_number)}
-          </td>
-          <td class="px-4 py-3 text-slate-700 font-medium">
-            ${escapeHtml(t.table_name)}
-          </td>
-          <td class="px-4 py-3" id="tm-badge-td-${t.id}">${badge}</td>
-          <td class="px-4 py-3 text-right" id="tm-action-td-${t.id}">
-            <div class="inline-flex items-center gap-2">
-              <select class="h-8 text-xs font-semibold rounded-lg border border-slate-200 bg-white px-2 py-1 text-slate-700 focus:outline-none focus:border-indigo-500 cursor-pointer" onchange="updateLiveTableStatus(${t.id}, this.value)">
-                <option value="available" ${isAvail ? 'selected' : ''}>Available (Free)</option>
-                <option value="booked" ${isBooked ? 'selected' : ''}>Booked</option>
-                <option value="inactive" ${t.status === 'inactive' ? 'selected' : ''}>Inactive</option>
-              </select>
-              ${actionBtn}
-            </div>
-          </td>
-        </tr>
-      `;
-    }).join('');
-  }
-
-  function refreshPosTableSelectDropdown(availableTables) {
-    const sel = document.getElementById('pos-table-select');
-    if (!sel) return;
-    const currentVal = sel.value;
-    const firstOptionText = (currentOrderType === 'Takeaway') 
-      ? '-- No Table / Takeaway Counter (Optional) --' 
-      : '-- Select Available Table --';
-
-    let html = `<option value="">${firstOptionText}</option>`;
-    availableTables.forEach(t => {
-      const val = `${t.table_number} (${t.table_name})`;
-      const selected = (val === currentVal) ? 'selected' : '';
-      html += `<option value="${val}" data-table-id="${t.id}" data-table-num="${t.table_number}" data-table-name="${t.table_name}" ${selected}>${val}</option>`;
-    });
-    sel.innerHTML = html;
   }
 
   function escapeHtml(str) {

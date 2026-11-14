@@ -24,4 +24,24 @@ class TableManage extends Model
     {
         return $query->where('status', 'available');
     }
+
+    /**
+     * All POS orders for this table.
+     */
+    public function posOrders()
+    {
+        return $this->hasMany(PosOrder::class, 'table_id');
+    }
+
+    /**
+     * Currently active pending KOTs on this table (not yet settled in a final bill).
+     */
+    public function activeKots()
+    {
+        return $this->hasMany(PosOrder::class, 'table_id')
+            ->where('is_kot', true)
+            ->whereNull('parent_order_id')
+            ->where('status', '!=', 'Cancelled')
+            ->where('payment_status', 'Pending');
+    }
 }

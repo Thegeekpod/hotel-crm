@@ -13,6 +13,8 @@ Route::prefix('pos')->name('pos.')->middleware('section:pos')->group(function ()
 
     // Table management from POS
     Route::get('/tables', [PosController::class, 'getTablesList'])->name('tables.index');
+    Route::get('/tables/{table}/session', [PosController::class, 'getTableSession'])->name('tables.session');
+    Route::post('/tables/{table}/settle', [PosController::class, 'settleTableBill'])->name('tables.settle');
     Route::post('/tables/{table}/status', [PosController::class, 'updateTableStatus'])->name('tables.status');
 
     // Menu catalog management

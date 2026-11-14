@@ -12,7 +12,11 @@ class PosOrder extends Model
     protected $fillable = [
         'order_number',
         'order_type',
+        'is_kot',
+        'kot_number',
+        'kot_sequence',
         'table_number',
+        'table_id',
         'room_id',
         'booking_id',
         'customer_name',
@@ -28,6 +32,16 @@ class PosOrder extends Model
         'server_name',
         'special_instructions',
         'room_service_order_id',
+        'parent_order_id',
+    ];
+
+    protected $casts = [
+        'is_kot' => 'boolean',
+        'kot_sequence' => 'integer',
+        'subtotal' => 'decimal:2',
+        'tax_percentage' => 'decimal:2',
+        'tax_amount' => 'decimal:2',
+        'total_amount' => 'decimal:2',
     ];
 
     public function room()
@@ -48,5 +62,48 @@ class PosOrder extends Model
     public function roomServiceOrder()
     {
         return $this->belongsTo(RoomServiceOrder::class, 'room_service_order_id');
+    }
+
+    public function tableManage()
+    {
+        return $this->belongsTo(TableManage::class, 'table_id');
+    }
+
+    public function parentOrder()
+    {
+        return $this->belongsTo(PosOrder::class, 'parent_order_id');
+    }
+
+    public function kotOrders()
+    {
+        return $this->hasMany(PosOrder::class, 'parent_order_id');
+    }
+
+    /**
+     * Scope for KOT tickets only.
+     */
+    public function scopeKot($query)
+    {
+        return $query->where('is_kot', true);
+    }
+
+    /**
+     * Scope for Master Bills only.
+     */
+    public function scopeBills($query)
+    {
+        return $query->where('is_kot', false);
+    }
+
+    /**
+     * Scope for active pending KOTs for a table.
+     */
+    public function scopeActiveTableKots($query, $tableId)
+    {
+        return $query->where('table_id', $tableId)
+            ->where('is_kot', true)
+            ->whereNull('parent_order_id')
+            ->where('status', '!=', 'Cancelled')
+            ->where('payment_status', 'Pending');
     }
 }

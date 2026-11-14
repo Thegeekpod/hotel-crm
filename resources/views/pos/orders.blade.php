@@ -131,6 +131,13 @@
             <option value="Takeaway" {{ request('type') === 'Takeaway' ? 'selected' : '' }}>Takeaway</option>
           </select>
 
+          <!-- Document Nature (KOT vs Final Bill) -->
+          <select name="nature" class="h-9.5 pl-3.5 pr-8.5 text-xs font-semibold rounded-xl border border-slate-200 bg-white text-slate-700 focus:outline-none focus:border-indigo-500 cursor-pointer">
+            <option value="all" {{ request('nature', 'all') === 'all' ? 'selected' : '' }}>All Records (Bills &amp; KOTs)</option>
+            <option value="bill" {{ request('nature') === 'bill' ? 'selected' : '' }}>Final Bills Only</option>
+            <option value="kot" {{ request('nature') === 'kot' ? 'selected' : '' }}>KOT Tickets Only</option>
+          </select>
+
           <!-- Status -->
           <select name="status" class="h-9.5 pl-3.5 pr-8.5 text-xs font-semibold rounded-xl border border-slate-200 bg-white text-slate-700 focus:outline-none focus:border-indigo-500 cursor-pointer">
             <option value="all" {{ request('status', 'all') === 'all' ? 'selected' : '' }}>All Statuses</option>
@@ -214,9 +221,25 @@
 
                 <!-- Order Number & Timestamp -->
                 <td class="px-4 py-3">
-                  <div class="font-mono font-black text-indigo-700 text-xs">
-                    {{ $order->order_number }}
+                  <div class="flex items-center gap-1.5 flex-wrap">
+                    <span class="font-mono font-black text-indigo-700 text-xs">
+                      {{ $order->order_number }}
+                    </span>
+                    @if($order->is_kot)
+                      <span class="px-1.5 py-0.5 rounded text-[9.5px] font-black bg-amber-100 text-amber-800 border border-amber-300">
+                        KOT #{{ $order->kot_sequence }}
+                      </span>
+                    @else
+                      <span class="px-1.5 py-0.5 rounded text-[9.5px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300">
+                        Final Bill
+                      </span>
+                    @endif
                   </div>
+                  @if($order->is_kot && $order->parentOrder)
+                    <div class="text-[10px] text-slate-400 font-medium mt-0.5">
+                      <i class="fa-solid fa-link text-[9px] text-slate-300"></i> Settled in <span class="font-mono text-indigo-600 font-bold">{{ $order->parentOrder->order_number }}</span>
+                    </div>
+                  @endif
                   <div class="text-[11px] text-slate-400 font-medium mt-0.5 flex items-center gap-1">
                     <i class="fa-regular fa-clock text-[10px]"></i>
                     {{ $order->created_at->format('d M Y, h:i A') }}
@@ -302,10 +325,17 @@
 
                 <!-- Billing Mode -->
                 <td class="px-4 py-3">
-                  <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold {{ $order->billing_type === 'Charged to Room Folio' ? 'bg-indigo-50 text-indigo-700 border border-indigo-200/80' : 'bg-emerald-50 text-emerald-700 border border-emerald-200/80' }}">
-                    <span class="w-1.5 h-1.5 rounded-full {{ $order->billing_type === 'Charged to Room Folio' ? 'bg-indigo-500' : 'bg-emerald-500' }}"></span>
-                    {{ $order->billing_type }}
-                  </span>
+                  @if($order->is_kot)
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold {{ $order->payment_status === 'Settled' ? 'bg-slate-100 text-slate-700 border border-slate-200' : 'bg-amber-50 text-amber-800 border border-amber-300' }}">
+                      <span class="w-1.5 h-1.5 rounded-full {{ $order->payment_status === 'Settled' ? 'bg-slate-400' : 'bg-amber-500 animate-pulse' }}"></span>
+                      {{ $order->payment_status === 'Settled' ? 'Settled in Bill' : 'Running KOT' }}
+                    </span>
+                  @else
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold {{ $order->billing_type === 'Charged to Room Folio' ? 'bg-indigo-50 text-indigo-700 border border-indigo-200/80' : 'bg-emerald-50 text-emerald-700 border border-emerald-200/80' }}">
+                      <span class="w-1.5 h-1.5 rounded-full {{ $order->billing_type === 'Charged to Room Folio' ? 'bg-indigo-500' : 'bg-emerald-500' }}"></span>
+                      {{ $order->billing_type }}
+                    </span>
+                  @endif
                   @if($order->room_number)
                     <div class="text-[10px] font-bold mt-1 {{ $order->billing_type === 'Charged to Room Folio' ? 'text-indigo-600' : 'text-emerald-700' }}">
                       Room {{ $order->room_number }} ({{ $order->billing_type === 'Charged to Room Folio' ? 'Folio Due' : 'Paid Direct' }})

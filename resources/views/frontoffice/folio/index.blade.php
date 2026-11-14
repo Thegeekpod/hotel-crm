@@ -393,8 +393,8 @@
                   <div class="inline-flex items-center gap-1.5">
                     <button type="button" 
                             class="w-7 h-7 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 flex items-center justify-center text-xs transition cursor-pointer shadow-2xs" 
-                            onclick="openAndPrintFolioById({{ $item->id }})" 
-                            title="Print Pre-Settlement A4 Bill (Customer Copy)">
+                            onclick="promptPrintBillModal({{ $item->id }})" 
+                            title="Print Customer Bill (Combined / Room / Food)">
                       <i class="fa-solid fa-print pointer-events-none"></i>
                     </button>
                     <button type="button" 
@@ -695,6 +695,39 @@
 
       <!-- CARD 4: Pricing & Billing Breakdown (like guest CRM) -->
       <div class="dossier-card mb-0">
+        <!-- Customer Bill Presentation & Print Bar (Age Bill Berobe) -->
+        <div class="bg-indigo-50/80 border border-indigo-200 rounded-xl p-3 mb-3.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5">
+          <div>
+            <div class="text-xs font-extrabold text-indigo-950 flex items-center gap-1.5">
+              <i class="fa-solid fa-file-invoice text-indigo-600"></i> Customer Bill Presentation &amp; Print
+            </div>
+            <div class="text-[11px] text-indigo-700/80 font-medium mt-0.5">
+              Present bill to customer before payment settlement. Choose combined or split format:
+            </div>
+          </div>
+          <div class="flex items-center gap-1.5 flex-wrap">
+            <button type="button" 
+                    onclick="printFolioInvoice('combined')" 
+                    class="py-1.5 px-3 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs inline-flex items-center gap-1.5 shadow-xs transition cursor-pointer border-none"
+                    title="Print Combined Room + Food Bill (All-in-One)">
+              <i class="fa-solid fa-receipt text-indigo-200"></i> Combined Bill
+            </button>
+            <button type="button" 
+                    onclick="printFolioInvoice('room')" 
+                    class="py-1.5 px-3 rounded-lg bg-sky-600 hover:bg-sky-700 text-white font-extrabold text-xs inline-flex items-center gap-1.5 shadow-xs transition cursor-pointer border-none"
+                    title="Print Room Stay Bill Only">
+              <i class="fa-solid fa-bed text-sky-200"></i> Room Bill Only
+            </button>
+            <button type="button" 
+                    id="fmdl-bar-print-food"
+                    onclick="printFolioInvoice('food')" 
+                    class="py-1.5 px-3 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-extrabold text-xs inline-flex items-center gap-1.5 shadow-xs transition cursor-pointer border-none"
+                    title="Print Food &amp; Dining Bill Only">
+              <i class="fa-solid fa-utensils text-amber-200"></i> Food Bill Only
+            </button>
+          </div>
+        </div>
+
         <div class="dossier-card-title">
           <i class="fa-solid fa-file-invoice-dollar"></i> Pricing &amp; Billing Breakdown
         </div>
@@ -810,11 +843,20 @@
         <div id="fmdl-settlement-interactive-panel" class="settlement-panel hidden">
           <div class="flex justify-between items-center mb-2.5 flex-wrap gap-2">
             <div class="text-xs font-extrabold text-emerald-800 uppercase tracking-wider flex items-center gap-1.5">
-              <i class="fa-solid fa-calculator"></i> Process Settlement
+              <i class="fa-solid fa-calculator"></i> Process Settlement &amp; Checkout
             </div>
-            <button type="button" onclick="setFullFolioSettlementAmount()" class="bg-transparent border-none text-emerald-700 font-extrabold cursor-pointer underline text-xs p-0 hover:text-emerald-900">
-              Pay Full Due (<span id="fmdl-btn-payfull-val">₹ 0.00</span>)
-            </button>
+            <div class="flex items-center gap-1.5 flex-wrap text-[11px]">
+              <span class="text-slate-500 font-medium">Quick Fill:</span>
+              <button type="button" onclick="setFullFolioSettlementAmount()" class="px-2 py-0.5 rounded-md bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-bold border border-emerald-300 cursor-pointer transition">
+                Full Due: <span id="fmdl-btn-payfull-val">₹ 0.00</span>
+              </button>
+              <button type="button" id="fmdl-btn-payroom" onclick="setRoomFolioSettlementAmount()" class="hidden px-2 py-0.5 rounded-md bg-sky-100 hover:bg-sky-200 text-sky-800 font-bold border border-sky-300 cursor-pointer transition">
+                Room: <span id="fmdl-btn-payroom-val">₹ 0.00</span>
+              </button>
+              <button type="button" id="fmdl-btn-payfood" onclick="setFoodFolioSettlementAmount()" class="hidden px-2 py-0.5 rounded-md bg-amber-100 hover:bg-amber-200 text-amber-800 font-bold border border-amber-300 cursor-pointer transition">
+                Food: <span id="fmdl-btn-payfood-val">₹ 0.00</span>
+              </button>
+            </div>
           </div>
 
           <!-- Dynamic Settlement Price Breakdown (Room + Extra Services Date-wise) -->
@@ -857,7 +899,7 @@
             </div>
           </div>
 
-          <div class="mb-3">
+          <div class="mb-2.5">
             <label class="block text-[11px] font-extrabold text-slate-800 mb-1">
               Settlement Notes / Remarks
             </label>
@@ -867,18 +909,40 @@
                    class="w-full box-border py-2 px-2.5 rounded-lg border border-emerald-300 text-xs outline-none bg-white focus:ring-2 focus:ring-emerald-500/20">
           </div>
 
+          <div class="mb-3 p-2 bg-emerald-100/60 border border-emerald-200 rounded-lg">
+            <label class="inline-flex items-center gap-2 cursor-pointer text-xs font-bold text-emerald-900 select-none">
+              <input type="checkbox" id="fmdl-check-auto-checkout" checked class="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 border-emerald-300 cursor-pointer">
+              <span>Automatically complete Check-Out when balance is fully cleared</span>
+            </label>
+          </div>
+
           <div class="flex justify-between items-center gap-2 flex-wrap">
-            <button type="button" 
-                    onclick="printFolioInvoice()" 
-                    class="px-4 py-2 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs font-extrabold inline-flex items-center gap-1.5 cursor-pointer shadow-xs transition"
-                    title="Print full A4 invoice/bill for guest review before payment">
-              <i class="fa-solid fa-print text-indigo-600"></i> Print Pre-Settlement Bill (A4)
-            </button>
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <button type="button" 
+                      onclick="printFolioInvoice('combined')" 
+                      class="px-3 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs font-extrabold inline-flex items-center gap-1.5 cursor-pointer shadow-xs transition"
+                      title="Print combined A4 bill (Room + Food)">
+                <i class="fa-solid fa-receipt text-indigo-600"></i> Combined Bill
+              </button>
+              <button type="button" 
+                      onclick="printFolioInvoice('room')" 
+                      class="px-3 py-1.5 rounded-lg bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 text-xs font-extrabold inline-flex items-center gap-1.5 cursor-pointer shadow-xs transition"
+                      title="Print room stay bill only">
+                <i class="fa-solid fa-bed text-sky-600"></i> Room Bill
+              </button>
+              <button type="button" 
+                      id="fmdl-settle-print-food"
+                      onclick="printFolioInvoice('food')" 
+                      class="px-3 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 text-xs font-extrabold inline-flex items-center gap-1.5 cursor-pointer shadow-xs transition"
+                      title="Print food &amp; dining bill only">
+                <i class="fa-solid fa-utensils text-amber-600"></i> Food Bill
+              </button>
+            </div>
             <button type="button" 
                     id="fmdl-btn-confirm-settlement" 
                     onclick="executeFolioSettlement()" 
                     class="px-5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white border-none text-xs font-extrabold inline-flex items-center gap-1.5 cursor-pointer shadow-sm transition">
-              <i class="fa-solid fa-check-circle"></i> Confirm &amp; Save Settlement
+              <i class="fa-solid fa-check-circle"></i> Settle Payment &amp; Check Out
             </button>
           </div>
         </div>
@@ -920,10 +984,19 @@
           <i class="fa-solid fa-images text-indigo-600"></i> View Document Images (<span class="fmdl-docs-count-pill">0</span>)
         </button>
 
-        <!-- Print Invoice Button -->
-        <button type="button" class="btn-ui-secondary px-4 py-1.5 rounded-lg border border-slate-300 bg-white text-xs font-bold text-slate-700 hover:bg-slate-50 inline-flex items-center gap-1.5 cursor-pointer shadow-2xs transition" onclick="printFolioInvoice()">
-          <i class="fa-solid fa-print"></i> Print Invoice
-        </button>
+        <!-- Print Buttons -->
+        <div class="inline-flex items-center gap-1">
+          <button type="button" class="btn-ui-secondary px-2.5 py-1.5 rounded-lg border border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 text-xs font-bold inline-flex items-center gap-1 cursor-pointer" onclick="printFolioInvoice('combined')" title="Print Combined Room + Food Bill">
+            <i class="fa-solid fa-receipt"></i> Combined Bill
+          </button>
+          <button type="button" class="btn-ui-secondary px-2.5 py-1.5 rounded-lg border border-sky-200 bg-sky-50 text-sky-700 hover:bg-sky-100 text-xs font-bold inline-flex items-center gap-1 cursor-pointer" onclick="printFolioInvoice('room')" title="Print Room Stay Bill Only">
+            <i class="fa-solid fa-bed"></i> Room Bill
+          </button>
+          <button type="button" id="fmdl-footer-print-food" class="btn-ui-secondary px-2.5 py-1.5 rounded-lg border border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100 text-xs font-bold inline-flex items-center gap-1 cursor-pointer" onclick="printFolioInvoice('food')" title="Print Food Bill Only">
+            <i class="fa-solid fa-utensils"></i> Food Bill
+          </button>
+        </div>
+
         <!-- Close Button -->
         <button type="button" class="btn-ui-secondary px-4 py-1.5 rounded-lg border border-slate-300 bg-white text-xs font-bold text-slate-500 hover:text-slate-700 hover:bg-slate-50 cursor-pointer shadow-2xs transition" onclick="closeFolioModal()">
           Close
@@ -2006,6 +2079,14 @@
       : ((folio.status || '').toLowerCase() === 'checked out');
     const isSettled = (folio.status || '').toLowerCase() === 'settlement done' || Number(folio.balance) <= 0.01;
 
+    // Toggle visibility of Food Bill Only print buttons based on whether food orders exist
+    const foodOrders = folio.room_service_orders || [];
+    const hasFood = foodOrders.length > 0 || Number(folio.total_food_amount || 0) > 0;
+    ['fmdl-bar-print-food', 'fmdl-settle-print-food', 'fmdl-footer-print-food'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = hasFood ? 'inline-flex' : 'none';
+    });
+
     if (isCheckedOut) {
       btnSettle.style.display = 'none';
       btnCheckout.style.display = 'none';
@@ -2129,6 +2210,32 @@
       if (activeFolioData) {
         document.getElementById('fmdl-input-settle-amount').value = Number(activeFolioData.balance || 0).toFixed(2);
         document.getElementById('fmdl-btn-payfull-val').textContent = formatINR(activeFolioData.balance);
+
+        const roomBal = Number(activeFolioData.room_balance !== undefined ? activeFolioData.room_balance : Math.max(0, (activeFolioData.room_payable_amount || 0) - (activeFolioData.advance_amount || 0)));
+        const foodBal = Number(activeFolioData.food_balance !== undefined ? activeFolioData.food_balance : (activeFolioData.effective_extra_charges !== undefined ? activeFolioData.effective_extra_charges : (activeFolioData.total_room_service_charges || 0)));
+
+        const btnRoom = document.getElementById('fmdl-btn-payroom');
+        const valRoom = document.getElementById('fmdl-btn-payroom-val');
+        if (btnRoom && valRoom) {
+          if (roomBal > 0.01 && foodBal > 0.01) {
+            btnRoom.classList.remove('hidden');
+            valRoom.textContent = formatINR(roomBal);
+          } else {
+            btnRoom.classList.add('hidden');
+          }
+        }
+
+        const btnFood = document.getElementById('fmdl-btn-payfood');
+        const valFood = document.getElementById('fmdl-btn-payfood-val');
+        if (btnFood && valFood) {
+          if (foodBal > 0.01 && roomBal > 0.01) {
+            btnFood.classList.remove('hidden');
+            valFood.textContent = formatINR(foodBal);
+          } else {
+            btnFood.classList.add('hidden');
+          }
+        }
+
         renderSettlementBreakdown(activeFolioData);
       }
       panel.scrollIntoView({ behavior: 'smooth' });
@@ -2143,6 +2250,18 @@
     }
   }
 
+  function setRoomFolioSettlementAmount() {
+    if (activeFolioData && activeFolioData.room_balance !== undefined) {
+      document.getElementById('fmdl-input-settle-amount').value = Number(activeFolioData.room_balance).toFixed(2);
+    }
+  }
+
+  function setFoodFolioSettlementAmount() {
+    if (activeFolioData && activeFolioData.food_balance !== undefined) {
+      document.getElementById('fmdl-input-settle-amount').value = Number(activeFolioData.food_balance).toFixed(2);
+    }
+  }
+
   function executeFolioSettlement() {
     if (!activeFolioData) return;
 
@@ -2152,6 +2271,8 @@
     const txnInput = document.getElementById('fmdl-input-settle-txn');
     const remarksInput = document.getElementById('fmdl-input-settle-remarks');
     const confirmBtn = document.getElementById('fmdl-btn-confirm-settlement');
+    const autoCheckoutCheck = document.getElementById('fmdl-check-auto-checkout');
+    const autoCheckout = autoCheckoutCheck && autoCheckoutCheck.checked ? 1 : 0;
 
     if (isNaN(settleAmount) || settleAmount <= 0) {
       Swal.fire({
@@ -2190,23 +2311,50 @@
         payment_mode_id: modeSelect.value,
         transaction_id: txnInput.value.trim(),
         remarks: remarksInput.value.trim(),
+        auto_checkout: autoCheckout,
       })
     })
     .then(res => res.json())
     .then(data => {
       confirmBtn.disabled = false;
-      confirmBtn.innerHTML = '<i class="fa-solid fa-check-circle"></i> Confirm &amp; Save Settlement';
+      confirmBtn.innerHTML = '<i class="fa-solid fa-check-circle"></i> Settle Payment &amp; Check Out';
 
       if (data.success) {
-        Swal.fire({
-          icon: 'success',
-          title: 'Settlement Saved!',
-          text: data.message || 'Settlement processed successfully!',
-          confirmButtonColor: '#10b981',
-          confirmButtonText: 'OK'
-        }).then(() => {
-          window.location.reload();
-        });
+        if (data.is_checked_out) {
+          Swal.fire({
+            icon: 'success',
+            title: 'Settled & Checked Out!',
+            html: `${data.message || 'Payment settled and reservation checked out successfully!'}<br><br><strong>Would you like to print the settled bill now?</strong>`,
+            showCancelButton: true,
+            confirmButtonColor: '#4f46e5',
+            cancelButtonColor: '#64748b',
+            confirmButtonText: '<i class="fa-solid fa-print"></i> Print Bill Options',
+            cancelButtonText: 'Done / Close'
+          }).then(result => {
+            if (result.isConfirmed) {
+              promptPrintBillModal(activeFolioData.id, () => window.location.reload());
+            } else {
+              window.location.reload();
+            }
+          });
+        } else {
+          Swal.fire({
+            icon: 'success',
+            title: 'Settlement Saved!',
+            html: `${data.message || 'Settlement processed successfully!'}<br><br>Would you like to print the updated bill for customer?`,
+            showCancelButton: true,
+            confirmButtonColor: '#4f46e5',
+            cancelButtonColor: '#10b981',
+            confirmButtonText: '<i class="fa-solid fa-print"></i> Print Bill',
+            cancelButtonText: 'OK'
+          }).then((res) => {
+            if (res.isConfirmed) {
+              promptPrintBillModal(activeFolioData.id, () => window.location.reload());
+            } else {
+              window.location.reload();
+            }
+          });
+        }
       } else {
         Swal.fire({
           icon: 'warning',
@@ -2218,7 +2366,7 @@
     })
     .catch(err => {
       confirmBtn.disabled = false;
-      confirmBtn.innerHTML = '<i class="fa-solid fa-check-circle"></i> Confirm &amp; Save Settlement';
+      confirmBtn.innerHTML = '<i class="fa-solid fa-check-circle"></i> Settle Payment &amp; Check Out';
       console.error(err);
       Swal.fire({
         icon: 'error',
@@ -2503,15 +2651,42 @@
     });
   });
 
-  function printFolioInvoice() {
+  /**
+   * Print Folio Invoice with 3 Bill Modes:
+   * - 'combined': Consolidated bill with both Room Stay Charges & Food Dining Orders
+   * - 'room': Room Stay charges, Room GST, Advance and Room balance due only
+   * - 'food': Restaurant POS & In-Room Dining orders, food GST and food balance due only
+   */
+  function printFolioInvoice(mode = 'combined') {
     if (!activeFolioData) return;
     const f = activeFolioData;
     const pg = f.primary_guest || {};
     const balance = Number(f.balance || 0);
+    const roomBalance = Number(f.room_balance !== undefined ? f.room_balance : Math.max(0, (f.room_payable_amount || 0) - (f.advance_amount || 0)));
+    const foodBalance = Number(f.food_balance !== undefined ? f.food_balance : (f.effective_extra_charges !== undefined ? f.effective_extra_charges : (f.total_room_service_charges || 0)));
     const isPreSettlement = balance > 0.01 && !['settlement done', 'settled', 'checked out'].includes((f.status || '').toLowerCase());
 
     // Format INR helper
     const formatINR = num => '₹ ' + Number(num || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+    // Mode title & subtitle
+    let billTypeTitle = 'CONSOLIDATED TAX INVOICE & SETTLEMENT RECEIPT';
+    let billTypeBadge = 'COMBINED (ROOM + FOOD)';
+    let displayBalance = balance;
+
+    if (mode === 'room') {
+      billTypeTitle = isPreSettlement ? 'PROFORMA TAX INVOICE - ROOM CHARGES' : 'TAX INVOICE - ROOM CHARGES';
+      billTypeBadge = 'ROOM STAY BILL ONLY';
+      displayBalance = roomBalance;
+    } else if (mode === 'food') {
+      billTypeTitle = isPreSettlement ? 'PROFORMA FOOD & RESTAURANT DINING BILL' : 'TAX INVOICE - RESTAURANT & DINING';
+      billTypeBadge = 'FOOD & DINING BILL ONLY';
+      displayBalance = foodBalance;
+    } else {
+      billTypeTitle = isPreSettlement ? 'PROFORMA TAX INVOICE & PRE-SETTLEMENT BILL' : 'TAX INVOICE & SETTLEMENT RECEIPT';
+      billTypeBadge = 'COMBINED BILL';
+      displayBalance = balance;
+    }
 
     // 1. Build room rows
     let roomRowsHtml = '';
@@ -2531,13 +2706,33 @@
       `;
     });
 
-    // 2. Build Extra Services & Food Orders rows (ALL THINGS INCLUDED)
+    let roomTableHtml = `
+      <div class="section-title">1. Room Stay Charges</div>
+      <table class="data-table mb-3">
+        <thead>
+          <tr>
+            <th>Room / Floor</th>
+            <th>Category &amp; Bedding</th>
+            <th>Occupants</th>
+            <th class="text-right">Tariff &times; Nights</th>
+            <th class="text-right">Room Total</th>
+          </tr>
+        </thead>
+        <tbody class="bill-table">${roomRowsHtml}</tbody>
+      </table>
+    `;
+
+    // 2. Build Extra Services & Food Orders rows (Restaurant POS & In-Room Dining)
     let serviceRowsHtml = '';
     let serviceTableHtml = '';
     const serviceOrders = f.room_service_orders || [];
+    let calculatedFoodSubtotal = 0;
+
     if (serviceOrders.length > 0) {
       serviceOrders.forEach(ro => {
-        const itemsList = (ro.items || []).map(i => `${i.quantity}x ${escapeHtml(i.item_name)}`).join(', ');
+        const roTotal = Number(ro.total_amount || 0);
+        calculatedFoodSubtotal += roTotal;
+        const itemsList = (ro.items || []).map(i => `${i.quantity}x ${escapeHtml(i.item_name)} (${formatINR(i.unit_price)})`).join(', ');
         const dest = ro.table_number ? `Table: ${escapeHtml(ro.table_number)}` : (ro.room_number ? `Room ${escapeHtml(ro.room_number)}` : 'POS Dining');
         serviceRowsHtml += `
           <tr>
@@ -2545,30 +2740,39 @@
             <td class="p-1.5 px-2 border border-slate-200 text-slate-600">${escapeHtml(ro.date || '-')}</td>
             <td class="p-1.5 px-2 border border-slate-200 font-semibold text-slate-700">${dest}</td>
             <td class="p-1.5 px-2 border border-slate-200 text-slate-800">${itemsList || 'Kitchen Provision'}</td>
-            <td class="p-1.5 px-2 border border-slate-200 text-right font-mono font-bold">${formatINR(ro.total_amount)}</td>
+            <td class="p-1.5 px-2 border border-slate-200 text-right font-mono font-bold">${formatINR(roTotal)}</td>
           </tr>
         `;
       });
+
+      const secTitle = mode === 'food' ? '1. Restaurant POS &amp; In-Room Dining Orders' : '2. In-Room Dining, Restaurant POS &amp; Extra Services';
       serviceTableHtml = `
-        <div class="section-title">2. In-Room Dining, Restaurant POS &amp; Extra Services (${serviceOrders.length} Order(s))</div>
+        <div class="section-title">${secTitle} (${serviceOrders.length} Order(s))</div>
         <table class="data-table mb-3">
           <thead>
             <tr>
               <th style="width: 110px;">Order #</th>
-              <th style="width: 140px;">Date &amp; Time</th>
-              <th style="width: 120px;">Destination</th>
-              <th>Ordered Items &amp; Service</th>
+              <th style="width: 130px;">Date &amp; Time</th>
+              <th style="width: 110px;">Destination</th>
+              <th>Ordered Items &amp; Rate</th>
               <th style="width: 110px;" class="text-right">Amount</th>
             </tr>
           </thead>
           <tbody>${serviceRowsHtml}</tbody>
         </table>
       `;
+    } else if (mode === 'food') {
+      serviceTableHtml = `
+        <div class="section-title">1. Restaurant POS &amp; In-Room Dining Orders</div>
+        <div style="padding: 15px; border: 1px dashed #cbd5e1; border-radius: 6px; text-align: center; color: #64748b; margin-bottom: 12px;">
+          No restaurant POS or food orders registered for this reservation.
+        </div>
+      `;
     }
 
     // 3. Company Food Advance Allowance Box (if applicable)
     let foodAdvBoxHtml = '';
-    if (f.food_advance && f.food_advance.has_food_advance) {
+    if (f.food_advance && f.food_advance.has_food_advance && mode !== 'room') {
       const fa = f.food_advance;
       foodAdvBoxHtml = `
         <div class="food-adv-card">
@@ -2589,7 +2793,7 @@
     // 4. Financial Calculations
     const grossRoom      = Number(f.room_total_amount !== undefined ? f.room_total_amount : (f.total_amount || 0));
     const serviceChrg    = Number(f.total_room_service_charges || 0);
-    const rawServiceChrg = Number(f.raw_room_service_charges || serviceChrg);
+    const rawServiceChrg = Number(f.raw_room_service_charges || calculatedFoodSubtotal || serviceChrg);
     const discAmt        = Number(f.discount_amount || 0);
     const discPct        = Number(f.discount_percentage || 0);
     const gstAmt         = Number(f.gst_amount || 0);
@@ -2602,7 +2806,7 @@
 
     // 5. Settlements History (if any)
     let settlementsHtml = '';
-    if (f.settlements_history && f.settlements_history.length > 0) {
+    if (f.settlements_history && f.settlements_history.length > 0 && mode !== 'food') {
       let sRows = '';
       f.settlements_history.forEach(s => {
         sRows += `
@@ -2632,6 +2836,154 @@
       `;
     }
 
+    // 6. Mode-specific summary box
+    let summaryBoxHtml = '';
+    if (mode === 'room') {
+      // ROOM ONLY SUMMARY
+      const roomSettledPortion = Math.min(Math.max(0, roomPayable - advancePaid), settlePaid);
+      summaryBoxHtml = `
+        <div class="summary-wrap">
+          <div class="summary-box">
+            <table>
+              <tr class="s-head"><td colspan="2">Room Stay Financial Summary</td></tr>
+              <tr>
+                <td>Gross Room Tariff (${f.total_nights || 1} Night(s))</td>
+                <td class="text-right font-mono">${formatINR(grossRoom)}</td>
+              </tr>
+              ${discAmt > 0 ? `
+              <tr style="color: #059669;">
+                <td>Less: Room Discount (${discPct}%)</td>
+                <td class="text-right font-mono">- ${formatINR(discAmt)}</td>
+              </tr>` : ''}
+              ${gstAmt > 0 ? `
+              <tr style="color: #4338ca;">
+                <td>Room GST (${gstPct}%)</td>
+                <td class="text-right font-mono">+ ${formatINR(gstAmt)}</td>
+              </tr>` : ''}
+              <tr class="s-total">
+                <td>Net Room Tariff Payable</td>
+                <td class="text-right font-mono font-bold">${formatINR(roomPayable)}</td>
+              </tr>
+              <tr class="s-paid">
+                <td>Less: Advance Deposit Paid (Check-in)</td>
+                <td class="text-right font-mono">- ${formatINR(advancePaid)}</td>
+              </tr>
+              ${roomSettledPortion > 0 ? `
+              <tr class="s-paid">
+                <td>Less: Room Settlements Applied</td>
+                <td class="text-right font-mono">- ${formatINR(roomSettledPortion)}</td>
+              </tr>` : ''}
+              <tr class="s-bal">
+                <td>Net Room Balance Due</td>
+                <td class="text-right font-mono font-black">${formatINR(roomBalance)}</td>
+              </tr>
+            </table>
+          </div>
+        </div>
+      `;
+    } else if (mode === 'food') {
+      // FOOD ONLY SUMMARY
+      const faUsed = (f.food_advance && f.food_advance.has_food_advance) ? Number(f.food_advance.used_amount || 0) : 0;
+      const netFoodDue = foodBalance;
+      summaryBoxHtml = `
+        <div class="summary-wrap">
+          <div class="summary-box">
+            <table>
+              <tr class="s-head"><td colspan="2">Food &amp; Dining Financial Summary</td></tr>
+              <tr>
+                <td>Total Food / Dining Subtotal (${serviceOrders.length} Order(s))</td>
+                <td class="text-right font-mono">${formatINR(rawServiceChrg)}</td>
+              </tr>
+              ${faUsed > 0 ? `
+              <tr style="color: #047857; font-weight: bold;">
+                <td>Less: Company Food Advance Covered</td>
+                <td class="text-right font-mono">- ${formatINR(faUsed)}</td>
+              </tr>` : ''}
+              <tr class="s-total">
+                <td>Net Food Charges Payable</td>
+                <td class="text-right font-mono font-bold">${formatINR(netFoodDue)}</td>
+              </tr>
+              <tr class="s-bal">
+                <td>Net Food Balance Due</td>
+                <td class="text-right font-mono font-black">${formatINR(foodBalance)}</td>
+              </tr>
+            </table>
+          </div>
+        </div>
+      `;
+    } else {
+      // COMBINED SUMMARY
+      summaryBoxHtml = `
+        <div class="summary-wrap">
+          <div class="summary-box">
+            <table>
+              <tr class="s-head"><td colspan="2">Financial Summary Breakdown</td></tr>
+              <tr>
+                <td>Gross Room Tariff</td>
+                <td class="text-right font-mono">${formatINR(grossRoom)}</td>
+              </tr>
+              ${serviceChrg > 0 ? `
+              <tr>
+                <td>In-Room Dining &amp; Restaurant Services</td>
+                <td class="text-right font-mono">+ ${formatINR(rawServiceChrg)}</td>
+              </tr>` : ''}
+              ${f.food_advance && f.food_advance.has_food_advance && f.food_advance.used_amount > 0 ? `
+              <tr style="color: #047857; font-weight: bold;">
+                <td>Less: Company Food Advance Covered</td>
+                <td class="text-right font-mono">- ${formatINR(f.food_advance.used_amount)}</td>
+              </tr>` : ''}
+              ${f.food_advance && f.food_advance.has_food_advance && f.food_advance.unused_advance > 0 ? `
+              <tr style="color: #047857; font-weight: bold;">
+                <td>Less: Unused Food Credit Adjustment</td>
+                <td class="text-right font-mono">- ${formatINR(f.food_advance.unused_advance)}</td>
+              </tr>` : ''}
+              ${discAmt > 0 ? `
+              <tr style="color: #059669;">
+                <td>Less: Special Discount (${discPct}%)</td>
+                <td class="text-right font-mono">- ${formatINR(discAmt)}</td>
+              </tr>` : ''}
+              ${gstAmt > 0 ? `
+              <tr style="color: #4338ca;">
+                <td>Taxes (Room GST ${gstPct}%)</td>
+                <td class="text-right font-mono">+ ${formatINR(gstAmt)}</td>
+              </tr>` : ''}
+              <tr class="s-total">
+                <td>Net Payable Amount</td>
+                <td class="text-right font-mono font-bold">${formatINR(netPayable)}</td>
+              </tr>
+              <tr class="s-paid">
+                <td>Less: Advance Deposit Paid (Check-in)</td>
+                <td class="text-right font-mono">- ${formatINR(advancePaid)}</td>
+              </tr>
+              ${settlePaid > 0 ? `
+              <tr class="s-paid">
+                <td>Less: Previous Settlements Paid</td>
+                <td class="text-right font-mono">- ${formatINR(settlePaid)}</td>
+              </tr>` : ''}
+              <tr class="s-paid">
+                <td>Total Amount Paid So Far</td>
+                <td class="text-right font-mono font-bold">${formatINR(totalPaid)}</td>
+              </tr>
+              <tr class="s-bal">
+                <td>Net Balance Due (To Pay)</td>
+                <td class="text-right font-mono font-black">${formatINR(balance)}</td>
+              </tr>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    // Compose section bodies based on mode
+    let mainTablesHtml = '';
+    if (mode === 'room') {
+      mainTablesHtml = roomTableHtml + settlementsHtml + summaryBoxHtml;
+    } else if (mode === 'food') {
+      mainTablesHtml = serviceTableHtml + foodAdvBoxHtml + summaryBoxHtml;
+    } else {
+      mainTablesHtml = roomTableHtml + serviceTableHtml + foodAdvBoxHtml + settlementsHtml + summaryBoxHtml;
+    }
+
     // Build full invoice body HTML for print iframe
     const invoiceBodyContent = `
 <div class="inv-wrap">
@@ -2644,13 +2996,14 @@
       <div class="hotel-contact">Phone: +91 98765 43210 &bull; Email: reservations@hotelsagarsonnet.com &bull; GSTIN: 19AAGCS7712K1Z9</div>
     </div>
     <div style="text-align: right;">
-      <div class="inv-title">${isPreSettlement ? 'PROFORMA TAX INVOICE &amp; PRE-SETTLEMENT BILL' : 'TAX INVOICE &amp; SETTLEMENT RECEIPT'}</div>
+      <div class="inv-title">${billTypeTitle}</div>
+      <div class="inv-ref"><span class="status-chip mode-chip">${billTypeBadge}</span></div>
       <div class="inv-ref">Folio #: <strong>${escapeHtml(f.folio_number || 'FOL-' + f.id)}</strong></div>
       <div class="inv-ref">Booking Ref: <strong>${escapeHtml(f.reserve_id || ('RES-' + f.id))}</strong></div>
       <div class="inv-ref">Generated: <strong>${new Date().toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</strong></div>
       <div class="inv-ref" style="margin-top: 4px;">
-        Status: <span class="status-chip ${isPreSettlement ? 'unsettled' : 'settled'}">
-          ${isPreSettlement ? 'PRE-SETTLEMENT (DUE: ' + formatINR(balance) + ')' : escapeHtml(f.status || 'Settled')}
+        Status: <span class="status-chip ${displayBalance > 0.01 ? 'unsettled' : 'settled'}">
+          ${displayBalance > 0.01 ? 'BALANCE DUE: ' + formatINR(displayBalance) : 'SETTLED (NIL DUE)'}
         </span>
       </div>
     </div>
@@ -2682,92 +3035,12 @@
     </div>
   </div>
 
-  <!-- 1. Room Charges Table -->
-  <div class="section-title">1. Room Stay Charges</div>
-  <table class="data-table mb-3">
-    <thead>
-      <tr>
-        <th>Room / Floor</th>
-        <th>Category &amp; Bedding</th>
-        <th>Occupants</th>
-        <th class="text-right">Tariff &times; Nights</th>
-        <th class="text-right">Room Total</th>
-      </tr>
-    </thead>
-    <tbody class="bill-table">${roomRowsHtml}</tbody>
-  </table>
-
-  <!-- 2. Service Orders (Food, POS, In-Room Dining) -->
-  ${serviceTableHtml}
-
-  <!-- 3. Food Advance Details (if applicable) -->
-  ${foodAdvBoxHtml}
-
-  <!-- 4. Previous Settlements (if any) -->
-  ${settlementsHtml}
-
-  <!-- 5. Comprehensive Bill Summary -->
-  <div class="summary-wrap">
-    <div class="summary-box">
-      <table>
-        <tr class="s-head"><td colspan="2">Financial Summary Breakdown</td></tr>
-        <tr>
-          <td>Gross Room Tariff</td>
-          <td class="text-right font-mono">${formatINR(grossRoom)}</td>
-        </tr>
-        ${serviceChrg > 0 ? `
-        <tr>
-          <td>In-Room Dining &amp; Restaurant Services</td>
-          <td class="text-right font-mono">+ ${formatINR(rawServiceChrg)}</td>
-        </tr>` : ''}
-        ${f.food_advance && f.food_advance.has_food_advance && f.food_advance.used_amount > 0 ? `
-        <tr style="color: #047857; font-weight: bold;">
-          <td>Less: Company Food Advance Covered</td>
-          <td class="text-right font-mono">- ${formatINR(f.food_advance.used_amount)}</td>
-        </tr>` : ''}
-        ${f.food_advance && f.food_advance.has_food_advance && f.food_advance.unused_advance > 0 ? `
-        <tr style="color: #047857; font-weight: bold;">
-          <td>Less: Unused Food Credit Adjustment</td>
-          <td class="text-right font-mono">- ${formatINR(f.food_advance.unused_advance)}</td>
-        </tr>` : ''}
-        ${discAmt > 0 ? `
-        <tr style="color: #059669;">
-          <td>Less: Special Discount (${discPct}%)</td>
-          <td class="text-right font-mono">- ${formatINR(discAmt)}</td>
-        </tr>` : ''}
-        ${gstAmt > 0 ? `
-        <tr style="color: #4338ca;">
-          <td>Taxes (Room GST ${gstPct}%)</td>
-          <td class="text-right font-mono">+ ${formatINR(gstAmt)}</td>
-        </tr>` : ''}
-        <tr class="s-total">
-          <td>Net Payable Amount</td>
-          <td class="text-right font-mono font-bold">${formatINR(netPayable)}</td>
-        </tr>
-        <tr class="s-paid">
-          <td>Less: Advance Deposit Paid (Check-in)</td>
-          <td class="text-right font-mono">- ${formatINR(advancePaid)}</td>
-        </tr>
-        ${settlePaid > 0 ? `
-        <tr class="s-paid">
-          <td>Less: Previous Settlements Paid</td>
-          <td class="text-right font-mono">- ${formatINR(settlePaid)}</td>
-        </tr>` : ''}
-        <tr class="s-paid">
-          <td>Total Amount Paid So Far</td>
-          <td class="text-right font-mono font-bold">${formatINR(totalPaid)}</td>
-        </tr>
-        <tr class="s-bal">
-          <td>Net Balance Due (To Pay)</td>
-          <td class="text-right font-mono font-black">${formatINR(balance)}</td>
-        </tr>
-      </table>
-    </div>
-  </div>
+  <!-- Tables & Summary -->
+  ${mainTablesHtml}
 
   <!-- Pre-settlement Notice & Signature -->
   <div class="footer-notice">
-    ${isPreSettlement ? '<strong>PROFORMA NOTICE:</strong> This is a computer-generated pre-settlement folio statement provided for guest review prior to final payment settlement and checkout. All included room charges, meals, POS restaurant dining orders and advance adjustments are subject to final cashier confirmation.' : '<strong>TAX INVOICE:</strong> Thank you for staying with Hotel Sagar Sonnet. We hope you had a pleasant stay!'}
+    ${displayBalance > 0.01 ? '<strong>PROFORMA NOTICE:</strong> This is a computer-generated pre-settlement statement provided for guest review prior to final cashier payment and checkout.' : '<strong>TAX INVOICE:</strong> Thank you for staying with Hotel Sagar Sonnet. We hope you had a pleasant stay!'}
   </div>
 
   <div class="footer">
@@ -2786,9 +3059,10 @@
       .hotel-name { font-size: 20px; font-weight: 900; color: #1e1b4b; text-transform: uppercase; letter-spacing: 0.5px; }
       .hotel-sub { font-size: 10.5px; font-weight: 600; color: #475569; margin-top: 2px; }
       .hotel-contact { font-size: 9.5px; color: #64748b; margin-top: 2px; }
-      .inv-title { font-size: 13.5px; font-weight: 900; color: #4f46e5; text-transform: uppercase; }
+      .inv-title { font-size: 13px; font-weight: 900; color: #4f46e5; text-transform: uppercase; }
       .inv-ref { font-size: 10.5px; font-family: monospace; color: #334155; margin-top: 2px; }
       .status-chip { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 9.5px; font-weight: 800; text-transform: uppercase; }
+      .status-chip.mode-chip { background: #e0e7ff; color: #3730a3; border: 1px solid #c7d2fe; margin-bottom: 3px; }
       .status-chip.unsettled { background: #ffe4e6; color: #be123c; border: 1px solid #fecdd3; }
       .status-chip.settled { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
       .info-grid { display: flex; justify-content: space-between; margin-bottom: 12px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 14px; }
@@ -2815,7 +3089,7 @@
       .s-head td { background: #f1f5f9; font-weight: 800; font-size: 10.5px; color: #334155; text-transform: uppercase; }
       .s-total td { background: #f8fafc; font-weight: 800; font-size: 11.5px; color: #0f172a; border-top: 2px solid #cbd5e1; border-bottom: 2px solid #cbd5e1; }
       .s-paid td { color: #059669; }
-      .s-bal td { font-weight: 900; font-size: 13px; background: ${balance > 0.01 ? '#fff1f2' : '#f0fdf4'}; color: ${balance > 0.01 ? '#be123c' : '#15803d'}; }
+      .s-bal td { font-weight: 900; font-size: 13px; background: ${displayBalance > 0.01 ? '#fff1f2' : '#f0fdf4'}; color: ${displayBalance > 0.01 ? '#be123c' : '#15803d'}; }
       .footer-notice { font-size: 9.5px; color: #64748b; background: #f8fafc; border: 1px dashed #cbd5e1; padding: 6px 10px; border-radius: 6px; margin-top: 8px; line-height: 1.4; }
       .footer { border-top: 1px dashed #94a3b8; padding-top: 14px; display: flex; justify-content: space-between; align-items: center; font-size: 10px; color: #475569; margin-top: 18px; }
       @media print {
@@ -2836,7 +3110,7 @@
     const doc = iframe.contentWindow.document;
     doc.open();
     // Split tag strings to avoid regex/server HTML interceptor matches
-    doc.write('<!DOCTYPE html><html><' + 'head><title>A4 Bill - ' + escapeHtml(f.folio_number) + '</title><style>' + printStyles + '</style></' + 'head><' + 'body>' + invoiceBodyContent + '</' + 'body></html>');
+    doc.write('<!DOCTYPE html><html><' + 'head><title>' + escapeHtml(billTypeTitle) + ' - ' + escapeHtml(f.folio_number) + '</title><style>' + printStyles + '</style></' + 'head><' + 'body>' + invoiceBodyContent + '</' + 'body></html>');
     doc.close();
 
     setTimeout(function() {
@@ -2852,23 +3126,122 @@
     }, 150);
   }
 
-  // Helper to open and print folio A4 bill directly from table row
-  async function openAndPrintFolioById(bookingId) {
+  /**
+   * Action: Prompt Print Bill Modal
+   * Displays 3 options (Combined Bill, Room Bill Only, Food Bill Only)
+   */
+  async function promptPrintBillModal(bookingId, onDone) {
+    Swal.fire({
+      title: 'Preparing Bill...',
+      text: 'Fetching folio ledger details.',
+      allowOutsideClick: false,
+      didOpen: () => { Swal.showLoading(); }
+    });
+
     try {
       const res = await fetch(`{{ url('front-office/folio') }}/${bookingId}/details`, {
         headers: { 'Accept': 'application/json' }
       });
       const data = await res.json();
-      if (data.success && data.folio) {
-        activeFolioData = data.folio;
-        printFolioInvoice();
-      } else {
-        alert(data.error || 'Failed to fetch folio details for printing.');
+      Swal.close();
+
+      if (!data.success || !data.folio) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: data.error || 'Failed to load folio details.',
+          confirmButtonColor: '#4f46e5'
+        });
+        return;
       }
+
+      activeFolioData = data.folio;
+      const f = data.folio;
+      const foodCount = (f.room_service_orders || []).length;
+      const roomTotal = Number(f.room_payable_amount || f.total_amount || 0);
+      const foodTotal = Number(f.total_food_amount || f.total_room_service_charges || 0);
+      const roomBal = Number(f.room_balance !== undefined ? f.room_balance : Math.max(0, (f.room_payable_amount || 0) - (f.advance_amount || 0)));
+      const foodBal = Number(f.food_balance !== undefined ? f.food_balance : (f.effective_extra_charges !== undefined ? f.effective_extra_charges : foodTotal));
+
+      Swal.fire({
+        title: 'Choose Bill Format to Print',
+        html: `
+          <div class="text-left text-xs text-slate-600 mb-4">
+            Guest: <strong>${escapeHtml(f.primary_guest?.name || 'Guest')}</strong> &bull; Booking: <strong>#${escapeHtml(f.reserve_id)}</strong>
+            <div class="mt-1 text-slate-500">Customer wants to review the bill. Choose which format to generate:</div>
+          </div>
+          <div class="flex flex-col gap-2.5 text-left">
+            <button type="button" id="swal-btn-print-combined" class="p-3 rounded-xl border border-indigo-200 bg-indigo-50/70 hover:bg-indigo-100 flex items-center justify-between cursor-pointer transition text-indigo-950">
+              <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center font-bold text-xs"><i class="fa-solid fa-receipt"></i></div>
+                <div>
+                  <div class="font-extrabold text-xs">Combined Bill (All-in-One)</div>
+                  <div class="text-[10.5px] text-indigo-700">Consolidated Room + Food &amp; Dining orders in single bill</div>
+                </div>
+              </div>
+              <span class="font-mono font-extrabold text-xs text-indigo-800">${formatINR(f.balance)}</span>
+            </button>
+
+            <button type="button" id="swal-btn-print-room" class="p-3 rounded-xl border border-sky-200 bg-sky-50/70 hover:bg-sky-100 flex items-center justify-between cursor-pointer transition text-sky-950">
+              <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-lg bg-sky-600 text-white flex items-center justify-center font-bold text-xs"><i class="fa-solid fa-bed"></i></div>
+                <div>
+                  <div class="font-extrabold text-xs">Room Bill Only</div>
+                  <div class="text-[10.5px] text-sky-700">Room Stay Tariff, GST, Advance &amp; Room balance</div>
+                </div>
+              </div>
+              <span class="font-mono font-extrabold text-xs text-sky-800">${formatINR(roomBal)}</span>
+            </button>
+
+            <button type="button" id="swal-btn-print-food" class="p-3 rounded-xl border border-amber-200 bg-amber-50/70 hover:bg-amber-100 flex items-center justify-between cursor-pointer transition text-amber-950">
+              <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-lg bg-amber-600 text-white flex items-center justify-center font-bold text-xs"><i class="fa-solid fa-utensils"></i></div>
+                <div>
+                  <div class="font-extrabold text-xs">Food Bill Only (${foodCount} Orders)</div>
+                  <div class="text-[10.5px] text-amber-700">Restaurant POS &amp; In-Room Dining items and food total</div>
+                </div>
+              </div>
+              <span class="font-mono font-extrabold text-xs text-amber-800">${formatINR(foodBal)}</span>
+            </button>
+          </div>
+        `,
+        showConfirmButton: false,
+        showCancelButton: true,
+        cancelButtonText: 'Close',
+        cancelButtonColor: '#64748b',
+        didOpen: () => {
+          document.getElementById('swal-btn-print-combined')?.addEventListener('click', () => {
+            Swal.close();
+            printFolioInvoice('combined');
+            if (typeof onDone === 'function') onDone();
+          });
+          document.getElementById('swal-btn-print-room')?.addEventListener('click', () => {
+            Swal.close();
+            printFolioInvoice('room');
+            if (typeof onDone === 'function') onDone();
+          });
+          document.getElementById('swal-btn-print-food')?.addEventListener('click', () => {
+            Swal.close();
+            printFolioInvoice('food');
+            if (typeof onDone === 'function') onDone();
+          });
+        }
+      });
     } catch (e) {
+      Swal.close();
       console.error(e);
-      alert('Network error while retrieving folio for printing.');
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Failed to retrieve bill details.',
+        confirmButtonColor: '#4f46e5'
+      });
     }
+  }
+
+  // Helper to open and print folio A4 bill directly from table row
+  async function openAndPrintFolioById(bookingId) {
+    promptPrintBillModal(bookingId);
   }
 
   /* ========================================================================= */
@@ -3355,7 +3728,10 @@
   window.executeFolioCheckout = executeFolioCheckout;
   window.toggleFolioSettlementPanel = toggleFolioSettlementPanel;
   window.setFullFolioSettlementAmount = setFullFolioSettlementAmount;
+  window.setRoomFolioSettlementAmount = setRoomFolioSettlementAmount;
+  window.setFoodFolioSettlementAmount = setFoodFolioSettlementAmount;
   window.printFolioInvoice = printFolioInvoice;
+  window.promptPrintBillModal = promptPrintBillModal;
   window.openAndPrintFolioById = openAndPrintFolioById;
 </script>
 @endpush

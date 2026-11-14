@@ -445,6 +445,59 @@ class FolioController extends Controller
                 'remarks' => $settleRemarks,
             ]);
 
+            // 5. Automatic Check-Out if requested and balance is fully cleared
+            $isCheckedOut = false;
+            if ($request->boolean('auto_checkout') && $newBalance <= 0) {
+                $checkoutDate = now()->toDateString();
+                $checkoutTime = now()->format('H:i:s');
+                $dirtyState = HousekeepingState::where('name', 'like', '%dirty%')->first();
+
+                $allResBookings = Booking::where('reserve_id', $booking->reserve_id)->get();
+                if ($allResBookings->isEmpty()) {
+                    $allResBookings = collect([$booking]);
+                }
+
+                foreach ($allResBookings as $b) {
+                    $b->status = 'Checked Out';
+                    $b->checkout_date = $checkoutDate;
+                    $b->checkout_time = $checkoutTime;
+                    $b->save();
+
+                    if ($b->room_id && $dirtyState) {
+                        RoomHousekeepingHistory::create([
+                            'room_id' => $b->room_id,
+                            'housekeeping_status_id' => $dirtyState->id,
+                            'start_time' => now(),
+                            'status' => 'pending',
+                        ]);
+                    }
+                }
+
+                Checkout::create([
+                    'guest_id' => $booking->guest_id,
+                    'booking_id' => $booking->id,
+                    'room_id' => $booking->room_id,
+                    'settlement_id' => null,
+                    'checkout_date' => $checkoutDate,
+                    'checkout_time' => $checkoutTime,
+                    'actual_checkout_at' => now(),
+                    'total_nights' => $booking->total_nights,
+                    'room_charges' => $booking->total_amount,
+                    'extra_charges' => $effectiveExtra,
+                    'late_checkout_charge' => 0.00,
+                    'discount_amount' => $booking->discount_amount,
+                    'tax_amount' => $booking->gst_amount,
+                    'grand_total' => round((float)$booking->payable_amount + $effectiveExtra - $unusedAdvanceCredit, 2),
+                    'paid_amount' => round((float)$booking->advance_amount + $settleAmount, 2),
+                    'balance_amount' => 0.00,
+                    'status' => 'Completed',
+                    'remarks' => $request->input('remarks', 'Settled & Checked out via Folio Management'),
+                ]);
+
+                $isCheckedOut = true;
+                $booking->status = 'Checked Out';
+            }
+
             DB::commit();
 
             $totalSettled = (float)Settlement::where('booking_id', $booking->id)->sum('paid_amount');
@@ -453,15 +506,20 @@ class FolioController extends Controller
             }
             $totalPaid = round((float)$booking->advance_amount + $totalSettled, 2);
 
+            $msg = $isCheckedOut 
+                ? 'Settlement of ₹ ' . number_format($settleAmount, 2) . ' processed and Reservation successfully Checked Out!'
+                : 'Settlement of ₹ ' . number_format($settleAmount, 2) . ' processed successfully!';
+
             return response()->json([
                 'success' => true,
-                'message' => 'Settlement of ₹ ' . number_format($settleAmount, 2) . ' processed successfully!',
+                'message' => $msg,
                 'new_balance' => $newBalance,
                 'advance_amount' => (float)$booking->advance_amount,
                 'settlement_paid' => $totalSettled,
                 'total_paid' => $totalPaid,
                 'status' => $booking->status,
                 'is_fully_settled' => ($newBalance <= 0),
+                'is_checked_out' => $isCheckedOut,
                 'settlement_number' => $settlementNumber,
             ]);
         } catch (\Exception $e) {
@@ -1280,7 +1338,10 @@ class FolioController extends Controller
             'settlement_paid' => $settleAmount,
             'total_paid' => $totalPaid,
             'balance' => $effectiveBalance,
-            'room_balance' => $balance,
+            'room_balance' => max(0, round((float)$booking->balance, 2)),
+            'food_balance' => round((float)$effectiveExtra, 2),
+            'total_food_amount' => (float)$roomServiceOrders->where('order_status', '!=', 'Cancelled')->sum('total_amount'),
+            'food_paid_direct' => (float)$roomServiceOrders->where('payment_status', '!=', 'Charged to Room Folio')->where('order_status', '!=', 'Cancelled')->sum('total_amount'),
             'payment_mode' => $booking->payments?->first()?->paymentMode?->name ?? 'Cash / Direct',
             'payment_remarks' => $booking->remarks ?: ($booking->payments?->first()?->payment_remarks ?? 'None'),
             'checkin_date_fmt' => $checkinDateFmt,

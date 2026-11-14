@@ -299,9 +299,20 @@
         // General reservation: unlock fields so staff can choose room freely
         if (firstGuest) {
           setRoomFieldsLocked(firstGuest, false);
+          const catSel = firstGuest.querySelector('.select-room-category');
+          const flSel = firstGuest.querySelector('.select-room-floor');
+          const rmSel = firstGuest.querySelector('.select-room-no');
+          const banner = firstGuest.querySelector('.room-capacity-banner');
+          if (catSel) catSel.value = '';
+          if (flSel) flSel.value = '';
+          if (rmSel) rmSel.value = '';
+          if (banner) banner.style.display = 'none';
         }
         document.querySelectorAll('.unassigned-room-notice').forEach(n => n.classList.remove('hidden'));
         document.querySelectorAll('.room-assignment-grid').forEach(g => g.classList.add('hidden'));
+        if (typeof $ !== 'undefined' && $('#plan-id-select').length) {
+          $('#plan-id-select').val('').trigger('change.select2');
+        }
       }
     } catch (e) {
       console.error('Error preselecting room:', e);
@@ -354,15 +365,25 @@
       const grid = block.querySelector('.room-assignment-grid');
       const lockInd = block.querySelector('.room-lock-indicator');
       const rmSel = block.querySelector('.select-room-no');
+      const catSel = block.querySelector('.select-room-category');
+      const flSel = block.querySelector('.select-room-floor');
+      const banner = block.querySelector('.room-capacity-banner');
 
       if (notice) notice.classList.remove('hidden');
       if (grid) grid.classList.add('hidden');
       if (lockInd) lockInd.classList.add('hidden');
+      if (banner) banner.style.display = 'none';
+      if (catSel) catSel.value = '';
+      if (flSel) flSel.value = '';
       if (rmSel) {
         rmSel.value = '';
         rmSel.disabled = false;
       }
     });
+
+    if (typeof $ !== 'undefined' && $('#plan-id-select').length) {
+      $('#plan-id-select').val('').trigger('change.select2');
+    }
 
     // 4. Reset date conflict indicators and recalculate billing
     const conflictBox = document.querySelector('.room-conflict-alert-box');
@@ -2594,19 +2615,19 @@
       nightsBadge.textContent = nights + (nights === 1 ? ' Night' : ' Nights');
     }
 
-    // Calculate total room rate across distinct assigned rooms (or fallback to primary)
+    // Calculate total room rate across distinct assigned rooms (or 0 if no room assigned)
     const guestBlocks = document.querySelectorAll('.guest-block');
     const assignedRooms = new Map();
-    let fallbackRate = 4500;
 
     guestBlocks.forEach((block, idx) => {
       const rmSel = block.querySelector('.select-room-no');
       if (rmSel && rmSel.selectedIndex >= 0 && rmSel.value) {
         const opt = rmSel.options[rmSel.selectedIndex];
-        const rRate = (opt && opt.dataset.rate) ? parseFloat(opt.dataset.rate) : fallbackRate;
+        const rRate = (opt && opt.dataset.rate) ? parseFloat(opt.dataset.rate) : 0;
         const rKey = (opt && opt.dataset.roomNo) ? opt.dataset.roomNo : rmSel.value;
-        assignedRooms.set(rKey, rRate);
-        if (idx === 0) fallbackRate = rRate;
+        if (rRate > 0) {
+          assignedRooms.set(rKey, rRate);
+        }
       }
     });
 
@@ -2616,12 +2637,7 @@
         totalNightlyRate += rRate;
       }
     } else {
-      const selectedCatId = document.querySelector('.select-room-category')?.value;
-      if (selectedCatId && window.allPmsRooms && Array.isArray(window.allPmsRooms)) {
-        const catMatch = window.allPmsRooms.find(r => String(r.category_id) === String(selectedCatId));
-        if (catMatch && catMatch.rate) fallbackRate = parseFloat(catMatch.rate);
-      }
-      totalNightlyRate = fallbackRate;
+      totalNightlyRate = 0;
     }
 
     const totalRoomTariff = totalNightlyRate * nights;
@@ -2758,7 +2774,7 @@
     let gstAmount = 0;
     let payableAmount = netAfterDiscount;
 
-    if (gstRate > 0) {
+    if (gstRate > 0 && netAfterDiscount > 0) {
       if (gstType === 'inclusive') {
         // Room tariff already includes GST: extract GST portion
         gstAmount = Math.round((netAfterDiscount - (netAfterDiscount / (1 + (gstRate / 100)))) * 100) / 100;
@@ -2768,16 +2784,21 @@
         gstAmount = Math.round(((netAfterDiscount * gstRate) / 100) * 100) / 100;
         payableAmount = netAfterDiscount + gstAmount;
       }
+    } else {
+      gstAmount = 0;
+      payableAmount = netAfterDiscount;
     }
 
     const gstValLabel = document.getElementById('calc-gst-val-label');
     if (gstValLabel) {
-      if (gstRate > 0) {
+      if (gstRate > 0 && netAfterDiscount > 0) {
         if (gstType === 'inclusive') {
           gstValLabel.textContent = `Incl. ₹ ${gstAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (${gstRate}%)`;
         } else {
           gstValLabel.textContent = `+ ₹ ${gstAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (${gstRate}%)`;
         }
+      } else if (gstRate > 0) {
+        gstValLabel.textContent = `+ ₹ 0.00 (${gstRate}%)`;
       } else {
         gstValLabel.textContent = `+ ₹ 0.00 (0%)`;
       }
@@ -2826,7 +2847,18 @@
     const balanceBox = document.getElementById('calc-balance-box');
     if (balanceBox) {
       const boxLabel = balanceBox.querySelector('span');
-      if (remainingBalance <= 0) {
+      if (payableAmount <= 0) {
+        balanceBox.style.background = '#f8fafc';
+        balanceBox.style.borderColor = '#e2e8f0';
+        if (balanceDisplay) {
+          balanceDisplay.style.color = '#475569';
+          balanceDisplay.textContent = '₹ 0.00';
+        }
+        if (boxLabel) {
+          boxLabel.style.color = '#64748b';
+          boxLabel.innerHTML = 'Remaining Amount:';
+        }
+      } else if (remainingBalance <= 0) {
         balanceBox.style.background = 'rgba(16, 185, 129, 0.08)';
         balanceBox.style.borderColor = 'rgba(16, 185, 129, 0.3)';
         if (balanceDisplay) balanceDisplay.style.color = '#059669';
@@ -2843,6 +2875,7 @@
           boxLabel.innerHTML = 'Remaining Amount:';
         }
       }
+    }
     }
   }
 

@@ -1269,9 +1269,13 @@ class DashboardController extends Controller
                     }
                 }
 
-                $roomRate = (float)($roomObj?->rate ?? $request->input('room_rate', 4500));
-                if ($roomRate <= 0) {
-                    $roomRate = 4500;
+                if ($roomObj) {
+                    $roomRate = (float)($roomObj->rate > 0 ? $roomObj->rate : 4500);
+                } else {
+                    $roomRate = (float)($request->input('room_rate', 0));
+                    if ($roomRate < 0) {
+                        $roomRate = 0;
+                    }
                 }
                 $planModel = $planId ? Plan::find($planId) : null;
                 $planOriginalPrice = (float)($planModel?->price ?? 0);

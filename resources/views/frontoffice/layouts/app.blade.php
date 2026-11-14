@@ -551,7 +551,7 @@
                         <div>
                           <label class="block text-[10px] font-black mb-1 text-slate-500 uppercase tracking-wider">Room No.</label>
                           <select name="room_id" class="select-room-no pms-input-field w-full font-bold text-slate-900" onchange="onRoomChange(this)">
-                            <option value="" data-rate="4500">Select Room No. (or Unassigned)</option>
+                            <option value="" data-rate="0">Select Room No. (or Unassigned)</option>
                             @foreach($rackRooms ?? [] as $rm)
                               <option value="{{ $rm['id'] ?? $rm['room'] }}" data-room-no="{{ $rm['room'] }}" data-rate="{{ $rm['rate'] }}" data-bedding="{{ $rm['bedding'] ?? 'King Size Master (72x78)' }}" data-max-adults="{{ $rm['max_adults'] ?? 2 }}" data-max-children="{{ $rm['max_children'] ?? 1 }}" data-max-pax="{{ $rm['max_pax'] ?? 3 }}" data-plan-id="{{ $rm['plan_id'] ?? '' }}" data-plan-name="{{ $rm['plan_name'] ?? '' }}" data-plan-price="{{ $rm['plan_price'] ?? 0 }}">{{ $rm['room'] }} ({{ $rm['type'] }})</option>
                             @endforeach
@@ -760,13 +760,13 @@
                   <div class="bg-slate-50 border border-slate-200 rounded-lg p-2.5">
                     <div class="flex justify-between items-center mb-0.5 text-[9px] font-black text-slate-500 uppercase tracking-wide">
                       <span>Room Tariff</span>
-                      <span id="calc-nights-rate-label" class="font-mono text-slate-600">₹ 4,500 x 1 Night</span>
+                      <span id="calc-nights-rate-label" class="font-mono text-slate-600">₹ 0 x 1 Night</span>
                     </div>
                     <div class="flex justify-between items-baseline">
                       <span class="text-xs font-bold text-slate-800">Total Room Tariff:</span>
-                      <span id="calc-gross-display" class="text-sm font-black text-slate-900 font-mono">₹ 4,500.00</span>
+                      <span id="calc-gross-display" class="text-sm font-black text-slate-900 font-mono">₹ 0.00</span>
                     </div>
-                    <input type="hidden" name="total_amount" id="calc-total-amount" value="4500">
+                    <input type="hidden" name="total_amount" id="calc-total-amount" value="0">
                   </div>
 
                   <!-- Meal Plan Price Card -->
@@ -786,7 +786,7 @@
                   <div id="calc-combined-gross-card" class="hidden bg-slate-100 border border-slate-200 rounded-lg p-2">
                     <div class="flex justify-between items-baseline">
                       <span class="text-[10px] font-black text-slate-600 uppercase tracking-wider">Gross Total (Room + Meals):</span>
-                      <span id="calc-combined-gross-display" class="text-xs font-black text-slate-900 font-mono">₹ 4,500.00</span>
+                      <span id="calc-combined-gross-display" class="text-xs font-black text-slate-900 font-mono">₹ 0.00</span>
                     </div>
                   </div>
 
@@ -877,8 +877,8 @@
                   <!-- Net Payable Amount -->
                   <div class="bg-linear-to-r from-indigo-50 to-emerald-50 border border-indigo-200 rounded-lg p-2.5 flex justify-between items-center">
                     <span class="text-[10px] font-black text-indigo-700 uppercase tracking-wider">Payable Amount:</span>
-                    <span id="calc-payable-display" class="text-sm font-black text-indigo-800 font-mono">₹ 4,500.00</span>
-                    <input type="hidden" name="payable_amount" id="calc-payable-amount" value="4500">
+                    <span id="calc-payable-display" class="text-sm font-black text-indigo-800 font-mono">₹ 0.00</span>
+                    <input type="hidden" name="payable_amount" id="calc-payable-amount" value="0">
                   </div>
 
                   <!-- Company Food Allowance Card (Tracking) -->
@@ -900,10 +900,10 @@
                   </div>
 
                   <!-- Remaining / Balance Amount Display -->
-                  <div id="calc-balance-box" class="bg-rose-50 border border-rose-200 rounded-lg p-2.5 flex justify-between items-center">
-                    <span class="text-[10px] font-black text-rose-700 uppercase tracking-wider">Remaining Amount:</span>
-                    <span id="calc-balance-display" class="text-sm font-black text-rose-800 font-mono">₹ 4,500.00</span>
-                    <input type="hidden" name="balance" id="calc-balance-amount" value="4500">
+                  <div id="calc-balance-box" class="bg-slate-50 border border-slate-200 rounded-lg p-2.5 flex justify-between items-center">
+                    <span class="text-[10px] font-black text-slate-600 uppercase tracking-wider">Remaining Amount:</span>
+                    <span id="calc-balance-display" class="text-sm font-black text-slate-800 font-mono">₹ 0.00</span>
+                    <input type="hidden" name="balance" id="calc-balance-amount" value="0">
                   </div>
 
                   <!-- Remarks -->

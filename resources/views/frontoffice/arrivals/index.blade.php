@@ -151,6 +151,16 @@
             @endif
           </div>
         </div>
+
+        <!-- Add Arrival Quick Action Button -->
+        <div class="flex items-center gap-2.5">
+          <button type="button" 
+                  class="btn-ui-primary px-4 py-2.5 text-xs font-black rounded-xl shadow-md inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer active:scale-98 transition-all" 
+                  onclick="openAddArrivalModal()">
+            <i class="fa-solid fa-plus text-amber-300 text-sm"></i> 
+            <span>Add Arrival</span>
+          </button>
+        </div>
       </div>
     </div>
 
@@ -202,6 +212,13 @@
         <!-- Reset Button -->
         <button type="button" class="btn-ui-secondary px-3.5 py-2 rounded-lg border border-slate-300 bg-white text-[11px] font-bold text-slate-600 inline-flex items-center gap-1.5 hover:bg-slate-50" onclick="resetFilters()">
           <i class="fa-solid fa-rotate-left"></i> Reset
+        </button>
+
+        <!-- Add Arrival Button in Toolbar -->
+        <button type="button" 
+                class="btn-ui-primary px-3.5 py-2 rounded-lg text-[11px] font-black inline-flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs cursor-pointer active:scale-98 transition-all" 
+                onclick="openAddArrivalModal()">
+          <i class="fa-solid fa-plus text-amber-300"></i> Add Arrival
         </button>
       </div>
 

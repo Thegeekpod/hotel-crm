@@ -17,6 +17,7 @@ use App\Models\Checkout;
 use App\Models\HousekeepingState;
 use App\Models\OperationalStatus;
 use App\Models\RoomHousekeepingHistory;
+use App\Models\Room;
 use App\Models\RoomOperationalHistory;
 use Illuminate\Http\Request;
 
@@ -30,7 +31,21 @@ class ArrivalController extends Controller
         $idCardTypes = IdCardType::where('status', 'Active')->get();
         $reservationModes = ReservationMode::where('status', 'Active')->get();
         $paymentModes = PaymentMode::where('status', 'Active')->get();
-        $rackRooms = [];
+        $rackRooms = Room::with(['categoryRelation', 'floorRelation', 'beddingConfigRelation'])->get()->map(function($r) {
+            return [
+                'id' => $r->id,
+                'room' => $r->room_number,
+                'rate' => (float)$r->rate,
+                'category_id' => $r->category_id,
+                'category' => $r->categoryRelation?->name ?? 'Standard',
+                'type' => $r->categoryRelation?->name ?? 'Standard',
+                'floor_id' => $r->floor_id,
+                'floor' => $r->floorRelation?->floor ?? 1,
+                'bedding_id' => $r->bedding_config_id,
+                'bedding' => $r->beddingConfigRelation?->name ?? 'Standard',
+                'status' => $r->status ?? 'available',
+            ];
+        })->toArray();
 
         $today = now()->toDateString();
         $selectedDate = $request->query('date');

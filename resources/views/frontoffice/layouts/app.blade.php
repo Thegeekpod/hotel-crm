@@ -488,7 +488,7 @@
                     </div>
 
                     <!-- Dynamic Cascading Room Assign: Category -> Floor -> Room No -->
-                    <div class="border-t border-slate-100 pt-3">
+                    <div class="border-t border-slate-100 pt-3 room-assignment-section">
                       <div class="room-assign-header-row flex justify-between items-center mb-2.5">
                         <div class="flex items-center gap-2">
                           <h4 class="text-[11px] font-black text-indigo-600 uppercase tracking-wider m-0 flex items-center gap-1.5">
@@ -506,7 +506,25 @@
                         </div>
                       </div>
 
-                      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
+                      <!-- Notice when room selection is not needed / unassigned -->
+                      <div class="unassigned-room-notice hidden bg-amber-50/90 border border-amber-200 rounded-xl p-3 mb-3 text-xs flex items-center justify-between flex-wrap gap-2">
+                        <div class="flex items-center gap-2.5">
+                          <div class="w-8 h-8 rounded-lg bg-amber-500 text-white flex items-center justify-center text-sm shadow-xs shrink-0">
+                            <i class="fa-solid fa-bed"></i>
+                          </div>
+                          <div>
+                            <div class="text-[10px] font-black uppercase tracking-wider text-amber-800 flex items-center gap-1.5">
+                              <i class="fa-solid fa-circle-info"></i> Room Assignment: Unassigned
+                            </div>
+                            <div class="text-xs font-bold text-amber-950 mt-0.5">Booking without room selection • Room will be allocated upon arrival</div>
+                          </div>
+                        </div>
+                        <button type="button" class="btn-assign-room-toggle text-[11px] font-bold text-indigo-700 hover:text-indigo-900 underline cursor-pointer bg-transparent border-0 inline-flex items-center gap-1" onclick="toggleRoomAssignmentRow(this)">
+                          <i class="fa-solid fa-hotel text-[10px]"></i> Choose Room (Optional)
+                        </button>
+                      </div>
+
+                      <div class="room-assignment-grid grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
                         <div>
                           <label class="block text-[10px] font-black mb-1 text-slate-500 uppercase tracking-wider">Room Category</label>
                           <select name="category_id" class="select-room-category pms-input-field w-full font-semibold" onchange="onCategoryChange(this)">
@@ -533,7 +551,7 @@
                         <div>
                           <label class="block text-[10px] font-black mb-1 text-slate-500 uppercase tracking-wider">Room No.</label>
                           <select name="room_id" class="select-room-no pms-input-field w-full font-bold text-slate-900" onchange="onRoomChange(this)">
-                            <option value="">Select Room No.</option>
+                            <option value="" data-rate="4500">Select Room No. (or Unassigned)</option>
                             @foreach($rackRooms ?? [] as $rm)
                               <option value="{{ $rm['id'] ?? $rm['room'] }}" data-room-no="{{ $rm['room'] }}" data-rate="{{ $rm['rate'] }}" data-bedding="{{ $rm['bedding'] ?? 'King Size Master (72x78)' }}" data-max-adults="{{ $rm['max_adults'] ?? 2 }}" data-max-children="{{ $rm['max_children'] ?? 1 }}" data-max-pax="{{ $rm['max_pax'] ?? 3 }}" data-plan-id="{{ $rm['plan_id'] ?? '' }}" data-plan-name="{{ $rm['plan_name'] ?? '' }}" data-plan-price="{{ $rm['plan_price'] ?? 0 }}">{{ $rm['room'] }} ({{ $rm['type'] }})</option>
                             @endforeach

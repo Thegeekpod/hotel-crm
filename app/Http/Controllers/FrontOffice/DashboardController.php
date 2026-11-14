@@ -1145,12 +1145,45 @@ class DashboardController extends Controller
             $checkoutDate = $request->input('checkout_date', date('Y-m-d', strtotime('+1 day')));
             $checkoutTime = $request->input('checkout_time', '11:00');
 
+            // Check if guests data is passed as array or flat inputs
+            $rawGuests = $request->input('guests');
+            if (!is_array($rawGuests) || empty($rawGuests)) {
+                $rawGuests = [
+                    [
+                        'title_id' => $request->input('title_id'),
+                        'guest_name' => $request->input('guest_name'),
+                        'guest_address' => $request->input('guest_address'),
+                        'nationality_id' => $request->input('nationality_id'),
+                        'city' => $request->input('city'),
+                        'mobile' => $request->input('mobile'),
+                        'email' => $request->input('email'),
+                        'has_privilege_card' => $request->has('has_privilege_card') || $request->has('chk_privilege'),
+                        'privilege_card_no' => $request->input('privilege_card_no'),
+                        'room_id' => $request->filled('room_id') ? $request->input('room_id') : null,
+                        'id_card_type_id' => $request->input('id_card_type_id'),
+                        'id_card_number' => $request->input('id_card_number'),
+                    ]
+                ];
+            }
+
             // Date-based automatic status rule:
             // Today's date checkin => 'Checked In'
             // Future date checkin => 'Confirmed'
             $todayDate = now()->toDateString();
             $reserveDateOnly = \Carbon\Carbon::parse($reserveDate)->toDateString();
             $autoStatus = ($reserveDateOnly <= $todayDate) ? 'Checked In' : 'Confirmed';
+
+            // If no room is assigned, reservation cannot be Checked In; must be Confirmed
+            $hasAnyRoomAssigned = false;
+            foreach ($rawGuests as $gCheck) {
+                if (!empty($gCheck['room_id'])) {
+                    $hasAnyRoomAssigned = true;
+                    break;
+                }
+            }
+            if (!$hasAnyRoomAssigned && !$request->filled('room_id')) {
+                $autoStatus = 'Confirmed';
+            }
 
             // Calculate stay duration (nights)
             $dIn = new \DateTime($reserveDate);
@@ -1179,28 +1212,6 @@ class DashboardController extends Controller
                 }
             }
 
-            // Check if guests data is passed as array or flat inputs
-            $rawGuests = $request->input('guests');
-            if (!is_array($rawGuests) || empty($rawGuests)) {
-                $rawGuests = [
-                    [
-                        'title_id' => $request->input('title_id'),
-                        'guest_name' => $request->input('guest_name'),
-                        'guest_address' => $request->input('guest_address'),
-                        'nationality_id' => $request->input('nationality_id'),
-                        'city' => $request->input('city'),
-                        'mobile' => $request->input('mobile'),
-                        'email' => $request->input('email'),
-                        'status' => $autoStatus,
-                        'has_privilege_card' => $request->has('has_privilege_card') || $request->has('chk_privilege'),
-                        'privilege_card_no' => $request->input('privilege_card_no'),
-                        'room_id' => $request->input('room_id'),
-                        'id_card_type_id' => $request->input('id_card_type_id'),
-                        'id_card_number' => $request->input('id_card_number'),
-                    ]
-                ];
-            }
-
             $primaryBooking = null;
             $savedGuests = [];
             $createdBookingIds = [];
@@ -1216,13 +1227,15 @@ class DashboardController extends Controller
                     continue;
                 }
 
-                $roomId = $gData['room_id'] ?? null;
+                $roomId = !empty($gData['room_id']) ? $gData['room_id'] : null;
                 $roomObj = null;
                 if ($roomId) {
                     $roomObj = is_numeric($roomId) 
                         ? Room::find($roomId) 
                         : Room::where('room_number', (string)$roomId)->first();
                     $roomId = $roomObj?->id;
+                } else {
+                    $roomId = null;
                 }
 
                 // Verify no double-booking conflict for this room from OTHER reservations
@@ -1256,7 +1269,10 @@ class DashboardController extends Controller
                     }
                 }
 
-                $roomRate = (float)($roomObj?->rate ?? 4500);
+                $roomRate = (float)($roomObj?->rate ?? $request->input('room_rate', 4500));
+                if ($roomRate <= 0) {
+                    $roomRate = 4500;
+                }
                 $planModel = $planId ? Plan::find($planId) : null;
                 $planOriginalPrice = (float)($planModel?->price ?? 0);
                 $planPrice = $planOriginalPrice;
@@ -1452,7 +1468,7 @@ class DashboardController extends Controller
                     'payable_amount' => ($idx === 0) ? $payableAmount : 0.00,
                     'advance_amount' => ($idx === 0) ? $advanceAmount : 0.00,
                     'balance' => $calculatedBalance,
-                    'status' => (empty($gData['status']) || in_array($gData['status'], ['Confirmed', 'Checked In'])) ? $autoStatus : $gData['status'],
+                    'status' => (!$roomId) ? 'Confirmed' : ((empty($gData['status']) || in_array($gData['status'], ['Confirmed', 'Checked In'])) ? $autoStatus : $gData['status']),
                     'primary_booking_id' => $primaryBooking ? $primaryBooking->id : null,
                     'remarks' => ($idx === 0) ? $paymentRemarks : null,
                 ]);

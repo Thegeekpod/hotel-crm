@@ -292,12 +292,16 @@
           // Lock fields since opened through a specific room
           const finalRoomNo = match ? match.room : preselectRoomNo;
           setRoomFieldsLocked(firstGuest, true, finalRoomNo);
+          document.querySelectorAll('.unassigned-room-notice').forEach(n => n.classList.add('hidden'));
+          document.querySelectorAll('.room-assignment-grid').forEach(g => g.classList.remove('hidden'));
         }
       } else {
         // General reservation: unlock fields so staff can choose room freely
         if (firstGuest) {
           setRoomFieldsLocked(firstGuest, false);
         }
+        document.querySelectorAll('.unassigned-room-notice').forEach(n => n.classList.remove('hidden'));
+        document.querySelectorAll('.room-assignment-grid').forEach(g => g.classList.add('hidden'));
       }
     } catch (e) {
       console.error('Error preselecting room:', e);
@@ -317,6 +321,82 @@
         console.error('Error in post-reservation timeout:', err);
       }
     }, 60);
+  }
+
+  // Open Add Arrival Modal (Without Room Selection)
+  function openAddArrivalModal() {
+    // 1. Open the reservation modal
+    openReservationModal(null, null, null);
+
+    // 2. Configure modal specifically for Arrival without Room Selection
+    const modalTitle = document.getElementById('reserve-modal-title');
+    const modalSub = document.getElementById('reserve-modal-subtitle');
+    const submitBtn = document.getElementById('reserve-submit-btn');
+    const statusBadge = document.getElementById('reservation-status-badge');
+
+    if (modalTitle) {
+      modalTitle.innerHTML = '<i class="fa-solid fa-plane-arrival mr-1.5 text-amber-300"></i> New Guest Arrival / Booking';
+    }
+    if (modalSub) {
+      modalSub.innerHTML = 'Hotel Sagar Sonnet • Advance Arrival (Status: <strong>Confirmed</strong> • Room: <strong>Unassigned</strong>)';
+    }
+    if (statusBadge) {
+      statusBadge.className = 'px-2.5 py-1 rounded-full text-xs font-bold inline-flex items-center gap-1.5 bg-blue-50 text-blue-700 border border-blue-200';
+      statusBadge.innerHTML = '<i class="fa-solid fa-calendar-check"></i> Status: Confirmed';
+    }
+    if (submitBtn && !submitBtn.disabled) {
+      submitBtn.innerHTML = '<i class="fa-solid fa-plane-arrival"></i> Save Confirmed Arrival';
+    }
+
+    // 3. Hide room assignment inputs and show the unassigned notice
+    document.querySelectorAll('.guest-block, .section-guest-details').forEach(block => {
+      const notice = block.querySelector('.unassigned-room-notice');
+      const grid = block.querySelector('.room-assignment-grid');
+      const lockInd = block.querySelector('.room-lock-indicator');
+      const rmSel = block.querySelector('.select-room-no');
+
+      if (notice) notice.classList.remove('hidden');
+      if (grid) grid.classList.add('hidden');
+      if (lockInd) lockInd.classList.add('hidden');
+      if (rmSel) {
+        rmSel.value = '';
+        rmSel.disabled = false;
+      }
+    });
+
+    // 4. Reset date conflict indicators and recalculate billing
+    const conflictBox = document.querySelector('.room-conflict-alert-box');
+    if (conflictBox) conflictBox.style.display = 'none';
+    const datesAlert = document.getElementById('dates-conflict-alert');
+    if (datesAlert) datesAlert.style.display = 'none';
+
+    setTimeout(() => {
+      if (typeof calculateReservationBilling === 'function') calculateReservationBilling();
+    }, 60);
+  }
+
+  // Toggle Room Assignment Grid inside the reservation modal
+  function toggleRoomAssignmentRow(btn) {
+    const section = btn.closest('.room-assignment-section') || document.querySelector('.room-assignment-section');
+    if (!section) return;
+    const grid = section.querySelector('.room-assignment-grid');
+    const notice = section.querySelector('.unassigned-room-notice');
+    const rmSel = section.querySelector('.select-room-no');
+
+    if (grid && grid.classList.contains('hidden')) {
+      grid.classList.remove('hidden');
+      if (notice) notice.classList.add('hidden');
+      btn.innerHTML = '<i class="fa-solid fa-xmark text-[10px]"></i> Keep Unassigned';
+    } else if (grid) {
+      grid.classList.add('hidden');
+      if (notice) notice.classList.remove('hidden');
+      if (rmSel) {
+        rmSel.value = '';
+        if (typeof onRoomChange === 'function') onRoomChange(rmSel);
+      }
+      btn.innerHTML = '<i class="fa-solid fa-hotel text-[10px]"></i> Choose Room (Optional)';
+      if (typeof calculateReservationBilling === 'function') calculateReservationBilling();
+    }
   }
 
   function getRegistrationTypeRosetteBadgeHtml(typeName, size = 46) {
@@ -2536,6 +2616,11 @@
         totalNightlyRate += rRate;
       }
     } else {
+      const selectedCatId = document.querySelector('.select-room-category')?.value;
+      if (selectedCatId && window.allPmsRooms && Array.isArray(window.allPmsRooms)) {
+        const catMatch = window.allPmsRooms.find(r => String(r.category_id) === String(selectedCatId));
+        if (catMatch && catMatch.rate) fallbackRate = parseFloat(catMatch.rate);
+      }
       totalNightlyRate = fallbackRate;
     }
 

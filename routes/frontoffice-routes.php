@@ -20,6 +20,8 @@ Route::prefix('front-office')->name('frontoffice.')->middleware('section:frontof
     Route::get('/arrivals', [ArrivalController::class, 'index'])->name('arrivals');
     Route::post('/arrivals/{id}/status', [ArrivalController::class, 'updateStatus'])->name('arrivals.update-status');
     Route::get('/arrivals/{id}/details', [ArrivalController::class, 'getDetails'])->name('arrivals.details');
+    Route::get('/arrivals/{id}/available-rooms', [ArrivalController::class, 'getAvailableRooms'])->name('arrivals.available-rooms');
+    Route::post('/arrivals/{id}/assign-room', [ArrivalController::class, 'assignRoom'])->name('arrivals.assign-room');
     Route::get('/guest', [GuestController::class, 'index'])->name('guest');
     Route::get('/guest-crm', [GuestController::class, 'index'])->name('guest-crm');
     Route::get('/guest/{id}/details', [GuestController::class, 'getDetails'])->name('guest.details');

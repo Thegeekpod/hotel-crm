@@ -19,6 +19,8 @@ use App\Models\OperationalStatus;
 use App\Models\RoomHousekeepingHistory;
 use App\Models\Room;
 use App\Models\RoomOperationalHistory;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 
 class ArrivalController extends Controller
@@ -48,7 +50,7 @@ class ArrivalController extends Controller
         })->toArray();
 
         $today = now()->toDateString();
-        $selectedDate = $request->query('date');
+        $dateParam = $request->query('date');
 
         // Fetch primary bookings (folio dossiers) whose check-in date matches chosen date or strictly future dates
         $query = Booking::with([
@@ -77,15 +79,9 @@ class ArrivalController extends Controller
         // Arrivals Scoping: Exclude any bookings that are already Checked In, Stay Over, Checked Out, or Settled
         $query->whereNotIn('status', ['Checked In', 'Stay Over', 'Checked Out', 'Settlement Done']);
 
-        if ($request->filled('date')) {
-            $query->whereDate('reserve_date', $selectedDate);
-            $baseQuery = Booking::whereNull('primary_booking_id')
-                ->whereNotIn('status', ['Checked In', 'Stay Over', 'Checked Out', 'Settlement Done'])
-                ->whereDate('reserve_date', $selectedDate);
-        } else {
-            // Hotel PMS Arrival Scoping:
-            // 1. All upcoming arrivals (checkin/reserve date >= today)
-            // 2. Any pending arrival whose status is confirmed or arrived from earlier dates
+        if ($dateParam === 'all') {
+            $selectedDate = 'all';
+            // All upcoming arrivals (checkin/reserve date >= today)
             $arrivalScope = function ($q) use ($today) {
                 $q->where(function ($sub) use ($today) {
                     $sub->whereDate('reserve_date', '>=', $today)
@@ -96,6 +92,13 @@ class ArrivalController extends Controller
             $baseQuery = Booking::whereNull('primary_booking_id')
                 ->whereNotIn('status', ['Checked In', 'Stay Over', 'Checked Out', 'Settlement Done'])
                 ->where($arrivalScope);
+        } else {
+            // By default, strictly show TODAY's arrivals so tomorrow's arrivals are not seen today
+            $selectedDate = $dateParam ?: $today;
+            $query->whereDate('reserve_date', $selectedDate);
+            $baseQuery = Booking::whereNull('primary_booking_id')
+                ->whereNotIn('status', ['Checked In', 'Stay Over', 'Checked Out', 'Settlement Done'])
+                ->whereDate('reserve_date', $selectedDate);
         }
 
         // Order chronologically by arrival date, then by ID
@@ -241,6 +244,20 @@ class ArrivalController extends Controller
             ], 422);
         }
 
+        // Strict Rule: Room MUST be assigned before checking in
+        if ($newStatus === 'Checked In') {
+            $hasUnassignedRoom = $allRelatedBookings->contains(function ($b) {
+                return empty($b->room_id) || !$b->room;
+            });
+            if ($hasUnassignedRoom) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Room is not assigned yet! Please assign a room from Arrivals before checking in.',
+                    'error' => 'Room is not assigned yet! Please assign a room from Arrivals before checking in.'
+                ], 422);
+            }
+        }
+
         // Synchronize status across ALL related bookings and guests
         foreach ($allRelatedBookings as $b) {
             $b->status = $newStatus;
@@ -368,5 +385,210 @@ class ArrivalController extends Controller
             'success' => true,
             'guest' => $booking,
         ]);
+    }
+
+    /**
+     * Get Available Rooms for an Unassigned / Arrival Booking stay window
+     */
+    public function getAvailableRooms(Request $request, $id)
+    {
+        $booking = Booking::with(['room', 'guest', 'plan', 'primaryBooking'])->findOrFail($id);
+        $masterBooking = $booking->primary_booking_id ? $booking->primaryBooking : $booking;
+
+        $checkinDate = $booking->reserve_date ?: ($masterBooking->reserve_date ?: now()->toDateString());
+        $checkoutDate = $booking->checkout_date ?: ($masterBooking->checkout_date ?: Carbon::parse($checkinDate)->addDay()->toDateString());
+
+        // Find conflicting rooms during this stay window from other reservations
+        $conflictingRoomIds = Booking::where(function ($q) use ($checkinDate, $checkoutDate) {
+                $q->whereDate('reserve_date', '<', $checkoutDate)
+                  ->where(function ($sub) use ($checkinDate) {
+                      $sub->whereDate('checkout_date', '>', $checkinDate)
+                          ->orWhereNull('checkout_date');
+                  });
+            })
+            ->where('reserve_id', '!=', $masterBooking->reserve_id)
+            ->whereIn('status', ['Confirmed', 'Checked In', 'Arrived', 'Stay Over', 'Settlement Done'])
+            ->whereNotNull('room_id')
+            ->pluck('room_id')
+            ->filter()
+            ->unique()
+            ->all();
+
+        // Also exclude other rooms already taken under the same reservation
+        $sameResRooms = Booking::where(function ($q) use ($masterBooking) {
+                $q->where('id', $masterBooking->id)
+                  ->orWhere('primary_booking_id', $masterBooking->id)
+                  ->orWhere('reserve_id', $masterBooking->reserve_id);
+            })
+            ->where('id', '!=', $booking->id)
+            ->whereNotNull('room_id')
+            ->pluck('room_id')
+            ->filter()
+            ->all();
+
+        $excludedRoomIds = array_unique(array_merge($conflictingRoomIds, $sameResRooms));
+
+        $rooms = Room::with(['categoryRelation', 'floorRelation', 'beddingConfigRelation'])
+            ->where('status', 'Active')
+            ->whereNotIn('id', $excludedRoomIds)
+            ->orderByRaw('CAST(room_number AS UNSIGNED) ASC, room_number ASC')
+            ->get()
+            ->map(function ($r) {
+                return [
+                    'id' => $r->id,
+                    'room_number' => $r->room_number,
+                    'floor' => $r->floorRelation?->floor ?? ($r->floor ?? '1'),
+                    'category' => $r->categoryRelation?->name ?? 'Standard',
+                    'category_id' => $r->category_id,
+                    'bedding' => $r->beddingConfigRelation?->name ?? 'Standard',
+                    'rate' => (float)$r->rate,
+                    'status' => $r->status,
+                ];
+            });
+
+        $dCheckin = Carbon::parse($checkinDate)->startOfDay();
+        $dCheckout = Carbon::parse($checkoutDate)->startOfDay();
+        $nights = max(1, (int)$dCheckin->diffInDays($dCheckout, false));
+
+        return response()->json([
+            'success' => true,
+            'booking_id' => $booking->id,
+            'reserve_id' => $masterBooking->reserve_id,
+            'folio_number' => $masterBooking->settle_number ?: $masterBooking->folio_number,
+            'guest_name' => $booking->guest?->guest_name ?? 'Guest',
+            'mobile' => $booking->guest?->mobile ?? '',
+            'checkin_date' => Carbon::parse($checkinDate)->format('d M Y'),
+            'checkout_date' => Carbon::parse($checkoutDate)->format('d M Y'),
+            'nights' => $nights,
+            'plan_name' => $booking->plan?->plan_name ?? 'None',
+            'plan_price' => (float)($booking->plan?->price ?? 0),
+            'advance_amount' => (float)($masterBooking->advance_amount ?? 0),
+            'gst_percentage' => (float)($masterBooking->gst_percentage ?? 0),
+            'current_room_id' => $booking->room_id,
+            'available_rooms' => $rooms,
+        ]);
+    }
+
+    /**
+     * Assign Room to an Arrival / Unassigned Booking and optionally Check In
+     */
+    public function assignRoom(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'room_id' => 'required|exists:rooms,id',
+            'status' => 'nullable|string|in:Confirmed,Checked In',
+        ]);
+
+        $booking = Booking::with(['room', 'guest', 'plan', 'primaryBooking', 'additionalBookings'])->findOrFail($id);
+        $masterBooking = $booking->primary_booking_id ? $booking->primaryBooking : $booking;
+        $room = Room::with(['categoryRelation', 'floorRelation', 'beddingConfigRelation'])->findOrFail($validated['room_id']);
+
+        $checkinDate = $booking->reserve_date ?: ($masterBooking->reserve_date ?: now()->toDateString());
+        $checkoutDate = $booking->checkout_date ?: ($masterBooking->checkout_date ?: Carbon::parse($checkinDate)->addDay()->toDateString());
+
+        // Check availability of chosen room during stay window
+        $hasConflict = Booking::where('room_id', $room->id)
+            ->where('reserve_id', '!=', $masterBooking->reserve_id)
+            ->whereIn('status', ['Confirmed', 'Checked In', 'Arrived', 'Stay Over', 'Settlement Done'])
+            ->where(function ($q) use ($checkinDate, $checkoutDate) {
+                $q->whereDate('reserve_date', '<', $checkoutDate)
+                  ->where(function ($sub) use ($checkinDate) {
+                      $sub->whereDate('checkout_date', '>', $checkinDate)
+                          ->orWhereNull('checkout_date');
+                  });
+            })
+            ->exists();
+
+        if ($hasConflict) {
+            return response()->json([
+                'success' => false,
+                'message' => "Room #{$room->room_number} is already booked between {$checkinDate} and {$checkoutDate}. Please select another room.",
+                'error' => "Room #{$room->room_number} is already booked between {$checkinDate} and {$checkoutDate}."
+            ], 422);
+        }
+
+        DB::beginTransaction();
+        try {
+            // Assign room to booking
+            $booking->room_id = $room->id;
+            $roomRate = (float)$room->rate;
+            $booking->room_rate = $roomRate;
+
+            // Recalculate billing
+            $dCheckin = Carbon::parse($checkinDate)->startOfDay();
+            $dCheckout = Carbon::parse($checkoutDate)->startOfDay();
+            $nights = max(1, (int)$dCheckin->diffInDays($dCheckout, false));
+
+            $roomTariff = $roomRate * $nights;
+            $planPrice = (float)($booking->plan?->price ?? 0);
+            $mealPlanTotal = $planPrice * $nights;
+            $grossTotal = $roomTariff + $mealPlanTotal;
+
+            // Discount
+            $discountAmt = 0.0;
+            if ((float)$booking->discount_percentage > 0) {
+                $discountAmt = round(($grossTotal * (float)$booking->discount_percentage) / 100, 2);
+            } elseif ((float)$booking->discount_amount > 0) {
+                $discountAmt = min($grossTotal, (float)$booking->discount_amount);
+            }
+            $netAfterDiscount = max(0, $grossTotal - $discountAmt);
+
+            // GST
+            $gstRate = (float)($booking->gst_percentage > 0 ? $booking->gst_percentage : 0);
+            $gstAmount = 0.0;
+            $payableAmount = $netAfterDiscount;
+            if ($gstRate > 0) {
+                $gstAmount = round(($netAfterDiscount * $gstRate) / 100, 2);
+                $payableAmount = $netAfterDiscount + $gstAmount;
+            }
+
+            // Update master billing values if this is the primary booking
+            if ($booking->primary_booking_id === null) {
+                $booking->total_amount = $grossTotal;
+                $booking->discount_amount = $discountAmt;
+                $booking->gst_amount = $gstAmount;
+                $booking->payable_amount = $payableAmount;
+                $advance = (float)($booking->advance_amount ?? 0);
+                $booking->balance = max(0, $payableAmount - $advance);
+            }
+
+            // Status transition (e.g. 'Checked In' or keep 'Confirmed')
+            $newStatus = $validated['status'] ?? 'Confirmed';
+            $booking->status = $newStatus;
+            if ($newStatus === 'Checked In') {
+                if (empty($booking->checkin_date)) {
+                    $booking->checkin_date = now()->toDateString();
+                }
+                if (empty($booking->checkin_time)) {
+                    $booking->checkin_time = now()->format('H:i');
+                }
+                // Also update any child bookings to Checked In
+                foreach ($booking->additionalBookings as $childB) {
+                    $childB->status = 'Checked In';
+                    $childB->checkin_date = $booking->checkin_date;
+                    $childB->checkin_time = $booking->checkin_time;
+                    $childB->save();
+                }
+            }
+
+            $booking->save();
+            DB::commit();
+
+            $statusText = $booking->status === 'Checked In' ? 'assigned and guest checked in successfully' : 'assigned successfully';
+            return response()->json([
+                'success' => true,
+                'message' => "Room #{$room->room_number} {$statusText}!",
+                'room_number' => $room->room_number,
+                'status' => $booking->status,
+                'booking_id' => $booking->id,
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to assign room: ' . $e->getMessage(),
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 }

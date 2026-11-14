@@ -182,15 +182,22 @@
             <input type="date" 
                    id="arrival-date-filter" 
                    class="pms-filter-date" 
-                   value="{{ $selectedDate ?? '' }}" 
+                   value="{{ $selectedDate !== 'all' ? ($selectedDate ?? $today) : '' }}" 
                    onchange="onArrivalDateFilterChanged(this.value)"
                    title="Choose date to see guests arriving on that date">
-            @if(!empty($selectedDate))
+            @if($selectedDate !== 'all')
               <button type="button" 
-                      class="btn-ui-secondary px-2.5 py-1.5 text-[11px] h-[38px] rounded-lg border border-indigo-200 bg-indigo-50 text-indigo-700 font-bold inline-flex items-center gap-1" 
+                      class="btn-ui-secondary px-2.5 py-1.5 text-[11px] h-[38px] rounded-lg border border-indigo-200 bg-indigo-50 text-indigo-700 font-bold inline-flex items-center gap-1 cursor-pointer" 
                       onclick="clearArrivalDateFilter()" 
-                      title="Clear date & view all arrivals">
-                <i class="fa-solid fa-xmark"></i> All Arrivals
+                      title="View all upcoming arrivals">
+                <i class="fa-solid fa-list"></i> All Arrivals
+              </button>
+            @else
+              <button type="button" 
+                      class="btn-ui-secondary px-2.5 py-1.5 text-[11px] h-[38px] rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-700 font-bold inline-flex items-center gap-1 cursor-pointer" 
+                      onclick="goToTodayArrivals()" 
+                      title="Jump back to Today's Arrivals">
+                <i class="fa-regular fa-calendar-check"></i> Today's Arrivals
               </button>
             @endif
           </div>
@@ -693,6 +700,102 @@
   </div>
 </div>
 
+<!-- Assign Room & Check In Modal -->
+<div class="modal-backdrop fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 transition-all opacity-0 pointer-events-none" id="assign-room-modal" style="transition: opacity 0.2s ease;">
+  <div class="modal-dialog bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
+    <!-- Header -->
+    <div class="bg-linear-to-r from-indigo-700 to-indigo-900 px-5 py-4 flex items-center justify-between text-white shrink-0">
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center text-amber-300 text-base shadow-xs">
+          <i class="fa-solid fa-hotel"></i>
+        </div>
+        <div>
+          <h3 class="m-0 text-sm font-black tracking-wide text-white flex items-center gap-2">
+            <span>Assign Room to Guest</span>
+            <span id="assign-room-badge" class="text-[10px] bg-amber-400 text-slate-900 font-extrabold px-2 py-0.5 rounded-full uppercase">Arrival</span>
+          </h3>
+          <div class="text-[11px] text-indigo-100 font-medium">Hotel Sagar Sonnet • Allocate Room &amp; Check In</div>
+        </div>
+      </div>
+      <button type="button" class="text-white/70 hover:text-white text-lg cursor-pointer bg-transparent border-0" onclick="closeAssignRoomModal()">&times;</button>
+    </div>
+
+    <!-- Body -->
+    <div class="p-5 overflow-y-auto space-y-4 text-xs">
+      <input type="hidden" id="assign-booking-id" value="">
+      <input type="hidden" id="assign-auto-checkin" value="false">
+
+      <!-- Guest & Dossier Summary Card -->
+      <div class="bg-indigo-50/60 border border-indigo-100 rounded-xl p-3 flex justify-between items-center flex-wrap gap-2">
+        <div>
+          <div class="text-[10px] font-black text-indigo-600 uppercase tracking-wider">Guest Dossier</div>
+          <div id="assign-guest-name" class="text-sm font-black text-slate-900 mt-0.5">Guest Name</div>
+          <div class="text-[11px] text-slate-500 font-mono mt-0.5 flex items-center gap-2">
+            <span>Ref: <strong id="assign-reserve-id" class="text-indigo-700">-</strong></span>
+            <span>•</span>
+            <span>Folio: <strong id="assign-folio-no">-</strong></span>
+          </div>
+        </div>
+        <div class="text-right">
+          <div class="text-[10px] font-black text-slate-500 uppercase tracking-wider">Stay Duration</div>
+          <div id="assign-stay-dates" class="text-xs font-bold text-slate-800 mt-0.5">Dates</div>
+          <div id="assign-nights-badge" class="text-[10px] font-extrabold text-indigo-700 mt-0.5">1 Night</div>
+        </div>
+      </div>
+
+      <!-- Room Selection Dropdown -->
+      <div>
+        <label for="assign-room-select" class="block text-[11px] font-black text-slate-700 uppercase tracking-wider mb-1.5 flex items-center justify-between">
+          <span><i class="fa-solid fa-door-open text-indigo-600 mr-1"></i> Choose Vacant Room:</span>
+          <span id="assign-room-count-badge" class="text-[10px] text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full font-bold">Loading rooms...</span>
+        </label>
+        <select id="assign-room-select" class="w-full h-11 px-3 text-xs font-bold rounded-xl border border-slate-300 bg-white text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none transition" onchange="onAssignRoomSelectChange()">
+          <option value="">-- Select Room Number --</option>
+        </select>
+      </div>
+
+      <!-- Live Calculation Card -->
+      <div id="assign-calc-card" class="bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-2 hidden">
+        <div class="text-[10px] font-black text-slate-500 uppercase tracking-wider border-b border-slate-200/60 pb-1 flex justify-between items-center">
+          <span>Billing Summary for Selected Room</span>
+          <span id="assign-calc-rate-label" class="text-indigo-600 font-mono font-bold">₹ 0 / night</span>
+        </div>
+        <div class="grid grid-cols-2 gap-2 text-xs">
+          <div class="flex justify-between"><span class="text-slate-500">Room Tariff:</span><strong id="assign-calc-tariff" class="font-mono text-slate-800">₹ 0.00</strong></div>
+          <div class="flex justify-between"><span class="text-slate-500">Meal Plan:</span><strong id="assign-calc-meal" class="font-mono text-slate-800">₹ 0.00</strong></div>
+          <div class="flex justify-between"><span class="text-slate-500">GST / Tax:</span><strong id="assign-calc-gst" class="font-mono text-slate-800">₹ 0.00</strong></div>
+          <div class="flex justify-between"><span class="text-slate-500">Payable Amount:</span><strong id="assign-calc-payable" class="font-mono text-indigo-700">₹ 0.00</strong></div>
+          <div class="flex justify-between"><span class="text-slate-500">Advance Paid:</span><strong id="assign-calc-advance" class="font-mono text-emerald-600">₹ 0.00</strong></div>
+          <div class="flex justify-between"><span class="text-slate-500">Remaining Balance:</span><strong id="assign-calc-balance" class="font-mono text-rose-600">₹ 0.00</strong></div>
+        </div>
+      </div>
+
+      <!-- Notice Alert -->
+      <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 text-[11px] text-amber-900 flex items-start gap-2">
+        <i class="fa-solid fa-circle-info text-amber-600 mt-0.5 shrink-0"></i>
+        <div>
+          Selecting a room will allocate the room in Front Desk rack and update the reservation bill dynamically.
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer Actions -->
+    <div class="bg-slate-50 border-t border-slate-200 px-5 py-3 flex justify-between items-center gap-2">
+      <button type="button" class="btn-ui-secondary px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer" onclick="closeAssignRoomModal()">
+        Cancel
+      </button>
+      <div class="flex items-center gap-2">
+        <button type="button" id="btn-assign-room-only" class="btn-ui-secondary px-3.5 py-1.5 rounded-lg text-xs font-bold border border-indigo-300 text-indigo-700 bg-indigo-50 hover:bg-indigo-100 cursor-pointer inline-flex items-center gap-1.5" onclick="submitRoomAssignment('Confirmed')">
+          <i class="fa-solid fa-bed"></i> Assign Room Only
+        </button>
+        <button type="button" id="btn-assign-and-checkin" class="btn-ui-primary px-4 py-1.5 rounded-lg text-xs font-extrabold cursor-pointer inline-flex items-center gap-1.5 shadow-sm" onclick="submitRoomAssignment('Checked In')">
+          <i class="fa-solid fa-door-open"></i> Assign Room &amp; Check In
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Floating Room Status Dropdown Menu Portal (Click room to change status) -->
 <div id="floating-room-status-dropdown" class="room-status-dropdown-portal hidden" style="display: none;">
   <div class="room-status-item confirmed" data-status="Confirmed" onclick="selectRoomStatus('Confirmed')">
@@ -782,6 +885,22 @@
     if (portal) portal.style.display = 'none';
 
     if (!activeStatusDropdownGuestId) return;
+
+    // Disallow Check-In without an assigned room
+    if (status === 'Checked In') {
+      const item = (window.allArrivalGuests || []).find(g => String(g.id) === String(activeStatusDropdownGuestId));
+      const isUnassigned = !item || !item.rooms || item.rooms.length === 0 || item.rooms.every(r => !r.room_id || r.room_number === 'Unassigned');
+      if (isUnassigned) {
+        if (typeof PmsAlert !== 'undefined') {
+          PmsAlert.toast('Room is not assigned yet! Please choose a room to check in.', 'warning');
+        } else {
+          alert('Room is not assigned yet! Please choose a room to check in.');
+        }
+        openAssignRoomModal(activeStatusDropdownGuestId, true);
+        return;
+      }
+    }
+
     updateGuestStatus(activeStatusDropdownGuestId, status);
   }
 
@@ -890,41 +1009,66 @@
             ${sl}
           </td>
 
-          <!-- Allotted Room (Clickable Room Number to Change Status: Confirm, Checkin, Cancel) -->
+          <!-- Allotted Room (Clickable Room Number to Change Status or Choose Room if Unassigned) -->
           <td>
-            ${item.rooms && item.rooms.length > 0 ? `
-              <div class="flex flex-col gap-1">
-                ${item.rooms.map(r => `
-                  <div class="inline-flex items-center gap-1.5">
-                    <button type="button" 
-                            class="room-tag room-tag-clickable status-${badgeColor} ${(item.is_locked || ['settlement done', 'checked out'].includes((item.status || '').toLowerCase())) ? 'disabled' : ''}" 
-                            onclick="openRoomStatusDropdown(event, ${item.id}, '${escapeHtml(item.status)}', ${item.is_locked ? 'true' : 'false'})"
-                            title="${(item.is_locked || ['settlement done', 'checked out'].includes((item.status || '').toLowerCase())) ? 'Reservation is locked' : 'Click to change status (Confirm, Checkin, Cancel)'}">
-                      <i class="fa-solid fa-door-open text-[10px]"></i>
-                      <span>${escapeHtml(r.room_number)}</span>
-                      ${(item.is_locked || ['settlement done', 'checked out'].includes((item.status || '').toLowerCase())) ? `
-                        <i class="fa-solid fa-lock text-[8px] opacity-60 ml-0.5"></i>
-                      ` : `
-                        <i class="fa-solid fa-chevron-down text-[8px] opacity-70 ml-0.5"></i>
-                      `}
-                    </button>
-                    <span class="text-[10px] text-slate-500 font-bold">
-                      Floor ${escapeHtml(r.floor)}
-                    </span>
-                    <span class="text-slate-300">•</span>
-                    <span class="text-[10px] text-slate-400">${escapeHtml(r.category)}</span>
-                  </div>
-                `).join('')}
+            ${(item.rooms && item.rooms.length > 0) ? `
+              <div class="flex flex-col gap-1.5">
+                ${item.rooms.map(r => {
+                  const isUnassigned = !r.room_id || r.room_number === 'Unassigned';
+                  if (isUnassigned) {
+                    return `
+                      <div class="flex items-center gap-1.5 flex-wrap">
+                        <button type="button" 
+                                class="room-tag bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 font-extrabold cursor-pointer px-2.5 py-1 rounded-md inline-flex items-center gap-1.5 shadow-2xs"
+                                onclick="openAssignRoomModal(${item.id})"
+                                title="Click to Choose & Assign Room">
+                          <i class="fa-solid fa-bed text-amber-600 text-[10px]"></i>
+                          <span>Assign Room</span>
+                          <i class="fa-solid fa-plus text-[8px] text-amber-600 ml-0.5"></i>
+                        </button>
+                        <span class="text-[10px] text-slate-500 font-bold">
+                          Floor ${escapeHtml(r.floor)}
+                        </span>
+                        <span class="text-slate-300">•</span>
+                        <span class="text-[10px] text-slate-400 font-semibold">${escapeHtml(r.category)}</span>
+                      </div>
+                    `;
+                  } else {
+                    return `
+                      <div class="flex items-center gap-1.5 flex-wrap">
+                        <button type="button" 
+                                class="room-tag room-tag-clickable status-${badgeColor} ${(item.is_locked || ['settlement done', 'checked out'].includes((item.status || '').toLowerCase())) ? 'disabled' : ''}" 
+                                onclick="openRoomStatusDropdown(event, ${item.id}, '${escapeHtml(item.status)}', ${item.is_locked ? 'true' : 'false'})"
+                                title="${(item.is_locked || ['settlement done', 'checked out'].includes((item.status || '').toLowerCase())) ? 'Reservation is locked' : 'Click to change status (Confirm, Checkin, Cancel)'}">
+                          <i class="fa-solid fa-door-open text-[10px]"></i>
+                          <span>${escapeHtml(r.room_number)}</span>
+                          ${(item.is_locked || ['settlement done', 'checked out'].includes((item.status || '').toLowerCase())) ? `
+                            <i class="fa-solid fa-lock text-[8px] opacity-60 ml-0.5"></i>
+                          ` : `
+                            <i class="fa-solid fa-chevron-down text-[8px] opacity-70 ml-0.5"></i>
+                          `}
+                        </button>
+                        <span class="text-[10px] text-slate-500 font-bold">
+                          Floor ${escapeHtml(r.floor)}
+                        </span>
+                        <span class="text-slate-300">•</span>
+                        <span class="text-[10px] text-slate-400 font-semibold">${escapeHtml(r.category)}</span>
+                      </div>
+                    `;
+                  }
+                }).join('')}
               </div>
             ` : `
-              <button type="button" 
-                      class="room-tag room-tag-clickable status-${badgeColor} ${(item.is_locked || ['settlement done', 'checked out'].includes((item.status || '').toLowerCase())) ? 'disabled' : ''}"
-                      onclick="openRoomStatusDropdown(event, ${item.id}, '${escapeHtml(item.status)}', ${item.is_locked ? 'true' : 'false'})"
-                      title="${(item.is_locked || ['settlement done', 'checked out'].includes((item.status || '').toLowerCase())) ? 'Reservation is locked' : 'Click to change status (Confirm, Checkin, Cancel)'}">
-                <i class="fa-solid fa-hourglass-half text-[10px]"></i>
-                <span>Unassigned</span>
-                <i class="fa-solid fa-chevron-down text-[8px] opacity-70 ml-0.5"></i>
-              </button>
+              <div class="flex items-center gap-1.5">
+                <button type="button" 
+                        class="room-tag bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 font-extrabold cursor-pointer px-2.5 py-1 rounded-md inline-flex items-center gap-1.5 shadow-2xs"
+                        onclick="openAssignRoomModal(${item.id})"
+                        title="Click to Choose & Assign Room">
+                  <i class="fa-solid fa-bed text-amber-600 text-[10px]"></i>
+                  <span>Assign Room</span>
+                  <i class="fa-solid fa-plus text-[8px] text-amber-600 ml-0.5"></i>
+                </button>
+              </div>
             `}
           </td>
 
@@ -1107,8 +1251,15 @@
     window.location.href = url.toString();
   }
 
-  // Clear date filter to return to upcoming future dates
+  // Clear date filter to view all upcoming future dates
   function clearArrivalDateFilter() {
+    const url = new URL(window.location.href);
+    url.searchParams.set('date', 'all');
+    window.location.href = url.toString();
+  }
+
+  // Jump back to Today's Arrivals
+  function goToTodayArrivals() {
     const url = new URL(window.location.href);
     url.searchParams.delete('date');
     window.location.href = url.toString();
@@ -1144,6 +1295,21 @@
       }
       if (selectElement) selectElement.value = item.status;
       return;
+    }
+
+    // Disallow Check-In without an assigned room
+    if (newStatus === 'Checked In') {
+      const isUnassigned = !item || !item.rooms || item.rooms.length === 0 || item.rooms.every(r => !r.room_id || r.room_number === 'Unassigned');
+      if (isUnassigned) {
+        if (typeof PmsAlert !== 'undefined') {
+          PmsAlert.toast('Room is not assigned yet! Please choose a room to check in.', 'warning');
+        } else {
+          alert('Room is not assigned yet! Please choose a room to check in.');
+        }
+        if (selectElement) selectElement.value = item ? item.status : 'Confirmed';
+        openAssignRoomModal(guestId, true);
+        return;
+      }
     }
 
     const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
@@ -2102,7 +2268,210 @@
         }
       });
     }
+
+    const assignModalBackdrop = document.getElementById('assign-room-modal');
+    if (assignModalBackdrop) {
+      assignModalBackdrop.addEventListener('click', function(e) {
+        if (e.target === this) {
+          closeAssignRoomModal();
+        }
+      });
+    }
   });
+
+  /* ========================================================================= */
+  /* ASSIGN ROOM MODAL FUNCTIONALITY                                           */
+  /* ========================================================================= */
+  let currentAssignData = null;
+
+  function openAssignRoomModal(bookingId, autoCheckIn = false) {
+    const modal = document.getElementById('assign-room-modal');
+    if (!modal) return;
+
+    modal.classList.remove('opacity-0', 'pointer-events-none');
+    modal.classList.add('opacity-100', 'pointer-events-auto');
+
+    document.getElementById('assign-booking-id').value = bookingId;
+    document.getElementById('assign-auto-checkin').value = autoCheckIn ? 'true' : 'false';
+
+    const roomSelect = document.getElementById('assign-room-select');
+    roomSelect.innerHTML = '<option value="">-- Loading available vacant rooms... --</option>';
+    roomSelect.disabled = true;
+
+    const countBadge = document.getElementById('assign-room-count-badge');
+    if (countBadge) countBadge.textContent = 'Searching rooms...';
+
+    const calcCard = document.getElementById('assign-calc-card');
+    if (calcCard) calcCard.classList.add('hidden');
+
+    fetch(`{{ url('front-office/arrivals') }}/${bookingId}/available-rooms`, {
+      headers: { 'Accept': 'application/json' }
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (!data.success) {
+        if (typeof PmsAlert !== 'undefined') {
+          PmsAlert.toast(data.message || 'Error loading rooms', 'error');
+        } else {
+          alert(data.message || 'Error loading rooms');
+        }
+        closeAssignRoomModal();
+        return;
+      }
+
+      currentAssignData = data;
+
+      document.getElementById('assign-guest-name').textContent = data.guest_name;
+      document.getElementById('assign-reserve-id').textContent = data.reserve_id;
+      document.getElementById('assign-folio-no').textContent = data.folio_number || '-';
+      document.getElementById('assign-stay-dates').textContent = `${data.checkin_date} → ${data.checkout_date}`;
+      document.getElementById('assign-nights-badge').textContent = `${data.nights} ${data.nights === 1 ? 'Night' : 'Nights'}`;
+
+      roomSelect.disabled = false;
+      roomSelect.innerHTML = '<option value="">-- Choose Vacant Room --</option>';
+
+      if (data.available_rooms && data.available_rooms.length > 0) {
+        data.available_rooms.forEach(r => {
+          const opt = document.createElement('option');
+          opt.value = r.id;
+          opt.dataset.rate = r.rate;
+          opt.dataset.category = r.category;
+          opt.dataset.floor = r.floor;
+          opt.dataset.roomNo = r.room_number;
+          opt.textContent = `Room #${r.room_number} • Floor ${r.floor} • ${r.category} (₹ ${Number(r.rate).toLocaleString('en-IN')}/night)`;
+          roomSelect.appendChild(opt);
+        });
+        if (countBadge) countBadge.textContent = `${data.available_rooms.length} Rooms Available`;
+      } else {
+        roomSelect.innerHTML = '<option value="">No vacant rooms available for these dates</option>';
+        if (countBadge) countBadge.textContent = '0 Available';
+      }
+
+      // Highlight Checkin button if autoCheckIn was requested
+      const checkInBtn = document.getElementById('btn-assign-and-checkin');
+      if (checkInBtn) {
+        if (autoCheckIn) {
+          checkInBtn.classList.add('ring-2', 'ring-indigo-400');
+        } else {
+          checkInBtn.classList.remove('ring-2', 'ring-indigo-400');
+        }
+      }
+    })
+    .catch(err => {
+      console.error('Error fetching available rooms:', err);
+      closeAssignRoomModal();
+    });
+  }
+
+  function closeAssignRoomModal() {
+    const modal = document.getElementById('assign-room-modal');
+    if (modal) {
+      modal.classList.add('opacity-0', 'pointer-events-none');
+      modal.classList.remove('opacity-100', 'pointer-events-auto');
+    }
+  }
+
+  function onAssignRoomSelectChange() {
+    const roomSelect = document.getElementById('assign-room-select');
+    const calcCard = document.getElementById('assign-calc-card');
+    if (!roomSelect || !calcCard || !currentAssignData) return;
+
+    const opt = roomSelect.options[roomSelect.selectedIndex];
+    if (!opt || !opt.value) {
+      calcCard.classList.add('hidden');
+      return;
+    }
+
+    const roomRate = parseFloat(opt.dataset.rate) || 0;
+    const nights = currentAssignData.nights || 1;
+    const roomTariff = roomRate * nights;
+    const mealPlanTotal = (currentAssignData.plan_price || 0) * nights;
+    const gross = roomTariff + mealPlanTotal;
+
+    const gstRate = currentAssignData.gst_percentage || 0;
+    const gstAmount = gstRate > 0 ? Math.round(((gross * gstRate) / 100) * 100) / 100 : 0;
+    const payable = gross + gstAmount;
+    const advance = currentAssignData.advance_amount || 0;
+    const balance = Math.max(0, payable - advance);
+
+    document.getElementById('assign-calc-rate-label').textContent = `₹ ${roomRate.toLocaleString('en-IN')} / night`;
+    document.getElementById('assign-calc-tariff').textContent = `₹ ${roomTariff.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
+    document.getElementById('assign-calc-meal').textContent = `+ ₹ ${mealPlanTotal.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
+    document.getElementById('assign-calc-gst').textContent = `+ ₹ ${gstAmount.toLocaleString('en-IN', {minimumFractionDigits: 2})} (${gstRate}%)`;
+    document.getElementById('assign-calc-payable').textContent = `₹ ${payable.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
+    document.getElementById('assign-calc-advance').textContent = `₹ ${advance.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
+    document.getElementById('assign-calc-balance').textContent = `₹ ${balance.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
+
+    calcCard.classList.remove('hidden');
+  }
+
+  function submitRoomAssignment(status = 'Confirmed') {
+    const bookingId = document.getElementById('assign-booking-id')?.value;
+    const roomSelect = document.getElementById('assign-room-select');
+    const roomId = roomSelect?.value;
+
+    if (!roomId) {
+      if (typeof PmsAlert !== 'undefined') {
+        PmsAlert.toast('Please choose a vacant room first!', 'warning');
+      } else {
+        alert('Please choose a vacant room first!');
+      }
+      return;
+    }
+
+    const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+    const btnOnly = document.getElementById('btn-assign-room-only');
+    const btnCheckin = document.getElementById('btn-assign-and-checkin');
+
+    if (btnOnly) btnOnly.disabled = true;
+    if (btnCheckin) btnCheckin.disabled = true;
+
+    fetch(`{{ url('front-office/arrivals') }}/${bookingId}/assign-room`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': token,
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({
+        room_id: roomId,
+        status: status
+      })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (btnOnly) btnOnly.disabled = false;
+      if (btnCheckin) btnCheckin.disabled = false;
+
+      if (data.success) {
+        closeAssignRoomModal();
+        if (typeof PmsAlert !== 'undefined') {
+          PmsAlert.toast(data.message, 'success');
+        } else {
+          alert(data.message);
+        }
+        setTimeout(() => {
+          window.location.reload();
+        }, 500);
+      } else {
+        if (typeof PmsAlert !== 'undefined') {
+          PmsAlert.toast(data.message || data.error || 'Failed to assign room', 'error');
+        } else {
+          alert(data.message || data.error || 'Failed to assign room');
+        }
+      }
+    })
+    .catch(err => {
+      if (btnOnly) btnOnly.disabled = false;
+      if (btnCheckin) btnCheckin.disabled = false;
+      console.error('Error assigning room:', err);
+      if (typeof PmsAlert !== 'undefined') {
+        PmsAlert.toast('Server error assigning room. Please try again.', 'error');
+      } else {
+        alert('Server error assigning room.');
+      }
+    });
+  }
 
   // Explicit window bindings
   window.openRoomSwipeModal = openRoomSwipeModal;
@@ -2111,6 +2480,11 @@
   window.onSwipeRoomSelected = onSwipeRoomSelected;
   window.calculateSwipePricing = calculateSwipePricing;
   window.submitRoomSwipe = submitRoomSwipe;
+  window.openAssignRoomModal = openAssignRoomModal;
+  window.closeAssignRoomModal = closeAssignRoomModal;
+  window.onAssignRoomSelectChange = onAssignRoomSelectChange;
+  window.submitRoomAssignment = submitRoomAssignment;
+  window.goToTodayArrivals = goToTodayArrivals;
 </script>
 @endpush
 @endsection

@@ -2876,7 +2876,6 @@
         }
       }
     }
-    }
   }
 
   function togglePaymentFields(selectElem) {
@@ -3604,12 +3603,16 @@
   }
 
   window.addEventListener('DOMContentLoaded', () => {
-    setInitialDateTime();
-    initPlanSelect2();
-    if (typeof $ !== 'undefined') {
-      $('#company-select').off('change.corpSync').on('change.corpSync', function() {
-        toggleNewCompany(this);
-      });
+    try {
+      setInitialDateTime();
+      initPlanSelect2();
+      if (typeof $ !== 'undefined') {
+        $('#company-select').off('change.corpSync').on('change.corpSync', function() {
+          toggleNewCompany(this);
+        });
+      }
+    } catch (e) {
+      console.warn('PMS Init Error:', e);
     }
   });
 

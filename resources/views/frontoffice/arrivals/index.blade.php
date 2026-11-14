@@ -499,6 +499,13 @@
       </div>
 
       <div class="flex gap-2 items-center">
+        <button type="button" 
+                id="mdl-btn-direct-checkin"
+                class="btn-ui-primary px-3.5 py-1.5 rounded-lg text-xs font-black inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer shadow-xs transition" 
+                onclick="directCheckinFromModal()"
+                title="Check In this reservation (choose room if unassigned)">
+          <i class="fa-solid fa-door-open"></i> Check In
+        </button>
         <a id="mdl-btn-goto-crm" href="{{ url('front-office/guest') }}" class="btn-ui-secondary hidden px-3.5 py-1.5 rounded-lg border border-indigo-200 bg-indigo-50 text-indigo-700 text-xs font-bold no-underline items-center gap-1.5 hover:bg-indigo-100 transition" title="Open Guest Profile & Folio in CRM">
           <i class="fa-solid fa-users"></i> Guest CRM
         </a>
@@ -701,7 +708,7 @@
 </div>
 
 <!-- Assign Room & Check In Modal -->
-<div class="modal-backdrop fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 transition-all opacity-0 pointer-events-none" id="assign-room-modal" style="transition: opacity 0.2s ease;">
+<div class="modal-backdrop" id="assign-room-modal" style="display: none;">
   <div class="modal-dialog bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
     <!-- Header -->
     <div class="bg-linear-to-r from-indigo-700 to-indigo-900 px-5 py-4 flex items-center justify-between text-white shrink-0">
@@ -889,12 +896,10 @@
     // Disallow Check-In without an assigned room
     if (status === 'Checked In') {
       const item = (window.allArrivalGuests || []).find(g => String(g.id) === String(activeStatusDropdownGuestId));
-      const isUnassigned = !item || !item.rooms || item.rooms.length === 0 || item.rooms.every(r => !r.room_id || r.room_number === 'Unassigned');
+      const isUnassigned = !item || !item.rooms || item.rooms.length === 0 || item.rooms.some(r => !r.room_id || r.room_number === 'Unassigned');
       if (isUnassigned) {
         if (typeof PmsAlert !== 'undefined') {
-          PmsAlert.toast('Room is not assigned yet! Please choose a room to check in.', 'warning');
-        } else {
-          alert('Room is not assigned yet! Please choose a room to check in.');
+          PmsAlert.toast('Room is not assigned yet! Please choose a vacant room to check in.', 'info');
         }
         openAssignRoomModal(activeStatusDropdownGuestId, true);
         return;
@@ -1312,7 +1317,7 @@
       }
     }
 
-    const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+    const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}';
     if (selectElement) selectElement.disabled = true;
 
     fetch(`{{ url('front-office/arrivals') }}/${guestId}/status`, {
@@ -1423,10 +1428,45 @@
       }
       return;
     }
+
+    if (newStatus === 'Checked In') {
+      const hasUnassigned = !currentActiveGuest.rooms || currentActiveGuest.rooms.length === 0 || currentActiveGuest.rooms.some(r => !r.room_id || r.room_number === 'Unassigned');
+      if (hasUnassigned) {
+        const modalSelect = document.getElementById('mdl-quick-status-select');
+        if (modalSelect) modalSelect.value = currentActiveGuest.status || 'Confirmed';
+        closeModal('guest-details-modal');
+        if (typeof PmsAlert !== 'undefined') {
+          PmsAlert.toast('Please choose a vacant room to check in the guest.', 'info');
+        }
+        openAssignRoomModal(currentActiveGuest.id, true);
+        return;
+      }
+    }
+
     const guestId = currentActiveGuest.id;
     const rowSelect = document.getElementById(`status-select-${guestId}`);
     if (rowSelect) rowSelect.value = newStatus;
     updateGuestStatus(guestId, newStatus, rowSelect);
+  }
+
+  // Direct Check In button click from inside the Eye Details Modal
+  function directCheckinFromModal() {
+    if (!currentActiveGuest) return;
+    const isLocked = currentActiveGuest.is_locked || ['settlement done', 'checked out'].includes((currentActiveGuest.status || '').toLowerCase());
+    if (isLocked) {
+      if (typeof PmsAlert !== 'undefined') {
+        PmsAlert.toast(`Reservation is locked in '${currentActiveGuest.status}' status.`, 'warning');
+      }
+      return;
+    }
+
+    const hasUnassigned = !currentActiveGuest.rooms || currentActiveGuest.rooms.length === 0 || currentActiveGuest.rooms.some(r => !r.room_id || r.room_number === 'Unassigned');
+    if (hasUnassigned) {
+      closeModal('guest-details-modal');
+      openAssignRoomModal(currentActiveGuest.id, true);
+    } else {
+      updateGuestStatus(currentActiveGuest.id, 'Checked In');
+    }
   }
 
   // Render Room-wise Allocated Rooms and Occupants in Modal
@@ -1440,6 +1480,7 @@
 
     let html = '';
     rooms.forEach(r => {
+      const isUnassigned = !r.room_id || r.room_number === 'Unassigned';
       const canSwipe = currentActiveGuest && currentActiveGuest.status !== 'Checked Out' && currentActiveGuest.status !== 'Cancelled' && r.room_id;
       const swipeBtnMarkup = canSwipe ? `
         <button type="button" 
@@ -1447,6 +1488,16 @@
                 onclick="openRoomSwipeModal(${currentActiveGuest ? currentActiveGuest.id : 0}, ${r.room_id}, '${escapeHtml(r.room_number).replace(/'/g, "\\'")}')" 
                 title="Swipe / Shift Room ${escapeHtml(r.room_number)}">
           <i class="fa-solid fa-arrow-right-arrow-left"></i> Room Swipe
+        </button>
+      ` : '';
+
+      const canAssign = currentActiveGuest && !['checked out', 'cancelled', 'settlement done'].includes((currentActiveGuest.status || '').toLowerCase()) && isUnassigned;
+      const assignBtnMarkup = canAssign ? `
+        <button type="button" 
+                class="btn-ui-primary text-[11px] font-extrabold px-3 py-1 rounded-lg inline-flex items-center gap-1.5 bg-amber-500 hover:bg-amber-600 text-slate-900 cursor-pointer shadow-xs border border-amber-600 transition" 
+                onclick="closeModal('guest-details-modal'); openAssignRoomModal(${currentActiveGuest ? currentActiveGuest.id : 0}, false)" 
+                title="Choose a vacant room for this guest">
+          <i class="fa-solid fa-bed"></i> Choose Room
         </button>
       ` : '';
 
@@ -1468,6 +1519,7 @@
                 ${(r.occupants || []).length} Occupant(s)
               </span>
               ${swipeBtnMarkup}
+              ${assignBtnMarkup}
             </div>
           </div>
           <div>
@@ -1649,6 +1701,16 @@
       }
       if (lockedIndicator) {
         lockedIndicator.style.display = 'none';
+      }
+    }
+
+    // Toggle direct checkin button visibility
+    const directCheckinBtn = document.getElementById('mdl-btn-direct-checkin');
+    if (directCheckinBtn) {
+      if (isLocked || ['checked in', 'stay over', 'checked out', 'settlement done', 'cancelled'].includes((g.status || '').toLowerCase())) {
+        directCheckinBtn.style.display = 'none';
+      } else {
+        directCheckinBtn.style.display = 'inline-flex';
       }
     }
 
@@ -2289,7 +2351,8 @@
     if (!modal) return;
 
     modal.classList.remove('opacity-0', 'pointer-events-none');
-    modal.classList.add('opacity-100', 'pointer-events-auto');
+    modal.classList.add('opacity-100', 'pointer-events-auto', 'open');
+    modal.style.setProperty('display', 'flex', 'important');
 
     document.getElementById('assign-booking-id').value = bookingId;
     document.getElementById('assign-auto-checkin').value = autoCheckIn ? 'true' : 'false';
@@ -2367,7 +2430,8 @@
     const modal = document.getElementById('assign-room-modal');
     if (modal) {
       modal.classList.add('opacity-0', 'pointer-events-none');
-      modal.classList.remove('opacity-100', 'pointer-events-auto');
+      modal.classList.remove('opacity-100', 'pointer-events-auto', 'open');
+      modal.style.setProperty('display', 'none', 'important');
     }
   }
 
@@ -2419,7 +2483,7 @@
       return;
     }
 
-    const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+    const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}';
     const btnOnly = document.getElementById('btn-assign-room-only');
     const btnCheckin = document.getElementById('btn-assign-and-checkin');
 

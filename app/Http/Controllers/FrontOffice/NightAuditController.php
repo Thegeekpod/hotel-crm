@@ -1059,6 +1059,10 @@ class NightAuditController extends Controller
                 $extraOrdersDetailed[] = [
                     'id' => $eo->id,
                     'order_number' => $eo->order_number,
+                    'subtotal' => (float)$eo->subtotal,
+                    'tax_amount' => (float)$eo->tax_amount,
+                    'cgst_amount' => round((float)$eo->tax_amount / 2, 2),
+                    'sgst_amount' => round((float)$eo->tax_amount - round((float)$eo->tax_amount / 2, 2), 2),
                     'total_amount' => (float)$eo->total_amount,
                     'date_time' => $eo->created_at ? $eo->created_at->format('d M Y, h:i A') : 'N/A',
                     'date_short' => $eo->created_at ? $eo->created_at->format('d M') : 'N/A',

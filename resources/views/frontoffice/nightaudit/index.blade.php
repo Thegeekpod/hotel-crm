@@ -326,6 +326,16 @@
                           @endforeach
                         </div>
                       @endif
+                      @if(!empty($b['food_advance']['has_food_advance']) && ($b['food_advance']['excess_food'] ?? 0) > 0)
+                        @php
+                          $fa = $b['food_advance'];
+                          $faCgst = $fa['excess_cgst'] ?? round(($fa['excess_gst'] ?? 0) / 2, 2);
+                          $faSgst = $fa['excess_sgst'] ?? round(($fa['excess_gst'] ?? 0) - $faCgst, 2);
+                        @endphp
+                        <div class="text-[8.5px] text-amber-900 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5 mt-1 text-right font-medium">
+                          Food Adv Excess: ₹{{ number_format($fa['excess_food'], 2) }} + CGST 2.5% (₹{{ number_format($faCgst, 2) }}) &amp; SGST 2.5% (₹{{ number_format($faSgst, 2) }})
+                        </div>
+                      @endif
                     @else
                       <span class="text-slate-400 text-xs">₹ 0.00</span>
                     @endif

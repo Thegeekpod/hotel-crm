@@ -738,6 +738,11 @@
                                   `).join('')}
                                 </div>
                               ` : ''}
+                              ${(g.food_advance && g.food_advance.has_food_advance && Number(g.food_advance.excess_food || 0) > 0) ? `
+                                <div class="text-[9px] text-amber-900 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5 mt-1 text-right font-medium">
+                                  Food Adv Excess: ₹${fmt(g.food_advance.excess_food)} + CGST 2.5% (₹${fmt(g.food_advance.excess_cgst || (g.food_advance.excess_gst / 2))}) &amp; SGST 2.5% (₹${fmt(g.food_advance.excess_sgst || (g.food_advance.excess_gst / 2))})
+                                </div>
+                              ` : ''}
                             ` : `
                               <span class="text-slate-400 text-xs">₹ 0.00</span>
                             `}

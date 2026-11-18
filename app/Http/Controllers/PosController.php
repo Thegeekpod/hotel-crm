@@ -112,7 +112,7 @@ class PosController extends Controller
         }
 
         // 5. Tables: With their active running KOTs
-        $defaultGstPos = (float) AppSetting::get('default_gst_pos', 12.00);
+        $defaultGstPos = (float) AppSetting::get('default_gst_pos', 5.00);
 
         $allTables = TableManage::with(['activeKots' => function ($q) {
             $q->with(['items', 'room', 'booking.guest'])->orderBy('id', 'asc');
@@ -420,7 +420,7 @@ class PosController extends Controller
                 $subtotal += ($item['price'] * $item['quantity']);
             }
 
-            $taxRate = (float) AppSetting::get('default_gst_pos', 12.00);
+            $taxRate = (float) AppSetting::get('default_gst_pos', 5.00);
             $taxAmount = round($subtotal * ($taxRate / 100), 2);
             $totalAmount = round($subtotal + $taxAmount, 2);
 
@@ -689,7 +689,7 @@ class PosController extends Controller
             }
         }
 
-        $defaultGstPos = (float) AppSetting::get('default_gst_pos', 12.00);
+        $defaultGstPos = (float) AppSetting::get('default_gst_pos', 5.00);
         $taxAmount = round($subtotal * ($defaultGstPos / 100), 2);
         $totalAmount = round($subtotal + $taxAmount, 2);
 
@@ -806,7 +806,7 @@ class PosController extends Controller
             $room = $roomId ? Room::find($roomId) : null;
             $booking = $bookingId ? Booking::find($bookingId) : null;
 
-            $taxRate = (float) AppSetting::get('default_gst_pos', 12.00);
+            $taxRate = (float) AppSetting::get('default_gst_pos', 5.00);
             $taxAmount = round($subtotal * ($taxRate / 100), 2);
             $totalAmount = round($subtotal + $taxAmount, 2);
 
@@ -856,7 +856,7 @@ class PosController extends Controller
 
                 if ($foodAdvImpact && $foodAdvImpact['has_food_advance']) {
                     if ($foodAdvImpact['excess_amount'] > 0) {
-                        $instructionsNote .= " [Food Advance: ₹" . number_format($advanceCoveredAmount, 2) . " cut | Excess: ₹" . number_format($foodAdvImpact['excess_amount'], 2) . " + 5% GST = ₹" . number_format($folioChargedAmount, 2) . " Folio Due]";
+                        $instructionsNote .= " [Food Advance: ₹" . number_format($advanceCoveredAmount, 2) . " cut | Excess: ₹" . number_format($foodAdvImpact['excess_amount'], 2) . " + CGST 2.5% + SGST 2.5% = ₹" . number_format($folioChargedAmount, 2) . " Folio Due]";
                     } else {
                         $instructionsNote .= " [Food Advance: ₹" . number_format($advanceCoveredAmount, 2) . " cut | 100% Covered (Net Folio: ₹0.00)]";
                     }

@@ -400,7 +400,7 @@
                     </div>
                     <p class="text-[10px] text-slate-500 mt-1.5 leading-tight">
                       <i class="fa-solid fa-circle-info text-emerald-600 mr-0.5"></i>
-                      Pre-allocated company food budget. When food is ordered in POS, it deducts from this amount. Unspent amount is deducted (-₹) at settlement; food orders exceeding this limit attract 5% GST on the excess amount.
+                      Pre-allocated company food budget. When food is ordered in POS, it deducts from this amount. Unspent amount is deducted (-₹) at settlement; food orders exceeding this limit attract GST 5% (CGST 2.5% + SGST 2.5%) on the excess amount.
                     </p>
                   </div>
                 </div>

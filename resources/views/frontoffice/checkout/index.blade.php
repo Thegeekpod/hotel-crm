@@ -1539,7 +1539,9 @@
         foodAdvRow.style.display = 'flex';
         const fa = folio.food_advance;
         if (fa.excess_food > 0) {
-          foodAdvVal.innerHTML = `<span class="text-amber-700 font-bold">${formatINR(fa.advance_amount)} (+${formatINR(fa.excess_total)} excess + 5% GST)</span>`;
+          const faCgst = Number(fa.excess_cgst !== undefined ? fa.excess_cgst : (fa.excess_gst ? Math.round((fa.excess_gst / 2) * 100) / 100 : 0));
+          const faSgst = Number(fa.excess_sgst !== undefined ? fa.excess_sgst : (fa.excess_gst ? Math.round((fa.excess_gst - faCgst) * 100) / 100 : 0));
+          foodAdvVal.innerHTML = `<span class="text-amber-700 font-bold">${formatINR(fa.advance_amount)} (+${formatINR(fa.excess_total)} excess + CGST 2.5% [${formatINR(faCgst)}] &amp; SGST 2.5% [${formatINR(faSgst)}])</span>`;
         } else {
           foodAdvVal.innerHTML = `<span class="text-emerald-700 font-bold">${formatINR(fa.advance_amount)} (${formatINR(fa.used_amount)} used, -${formatINR(fa.unused_advance)} credited)</span>`;
         }
@@ -2592,8 +2594,14 @@
 
     // 3. Company Food Advance Allowance Box (if applicable)
     let foodAdvBoxHtml = '';
-    if (f.food_advance && f.food_advance.has_food_advance && mode !== 'room') {
-      const fa = f.food_advance;
+    const fa = f.food_advance;
+    const faCgst = (fa && fa.has_food_advance) ? Number(fa.excess_cgst !== undefined ? fa.excess_cgst : (fa.excess_gst ? Math.round((fa.excess_gst / 2) * 100) / 100 : 0)) : 0;
+    const faSgst = (fa && fa.has_food_advance) ? Number(fa.excess_sgst !== undefined ? fa.excess_sgst : (fa.excess_gst ? Math.round((fa.excess_gst - faCgst) * 100) / 100 : 0)) : 0;
+    const foodOrdersTax = serviceOrders.reduce((sum, ro) => sum + Number(ro.tax_amount || 0), 0);
+    const foodOrdersCgst = Math.round((foodOrdersTax / 2) * 100) / 100;
+    const foodOrdersSgst = Math.round((foodOrdersTax - foodOrdersCgst) * 100) / 100;
+
+    if (fa && fa.has_food_advance && mode !== 'room') {
       foodAdvBoxHtml = `
         <div class="food-adv-card">
           <div class="food-adv-header">
@@ -2604,7 +2612,7 @@
             <div>Total Food Consumed: <strong>${formatINR(fa.total_food_subtotal)}</strong></div>
             <div>Covered by Food Advance: <strong class="text-emerald-700 font-mono">- ${formatINR(fa.used_amount)}</strong></div>
             ${fa.unused_advance > 0 ? `<div class="food-adv-note credit">✓ Unused Food Advance Credit of <strong>${formatINR(fa.unused_advance)}</strong> will be deducted from remaining settlement bill.</div>` : ''}
-            ${fa.excess_total > 0 ? `<div class="food-adv-note excess">! Excess Food of ${formatINR(fa.excess_food)} + 5% GST (${formatINR(fa.excess_gst)}) = <strong>+ ${formatINR(fa.excess_total)}</strong> added to Room Folio.</div>` : ''}
+            ${fa.excess_total > 0 ? `<div class="food-adv-note excess">! Excess Food of ${formatINR(fa.excess_food)} + CGST 2.5% (${formatINR(faCgst)}) &amp; SGST 2.5% (${formatINR(faSgst)}) = <strong>+ ${formatINR(fa.excess_total)}</strong> added to Room Folio.</div>` : ''}
           </div>
         </div>
       `;
@@ -2719,6 +2727,23 @@
                 <td>Less: Company Food Advance Covered</td>
                 <td class="text-right font-mono">- ${formatINR(faUsed)}</td>
               </tr>` : ''}
+              ${(fa && fa.has_food_advance && fa.excess_food > 0) ? `
+              <tr style="color: #4338ca;">
+                <td>CGST (2.5% on Excess Food)</td>
+                <td class="text-right font-mono">+ ${formatINR(faCgst)}</td>
+              </tr>
+              <tr style="color: #4338ca;">
+                <td>SGST (2.5% on Excess Food)</td>
+                <td class="text-right font-mono">+ ${formatINR(faSgst)}</td>
+              </tr>` : (foodOrdersTax > 0 ? `
+              <tr style="color: #4338ca;">
+                <td>Food CGST (2.5%)</td>
+                <td class="text-right font-mono">+ ${formatINR(foodOrdersCgst)}</td>
+              </tr>
+              <tr style="color: #4338ca;">
+                <td>Food SGST (2.5%)</td>
+                <td class="text-right font-mono">+ ${formatINR(foodOrdersSgst)}</td>
+              </tr>` : '')}
               <tr class="s-total">
                 <td>Net Food Charges Payable</td>
                 <td class="text-right font-mono font-bold">${formatINR(netFoodDue)}</td>

@@ -104,6 +104,8 @@ class FoodAdvanceService
             $unusedAdvance = round($advanceAmount - $totalFoodSubtotal, 2);
             $excessFood = 0.00;
             $excessGst = 0.00;
+            $excessCgst = 0.00;
+            $excessSgst = 0.00;
             $excessTotal = 0.00;
             $netAdjustment = -1 * $unusedAdvance; // Deduct unused advance from pending bill (-₹40)
             $usedAmount = $totalFoodSubtotal;
@@ -111,7 +113,9 @@ class FoodAdvanceService
         } else {
             $unusedAdvance = 0.00;
             $excessFood = round($totalFoodSubtotal - $advanceAmount, 2);
-            $excessGst = round($excessFood * 0.05, 2); // 5% GST on excess
+            $excessGst = round($excessFood * 0.05, 2); // 5% GST on excess (CGST 2.5% + SGST 2.5%)
+            $excessCgst = round($excessGst / 2, 2);
+            $excessSgst = round($excessGst - $excessCgst, 2);
             $excessTotal = round($excessFood + $excessGst, 2);
             $netAdjustment = $excessTotal; // Add excess bill with 5% GST (+₹52.50)
             $usedAmount = $advanceAmount;
@@ -127,6 +131,8 @@ class FoodAdvanceService
             'unused_advance' => $unusedAdvance,
             'excess_food' => $excessFood,
             'excess_gst' => $excessGst,
+            'excess_cgst' => $excessCgst,
+            'excess_sgst' => $excessSgst,
             'excess_total' => $excessTotal,
             'net_adjustment' => $netAdjustment,
         ];
@@ -184,8 +190,10 @@ class FoodAdvanceService
             $excessAmount = round($newSubtotal - $coveredAmount, 2);
         }
 
-        // 5% GST specifically on the excess food amount as per company food allowance rules
+        // 5% GST specifically on the excess food amount as per company food allowance rules (CGST 2.5% + SGST 2.5%)
         $gstAmount = ($excessAmount > 0) ? round($excessAmount * 0.05, 2) : 0.00;
+        $cgstAmount = round($gstAmount / 2, 2);
+        $sgstAmount = round($gstAmount - $cgstAmount, 2);
         $chargedTotal = round($excessAmount + $gstAmount, 2);
 
         return [
@@ -196,7 +204,11 @@ class FoodAdvanceService
             'covered_amount' => $coveredAmount,
             'excess_amount' => $excessAmount,
             'gst_rate' => 5.00,
+            'cgst_rate' => 2.50,
+            'sgst_rate' => 2.50,
             'gst_amount' => $gstAmount,
+            'cgst_amount' => $cgstAmount,
+            'sgst_amount' => $sgstAmount,
             'charged_total' => $chargedTotal,
         ];
     }

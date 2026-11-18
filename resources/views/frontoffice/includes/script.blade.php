@@ -1540,6 +1540,8 @@
       let foodAdvBoxHtml = '';
       if (f.food_advance && f.food_advance.has_food_advance) {
         const fa = f.food_advance;
+        const faCgst = Number(fa.excess_cgst !== undefined ? fa.excess_cgst : (fa.excess_gst ? Math.round((fa.excess_gst / 2) * 100) / 100 : 0));
+        const faSgst = Number(fa.excess_sgst !== undefined ? fa.excess_sgst : (fa.excess_gst ? Math.round((fa.excess_gst - faCgst) * 100) / 100 : 0));
         foodAdvBoxHtml = `
           <div class="food-adv-card">
             <div class="food-adv-header">
@@ -1550,7 +1552,7 @@
               <div>Total Food Consumed: <strong>${formatINR(fa.total_food_subtotal)}</strong></div>
               <div>Covered by Food Advance: <strong class="text-emerald-700 font-mono">- ${formatINR(fa.used_amount)}</strong></div>
               ${fa.unused_advance > 0 ? `<div class="food-adv-note credit">✓ Unused Food Advance Credit of <strong>${formatINR(fa.unused_advance)}</strong> will be deducted from remaining settlement bill.</div>` : ''}
-              ${fa.excess_total > 0 ? `<div class="food-adv-note excess">! Excess Food of ${formatINR(fa.excess_food)} + 5% GST (${formatINR(fa.excess_gst)}) = <strong>+ ${formatINR(fa.excess_total)}</strong> added to Room Folio.</div>` : ''}
+              ${fa.excess_total > 0 ? `<div class="food-adv-note excess">! Excess Food of ${formatINR(fa.excess_food)} + CGST 2.5% (${formatINR(faCgst)}) &amp; SGST 2.5% (${formatINR(faSgst)}) = <strong>+ ${formatINR(fa.excess_total)}</strong> added to Room Folio.</div>` : ''}
             </div>
           </div>
         `;

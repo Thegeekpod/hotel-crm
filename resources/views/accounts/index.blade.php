@@ -253,7 +253,7 @@
 
           <div class="flex items-center justify-between text-xs py-1">
             <span class="font-medium text-slate-600 flex items-center gap-2">
-              <i class="fa-solid fa-percent text-slate-400 w-4"></i> POS GST Tax Collected (12%):
+              <i class="fa-solid fa-percent text-slate-400 w-4"></i> POS Food GST (CGST 2.5% + SGST 2.5%):
             </span>
             <span class="font-mono font-bold text-slate-600">₹ {{ number_format($posTaxCollected, 2) }}</span>
           </div>
@@ -539,7 +539,7 @@
               <th class="py-3 px-3">Customer / Guest</th>
               <th class="py-3 px-3">Ordered Items</th>
               <th class="py-3 px-3 text-right">Subtotal</th>
-              <th class="py-3 px-3 text-right">GST (12%)</th>
+              <th class="py-3 px-3 text-right">CGST &amp; SGST (2.5%+2.5%)</th>
               <th class="py-3 px-3 text-right">Total Bill</th>
               <th class="py-3 px-3 text-center">Billing Mode</th>
               <th class="py-3 px-3 text-center">Status</th>
@@ -599,7 +599,12 @@
                   ₹ {{ number_format($po['subtotal'], 2) }}
                 </td>
                 <td class="py-3 px-3 text-right font-mono text-slate-500">
-                  ₹ {{ number_format($po['tax_amount'], 2) }}
+                  @php
+                    $cgstAmt = round($po['tax_amount'] / 2, 2);
+                    $sgstAmt = round($po['tax_amount'] - $cgstAmt, 2);
+                  @endphp
+                  <div class="text-[11px] font-bold text-slate-700">₹ {{ number_format($po['tax_amount'], 2) }}</div>
+                  <div class="text-[9.5px] text-slate-400 font-mono">C: ₹{{ number_format($cgstAmt, 2) }} | S: ₹{{ number_format($sgstAmt, 2) }}</div>
                 </td>
                 <td class="py-3 px-3 text-right font-mono font-black text-slate-900 text-xs">
                   ₹ {{ number_format($po['total_amount'], 2) }}

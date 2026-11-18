@@ -306,8 +306,14 @@
                     ₹ {{ number_format($order->total_amount, 2) }}
                   </div>
                   @if($order->tax_amount > 0)
-                    <div class="text-[10px] text-slate-400 font-mono mt-0.5">
-                      Tax: ₹ {{ number_format($order->tax_amount, 2) }}
+                    @php
+                      $tRate = (float)($order->tax_percentage ?: 5);
+                      $hRate = $tRate / 2;
+                      $cgstAmt = round($order->tax_amount / 2, 2);
+                      $sgstAmt = round($order->tax_amount - $cgstAmt, 2);
+                    @endphp
+                    <div class="text-[10px] text-slate-500 font-mono mt-0.5">
+                      CGST ({{ rtrim(rtrim(number_format($hRate, 2), '0'), '.') }}%): ₹{{ number_format($cgstAmt, 2) }} | SGST ({{ rtrim(rtrim(number_format($hRate, 2), '0'), '.') }}%): ₹{{ number_format($sgstAmt, 2) }}
                     </div>
                   @endif
                   @if(!empty($order->special_instructions) && str_contains($order->special_instructions, 'Food Advance:'))
@@ -492,6 +498,21 @@
               <!-- Dynamic Guest Items -->
             </tbody>
           </table>
+          <div class="divider-line border-b border-dashed border-slate-300 my-2"></div>
+          <div id="kot-guest-tax-breakdown" class="space-y-1 text-[11px] text-slate-700">
+            <div class="flex justify-between font-medium">
+              <span>Subtotal:</span>
+              <span class="font-mono">₹ <span id="kot-guest-subtotal">0.00</span></span>
+            </div>
+            <div class="flex justify-between font-medium text-slate-600" id="row-kot-guest-cgst">
+              <span>CGST (<span id="kot-guest-cgst-rate">2.5</span>%):</span>
+              <span class="font-mono">₹ <span id="kot-guest-cgst-amount">0.00</span></span>
+            </div>
+            <div class="flex justify-between font-medium text-slate-600" id="row-kot-guest-sgst">
+              <span>SGST (<span id="kot-guest-sgst-rate">2.5</span>%):</span>
+              <span class="font-mono">₹ <span id="kot-guest-sgst-amount">0.00</span></span>
+            </div>
+          </div>
           <div class="divider-line border-b border-dashed border-slate-300 my-2"></div>
           <div class="flex justify-between font-black text-xs">
             <span>Total Qty: <span id="kot-guest-total-qty">0</span></span>
@@ -714,6 +735,26 @@
     document.getElementById('kot-guest-total-qty').textContent = totQty;
     document.getElementById('kot-guest-grand-total').textContent = grandTotalFmt;
     document.getElementById('kot-guest-notes-line').textContent = notesStr;
+
+    // Tax breakdown for food bill (CGST 2.5% + SGST 2.5%)
+    const taxAmt = Number(order.tax_amount || 0);
+    const taxRate = parseFloat(order.tax_percentage || 5);
+    const halfRate = taxRate / 2;
+    const cgstAmt = Math.round((taxAmt / 2) * 100) / 100;
+    const sgstAmt = Math.round((taxAmt - cgstAmt) * 100) / 100;
+    const subtotalFmt = Number(order.subtotal || (Number(order.total_amount) - taxAmt)).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const cgstFmt = cgstAmt.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const sgstFmt = sgstAmt.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+    if (document.getElementById('kot-guest-subtotal')) document.getElementById('kot-guest-subtotal').textContent = subtotalFmt;
+    if (document.getElementById('kot-guest-cgst-rate')) document.getElementById('kot-guest-cgst-rate').textContent = (halfRate % 1 === 0 ? halfRate.toString() : halfRate.toFixed(1));
+    if (document.getElementById('kot-guest-sgst-rate')) document.getElementById('kot-guest-sgst-rate').textContent = (halfRate % 1 === 0 ? halfRate.toString() : halfRate.toFixed(1));
+    if (document.getElementById('kot-guest-cgst-amount')) document.getElementById('kot-guest-cgst-amount').textContent = cgstFmt;
+    if (document.getElementById('kot-guest-sgst-amount')) document.getElementById('kot-guest-sgst-amount').textContent = sgstFmt;
+    const taxBreakdownRow = document.getElementById('kot-guest-tax-breakdown');
+    if (taxBreakdownRow) {
+      taxBreakdownRow.style.display = (taxAmt > 0 || !order.is_kot) ? 'block' : 'none';
+    }
 
     // Populate Kitchen Ticket
     document.getElementById('kot-kitchen-order-num').innerHTML = `<strong>KOT: ${order.order_number || 'POS'}</strong>`;

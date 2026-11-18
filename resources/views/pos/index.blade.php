@@ -401,9 +401,17 @@
               <span><i class="fa-solid fa-utensils text-emerald-600 mr-1"></i> Cut from Food Advance:</span>
               <span id="food-adv-cut-val" class="font-mono">- ₹ 0</span>
             </div>
-            <div class="flex items-center justify-between text-slate-500 font-medium" id="row-pos-gst">
-              <span>GST (<span id="pos-gst-label-rate">{{ rtrim(rtrim(number_format($defaultGstPos ?? 12, 2), '0'), '.') }}</span>%):</span>
-              <span id="tax-val" class="font-mono text-slate-500">₹ 0</span>
+            <div class="flex items-center justify-between text-slate-500 font-medium" id="row-pos-cgst">
+              <span>CGST (<span id="pos-cgst-label-rate">{{ rtrim(rtrim(number_format(($defaultGstPos ?? 5) / 2, 2), '0'), '.') }}</span>%):</span>
+              <span id="cgst-val" class="font-mono text-slate-500">₹ 0.00</span>
+            </div>
+            <div class="flex items-center justify-between text-slate-500 font-medium" id="row-pos-sgst">
+              <span>SGST (<span id="pos-sgst-label-rate">{{ rtrim(rtrim(number_format(($defaultGstPos ?? 5) / 2, 2), '0'), '.') }}</span>%):</span>
+              <span id="sgst-val" class="font-mono text-slate-500">₹ 0.00</span>
+            </div>
+            <div class="hidden" id="row-pos-gst">
+              <span id="pos-gst-label-rate">{{ rtrim(rtrim(number_format($defaultGstPos ?? 5, 2), '0'), '.') }}</span>
+              <span id="tax-val">₹ 0</span>
             </div>
             <div class="flex items-center justify-between pt-2 border-t border-slate-100 text-sm font-black text-slate-900">
               <span id="tot-label">Order Total:</span>
@@ -494,6 +502,21 @@
               <!-- Dynamic Guest Items -->
             </tbody>
           </table>
+          <div class="divider-line border-b border-dashed border-slate-300 my-2"></div>
+          <div id="kot-guest-tax-breakdown" class="space-y-1 text-[11px] text-slate-700">
+            <div class="flex justify-between font-medium">
+              <span>Subtotal:</span>
+              <span class="font-mono">₹ <span id="kot-guest-subtotal">0.00</span></span>
+            </div>
+            <div class="flex justify-between font-medium text-slate-600" id="row-kot-guest-cgst">
+              <span>CGST (<span id="kot-guest-cgst-rate">2.5</span>%):</span>
+              <span class="font-mono">₹ <span id="kot-guest-cgst-amount">0.00</span></span>
+            </div>
+            <div class="flex justify-between font-medium text-slate-600" id="row-kot-guest-sgst">
+              <span>SGST (<span id="kot-guest-sgst-rate">2.5</span>%):</span>
+              <span class="font-mono">₹ <span id="kot-guest-sgst-amount">0.00</span></span>
+            </div>
+          </div>
           <div class="divider-line border-b border-dashed border-slate-300 my-2"></div>
           <div class="flex justify-between font-black text-xs">
             <span>Total Qty: <span id="kot-guest-total-qty">0</span></span>
@@ -640,9 +663,17 @@
           <span>Subtotal:</span>
           <span id="settle-subtotal-val" class="font-mono font-bold text-slate-800">₹ 0.00</span>
         </div>
-        <div class="flex justify-between text-slate-500 font-medium">
-          <span>GST (<span id="settle-gst-rate-val">12</span>%):</span>
-          <span id="settle-tax-val" class="font-mono">₹ 0.00</span>
+        <div class="flex justify-between text-slate-500 font-medium" id="row-settle-cgst">
+          <span>CGST (<span id="settle-cgst-rate-val">2.5</span>%):</span>
+          <span id="settle-cgst-val" class="font-mono">₹ 0.00</span>
+        </div>
+        <div class="flex justify-between text-slate-500 font-medium" id="row-settle-sgst">
+          <span>SGST (<span id="settle-sgst-rate-val">2.5</span>%):</span>
+          <span id="settle-sgst-val" class="font-mono">₹ 0.00</span>
+        </div>
+        <div class="hidden">
+          <span id="settle-gst-rate-val">5</span>
+          <span id="settle-tax-val">₹ 0.00</span>
         </div>
         <div class="flex justify-between pt-2 border-t border-slate-200 text-sm font-black text-slate-900">
           <span>Final Bill Amount:</span>
@@ -854,7 +885,7 @@
 @push('scripts')
 <script>
   // State variables
-  const posGstRate = {{ (float) ($defaultGstPos ?? 12.00) }};
+  const posGstRate = {{ (float) ($defaultGstPos ?? 5.00) }};
   let cart = [];
   let currentOrderType = 'Room Dining';
   let currentBillingType = 'Charged to Room Folio';
@@ -1296,9 +1327,21 @@
     container.innerHTML = html;
 
     const tax = Math.round(((subtotal * posGstRate) / 100) * 100) / 100;
+    const cgst = Math.round((tax / 2) * 100) / 100;
+    const sgst = Math.round((tax - cgst) * 100) / 100;
+    const halfRate = posGstRate / 2;
     const grandTotal = Math.round((subtotal + tax) * 100) / 100;
 
+    const cgstVal = document.getElementById('cgst-val');
+    const sgstVal = document.getElementById('sgst-val');
+    const posCgstLabelRate = document.getElementById('pos-cgst-label-rate');
+    const posSgstLabelRate = document.getElementById('pos-sgst-label-rate');
+
     if (subVal) subVal.textContent = '₹ ' + subtotal.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+    if (cgstVal) cgstVal.textContent = '₹ ' + cgst.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+    if (sgstVal) sgstVal.textContent = '₹ ' + sgst.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+    if (posCgstLabelRate) posCgstLabelRate.textContent = (halfRate % 1 === 0 ? halfRate.toString() : halfRate.toFixed(1));
+    if (posSgstLabelRate) posSgstLabelRate.textContent = (halfRate % 1 === 0 ? halfRate.toString() : halfRate.toFixed(1));
     if (taxVal) taxVal.textContent = '₹ ' + tax.toLocaleString('en-IN', { minimumFractionDigits: 2 });
     if (totVal) totVal.textContent = '₹ ' + grandTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 });
 
@@ -1614,9 +1657,19 @@
     document.getElementById('settle-items-total-qty').textContent = `${totalQty} items total`;
 
     // Totals
+    const gstRate = parseFloat(sess.gst_rate || 5);
+    const halfRate = gstRate / 2;
+    const taxAmt = Number(sess.tax_amount || 0);
+    const cgstAmt = Math.round((taxAmt / 2) * 100) / 100;
+    const sgstAmt = Math.round((taxAmt - cgstAmt) * 100) / 100;
+
     document.getElementById('settle-subtotal-val').textContent = '₹ ' + Number(sess.subtotal).toLocaleString('en-IN', { minimumFractionDigits: 2 });
-    document.getElementById('settle-gst-rate-val').textContent = sess.gst_rate;
-    document.getElementById('settle-tax-val').textContent = '₹ ' + Number(sess.tax_amount).toLocaleString('en-IN', { minimumFractionDigits: 2 });
+    if (document.getElementById('settle-cgst-rate-val')) document.getElementById('settle-cgst-rate-val').textContent = (halfRate % 1 === 0 ? halfRate.toString() : halfRate.toFixed(1));
+    if (document.getElementById('settle-sgst-rate-val')) document.getElementById('settle-sgst-rate-val').textContent = (halfRate % 1 === 0 ? halfRate.toString() : halfRate.toFixed(1));
+    if (document.getElementById('settle-cgst-val')) document.getElementById('settle-cgst-val').textContent = '₹ ' + cgstAmt.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+    if (document.getElementById('settle-sgst-val')) document.getElementById('settle-sgst-val').textContent = '₹ ' + sgstAmt.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+    if (document.getElementById('settle-gst-rate-val')) document.getElementById('settle-gst-rate-val').textContent = sess.gst_rate;
+    if (document.getElementById('settle-tax-val')) document.getElementById('settle-tax-val').textContent = '₹ ' + taxAmt.toLocaleString('en-IN', { minimumFractionDigits: 2 });
     document.getElementById('settle-grand-total-val').textContent = '₹ ' + Number(sess.total_amount).toLocaleString('en-IN', { minimumFractionDigits: 2 });
 
     document.getElementById('table-settle-modal').style.display = 'flex';
@@ -1817,6 +1870,26 @@
     document.getElementById('kot-guest-total-qty').textContent = totQty;
     document.getElementById('kot-guest-grand-total').textContent = grandTotalFmt;
     document.getElementById('kot-guest-notes-line').textContent = notesStr;
+
+    // Tax breakdown for food bill (CGST 2.5% + SGST 2.5%)
+    const taxAmt = Number(order.tax_amount || 0);
+    const taxRate = parseFloat(order.tax_percentage || 5);
+    const halfRate = taxRate / 2;
+    const cgstAmt = Math.round((taxAmt / 2) * 100) / 100;
+    const sgstAmt = Math.round((taxAmt - cgstAmt) * 100) / 100;
+    const subtotalFmt = Number(order.subtotal || (Number(order.total_amount) - taxAmt)).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const cgstFmt = cgstAmt.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const sgstFmt = sgstAmt.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+    if (document.getElementById('kot-guest-subtotal')) document.getElementById('kot-guest-subtotal').textContent = subtotalFmt;
+    if (document.getElementById('kot-guest-cgst-rate')) document.getElementById('kot-guest-cgst-rate').textContent = (halfRate % 1 === 0 ? halfRate.toString() : halfRate.toFixed(1));
+    if (document.getElementById('kot-guest-sgst-rate')) document.getElementById('kot-guest-sgst-rate').textContent = (halfRate % 1 === 0 ? halfRate.toString() : halfRate.toFixed(1));
+    if (document.getElementById('kot-guest-cgst-amount')) document.getElementById('kot-guest-cgst-amount').textContent = cgstFmt;
+    if (document.getElementById('kot-guest-sgst-amount')) document.getElementById('kot-guest-sgst-amount').textContent = sgstFmt;
+    const taxBreakdownRow = document.getElementById('kot-guest-tax-breakdown');
+    if (taxBreakdownRow) {
+      taxBreakdownRow.style.display = (taxAmt > 0 || !isKot) ? 'block' : 'none';
+    }
 
     // Populate Kitchen Ticket
     document.getElementById('kot-kitchen-order-num').innerHTML = `<strong>${isKot ? 'KOT' : 'BILL'}: ${order.order_number}</strong>`;

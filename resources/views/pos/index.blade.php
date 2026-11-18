@@ -208,7 +208,7 @@
           <!-- Instant Search Input -->
           <div class="relative w-full sm:w-64 shrink-0">
             <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-            <input type="text" id="menu-search-input" placeholder="Search dish, beverage..." onkeyup="searchMenu(this.value)" class="h-9 pl-8 pr-3 text-xs font-medium rounded-xl border border-slate-200 bg-slate-50/70 focus:bg-white focus:border-indigo-500 focus:outline-none transition-all w-full">
+            <input type="text" id="menu-search-input" placeholder="Search dish, code, SKU..." onkeyup="searchMenu(this.value)" class="h-9 pl-8 pr-3 text-xs font-medium rounded-xl border border-slate-200 bg-slate-50/70 focus:bg-white focus:border-indigo-500 focus:outline-none transition-all w-full">
           </div>
         </div>
 
@@ -219,14 +219,22 @@
               $plates = $dish->available_plates;
               $isSoldOut = ($plates <= 0);
               $isLow = ($plates > 0 && $plates <= ($dish->min_alert_plates ?: 10));
+              $dishCode = $dish->code ?: ($dish->storeItem?->sku ?? '');
             @endphp
             <div class="pos-dish-card bg-white rounded-xl border border-slate-200 hover:border-emerald-500 hover:shadow-md transition-all p-3.5 flex flex-col justify-between cursor-pointer group {{ $isSoldOut ? 'opacity-55 border-rose-200 bg-rose-50/20' : '' }}" 
                  data-cat="{{ $dish->category }}" 
                  data-name="{{ strtolower($dish->name) }}"
+                 data-code="{{ strtolower($dish->code ?? '') }}"
+                 data-sku="{{ strtolower($dish->storeItem?->sku ?? '') }}"
                  onclick="{{ $isSoldOut ? 'if(typeof PmsAlert!==\'undefined\'){PmsAlert.toast(\'This dish is OUT OF STOCK in kitchen store!\', \'warning\');}else{alert(\'This dish is OUT OF STOCK in kitchen store!\');}' : 'addToCart(' . $dish->id . ', \'' . addslashes($dish->name) . '\', ' . $dish->price . ', ' . $plates . ')' }}">
               <div>
                 <div class="text-3xl text-center py-1 group-hover:scale-110 transition-transform">{{ $dish->emoji ?: '🍽️' }}</div>
                 <div class="font-bold text-xs text-slate-800 truncate group-hover:text-emerald-700 transition-colors mt-1" title="{{ $dish->name }}">{{ $dish->name }}</div>
+                @if(!empty($dishCode))
+                  <div class="text-[10px] font-mono font-bold text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-100 inline-flex items-center gap-1 mt-0.5" title="Code / SKU: {{ $dishCode }}">
+                    <i class="fa-solid fa-barcode text-[9px] opacity-70"></i> {{ $dishCode }}
+                  </div>
+                @endif
                 <div class="text-sm font-black font-mono text-slate-900 mt-0.5">₹ {{ number_format($dish->price, 0) }}</div>
                 @if($dish->ingredient_name)
                   <div class="text-[10px] text-slate-400 truncate mt-1 flex items-center gap-1" title="{{ $dish->ingredient_display }}">
@@ -875,8 +883,11 @@
           <select id="edit-kot-add-item-select" class="flex-1 h-9 px-3 text-xs font-medium rounded-xl border border-slate-300 bg-white">
             <option value="">-- Choose Menu Item to Add --</option>
             @foreach($menuItems as $mi)
+              @php
+                $miCode = $mi->code ?: ($mi->storeItem?->sku ?? '');
+              @endphp
               <option value="{{ $mi->id }}" data-name="{{ $mi->name }}" data-price="{{ $mi->price }}">
-                {{ $mi->name }} (₹{{ number_format($mi->price, 0) }})
+                {{ $mi->name }} {{ !empty($miCode) ? '[' . $miCode . ']' : '' }} (₹{{ number_format($mi->price, 0) }})
               </option>
             @endforeach
           </select>
@@ -1498,9 +1509,11 @@
     const q = query.trim().toLowerCase();
     const cards = document.querySelectorAll('.pos-dish-card');
     cards.forEach(card => {
-      const name = card.getAttribute('data-name');
-      const cat = card.getAttribute('data-cat').toLowerCase();
-      if (!q || name.includes(q) || cat.includes(q)) {
+      const name = (card.getAttribute('data-name') || '').toLowerCase();
+      const code = (card.getAttribute('data-code') || '').toLowerCase();
+      const sku = (card.getAttribute('data-sku') || '').toLowerCase();
+      const cat = (card.getAttribute('data-cat') || '').toLowerCase();
+      if (!q || name.includes(q) || code.includes(q) || sku.includes(q) || cat.includes(q)) {
         card.style.display = 'flex';
       } else {
         card.style.display = 'none';

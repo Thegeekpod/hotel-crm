@@ -1496,10 +1496,12 @@ class DashboardController extends Controller
                 ];
 
                 if (!empty($gData['mobile'])) {
-                    $guestModel = Guest::firstOrCreate(
-                        ['mobile' => $gData['mobile']],
-                        $guestFields
-                    );
+                    $guestModel = Guest::where('mobile', $gData['mobile'])
+                        ->where('guest_name', $guestFields['guest_name'])
+                        ->first();
+                    if (!$guestModel) {
+                        $guestModel = Guest::create($guestFields);
+                    }
                 } else {
                     $guestModel = Guest::create($guestFields);
                 }
@@ -1818,6 +1820,182 @@ class DashboardController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Error updating room status: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Add an additional guest to an already occupied room / active booking.
+     */
+    public function addGuestToOccupiedRoom(Request $request)
+    {
+        $request->validate([
+            'guest_name' => 'required|string|max:255',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            $roomId = $request->input('room_id');
+            $roomNo = $request->input('room_no');
+            $bookingId = $request->input('booking_id');
+
+            // 1. Locate the Room
+            $room = null;
+            if ($roomId && is_numeric($roomId)) {
+                $room = Room::find($roomId);
+            }
+            if (!$room && $roomNo) {
+                $room = Room::where('room_number', (string)$roomNo)->first();
+            }
+
+            // 2. Locate the Active/Primary Booking
+            $activeBooking = null;
+            if ($bookingId && is_numeric($bookingId)) {
+                $activeBooking = Booking::find($bookingId);
+            }
+            if (!$activeBooking && $room) {
+                $activeBooking = Booking::where('room_id', $room->id)
+                    ->whereIn('status', ['Checked In', 'Stay Over', 'Arrived', 'Confirmed', 'Settlement Done'])
+                    ->orderByRaw("CASE WHEN status = 'Checked In' THEN 1 WHEN status = 'Stay Over' THEN 2 WHEN status = 'Arrived' THEN 3 WHEN status = 'Confirmed' THEN 4 ELSE 5 END")
+                    ->latest('id')
+                    ->first();
+            }
+
+            if (!$activeBooking) {
+                DB::rollBack();
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No active reservation or booking found for this room.',
+                ], 404);
+            }
+
+            // If activeBooking is a secondary booking, resolve its primary booking
+            $primaryBooking = $activeBooking->primary_booking_id
+                ? (Booking::find($activeBooking->primary_booking_id) ?? $activeBooking)
+                : $activeBooking;
+
+            // If room wasn't directly found, use the booking's room
+            if (!$room && $activeBooking->room_id) {
+                $room = Room::find($activeBooking->room_id);
+            }
+
+            // 3. Find or Create Guest
+            $titleId = (!empty($request->input('title_id')) && Title::where('id', $request->input('title_id'))->exists()) 
+                ? (int)$request->input('title_id') 
+                : null;
+            $nationalityId = (!empty($request->input('nationality_id')) && Nationality::where('id', $request->input('nationality_id'))->exists()) 
+                ? (int)$request->input('nationality_id') 
+                : null;
+            $idCardTypeId = (!empty($request->input('id_card_type_id')) && IdCardType::where('id', $request->input('id_card_type_id'))->exists()) 
+                ? (int)$request->input('id_card_type_id') 
+                : null;
+
+            $guestFields = [
+                'title_id' => $titleId,
+                'guest_name' => trim($request->input('guest_name')),
+                'guest_address' => $request->input('guest_address') ?: null,
+                'nationality_id' => $nationalityId,
+                'city' => $request->input('city') ?: null,
+                'mobile' => $request->input('mobile') ?: null,
+                'email' => $request->input('email') ?: null,
+                'has_privilege_card' => (bool)$request->input('has_privilege_card'),
+                'privilege_card_no' => $request->input('privilege_card_no') ?: null,
+                'id_card_type_id' => $idCardTypeId,
+                'id_card_number' => $request->input('id_card_number') ?: null,
+                'company_id' => $primaryBooking->company_id,
+                'new_company_name' => $primaryBooking->new_company_name,
+                'new_company_address' => $primaryBooking->new_company_address,
+                'new_company_gstin' => $primaryBooking->new_company_gstin,
+                'new_company_phone' => $primaryBooking->new_company_phone,
+            ];
+
+            // Check if exact same guest (both name and mobile) exists, otherwise create a new distinct guest
+            $guestModel = null;
+            if (!empty($guestFields['mobile'])) {
+                $guestModel = Guest::where('mobile', $guestFields['mobile'])
+                    ->where('guest_name', $guestFields['guest_name'])
+                    ->first();
+            }
+
+            if (!$guestModel) {
+                $guestModel = Guest::create($guestFields);
+            } else {
+                // Update empty fields on existing guest
+                $dirty = false;
+                if (empty($guestModel->id_card_number) && !empty($guestFields['id_card_number'])) {
+                    $guestModel->id_card_type_id = $idCardTypeId;
+                    $guestModel->id_card_number = $guestFields['id_card_number'];
+                    $dirty = true;
+                }
+                if (empty($guestModel->guest_address) && !empty($guestFields['guest_address'])) {
+                    $guestModel->guest_address = $guestFields['guest_address'];
+                    $dirty = true;
+                }
+                if ($dirty) {
+                    $guestModel->save();
+                }
+            }
+
+            // 4. Generate Settle/Folio Number
+            $folioNo = $primaryBooking->settle_number ?: $primaryBooking->folio_number ?: Booking::generateSettleNumber($room?->room_number ?? '100');
+
+            // 5. Create new Booking for this additional guest
+            $newBooking = Booking::create([
+                'reserve_id' => $primaryBooking->reserve_id,
+                'settle_number' => $folioNo,
+                'folio_number' => $folioNo,
+                'guest_id' => $guestModel->id,
+                'room_id' => $room?->id ?? $activeBooking->room_id,
+                'registration_type_id' => $primaryBooking->registration_type_id,
+                'reservation_mode_id' => $primaryBooking->reservation_mode_id,
+                'company_id' => $primaryBooking->company_id,
+                'new_company_name' => $primaryBooking->new_company_name,
+                'new_company_address' => $primaryBooking->new_company_address,
+                'new_company_gstin' => $primaryBooking->new_company_gstin,
+                'new_company_phone' => $primaryBooking->new_company_phone,
+                'plan_id' => $primaryBooking->plan_id,
+                'plan_name' => $primaryBooking->plan_name,
+                'plan_original_price' => $primaryBooking->plan_original_price,
+                'plan_price' => $primaryBooking->plan_price,
+                'plan_discount_amount' => $primaryBooking->plan_discount_amount,
+                'checkin_date' => $primaryBooking->checkin_date ?? $primaryBooking->reserve_date,
+                'checkin_time' => $primaryBooking->checkin_time ?? $primaryBooking->reserve_time,
+                'reserve_date' => $primaryBooking->reserve_date,
+                'reserve_time' => $primaryBooking->reserve_time,
+                'checkout_date' => $primaryBooking->checkout_date,
+                'checkout_time' => $primaryBooking->checkout_time,
+                'total_nights' => $primaryBooking->total_nights,
+                'room_rate' => 0.00,
+                'total_amount' => 0.00,
+                'discount_percentage' => 0.0,
+                'discount_amount' => 0.00,
+                'gst_type' => 'exclusive',
+                'gst_percentage_id' => null,
+                'gst_percentage' => 0.0,
+                'gst_amount' => 0.00,
+                'payable_amount' => 0.00,
+                'advance_amount' => 0.00,
+                'balance' => 0.00,
+                'status' => in_array($activeBooking->status, ['Checked In', 'Stay Over', 'Arrived', 'Confirmed']) ? $activeBooking->status : 'Checked In',
+                'primary_booking_id' => $primaryBooking->id,
+                'remarks' => 'Additional guest added to Room #' . ($room?->room_number ?? ''),
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Guest successfully added to Room #' . ($room?->room_number ?? '') . '!',
+                'booking_id' => $newBooking->id,
+                'guest_id' => $guestModel->id,
+                'guest_name' => $guestModel->guest_name,
+                'room_number' => $room?->room_number ?? '',
+            ]);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to add guest: ' . $e->getMessage(),
             ], 500);
         }
     }

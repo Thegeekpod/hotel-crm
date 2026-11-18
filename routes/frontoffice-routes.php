@@ -79,6 +79,7 @@ Route::prefix('front-office')->name('frontoffice.')->middleware('section:frontof
     Route::get('/search-guest', [DashboardController::class, 'searchGuest'])->name('guest.search');
     Route::get('/check-room-availability', [DashboardController::class, 'checkRoomAvailability'])->name('room.check-availability');
     Route::post('/room/update-status', [DashboardController::class, 'updateRoomStatus'])->name('room.update-status');
+    Route::post('/room/add-guest', [DashboardController::class, 'addGuestToOccupiedRoom'])->name('room.add-guest');
 
     // Guest Mobile Upload Sessions & QR code generation (5-minute security limit)
     Route::post('/guest-upload/init', [\App\Http\Controllers\FrontOffice\GuestUploadController::class, 'initSession'])->name('guest-upload.init');

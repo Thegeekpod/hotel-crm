@@ -36,7 +36,10 @@ class PosController extends Controller
             $itemsQuery->where(function ($q) use ($s) {
                 $q->where('name', 'like', "%{$s}%")
                   ->orWhere('code', 'like', "%{$s}%")
-                  ->orWhere('description', 'like', "%{$s}%");
+                  ->orWhere('description', 'like', "%{$s}%")
+                  ->orWhereHas('storeItem', function ($sq) use ($s) {
+                      $sq->where('sku', 'like', "%{$s}%");
+                  });
             });
         }
 

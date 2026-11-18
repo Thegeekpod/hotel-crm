@@ -952,6 +952,11 @@
         });
       }
     };
+
+    window.pmsTitles = @json(\App\Models\Title::where('status', 'Active')->select('id', 'name')->get());
+    window.pmsNationalities = @json(\App\Models\Nationality::where('status', 'Active')->select('id', 'name')->get());
+    window.pmsIdCardTypes = @json(\App\Models\IdCardType::where('status', 'Active')->select('id', 'name')->get());
+    window.pmsAddGuestRoute = "{{ route('frontoffice.room.add-guest') }}";
   </script>
 
   @include('frontoffice.includes.script')

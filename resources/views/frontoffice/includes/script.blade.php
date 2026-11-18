@@ -667,6 +667,8 @@
 
     if (isOccupied && guestsList.length > 0) {
       const primaryGuest = guestsList[0];
+      const bookingId = primaryGuest.id || (roomData && roomData.booking_id) || '';
+      const roomId = roomData.id || '';
       const reservationId = primaryGuest.reserve_id || ('RES-2026-00' + roomNo);
       const extraServicesTotal = Number(primaryGuest.extra_service_charges || roomData.extra_service_charges || 0);
       const serviceOrders = Array.isArray(primaryGuest.room_service_orders) && primaryGuest.room_service_orders.length > 0
@@ -815,6 +817,9 @@
                 <i class="fa-solid fa-user-check"></i> Residing Guest Information
               </h4>
               <div class="flex items-center gap-1.5">
+                <button type="button" class="btn-ui-secondary text-indigo-600 bg-indigo-50/80 hover:bg-indigo-100 border border-indigo-200 px-2.5 py-1 text-[11px] font-extrabold rounded-lg flex items-center gap-1 cursor-pointer transition-all" onclick="toggleAddOccupiedGuestForm(true)">
+                  <i class="fa-solid fa-user-plus"></i> Add Guest
+                </button>
                 <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">${escapeHtml(g.state || overallState)}</span>
               </div>
             </div>
@@ -838,6 +843,17 @@
                 ${g.has_privilege_card && g.privilege_card_no ? `<div><strong class="text-slate-600"><i class="fa-solid fa-star text-amber-500 w-3.5"></i> Privilege:</strong> <span class="text-amber-700 font-bold">${escapeHtml(g.privilege_card_no)}</span></div>` : ''}
               </div>
             </div>
+
+            <!-- Add Another Guest Button (like checkin form) -->
+            <button type="button" id="btn-show-add-occupied-guest" class="btn-ui-secondary w-full h-10 border-dashed border-indigo-400 text-indigo-600 bg-indigo-50/70 hover:bg-indigo-100/70 font-bold text-xs rounded-xl flex items-center justify-center gap-2 transition-all shadow-none mt-3.5 mb-1 cursor-pointer" onclick="toggleAddOccupiedGuestForm(true)">
+              <i class="fa-solid fa-user-plus"></i> Add Another Guest
+            </button>
+
+            <!-- Inline Add Guest Form Container (hidden by default) -->
+            <div id="add-occupied-guest-form-container" class="hidden mt-3.5">
+              ${renderAddOccupiedGuestFormHtml(roomNo, roomId, bookingId)}
+            </div>
+
           </div>
         `;
       } else {
@@ -876,6 +892,9 @@
                 <i class="fa-solid fa-users"></i> Residing Guests (${guestsList.length} Guests)
               </h4>
               <div class="flex items-center gap-1.5">
+                <button type="button" class="btn-ui-secondary text-indigo-600 bg-indigo-50/80 hover:bg-indigo-100 border border-indigo-200 px-2.5 py-1 text-[11px] font-extrabold rounded-lg flex items-center gap-1 cursor-pointer transition-all" onclick="toggleAddOccupiedGuestForm(true)">
+                  <i class="fa-solid fa-user-plus"></i> Add Guest
+                </button>
                 <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200">
                   <i class="fa-solid fa-user-group mr-1"></i> ${guestsList.length} Guests
                 </span>
@@ -891,6 +910,16 @@
             <!-- List of All Guests One by One -->
             <div class="flex flex-col gap-2">
               ${guestCardsHtml}
+            </div>
+
+            <!-- Add Another Guest Button (like checkin form) -->
+            <button type="button" id="btn-show-add-occupied-guest" class="btn-ui-secondary w-full h-10 border-dashed border-indigo-400 text-indigo-600 bg-indigo-50/70 hover:bg-indigo-100/70 font-bold text-xs rounded-xl flex items-center justify-center gap-2 transition-all shadow-none mt-3.5 mb-1 cursor-pointer" onclick="toggleAddOccupiedGuestForm(true)">
+              <i class="fa-solid fa-user-plus"></i> Add Another Guest
+            </button>
+
+            <!-- Inline Add Guest Form Container (hidden by default) -->
+            <div id="add-occupied-guest-form-container" class="hidden mt-3.5">
+              ${renderAddOccupiedGuestFormHtml(roomNo, roomId, bookingId)}
             </div>
 
           </div>
@@ -974,10 +1003,13 @@
       const primaryGuest = guestsList[0];
       const bookingId = primaryGuest.id || (roomData && roomData.booking_id) || '';
       footerEl.innerHTML = `
+        <button type="button" class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 rounded-lg shadow-xs transition-colors cursor-pointer" onclick="toggleAddOccupiedGuestForm(true)">
+          <i class="fa-solid fa-user-plus"></i> Add Guest
+        </button>
         <button type="button" class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-lg shadow-xs transition-colors cursor-pointer" onclick="printFolioInvoiceForBooking('${bookingId}')">
           <i class="fa-solid fa-print"></i> Print Pre-Settlement Bill (A4)
         </button>
-        <a href="{{ url('front-office/folio') }}?search=R${roomNo}" class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 rounded-lg shadow-xs transition-colors cursor-pointer">
+        <a href="{{ url('front-office/folio') }}?search=R${roomNo}" class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-slate-800 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg shadow-xs transition-colors cursor-pointer">
           <i class="fa-solid fa-file-invoice-dollar"></i> Settle Folio
         </a>
         <button type="button" class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-lg shadow-xs transition-colors cursor-pointer" onclick="closeModal('room-modal')">Close</button>
@@ -991,6 +1023,228 @@
 
     openModal('room-modal');
   }
+
+  function renderAddOccupiedGuestFormHtml(roomNo, roomId, bookingId) {
+    const titles = window.pmsTitles || [];
+    const nats = window.pmsNationalities || [];
+    const idTypes = window.pmsIdCardTypes || [];
+
+    const titlesOptions = titles.map(t => `<option value="${t.id}" ${t.name === 'Mr.' ? 'selected' : ''}>${escapeHtml(t.name)}</option>`).join('');
+    const natsOptions = nats.map(n => `<option value="${n.id}" ${n.name.toLowerCase() === 'indian' ? 'selected' : ''}>${escapeHtml(n.name)}</option>`).join('');
+    const idTypesOptions = idTypes.map(it => `<option value="${it.id}">${escapeHtml(it.name)}</option>`).join('');
+
+    return `
+      <div class="bg-indigo-50/50 border-2 border-indigo-300 border-dashed rounded-xl p-4 sm:p-5 shadow-xs">
+        <div class="flex justify-between items-center border-b border-indigo-200 pb-2.5 mb-3.5">
+          <h4 class="m-0 text-xs font-black text-indigo-700 uppercase tracking-wider flex items-center gap-2">
+            <i class="fa-solid fa-user-plus text-indigo-600"></i> Add Additional Guest to Room ${escapeHtml(roomNo)}
+          </h4>
+          <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-indigo-100 text-indigo-800 border border-indigo-300">
+            <i class="fa-solid fa-bed mr-1"></i> Same Room (${escapeHtml(roomNo)})
+          </span>
+        </div>
+
+        <form id="form-add-occupied-guest" onsubmit="submitAddOccupiedRoomGuest(event)" class="flex flex-col gap-3 m-0">
+          <input type="hidden" name="room_id" value="${escapeHtml(roomId)}">
+          <input type="hidden" name="room_no" value="${escapeHtml(roomNo)}">
+          <input type="hidden" name="booking_id" value="${escapeHtml(bookingId)}">
+
+          <!-- Row 1: Title + Guest Name -->
+          <div class="flex gap-3">
+            <div class="w-28 shrink-0">
+              <label class="block text-[10px] font-black mb-1 text-slate-500 uppercase tracking-wider">Title</label>
+              <select name="title_id" class="pms-input-field w-full font-semibold text-xs h-9">
+                ${titlesOptions}
+              </select>
+            </div>
+            <div class="flex-1 min-w-0">
+              <label class="block text-[10px] font-black mb-1 text-slate-500 uppercase tracking-wider">Guest Name <span class="text-rose-600">*</span></label>
+              <input type="text" name="guest_name" class="pms-input-field w-full text-xs h-9" placeholder="First and Last Name as per ID" required>
+            </div>
+          </div>
+
+          <!-- Row 2: Address -->
+          <div>
+            <label class="block text-[10px] font-black mb-1 text-slate-500 uppercase tracking-wider">Guest Address</label>
+            <input type="text" name="guest_address" class="pms-input-field w-full text-xs h-9" placeholder="House No, Street, Landmark">
+          </div>
+
+          <!-- Row 3: Nationality + City -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-[10px] font-black mb-1 text-slate-500 uppercase tracking-wider">Nationality</label>
+              <select name="nationality_id" class="pms-input-field w-full font-semibold text-xs h-9">
+                ${natsOptions}
+              </select>
+            </div>
+            <div>
+              <label class="block text-[10px] font-black mb-1 text-slate-500 uppercase tracking-wider">City</label>
+              <input type="text" name="city" class="pms-input-field w-full text-xs h-9" placeholder="e.g. Kolkata, Mumbai">
+            </div>
+          </div>
+
+          <!-- Row 4: Mobile + Email -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-[10px] font-black mb-1 text-slate-500 uppercase tracking-wider">Telephone / Mobile</label>
+              <input type="text" name="mobile" class="pms-input-field w-full font-mono text-xs h-9" placeholder="+91 9876543210">
+            </div>
+            <div>
+              <label class="block text-[10px] font-black mb-1 text-slate-500 uppercase tracking-wider">Email ID</label>
+              <input type="email" name="email" class="pms-input-field w-full text-xs h-9" placeholder="guest@email.com">
+            </div>
+          </div>
+
+          <!-- Row 5: ID Card Type + Card Number -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-[10px] font-black mb-1 text-slate-500 uppercase tracking-wider">Identity Card Type</label>
+              <select name="id_card_type_id" class="pms-input-field w-full font-semibold text-xs h-9">
+                <option value="">Select ID Type</option>
+                ${idTypesOptions}
+              </select>
+            </div>
+            <div>
+              <label class="block text-[10px] font-black mb-1 text-slate-500 uppercase tracking-wider">Card Number</label>
+              <input type="text" name="id_card_number" class="pms-input-field w-full font-mono text-xs h-9" placeholder="ID Card Number">
+            </div>
+          </div>
+
+          <!-- Privilege Card Row -->
+          <div class="flex flex-col gap-2 p-2.5 bg-emerald-50/50 border border-emerald-200 rounded-lg">
+            <label class="flex items-center gap-2 font-bold text-xs cursor-pointer text-emerald-800">
+              <input type="checkbox" name="has_privilege_card" value="1" class="accent-emerald-600 cursor-pointer" onchange="const inp = this.closest('div').querySelector('.priv-input-wrap'); if(inp) inp.style.display = this.checked ? 'block' : 'none';"> Has Privilege Card
+            </label>
+            <div class="priv-input-wrap hidden">
+              <input type="text" name="privilege_card_no" class="pms-input-field w-full text-xs h-9" placeholder="Privilege Card Number">
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="flex items-center justify-end gap-2 pt-2 border-t border-indigo-200 mt-1">
+            <button type="button" class="px-3.5 py-2 text-xs font-bold text-slate-600 hover:text-slate-800 bg-white hover:bg-slate-100 border border-slate-200 rounded-lg cursor-pointer" onclick="toggleAddOccupiedGuestForm(false)">
+              Cancel
+            </button>
+            <button type="submit" id="btn-submit-occupied-guest" class="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 rounded-lg shadow-xs transition-colors cursor-pointer">
+              <i class="fa-solid fa-check"></i> Save &amp; Add Guest
+            </button>
+          </div>
+        </form>
+      </div>
+    `;
+  }
+
+  function toggleAddOccupiedGuestForm(show) {
+    const container = document.getElementById('add-occupied-guest-form-container');
+    const btn = document.getElementById('btn-show-add-occupied-guest');
+    if (!container) return;
+
+    if (show) {
+      container.classList.remove('hidden');
+      if (btn) btn.classList.add('hidden');
+      setTimeout(() => {
+        container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        const nameInput = container.querySelector('input[name="guest_name"]');
+        if (nameInput) nameInput.focus();
+      }, 50);
+    } else {
+      container.classList.add('hidden');
+      if (btn) btn.classList.remove('hidden');
+    }
+  }
+
+  function submitAddOccupiedRoomGuest(e) {
+    e.preventDefault();
+    const form = e.target;
+    const submitBtn = document.getElementById('btn-submit-occupied-guest');
+    const origHtml = submitBtn ? submitBtn.innerHTML : '';
+
+    const guestName = form.querySelector('input[name="guest_name"]')?.value?.trim();
+    if (!guestName) {
+      if (typeof PmsAlert !== 'undefined' && PmsAlert.toast) {
+        PmsAlert.toast('Please enter guest name!', 'error');
+      } else {
+        alert('Please enter guest name!');
+      }
+      return;
+    }
+
+    const payload = {
+      room_id: form.querySelector('input[name="room_id"]')?.value || null,
+      room_no: form.querySelector('input[name="room_no"]')?.value || null,
+      booking_id: form.querySelector('input[name="booking_id"]')?.value || null,
+      title_id: form.querySelector('select[name="title_id"]')?.value || null,
+      guest_name: guestName,
+      guest_address: form.querySelector('input[name="guest_address"]')?.value?.trim() || null,
+      nationality_id: form.querySelector('select[name="nationality_id"]')?.value || null,
+      city: form.querySelector('input[name="city"]')?.value?.trim() || null,
+      mobile: form.querySelector('input[name="mobile"]')?.value?.trim() || null,
+      email: form.querySelector('input[name="email"]')?.value?.trim() || null,
+      id_card_type_id: form.querySelector('select[name="id_card_type_id"]')?.value || null,
+      id_card_number: form.querySelector('input[name="id_card_number"]')?.value?.trim() || null,
+      has_privilege_card: form.querySelector('input[name="has_privilege_card"]')?.checked ? 1 : 0,
+      privilege_card_no: form.querySelector('input[name="privilege_card_no"]')?.value?.trim() || null,
+    };
+
+    if (submitBtn) {
+      submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...';
+      submitBtn.disabled = true;
+    }
+
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+    const routeUrl = window.pmsAddGuestRoute || "{{ route('frontoffice.room.add-guest') }}";
+
+    fetch(routeUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'X-CSRF-TOKEN': csrfToken || '',
+      },
+      body: JSON.stringify(payload),
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (submitBtn) {
+          submitBtn.innerHTML = origHtml;
+          submitBtn.disabled = false;
+        }
+
+        if (data.success) {
+          if (typeof PmsAlert !== 'undefined' && PmsAlert.toast) {
+            PmsAlert.toast(data.message || 'Guest added successfully!', 'success');
+          } else {
+            alert(data.message || 'Guest added successfully!');
+          }
+          closeModal('room-modal');
+          setTimeout(() => {
+            window.location.reload();
+          }, 600);
+        } else {
+          const errMsg = data.message || 'Failed to add guest.';
+          if (typeof PmsAlert !== 'undefined' && PmsAlert.toast) {
+            PmsAlert.toast(errMsg, 'error');
+          } else {
+            alert(errMsg);
+          }
+        }
+      })
+      .catch(err => {
+        console.error('Error adding guest to occupied room:', err);
+        if (submitBtn) {
+          submitBtn.innerHTML = origHtml;
+          submitBtn.disabled = false;
+        }
+        if (typeof PmsAlert !== 'undefined' && PmsAlert.toast) {
+          PmsAlert.toast('Failed to add guest. Please try again.', 'error');
+        } else {
+          alert('Failed to add guest. Please try again.');
+        }
+      });
+  }
+
+  window.toggleAddOccupiedGuestForm = toggleAddOccupiedGuestForm;
+  window.submitAddOccupiedRoomGuest = submitAddOccupiedRoomGuest;
 
   // Aliases & Global Functions
   window.checkInFromRoomModal = checkInFromRoomModal;

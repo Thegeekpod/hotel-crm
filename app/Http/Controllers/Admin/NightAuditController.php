@@ -375,7 +375,27 @@ class NightAuditController extends Controller
             $extraOrdersCount = $extraOrders->count();
             $extraOrdersDetailed = [];
             $extraItemsList = [];
+            $foodOrdersCount = 0;
+            $extraServicesOnlyCount = 0;
+            $foodCharges = 0.0;
+            $extraServicesOnlyCharges = 0.0;
+
             foreach ($extraOrders as $eo) {
+                $isExtra = $eo->items->contains(fn($it) => !empty($it->hotel_service_id)) 
+                    || ($eo->served_by !== 'POS Cashier' && empty($eo->table_number));
+
+                if ($isExtra) {
+                    $extraServicesOnlyCount++;
+                    if ($eo->payment_status === 'Charged to Room Folio') {
+                        $extraServicesOnlyCharges += (float)$eo->total_amount;
+                    }
+                } else {
+                    $foodOrdersCount++;
+                    if ($eo->payment_status === 'Charged to Room Folio') {
+                        $foodCharges += (float)$eo->total_amount;
+                    }
+                }
+
                 $orderItems = [];
                 foreach ($eo->items as $it) {
                     $orderItems[] = "{$it->quantity}x {$it->item_name}";
@@ -385,6 +405,8 @@ class NightAuditController extends Controller
                 $extraOrdersDetailed[] = [
                     'id' => $eo->id,
                     'order_number' => $eo->order_number,
+                    'is_extra_service' => $isExtra,
+                    'order_type' => $isExtra ? 'extra' : 'food',
                     'subtotal' => (float)$eo->subtotal,
                     'tax_amount' => (float)$eo->tax_amount,
                     'cgst_amount' => round((float)$eo->tax_amount / 2, 2),
@@ -458,8 +480,13 @@ class NightAuditController extends Controller
                 'transfers' => $transfersList,
                 'stay_status' => $stayStatus,
                 'status' => $stayStatus,
+                'pax_count' => $totalOccupants,
                 'room_charges' => $roomCharges,
                 'extra_service_charges' => $effectiveExtra,
+                'food_charges' => $foodCharges,
+                'food_orders_count' => $foodOrdersCount,
+                'extra_services_only_charges' => $extraServicesOnlyCharges,
+                'extra_services_only_count' => $extraServicesOnlyCount,
                 'unused_food_advance_credit' => $unusedAdvanceCredit,
                 'food_advance' => $faSummary,
                 'extra_paid_charges' => $extraPaidCharges,

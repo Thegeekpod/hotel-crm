@@ -258,11 +258,9 @@
                       @if(!empty($b['primary_mobile']) && $b['primary_mobile'] !== '-' && $b['primary_mobile'] !== 'N/A')
                         <span class="font-mono"><i class="fa-solid fa-phone text-[8px] text-emerald-600"></i> {{ $b['primary_mobile'] }}</span>
                       @endif
-                      @if($b['total_occupants'] > 1)
-                        <span class="bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded font-bold text-[9px]" title="{{ implode(', ', $b['occupants_names']) }}">
-                          +{{ $b['total_occupants'] - 1 }} guest(s)
-                        </span>
-                      @endif
+                      <span class="inline-flex items-center gap-1 font-bold text-[9px] px-1.5 py-0.5 rounded {{ $b['total_occupants'] > 1 ? 'bg-indigo-50 text-indigo-700 border border-indigo-200 font-black' : 'bg-slate-100 text-slate-600' }}" title="{{ implode(', ', $b['occupants_names'] ?? []) }}">
+                        <i class="fa-solid fa-users text-[8px]"></i> {{ $b['total_occupants'] }} Pax
+                      </span>
                     </div>
                   </td>
                   <!-- Settle / Folio # -->
@@ -306,13 +304,23 @@
                         </div>
                       @endif
                       <div class="text-[10px] text-amber-700 font-bold mt-0.5" title="{{ implode(', ', $b['extra_items_list'] ?? []) }}">
-                        <i class="fa-solid fa-bell-concierge text-[8px]"></i> {{ $b['extra_orders_count'] }} order(s)
+                        @if(($b['food_orders_count'] ?? 0) > 0 && ($b['extra_services_only_count'] ?? 0) > 0)
+                          <i class="fa-solid fa-receipt text-[8px]"></i> {{ $b['food_orders_count'] }} Food &bull; {{ $b['extra_services_only_count'] }} Service(s)
+                        @elseif(($b['extra_services_only_count'] ?? 0) > 0)
+                          <i class="fa-solid fa-bell-concierge text-[8px]"></i> {{ $b['extra_services_only_count'] }} Extra Service(s)
+                        @else
+                          <i class="fa-solid fa-utensils text-[8px]"></i> {{ $b['extra_orders_count'] }} Dining Order(s)
+                        @endif
                       </div>
                       @if(!empty($b['extra_orders_detailed']) && count($b['extra_orders_detailed']) > 0)
                         <div class="flex flex-col gap-1 mt-1 items-end">
                           @foreach($b['extra_orders_detailed'] as $eOrd)
+                            @php $isExtraType = (($eOrd['order_type'] ?? '') === 'extra'); @endphp
                             @if(!empty($eOrd['is_paid']))
                               <div class="text-[9px] text-emerald-800 bg-emerald-50 border border-emerald-200 rounded px-1.5 py-0.5 inline-flex items-center gap-1" title="{{ $eOrd['order_number'] }}: {{ $eOrd['items_summary'] }} (Paid Direct)">
+                                <span class="text-[7.5px] font-black uppercase px-1 rounded {{ $isExtraType ? 'bg-purple-200 text-purple-900' : 'bg-amber-200 text-amber-900' }}">
+                                  {{ $isExtraType ? 'Service' : 'Food' }}
+                                </span>
                                 <span class="opacity-75 text-[8px]"><i class="fa-solid fa-check text-[7.5px]"></i> {{ $eOrd['date_short'] }}:</span>
                                 <span class="font-bold">₹{{ number_format($eOrd['total_amount'], 2) }} (PAID)</span>
                                 @if(!empty($eOrd['table_number']))
@@ -321,6 +329,9 @@
                               </div>
                             @else
                               <div class="text-[9px] text-amber-900 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5 inline-flex items-center gap-1" title="{{ $eOrd['order_number'] }}: {{ $eOrd['items_summary'] }} (Charged to Folio)">
+                                <span class="text-[7.5px] font-black uppercase px-1 rounded {{ $isExtraType ? 'bg-purple-200 text-purple-900' : 'bg-amber-200 text-amber-900' }}">
+                                  {{ $isExtraType ? 'Service' : 'Food' }}
+                                </span>
                                 <span class="opacity-75 text-[8px]"><i class="fa-regular fa-clock text-[7.5px]"></i> {{ $eOrd['date_short'] }}:</span>
                                 <span class="font-bold">+ ₹{{ number_format($eOrd['total_amount'], 2) }}</span>
                                 @if(!empty($eOrd['table_number']))

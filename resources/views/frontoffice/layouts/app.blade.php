@@ -39,7 +39,7 @@
     <div class="hidden md:flex items-center gap-5 text-xs font-semibold text-slate-600 pms-header-center">
       <span class="inline-flex items-center gap-1.5">
         <i class="fa-regular fa-calendar-days text-indigo-500"></i>
-        {{ isset($selectedDate) ? \Carbon\Carbon::parse($selectedDate)->format('l, d M Y') : date('l, d M Y') }}
+        {{ (isset($selectedDate) && $selectedDate !== 'all') ? \Carbon\Carbon::parse($selectedDate)->format('l, d M Y') : date('l, d M Y') }}
         @if(isset($isToday) && $isToday)
           <span class="text-emerald-600 font-extrabold text-[10px] uppercase ml-1 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">(Today)</span>
         @endif
@@ -291,7 +291,7 @@
 
                   <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     @php
-                      $activeCheckInDate = $selectedDate ?? ($fromDate ?? date('Y-m-d'));
+                      $activeCheckInDate = (!empty($selectedDate) && $selectedDate !== 'all') ? $selectedDate : ($fromDate ?? date('Y-m-d'));
                       $activeCheckOutDate = \Carbon\Carbon::parse($activeCheckInDate)->addDay()->toDateString();
                     @endphp
                     <!-- Check-In -->

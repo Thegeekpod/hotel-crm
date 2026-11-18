@@ -133,7 +133,7 @@
           <h2 class="m-0 text-lg font-extrabold text-slate-800 flex items-center gap-2.5 flex-wrap">
             <i class="fa-solid fa-plane-arrival text-indigo-600"></i> 
             Guest Arrivals &amp; Advance Bookings
-            @if(!empty($selectedDate))
+            @if(!empty($selectedDate) && $selectedDate !== 'all')
               <span class="text-[11px] font-bold bg-indigo-100 text-indigo-800 border border-indigo-200 px-2.5 py-0.5 rounded-full inline-flex items-center gap-1.5">
                 <i class="fa-regular fa-calendar-check"></i> {{ \Carbon\Carbon::parse($selectedDate)->format('D, d M Y') }}
               </span>
@@ -144,7 +144,7 @@
             @endif
           </h2>
           <div class="text-xs text-slate-500 mt-0.5">
-            @if(!empty($selectedDate))
+            @if(!empty($selectedDate) && $selectedDate !== 'all')
               Showing guests arriving on <strong>{{ \Carbon\Carbon::parse($selectedDate)->format('l, d F Y') }}</strong>.
             @else
               Confirmed bookings awaiting check-in &amp; upcoming guest arrivals arranged chronologically with indexing, search, status filter, and live reservation dossiers.

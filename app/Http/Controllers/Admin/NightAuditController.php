@@ -507,6 +507,7 @@ class NightAuditController extends Controller
                 'folio_number' => $pwi->order_number,
                 'primary_guest_name' => $custName,
                 'guest_name' => $custName,
+                'customer_gstin' => $pwi->customer_gstin ?? null,
                 'mobile_no' => ($custPhone && $custPhone !== '-') ? $custPhone : 'N/A',
                 'primary_mobile' => ($custPhone && $custPhone !== '-') ? $custPhone : 'N/A',
                 'rooms' => [],

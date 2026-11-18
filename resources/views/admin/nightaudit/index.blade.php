@@ -685,6 +685,11 @@
                                 </span>
                               ` : ''}
                             </div>
+                            ${g.customer_gstin ? `
+                              <div class="text-[9.5px] font-mono font-bold text-amber-700 mt-0.5 flex items-center gap-1">
+                                <i class="fa-solid fa-file-invoice text-[8px]"></i> GSTIN: ${escapeHtml(g.customer_gstin)}
+                              </div>
+                            ` : ''}
                             <div class="text-[11px] text-slate-400 font-mono mt-0.5">
                               ${pPhone && pPhone !== '-' && pPhone !== 'N/A' ? `<i class="fa-solid fa-phone text-[9px] opacity-60"></i> ${escapeHtml(pPhone)}` : ''}
                             </div>
@@ -1454,7 +1459,10 @@
                     <td class="text-center font-mono">${idx + 1}</td>
                     <td class="font-mono font-bold text-indigo-700 whitespace-nowrap truncate">${escapeHtml(bkNo)}</td>
                     <td class="font-mono font-bold truncate whitespace-nowrap">${escapeHtml(roomsStr)}</td>
-                    <td class="font-bold truncate whitespace-nowrap">${escapeHtml(g.primary_guest_name || g.guest_name || 'Guest')}${occBonus}</td>
+                    <td class="font-bold truncate whitespace-nowrap">
+                      ${escapeHtml(g.primary_guest_name || g.guest_name || 'Guest')}${occBonus}
+                      ${g.customer_gstin ? `<span class="block text-[7.5px] font-mono text-amber-800">GSTIN: ${escapeHtml(g.customer_gstin)}</span>` : ''}
+                    </td>
                     <td class="font-mono font-bold text-[8px] text-teal-700 whitespace-nowrap truncate">${escapeHtml(settleNo)}</td>
                     <td class="text-[8px] text-slate-600 whitespace-nowrap">${escapeHtml(inDate)}</td>
                     <td class="text-[8px] text-slate-600 whitespace-nowrap">${escapeHtml(outDate)}</td>

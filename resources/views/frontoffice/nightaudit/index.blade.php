@@ -249,6 +249,11 @@
                     <div class="font-bold text-slate-900 text-xs">
                       {{ $b['primary_guest_name'] }}
                     </div>
+                    @if(!empty($b['customer_gstin']))
+                      <div class="text-[9.5px] font-mono font-bold text-amber-700 mt-0.5 flex items-center gap-1">
+                        <i class="fa-solid fa-file-invoice text-[8px]"></i> GSTIN: {{ $b['customer_gstin'] }}
+                      </div>
+                    @endif
                     <div class="text-[10px] text-slate-500 mt-0.5 flex items-center gap-1.5">
                       @if(!empty($b['primary_mobile']) && $b['primary_mobile'] !== '-' && $b['primary_mobile'] !== 'N/A')
                         <span class="font-mono"><i class="fa-solid fa-phone text-[8px] text-emerald-600"></i> {{ $b['primary_mobile'] }}</span>
@@ -1068,6 +1073,9 @@
               <td class="font-mono font-bold truncate whitespace-nowrap">{{ $roomsStr }}</td>
               <td class="font-bold truncate whitespace-nowrap">
                 {{ $b['primary_guest_name'] ?? $b['guest_name'] ?? 'Guest' }}
+                @if(!empty($b['customer_gstin']))
+                  <span class="block text-[7.5px] font-mono text-amber-800">GSTIN: {{ $b['customer_gstin'] }}</span>
+                @endif
                 @if(($b['total_occupants'] ?? 1) > 1)
                   <span class="text-[7.5px] opacity-80 font-semibold">(+{{ ($b['total_occupants'] ?? 1) - 1 }})</span>
                 @endif

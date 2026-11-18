@@ -121,79 +121,7 @@ class PosController extends Controller
         $availableTables = $allTables->where('status', 'available')->values();
 
         // 6. Build structured table active sessions map for the frontend
-        $tableSessions = [];
-        foreach ($allTables as $tbl) {
-            $kots = $tbl->activeKots;
-            if ($kots->isNotEmpty()) {
-                $firstKot = $kots->first();
-                $allItems = collect();
-                $consolidatedMap = [];
-                $subtotal = 0;
-
-                foreach ($kots as $k) {
-                    foreach ($k->items as $it) {
-                        $lineTotal = (float) $it->line_total;
-                        $subtotal += $lineTotal;
-
-                        $allItems->push([
-                            'kot_id' => $k->id,
-                            'kot_number' => $k->order_number,
-                            'item_name' => $it->item_name,
-                            'unit_price' => (float)$it->unit_price,
-                            'quantity' => (int)$it->quantity,
-                            'line_total' => $lineTotal,
-                            'instructions' => $it->instructions,
-                        ]);
-
-                        $key = $it->item_name . '_' . $it->unit_price;
-                        if (!isset($consolidatedMap[$key])) {
-                            $consolidatedMap[$key] = [
-                                'pos_item_id' => $it->pos_item_id,
-                                'item_name' => $it->item_name,
-                                'unit_price' => (float)$it->unit_price,
-                                'quantity' => 0,
-                                'line_total' => 0.0,
-                                'instructions' => $it->instructions,
-                            ];
-                        }
-                        $consolidatedMap[$key]['quantity'] += (int)$it->quantity;
-                        $consolidatedMap[$key]['line_total'] += $lineTotal;
-                    }
-                }
-
-                $taxAmount = round($subtotal * ($defaultGstPos / 100), 2);
-                $totalAmount = round($subtotal + $taxAmount, 2);
-
-                $tableSessions[$tbl->id] = [
-                    'table_id' => $tbl->id,
-                    'table_number' => $tbl->table_number,
-                    'table_name' => $tbl->table_name,
-                    'order_type' => $firstKot->order_type,
-                    'room_id' => $firstKot->room_id,
-                    'room_number' => $firstKot->room_number,
-                    'booking_id' => $firstKot->booking_id,
-                    'customer_name' => $firstKot->customer_name,
-                    'customer_phone' => $firstKot->customer_phone,
-                    'kots_count' => $kots->count(),
-                    'kots' => $kots->map(function ($k) {
-                        return [
-                            'id' => $k->id,
-                            'order_number' => $k->order_number,
-                            'time' => $k->created_at->format('h:i A'),
-                            'items_count' => $k->items->sum('quantity'),
-                            'subtotal' => (float)$k->subtotal,
-                            'special_instructions' => $k->special_instructions,
-                        ];
-                    })->values(),
-                    'raw_items' => $allItems,
-                    'consolidated_items' => array_values($consolidatedMap),
-                    'subtotal' => $subtotal,
-                    'gst_rate' => $defaultGstPos,
-                    'tax_amount' => $taxAmount,
-                    'total_amount' => $totalAmount,
-                ];
-            }
-        }
+        $tableSessions = $this->buildTableSessionsMap($allTables, $defaultGstPos);
 
         return view('pos.index', compact(
             'menuItems',
@@ -310,6 +238,7 @@ class PosController extends Controller
             'table_id' => 'nullable|integer',
             'customer_name' => 'nullable|string|max:150',
             'customer_phone' => 'nullable|string|max:30',
+            'customer_gstin' => 'nullable|string|max:30',
             'billing_type' => 'nullable|in:Charged to Room Folio,Cash Paid,Digital UPI / Card Paid,Pending Settlement',
             'special_instructions' => 'nullable|string|max:500',
             'items' => 'required|array|min:1',
@@ -495,6 +424,7 @@ class PosController extends Controller
                     'guest_name' => $customerName,
                     'room_number' => $roomNumber,
                     'table_number' => $finalTableString,
+                    'customer_gstin' => $validated['customer_gstin'] ?? $request->input('customer_gstin') ?? null,
                     'subtotal' => $subtotal,
                     'tax_amount' => $taxAmount,
                     'total_amount' => $totalAmount,
@@ -532,6 +462,7 @@ class PosController extends Controller
                 'booking_id' => $booking?->id,
                 'customer_name' => $customerName,
                 'customer_phone' => $validated['customer_phone'] ?? null,
+                'customer_gstin' => $validated['customer_gstin'] ?? $request->input('customer_gstin') ?? null,
                 'room_number' => $roomNumber,
                 'subtotal' => $subtotal,
                 'tax_percentage' => $taxRate,
@@ -626,6 +557,7 @@ class PosController extends Controller
                 'is_kot' => $isKot,
                 'kot_sequence' => $kotSequence,
                 'table_id' => $tableRecord?->id,
+                'tableSessions' => $this->buildTableSessionsMap(),
             ]);
         });
     }
@@ -635,16 +567,14 @@ class PosController extends Controller
      */
     public function getTableSession(TableManage $table)
     {
-        $activeKots = PosOrder::where('table_id', $table->id)
-            ->where('is_kot', true)
-            ->whereNull('parent_order_id')
-            ->where('status', '!=', 'Cancelled')
-            ->where('payment_status', 'Pending')
-            ->with(['items', 'room', 'booking.guest'])
-            ->orderBy('id', 'asc')
-            ->get();
+        $allTables = TableManage::where('id', $table->id)
+            ->with(['activeKots' => function ($q) {
+                $q->with(['items', 'room', 'booking.guest'])->orderBy('id', 'asc');
+            }])->get();
 
-        if ($activeKots->isEmpty()) {
+        $sessions = $this->buildTableSessionsMap($allTables);
+
+        if (!isset($sessions[$table->id])) {
             return response()->json([
                 'success' => true,
                 'has_active_session' => false,
@@ -652,73 +582,27 @@ class PosController extends Controller
             ]);
         }
 
-        $firstKot = $activeKots->first();
-        $allItems = collect();
-        $consolidatedMap = [];
-        $subtotal = 0;
-
-        foreach ($activeKots as $k) {
-            foreach ($k->items as $it) {
-                $lineTotal = (float) $it->line_total;
-                $subtotal += $lineTotal;
-
-                $allItems->push([
-                    'kot_id' => $k->id,
-                    'kot_number' => $k->order_number,
-                    'kot_time' => $k->created_at->format('h:i A'),
-                    'item_name' => $it->item_name,
-                    'unit_price' => (float)$it->unit_price,
-                    'quantity' => (int)$it->quantity,
-                    'line_total' => $lineTotal,
-                    'instructions' => $it->instructions,
-                ]);
-
-                $key = $it->item_name . '_' . $it->unit_price;
-                if (!isset($consolidatedMap[$key])) {
-                    $consolidatedMap[$key] = [
-                        'pos_item_id' => $it->pos_item_id,
-                        'item_name' => $it->item_name,
-                        'unit_price' => (float)$it->unit_price,
-                        'quantity' => 0,
-                        'line_total' => 0.0,
-                        'instructions' => $it->instructions,
-                    ];
-                }
-                $consolidatedMap[$key]['quantity'] += (int)$it->quantity;
-                $consolidatedMap[$key]['line_total'] += $lineTotal;
-            }
-        }
-
-        $defaultGstPos = (float) AppSetting::get('default_gst_pos', 5.00);
-        $taxAmount = round($subtotal * ($defaultGstPos / 100), 2);
-        $totalAmount = round($subtotal + $taxAmount, 2);
+        $sess = $sessions[$table->id];
 
         return response()->json([
             'success' => true,
             'has_active_session' => true,
             'table' => $table,
-            'order_type' => $firstKot->order_type,
-            'room_id' => $firstKot->room_id,
-            'room_number' => $firstKot->room_number,
-            'customer_name' => $firstKot->customer_name,
-            'customer_phone' => $firstKot->customer_phone,
-            'kots_count' => $activeKots->count(),
-            'kots' => $activeKots->map(function ($k) {
-                return [
-                    'id' => $k->id,
-                    'order_number' => $k->order_number,
-                    'time' => $k->created_at->format('h:i A'),
-                    'items_count' => $k->items->sum('quantity'),
-                    'subtotal' => (float)$k->subtotal,
-                    'special_instructions' => $k->special_instructions,
-                ];
-            }),
-            'raw_items' => $allItems,
-            'consolidated_items' => array_values($consolidatedMap),
-            'subtotal' => $subtotal,
-            'gst_rate' => $defaultGstPos,
-            'tax_amount' => $taxAmount,
-            'total_amount' => $totalAmount,
+            'order_type' => $sess['order_type'],
+            'room_id' => $sess['room_id'],
+            'room_number' => $sess['room_number'],
+            'customer_name' => $sess['customer_name'],
+            'customer_phone' => $sess['customer_phone'],
+            'customer_gstin' => $sess['customer_gstin'],
+            'kots_count' => $sess['kots_count'],
+            'kots' => $sess['kots'],
+            'raw_items' => $sess['raw_items'],
+            'consolidated_items' => $sess['consolidated_items'],
+            'subtotal' => $sess['subtotal'],
+            'gst_rate' => $sess['gst_rate'],
+            'tax_amount' => $sess['tax_amount'],
+            'total_amount' => $sess['total_amount'],
+            'session' => $sess,
         ]);
     }
 
@@ -738,6 +622,7 @@ class PosController extends Controller
     {
         $validated = $request->validate([
             'billing_type' => 'required|in:Charged to Room Folio,Cash Paid,Digital UPI / Card Paid',
+            'customer_gstin' => 'nullable|string|max:30',
             'special_instructions' => 'nullable|string|max:500',
         ]);
 
@@ -764,6 +649,7 @@ class PosController extends Controller
             $bookingId = $firstKot->booking_id;
             $customerName = $firstKot->customer_name;
             $customerPhone = $firstKot->customer_phone;
+            $customerGstin = $validated['customer_gstin'] ?? $request->input('customer_gstin') ?? $firstKot->customer_gstin ?? null;
             $roomNumber = $firstKot->room_number;
             $finalTableString = $table->table_number . ' (' . $table->table_name . ')';
 
@@ -869,6 +755,7 @@ class PosController extends Controller
                     'guest_name' => $customerName,
                     'room_number' => $roomNumber,
                     'table_number' => $finalTableString,
+                    'customer_gstin' => $validated['customer_gstin'] ?? $request->input('customer_gstin') ?? null,
                     'subtotal' => $subtotal,
                     'tax_amount' => $taxAmount,
                     'total_amount' => $totalAmount,
@@ -906,6 +793,7 @@ class PosController extends Controller
                 'booking_id' => $bookingId,
                 'customer_name' => $customerName,
                 'customer_phone' => $customerPhone,
+                'customer_gstin' => $customerGstin,
                 'room_number' => $roomNumber,
                 'subtotal' => $subtotal,
                 'tax_percentage' => $taxRate,
@@ -961,6 +849,7 @@ class PosController extends Controller
                 'bill' => $masterBill,
                 'table' => $table,
                 'kots_count' => $activeKots->count(),
+                'tableSessions' => $this->buildTableSessionsMap(),
             ]);
         });
     }
@@ -1122,6 +1011,472 @@ class PosController extends Controller
             'success' => true,
             'message' => 'Menu item deleted successfully.',
         ]);
+    }
+
+    /**
+     * Build structured table active sessions map for the frontend.
+     */
+    public function buildTableSessionsMap($allTables = null, $defaultGstPos = null): array
+    {
+        if ($defaultGstPos === null) {
+            $defaultGstPos = (float) AppSetting::get('default_gst_pos', 5.00);
+        }
+
+        if ($allTables === null) {
+            $allTables = TableManage::with(['activeKots' => function ($q) {
+                $q->with(['items', 'room', 'booking.guest'])->orderBy('id', 'asc');
+            }])->orderBy('table_number')->get();
+        }
+
+        $tableSessions = [];
+        foreach ($allTables as $tbl) {
+            $kots = $tbl->activeKots;
+            if ($kots->isNotEmpty()) {
+                $firstKot = $kots->first();
+                $allItems = collect();
+                $consolidatedMap = [];
+                $subtotal = 0;
+
+                foreach ($kots as $k) {
+                    foreach ($k->items as $it) {
+                        $lineTotal = (float) $it->line_total;
+                        $subtotal += $lineTotal;
+
+                        $allItems->push([
+                            'id' => $it->id,
+                            'pos_item_id' => $it->pos_item_id,
+                            'kot_id' => $k->id,
+                            'kot_number' => $k->order_number,
+                            'item_name' => $it->item_name,
+                            'unit_price' => (float)$it->unit_price,
+                            'quantity' => (int)$it->quantity,
+                            'line_total' => $lineTotal,
+                            'instructions' => $it->instructions,
+                        ]);
+
+                        $key = $it->item_name . '_' . $it->unit_price;
+                        if (!isset($consolidatedMap[$key])) {
+                            $consolidatedMap[$key] = [
+                                'pos_item_id' => $it->pos_item_id,
+                                'item_name' => $it->item_name,
+                                'unit_price' => (float)$it->unit_price,
+                                'quantity' => 0,
+                                'line_total' => 0.0,
+                                'instructions' => $it->instructions,
+                            ];
+                        }
+                        $consolidatedMap[$key]['quantity'] += (int)$it->quantity;
+                        $consolidatedMap[$key]['line_total'] += $lineTotal;
+                    }
+                }
+
+                $taxAmount = round($subtotal * ($defaultGstPos / 100), 2);
+                $totalAmount = round($subtotal + $taxAmount, 2);
+
+                $tableSessions[$tbl->id] = [
+                    'table_id' => $tbl->id,
+                    'table_number' => $tbl->table_number,
+                    'table_name' => $tbl->table_name,
+                    'order_type' => $firstKot->order_type,
+                    'room_id' => $firstKot->room_id,
+                    'room_number' => $firstKot->room_number,
+                    'booking_id' => $firstKot->booking_id,
+                    'customer_name' => $firstKot->customer_name,
+                    'customer_phone' => $firstKot->customer_phone,
+                    'customer_gstin' => $firstKot->customer_gstin,
+                    'kots_count' => $kots->count(),
+                    'kots' => $kots->map(function ($k) {
+                        return [
+                            'id' => $k->id,
+                            'order_number' => $k->order_number,
+                            'time' => $k->created_at->format('h:i A'),
+                            'items_count' => $k->items->sum('quantity'),
+                            'subtotal' => (float)$k->subtotal,
+                            'special_instructions' => $k->special_instructions,
+                            'items' => $k->items->map(function ($it) {
+                                return [
+                                    'id' => $it->id,
+                                    'pos_item_id' => $it->pos_item_id,
+                                    'item_name' => $it->item_name,
+                                    'unit_price' => (float)$it->unit_price,
+                                    'quantity' => (int)$it->quantity,
+                                    'line_total' => (float)$it->line_total,
+                                    'instructions' => $it->instructions,
+                                ];
+                            })->values(),
+                        ];
+                    })->values(),
+                    'raw_items' => $allItems,
+                    'consolidated_items' => array_values($consolidatedMap),
+                    'subtotal' => $subtotal,
+                    'gst_rate' => $defaultGstPos,
+                    'tax_amount' => $taxAmount,
+                    'total_amount' => $totalAmount,
+                ];
+            }
+        }
+
+        return $tableSessions;
+    }
+
+    /**
+     * Shift active KOTs from one table to another table.
+     */
+    public function shiftTable(Request $request, TableManage $table)
+    {
+        $validated = $request->validate([
+            'target_table_id' => 'required|exists:table_manages,id',
+        ]);
+
+        $targetTableId = (int) $validated['target_table_id'];
+        if ($targetTableId === $table->id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Target table must be different from current table.',
+            ], 422);
+        }
+
+        $targetTable = TableManage::findOrFail($targetTableId);
+        if ($targetTable->status === 'inactive') {
+            return response()->json([
+                'success' => false,
+                'message' => "Target Table {$targetTable->table_number} is inactive.",
+            ], 422);
+        }
+
+        return DB::transaction(function () use ($table, $targetTable) {
+            $activeKots = PosOrder::where('table_id', $table->id)
+                ->where('is_kot', true)
+                ->whereNull('parent_order_id')
+                ->where('status', '!=', 'Cancelled')
+                ->where('payment_status', 'Pending')
+                ->get();
+
+            if ($activeKots->isEmpty()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "No active KOTs to shift from Table {$table->table_number}.",
+                ], 422);
+            }
+
+            $newTableString = $targetTable->table_number . ' (' . $targetTable->table_name . ')';
+
+            foreach ($activeKots as $kot) {
+                $kot->update([
+                    'table_id' => $targetTable->id,
+                    'table_number' => $newTableString,
+                ]);
+
+                if ($kot->room_service_order_id && $kot->roomServiceOrder) {
+                    $kot->roomServiceOrder->update([
+                        'table_number' => $newTableString,
+                    ]);
+                }
+            }
+
+            // Update statuses: old table becomes available, target table becomes booked
+            $table->update(['status' => 'available']);
+            $targetTable->update(['status' => 'booked']);
+
+            $allTables = TableManage::with(['activeKots' => function ($q) {
+                $q->with(['items', 'room', 'booking.guest'])->orderBy('id', 'asc');
+            }])->orderBy('table_number')->get();
+
+            $availableTables = $allTables->where('status', 'available')->values();
+            $tableSessions = $this->buildTableSessionsMap($allTables);
+
+            return response()->json([
+                'success' => true,
+                'message' => "Table shifted successfully from Table {$table->table_number} ({$table->table_name}) to Table {$targetTable->table_number} ({$targetTable->table_name})!",
+                'tableSessions' => $tableSessions,
+                'allTables' => $allTables,
+                'availableTables' => $availableTables,
+                'from_table_id' => $table->id,
+                'new_table_id' => $targetTable->id,
+            ]);
+        });
+    }
+
+    /**
+     * Cancel an individual item inside an active KOT.
+     */
+    public function cancelKotItem(Request $request, PosOrder $order, $item = null)
+    {
+        $itemModel = null;
+        if ($item instanceof PosOrderItem) {
+            $itemModel = $item;
+        } elseif (is_numeric($item) && (int)$item > 0) {
+            $itemModel = PosOrderItem::find((int)$item);
+        }
+
+        if (!$itemModel && $request->filled('item_id') && is_numeric($request->input('item_id'))) {
+            $itemModel = PosOrderItem::find((int)$request->input('item_id'));
+        }
+
+        if (!$itemModel && $request->filled('item_name')) {
+            $itemModel = $order->items()->where('item_name', $request->input('item_name'))->latest('id')->first();
+        }
+
+        if (!$itemModel) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Food item could not be found in this KOT ticket.',
+            ], 404);
+        }
+
+        $item = $itemModel;
+
+        if ($item->pos_order_id !== $order->id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Item does not belong to this KOT.',
+            ], 422);
+        }
+
+        if (!$order->is_kot || $order->payment_status === 'Settled' || $order->status === 'Cancelled') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Only active running KOT items can be cancelled.',
+            ], 422);
+        }
+
+        return DB::transaction(function () use ($order, $item) {
+            $itemName = $item->item_name;
+            $qtyCancelled = (int) $item->quantity;
+
+            // Restore kitchen store stock if applicable
+            if ($item->pos_item_id) {
+                $posDish = PosItem::lockForUpdate()->find($item->pos_item_id);
+                if ($posDish) {
+                    $platesBefore = $posDish->available_plates;
+                    $platesAfter = $platesBefore + $qtyCancelled;
+                    $posDish->available_plates = $platesAfter;
+                    if ($posDish->status === 'Out of Stock' && $platesAfter > 0) {
+                        $posDish->status = 'Active';
+                    }
+                    $posDish->save();
+
+                    StoreMovement::create([
+                        'pos_item_id' => $posDish->id,
+                        'type' => 'IN',
+                        'quantity' => $qtyCancelled,
+                        'stock_before' => $platesBefore,
+                        'stock_after' => $platesAfter,
+                        'reference_no' => $order->order_number,
+                        'issued_to_department' => 'Kitchen Return (KOT Item Cancelled)',
+                        'remarks' => "Cancelled from KOT #{$order->order_number}: {$itemName} (+{$qtyCancelled} plates returned. Current: {$platesAfter})",
+                        'performed_by' => 'POS Cashier',
+                    ]);
+                }
+            }
+
+            // Sync with room service order item if present
+            if ($order->room_service_order_id && $order->roomServiceOrder) {
+                RoomServiceOrderItem::where('room_service_order_id', $order->room_service_order_id)
+                    ->where('item_name', $itemName)
+                    ->where('quantity', $qtyCancelled)
+                    ->latest()
+                    ->first()
+                    ?->delete();
+            }
+
+            // Delete the item
+            $item->delete();
+
+            // Check remaining items in this KOT
+            $remainingItems = $order->items()->get();
+            $tableReleased = false;
+
+            if ($remainingItems->isEmpty()) {
+                // All items cancelled -> cancel this KOT ticket
+                $order->update([
+                    'status' => 'Cancelled',
+                    'subtotal' => 0.00,
+                    'tax_amount' => 0.00,
+                    'total_amount' => 0.00,
+                ]);
+
+                if ($order->roomServiceOrder) {
+                    $order->roomServiceOrder->update([
+                        'order_status' => 'Cancelled',
+                        'subtotal' => 0.00,
+                        'tax_amount' => 0.00,
+                        'total_amount' => 0.00,
+                    ]);
+                }
+
+                // If table has no other active KOTs, release the table!
+                if ($order->table_id) {
+                    $otherActiveKots = PosOrder::where('table_id', $order->table_id)
+                        ->where('id', '!=', $order->id)
+                        ->where('is_kot', true)
+                        ->whereNull('parent_order_id')
+                        ->where('status', '!=', 'Cancelled')
+                        ->where('payment_status', 'Pending')
+                        ->exists();
+
+                    if (!$otherActiveKots) {
+                        TableManage::where('id', $order->table_id)->update(['status' => 'available']);
+                        $tableReleased = true;
+                    }
+                }
+            } else {
+                // Recalculate totals
+                $newSubtotal = (float) $remainingItems->sum('line_total');
+                $taxRate = (float) ($order->tax_percentage ?: AppSetting::get('default_gst_pos', 5.00));
+                $newTax = round($newSubtotal * ($taxRate / 100), 2);
+                $newTotal = round($newSubtotal + $newTax, 2);
+
+                $order->update([
+                    'subtotal' => $newSubtotal,
+                    'tax_amount' => $newTax,
+                    'total_amount' => $newTotal,
+                ]);
+
+                if ($order->roomServiceOrder) {
+                    $order->roomServiceOrder->update([
+                        'subtotal' => $newSubtotal,
+                        'tax_amount' => $newTax,
+                        'total_amount' => $newTotal,
+                    ]);
+                }
+            }
+
+            $allTables = TableManage::with(['activeKots' => function ($q) {
+                $q->with(['items', 'room', 'booking.guest'])->orderBy('id', 'asc');
+            }])->orderBy('table_number')->get();
+
+            $availableTables = $allTables->where('status', 'available')->values();
+            $tableSessions = $this->buildTableSessionsMap($allTables);
+
+            return response()->json([
+                'success' => true,
+                'message' => "Item '{$itemName}' cancelled from KOT #{$order->order_number}." . ($remainingItems->isEmpty() ? ' (KOT cancelled as no items remain)' : ''),
+                'tableSessions' => $tableSessions,
+                'allTables' => $allTables,
+                'availableTables' => $availableTables,
+                'order_cancelled' => $remainingItems->isEmpty(),
+                'table_released' => $tableReleased,
+            ]);
+        });
+    }
+
+    /**
+     * Update items and quantities inside an active KOT.
+     */
+    public function updateKotItems(Request $request, PosOrder $order)
+    {
+        if (!$order->is_kot || $order->payment_status === 'Settled' || $order->status === 'Cancelled') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Only active running KOTs can be edited.',
+            ], 422);
+        }
+
+        $validated = $request->validate([
+            'items' => 'required|array|min:1',
+            'items.*.id' => 'nullable|integer',
+            'items.*.pos_item_id' => 'nullable|exists:pos_items,id',
+            'items.*.name' => 'required|string|max:255',
+            'items.*.price' => 'required|numeric|min:0',
+            'items.*.quantity' => 'required|integer|min:1',
+            'items.*.instructions' => 'nullable|string|max:255',
+        ]);
+
+        return DB::transaction(function () use ($order, $validated) {
+            $existingItems = $order->items()->get()->keyBy('id');
+            $submittedItemIds = collect($validated['items'])->pluck('id')->filter()->all();
+
+            // Handle deleted items
+            foreach ($existingItems as $oldId => $oldItem) {
+                if (!in_array($oldId, $submittedItemIds)) {
+                    // Restore stock
+                    if ($oldItem->pos_item_id) {
+                        $dish = PosItem::find($oldItem->pos_item_id);
+                        if ($dish) {
+                            $dish->increment('available_plates', (int)$oldItem->quantity);
+                        }
+                    }
+                    $oldItem->delete();
+                }
+            }
+
+            // Update or create items
+            foreach ($validated['items'] as $itData) {
+                $qty = (int) $itData['quantity'];
+                $price = (float) $itData['price'];
+                $lineTotal = round($qty * $price, 2);
+
+                if (!empty($itData['id']) && $existingItems->has($itData['id'])) {
+                    $existing = $existingItems->get($itData['id']);
+                    $diff = $qty - (int)$existing->quantity;
+
+                    if ($diff !== 0 && $existing->pos_item_id) {
+                        $dish = PosItem::find($existing->pos_item_id);
+                        if ($dish) {
+                            if ($diff > 0) {
+                                $dish->decrement('available_plates', $diff);
+                            } else {
+                                $dish->increment('available_plates', abs($diff));
+                            }
+                        }
+                    }
+
+                    $existing->update([
+                        'quantity' => $qty,
+                        'unit_price' => $price,
+                        'line_total' => $lineTotal,
+                        'instructions' => $itData['instructions'] ?? null,
+                    ]);
+                } else {
+                    // Brand new line item added to this KOT
+                    PosOrderItem::create([
+                        'pos_order_id' => $order->id,
+                        'pos_item_id' => $itData['pos_item_id'] ?? null,
+                        'item_name' => $itData['name'],
+                        'unit_price' => $price,
+                        'quantity' => $qty,
+                        'line_total' => $lineTotal,
+                        'instructions' => $itData['instructions'] ?? null,
+                    ]);
+
+                    if (!empty($itData['pos_item_id'])) {
+                        $dish = PosItem::find($itData['pos_item_id']);
+                        if ($dish) {
+                            $dish->decrement('available_plates', $qty);
+                        }
+                    }
+                }
+            }
+
+            // Recalculate totals
+            $updatedItems = $order->items()->get();
+            $newSubtotal = (float) $updatedItems->sum('line_total');
+            $taxRate = (float) ($order->tax_percentage ?: AppSetting::get('default_gst_pos', 5.00));
+            $newTax = round($newSubtotal * ($taxRate / 100), 2);
+            $newTotal = round($newSubtotal + $newTax, 2);
+
+            $order->update([
+                'subtotal' => $newSubtotal,
+                'tax_amount' => $newTax,
+                'total_amount' => $newTotal,
+            ]);
+
+            $allTables = TableManage::with(['activeKots' => function ($q) {
+                $q->with(['items', 'room', 'booking.guest'])->orderBy('id', 'asc');
+            }])->orderBy('table_number')->get();
+
+            $availableTables = $allTables->where('status', 'available')->values();
+            $tableSessions = $this->buildTableSessionsMap($allTables);
+
+            return response()->json([
+                'success' => true,
+                'message' => "KOT #{$order->order_number} items successfully updated!",
+                'tableSessions' => $tableSessions,
+                'allTables' => $allTables,
+                'availableTables' => $availableTables,
+            ]);
+        });
     }
 
     /**

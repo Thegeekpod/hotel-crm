@@ -97,6 +97,7 @@
         <!-- Room Selector (Used for syncing) -->
         <div id="room-select-group" class="hidden" style="display: none !important;">
           <select class="h-9.5 text-xs font-medium rounded-xl border border-slate-200 bg-white min-w-[240px]" id="pos-room-select">
+            <option value="">-- Choose Room / Deselect --</option>
             @forelse($selectableRooms as $rm)
               <option value="{{ $rm->id }}" data-room="{{ $rm->room_number }}" data-guest="{{ $rm->guest_name }}" data-has-food-adv="{{ $rm->has_food_advance ? 1 : 0 }}" data-food-adv="{{ $rm->food_advance_amount ?? 0 }}" data-rem-adv="{{ $rm->remaining_advance ?? 0 }}" data-used-adv="{{ $rm->used_food_advance ?? 0 }}">
                 Room {{ $rm->room_number }} - {{ $rm->guest_name }}{{ $rm->has_food_advance ? ' [Food Allowance: ₹' . number_format($rm->food_advance_amount, 0) . ']' : '' }}
@@ -283,12 +284,15 @@
               <span id="sess-room-line" class="font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200">Room --</span>
             </div>
 
-            <div class="grid grid-cols-2 gap-2 pt-1">
-              <button type="button" onclick="openRunningKotsModal()" class="h-8.5 text-[11px] font-bold text-amber-900 bg-white hover:bg-amber-100 border border-amber-300 rounded-xl transition-colors flex items-center justify-center gap-1.5 cursor-pointer">
-                <i class="fa-solid fa-list-check text-amber-600"></i> View Running Items
+            <div class="grid grid-cols-3 gap-2 pt-1">
+              <button type="button" onclick="openRunningKotsModal()" class="h-8.5 text-[11px] font-bold text-amber-900 bg-white hover:bg-amber-100 border border-amber-300 rounded-xl transition-colors flex items-center justify-center gap-1 cursor-pointer" title="View Active KOTs">
+                <i class="fa-solid fa-list-check text-amber-600"></i> KOTs
               </button>
-              <button type="button" onclick="openTableSettleModal()" class="h-8.5 text-[11px] font-black text-white bg-linear-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 rounded-xl shadow-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer">
-                <i class="fa-solid fa-receipt"></i> Settle &amp; Print Bill
+              <button type="button" onclick="openShiftTableModal()" class="h-8.5 text-[11px] font-bold text-blue-900 bg-blue-50 hover:bg-blue-100 border border-blue-300 rounded-xl transition-colors flex items-center justify-center gap-1 cursor-pointer" title="Shift Table">
+                <i class="fa-solid fa-arrows-split-up-and-left text-blue-600"></i> Shift
+              </button>
+              <button type="button" onclick="openTableSettleModal()" class="h-8.5 text-[11px] font-black text-white bg-linear-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 rounded-xl shadow-xs transition-all flex items-center justify-center gap-1 cursor-pointer" title="Settle Bill">
+                <i class="fa-solid fa-receipt"></i> Settle
               </button>
             </div>
           </div>
@@ -357,7 +361,7 @@
                 <span id="room-picker-badge" class="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-bold">In-House Guest</span>
               </label>
               <select class="w-full h-9 text-xs font-medium rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-indigo-500" id="cart-room-folio-select" onchange="onCartRoomChange(this.value)">
-                <option value="">-- Select Checked-In Room --</option>
+                <option value="">-- Choose Room / Deselect --</option>
                 @forelse($selectableRooms as $rm)
                   <option value="{{ $rm->id }}" data-room="{{ $rm->room_number }}" data-guest="{{ $rm->guest_name }}" data-has-food-adv="{{ $rm->has_food_advance ? 1 : 0 }}" data-food-adv="{{ $rm->food_advance_amount ?? 0 }}" data-rem-adv="{{ $rm->remaining_advance ?? 0 }}" data-used-adv="{{ $rm->used_food_advance ?? 0 }}">
                     Room {{ $rm->room_number }} - {{ $rm->guest_name }}{{ $rm->has_food_advance ? ' [Food Allowance: ₹' . number_format($rm->food_advance_amount, 0) . ']' : '' }}
@@ -375,12 +379,15 @@
                 <span class="flex items-center gap-1.5"><i class="fa-solid fa-user-tag text-amber-600"></i> Outside Takeaway Guest Details: *</span>
                 <span class="text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full font-bold">Outside Customer</span>
               </label>
-              <div class="grid grid-cols-2 gap-2">
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
                 <div>
                   <input type="text" id="takeaway-customer-name" class="w-full h-8.5 px-3 text-xs font-medium rounded-lg border border-amber-300 bg-white focus:outline-none focus:border-amber-500" placeholder="Customer Name *">
                 </div>
                 <div>
                   <input type="text" id="takeaway-customer-phone" class="w-full h-8.5 px-3 text-xs font-medium rounded-lg border border-amber-300 bg-white focus:outline-none focus:border-amber-500" placeholder="Phone Number">
+                </div>
+                <div>
+                  <input type="text" id="takeaway-customer-gstin" class="w-full h-8.5 px-3 text-xs font-medium uppercase rounded-lg border border-amber-300 bg-white focus:outline-none focus:border-amber-500" placeholder="GST Number (Optional)">
                 </div>
               </div>
               <div class="text-[10px] text-amber-700 font-medium flex items-center gap-1 mt-1">
@@ -488,6 +495,7 @@
           </div>
           <div class="text-[11px] mt-0.5"><strong>Destination:</strong> <span id="kot-guest-dest">Room 102</span></div>
           <div class="text-[11px] mt-0.5"><strong>Guest / Host:</strong> <span id="kot-guest-name">In-House Guest</span></div>
+          <div class="text-[11px] mt-0.5" id="row-kot-guest-gstin" style="display:none;"><strong>GSTIN:</strong> <span id="kot-guest-gstin" class="font-bold font-mono text-indigo-900">--</span></div>
           <div class="text-[11px] mt-0.5"><strong>Billing Mode:</strong> <span id="kot-guest-billing" class="font-bold text-indigo-700">Charged to Room Folio</span></div>
           <div class="divider-line border-b border-dashed border-slate-300 my-2"></div>
           <table class="w-full border-collapse text-left text-[11px]">
@@ -495,14 +503,14 @@
               <tr class="border-b border-slate-300">
                 <th class="py-1">Item</th>
                 <th class="text-center w-12 py-1">Qty</th>
-                <th class="text-right w-16 py-1">Amount</th>
+                <th class="text-right w-16 py-1" id="kot-guest-amount-header">Amount</th>
               </tr>
             </thead>
             <tbody id="kot-guest-items-table" class="divide-y divide-slate-100">
               <!-- Dynamic Guest Items -->
             </tbody>
           </table>
-          <div class="divider-line border-b border-dashed border-slate-300 my-2"></div>
+          <div class="divider-line border-b border-dashed border-slate-300 my-2" id="divider-kot-guest-tax"></div>
           <div id="kot-guest-tax-breakdown" class="space-y-1 text-[11px] text-slate-700">
             <div class="flex justify-between font-medium">
               <span>Subtotal:</span>
@@ -517,10 +525,13 @@
               <span class="font-mono">₹ <span id="kot-guest-sgst-amount">0.00</span></span>
             </div>
           </div>
-          <div class="divider-line border-b border-dashed border-slate-300 my-2"></div>
-          <div class="flex justify-between font-black text-xs">
+          <div class="divider-line border-b border-dashed border-slate-300 my-2" id="divider-kot-guest-total"></div>
+          <div class="flex justify-between font-black text-xs" id="row-kot-guest-totals">
             <span>Total Qty: <span id="kot-guest-total-qty">0</span></span>
-            <span>Grand Total: ₹ <span id="kot-guest-grand-total">0.00</span></span>
+            <span id="wrap-kot-guest-grand-total">Grand Total: ₹ <span id="kot-guest-grand-total">0.00</span></span>
+          </div>
+          <div id="kot-guest-unsettled-note" class="text-center font-bold text-[10px] text-amber-800 bg-amber-50 p-1.5 rounded border border-amber-200 mt-2" style="display:none;">
+            *** KITCHEN ORDER TICKET (KOT) • RATES SHOWN ON FINAL BILL ***
           </div>
           <div class="divider-line border-b border-dashed border-slate-300 my-2"></div>
           <div id="kot-guest-notes-line" class="italic text-[10px] text-slate-600">
@@ -557,8 +568,7 @@
             <thead>
               <tr class="border-b border-slate-300">
                 <th class="py-1">Kitchen Preparation Item</th>
-                <th class="text-center w-12 py-1">Qty</th>
-                <th class="text-right w-16 py-1">Amount</th>
+                <th class="text-center w-16 py-1">Qty</th>
               </tr>
             </thead>
             <tbody id="kot-kitchen-items-table" class="divide-y divide-slate-100">
@@ -567,8 +577,8 @@
           </table>
           <div class="divider-line border-b border-dashed border-amber-300 my-2"></div>
           <div class="flex justify-between font-black text-xs">
-            <span>Total Qty: <span id="kot-kitchen-total-qty">0</span></span>
-            <span>Total: ₹ <span id="kot-kitchen-grand-total">0.00</span></span>
+            <span>Total Items / Qty:</span>
+            <span class="font-mono text-sm" id="kot-kitchen-total-qty">0</span>
           </div>
           <div class="divider-line border-b border-dashed border-amber-300 my-2"></div>
           <div id="kot-kitchen-notes-line" class="text-[10.5px] font-bold text-amber-900 bg-amber-50 p-2 rounded-lg border border-amber-200">
@@ -728,6 +738,14 @@
           </label>
         </div>
       </div>
+
+      <!-- Optional Customer GSTIN field for Tax Invoice -->
+      <div id="settle-gstin-box" class="pt-1">
+        <label class="block text-xs font-bold text-slate-700 mb-1">
+          Guest / Company GSTIN (Optional for Tax Invoice):
+        </label>
+        <input type="text" id="settle-customer-gstin" class="w-full h-8.5 px-3 text-xs font-medium uppercase rounded-lg border border-slate-300 bg-white focus:outline-none focus:border-indigo-500" placeholder="e.g. 19ABCDE1234F1Z5">
+      </div>
     </div>
 
     <!-- Footer -->
@@ -761,12 +779,120 @@
       <!-- Dynamic KOT cards rendered here -->
     </div>
 
-    <div class="px-6 py-3.5 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
+    <div class="px-6 py-3.5 bg-slate-50 border-t border-slate-200 flex items-center justify-between gap-2">
       <button type="button" onclick="closeRunningKotsModal()" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 cursor-pointer">
         Close
       </button>
-      <button type="button" onclick="closeRunningKotsModal(); openTableSettleModal();" class="px-4 py-2 rounded-xl text-xs font-extrabold text-white bg-emerald-600 hover:bg-emerald-700 cursor-pointer">
-        Proceed to Final Settlement
+      <div class="flex items-center gap-2">
+        <button type="button" onclick="closeRunningKotsModal(); openShiftTableModal();" class="px-4 py-2 rounded-xl text-xs font-bold text-blue-800 bg-blue-50 hover:bg-blue-100 border border-blue-200 cursor-pointer flex items-center gap-1.5">
+          <i class="fa-solid fa-arrows-split-up-and-left text-blue-600"></i> Shift Table
+        </button>
+        <button type="button" onclick="closeRunningKotsModal(); openTableSettleModal();" class="px-4 py-2 rounded-xl text-xs font-extrabold text-white bg-emerald-600 hover:bg-emerald-700 cursor-pointer flex items-center gap-1.5">
+          <i class="fa-solid fa-receipt"></i> Proceed to Final Settlement
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Shift / Transfer Table -->
+<div class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 hidden" id="shift-table-modal">
+  <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col">
+    <div class="bg-linear-to-r from-blue-700 to-indigo-700 text-white px-6 py-4 flex items-center justify-between">
+      <div>
+        <h3 class="text-sm font-extrabold text-white flex items-center gap-2">
+          <i class="fa-solid fa-arrows-split-up-and-left text-blue-200"></i> Shift Dining Table
+        </h3>
+        <p class="text-xs text-blue-100 mt-0.5">
+          Move active KOTs and guests to another dining table
+        </p>
+      </div>
+      <button type="button" onclick="closeShiftTableModal()" class="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center text-base cursor-pointer">&times;</button>
+    </div>
+
+    <div class="p-6 space-y-4">
+      <div class="bg-blue-50/70 border border-blue-200 rounded-xl p-3.5 space-y-1">
+        <div class="text-[11px] font-bold text-blue-800 uppercase tracking-wide">Current Source Table:</div>
+        <div class="text-sm font-black text-blue-950 flex items-center gap-2">
+          <i class="fa-solid fa-chair text-blue-600"></i>
+          <span id="shift-source-table-name">Table --</span>
+        </div>
+        <div class="text-xs text-blue-700" id="shift-source-table-details">-- active KOTs</div>
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold text-slate-700 mb-1.5">
+          Select Target Table to Shift To: *
+        </label>
+        <select id="shift-target-table-select" class="w-full h-10 px-3 text-xs font-semibold rounded-xl border border-slate-300 bg-white focus:outline-none focus:border-indigo-500">
+          <!-- Populated dynamically -->
+        </select>
+        <p class="text-[11px] text-slate-500 mt-1">
+          All active kitchen order tickets (KOTs) will be transferred to the chosen table.
+        </p>
+      </div>
+    </div>
+
+    <div class="px-6 py-3.5 bg-slate-50 border-t border-slate-200 flex items-center justify-end gap-2">
+      <button type="button" onclick="closeShiftTableModal()" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 cursor-pointer">
+        Cancel
+      </button>
+      <button type="button" id="btn-confirm-shift-table" onclick="confirmShiftTable()" class="px-4 py-2 rounded-xl text-xs font-extrabold text-white bg-blue-600 hover:bg-blue-700 shadow-xs cursor-pointer flex items-center gap-1.5">
+        <i class="fa-solid fa-arrow-right-arrow-left"></i> Confirm Table Shift
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Edit KOT Items & Quantities -->
+<div class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 hidden" id="edit-kot-modal">
+  <div class="bg-white w-full max-w-lg rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[85vh]">
+    <div class="bg-slate-900 text-white px-6 py-4 flex items-center justify-between">
+      <div>
+        <h3 class="text-sm font-extrabold text-white flex items-center gap-2">
+          <i class="fa-solid fa-pen-to-square text-amber-400"></i> Edit KOT Items
+        </h3>
+        <p class="text-xs text-slate-400 mt-0.5" id="edit-kot-modal-subtitle">
+          Adjust item quantities or remove food items from this KOT
+        </p>
+      </div>
+      <button type="button" onclick="closeEditKotModal()" class="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center text-base cursor-pointer">&times;</button>
+    </div>
+
+    <div class="p-6 overflow-y-auto space-y-4">
+      <!-- Current Items in this KOT -->
+      <div>
+        <label class="block text-xs font-bold text-slate-700 mb-2">Items Ordered in this KOT:</label>
+        <div id="edit-kot-items-list" class="space-y-2 border border-slate-200 rounded-xl p-3 bg-slate-50/50 max-h-60 overflow-y-auto">
+          <!-- Dynamic line items -->
+        </div>
+      </div>
+
+      <!-- Option to add an item to this KOT -->
+      <div class="border-t border-slate-200 pt-3">
+        <label class="block text-xs font-bold text-slate-700 mb-1.5">Add Item to this KOT:</label>
+        <div class="flex gap-2">
+          <select id="edit-kot-add-item-select" class="flex-1 h-9 px-3 text-xs font-medium rounded-xl border border-slate-300 bg-white">
+            <option value="">-- Choose Menu Item to Add --</option>
+            @foreach($menuItems as $mi)
+              <option value="{{ $mi->id }}" data-name="{{ $mi->name }}" data-price="{{ $mi->price }}">
+                {{ $mi->name }} (₹{{ number_format($mi->price, 0) }})
+              </option>
+            @endforeach
+          </select>
+          <button type="button" onclick="addDishToEditKot()" class="px-3.5 h-9 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold flex items-center gap-1 cursor-pointer">
+            <i class="fa-solid fa-plus text-[10px]"></i> Add
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="px-6 py-3.5 bg-slate-50 border-t border-slate-200 flex items-center justify-end gap-2">
+      <button type="button" onclick="closeEditKotModal()" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 cursor-pointer">
+        Cancel
+      </button>
+      <button type="button" id="btn-save-edit-kot" onclick="saveEditKot()" class="px-4 py-2 rounded-xl text-xs font-extrabold text-white bg-indigo-600 hover:bg-indigo-700 shadow-xs cursor-pointer flex items-center gap-1.5">
+        <i class="fa-solid fa-check"></i> Save Changes
       </button>
     </div>
   </div>
@@ -1017,10 +1143,11 @@
     if (typeof $.fn.select2 !== 'undefined') {
       $('#pos-room-select').select2({
         width: '280px',
-        placeholder: 'Search Room # or Guest Name...'
+        placeholder: 'Search Room # or Guest Name...',
+        allowClear: true
       }).on('change', function(e) {
         if (e.namespace !== 'select2Sync') {
-          syncRoomSelectors($(this).val());
+          syncRoomSelectors($(this).val() || '');
         }
       });
 
@@ -1033,10 +1160,11 @@
 
       $('#cart-room-folio-select').select2({
         width: '100%',
-        placeholder: 'Search Room # or Guest Name...'
+        placeholder: 'Search Room # or Guest Name...',
+        allowClear: true
       }).on('change', function(e) {
         if (e.namespace !== 'select2Sync') {
-          syncRoomSelectors($(this).val());
+          syncRoomSelectors($(this).val() || '');
         }
       });
     }
@@ -1431,7 +1559,7 @@
       }
 
     } else if (currentOrderType === 'Table Dine-in') {
-      // Scenario 2: Room-wise guest with table -> Send KOT
+      // Scenario 2: Room-wise or Walk-in guest with table -> Send KOT
       payload.action = 'kot';
       payload.is_kot = true;
 
@@ -1449,15 +1577,18 @@
       const headRm = document.getElementById('pos-room-select');
       const chosenRoomId = (cartRm && cartRm.value) ? cartRm.value : (headRm ? headRm.value : null);
 
-      if (!chosenRoomId && (!tableSessions[selectedTableId] || !tableSessions[selectedTableId].room_id)) {
+      if (currentBillingType === 'Charged to Room Folio' && !chosenRoomId && (!tableSessions[selectedTableId] || !tableSessions[selectedTableId].room_id)) {
         if (typeof Swal !== 'undefined') {
-          Swal.fire({ icon: 'warning', title: 'Room Required', text: 'Please select residing guest Room for Table Dine-In!' });
+          Swal.fire({ icon: 'warning', title: 'Room Required', text: 'Please select residing guest Room to Charge Room Folio!' });
         } else {
-          alert('Please select residing guest Room for Table Dine-In!');
+          alert('Please select residing guest Room to Charge Room Folio!');
         }
         return;
       }
-      payload.room_id = chosenRoomId || tableSessions[selectedTableId]?.room_id;
+      payload.room_id = chosenRoomId || tableSessions[selectedTableId]?.room_id || null;
+      if (!payload.room_id && selectedTable) {
+        payload.customer_name = `Table ${selectedTable.table_number} Guest`;
+      }
 
     } else if (currentOrderType === 'Takeaway') {
       // Scenario 3: Outside guest with table -> Send KOT
@@ -1466,12 +1597,14 @@
 
       const custName = document.getElementById('takeaway-customer-name')?.value?.trim();
       const custPhone = document.getElementById('takeaway-customer-phone')?.value?.trim();
+      const custGstin = document.getElementById('takeaway-customer-gstin')?.value?.trim();
 
       if (selectedTableId) {
         payload.table_id = selectedTableId;
       }
       payload.customer_name = custName || 'Outside Walk-in Guest';
       payload.customer_phone = custPhone || null;
+      payload.customer_gstin = custGstin || null;
     }
 
     try {
@@ -1500,6 +1633,10 @@
             timer: 2000,
             showConfirmButton: false
           });
+        }
+
+        if (data.tableSessions) {
+          tableSessions = data.tableSessions;
         }
 
         // Show KOT thermal slip modal
@@ -1637,6 +1774,12 @@
       if (cashRadio) cashRadio.checked = true;
     }
 
+    // Pre-fill GSTIN if previously entered
+    const gstinInput = document.getElementById('settle-customer-gstin');
+    if (gstinInput) {
+      gstinInput.value = sess.customer_gstin || '';
+    }
+
     // Populate Consolidated Items
     const tbody = document.getElementById('settle-items-tbody');
     let itemsHtml = '';
@@ -1694,6 +1837,8 @@
         btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing Settlement...';
       }
 
+      const gstinVal = document.getElementById('settle-customer-gstin')?.value?.trim();
+
       const res = await fetch(`{{ url('pos/tables') }}/${selectedTableId}/settle`, {
         method: "POST",
         headers: {
@@ -1701,7 +1846,10 @@
           "X-CSRF-TOKEN": "{{ csrf_token() }}",
           "Accept": "application/json"
         },
-        body: JSON.stringify({ billing_type: selectedMode })
+        body: JSON.stringify({
+          billing_type: selectedMode,
+          customer_gstin: gstinVal || null
+        })
       });
 
       const data = await res.json();
@@ -1726,10 +1874,16 @@
         // Show Single Consolidated Final Bill
         showKotModal(data.bill);
 
-        // Clear local table session (Table is now Available!)
-        delete tableSessions[selectedTableId];
+        // Update table sessions
+        if (data.tableSessions) {
+          tableSessions = data.tableSessions;
+        } else {
+          delete tableSessions[selectedTableId];
+        }
+        selectedTableId = null;
         updateTablePillsDom();
         renderActiveTableSessionBox();
+        renderCart();
         updateRoomPickerNote();
 
       } else {
@@ -1743,53 +1897,405 @@
     }
   }
 
-  // 8. View Running KOTs Viewer Modal
+  // 8. View Running KOTs Viewer Modal (Only quantity, no rate shown; item cancel & KOT edit supported)
   function openRunningKotsModal() {
     if (!selectedTableId || !tableSessions[selectedTableId]) return;
     const sess = tableSessions[selectedTableId];
 
+    const totalQty = (sess.raw_items || []).reduce((acc, ri) => acc + (parseInt(ri.quantity) || 1), 0);
+
     document.getElementById('running-kots-modal-subtitle').textContent = 
-      `Running KOT breakdown for ${sess.table_number} (${sess.table_name}) • Total: ₹${Number(sess.total_amount).toLocaleString('en-IN')}`;
+      `Running KOT items on ${sess.table_number} (${sess.table_name}) • Total Items: ${totalQty}`;
 
     const container = document.getElementById('running-kots-modal-content');
     let html = '';
 
     (sess.kots || []).forEach((k, idx) => {
       // Find raw items for this KOT
-      const kotItems = (sess.raw_items || []).filter(ri => ri.kot_id === k.id);
+      const kotItems = (k.items && k.items.length > 0)
+        ? k.items
+        : (sess.raw_items || []).filter(ri => ri.kot_id === k.id);
+
       html += `
-        <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-2xs space-y-2">
+        <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-2xs space-y-2.5">
           <div class="flex items-center justify-between border-b border-slate-100 pb-2">
             <div class="flex items-center gap-2">
               <span class="w-6 h-6 rounded-lg bg-amber-100 text-amber-800 text-xs font-black flex items-center justify-center">#${idx + 1}</span>
               <span class="font-mono font-bold text-xs text-slate-900">${escapeHtml(k.order_number)}</span>
             </div>
-            <div class="text-[11px] text-slate-500 font-medium">
-              <i class="fa-regular fa-clock text-[10px]"></i> ${k.time}
+            <div class="flex items-center gap-2">
+              <button type="button" onclick="openEditKotModal(${k.id})" class="px-2 py-0.5 text-[11px] font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-md transition-colors cursor-pointer flex items-center gap-1" title="Edit items in this KOT">
+                <i class="fa-solid fa-pen-to-square text-[10px]"></i> Edit KOT
+              </button>
+              <div class="text-[11px] text-slate-500 font-medium">
+                <i class="fa-regular fa-clock text-[10px]"></i> ${k.time}
+              </div>
             </div>
           </div>
           <div class="divide-y divide-slate-100 text-xs">
-            ${kotItems.map(it => `
-              <div class="py-1.5 flex justify-between items-center">
-                <span>${escapeHtml(it.item_name)} × <strong class="font-mono">${it.quantity}</strong></span>
-                <span class="font-mono font-bold text-slate-800">₹ ${(it.line_total).toFixed(2)}</span>
-              </div>
-            `).join('')}
-          </div>
-          <div class="flex justify-between items-center pt-2 border-t border-slate-100 text-xs font-bold text-slate-700">
-            <span>KOT Subtotal:</span>
-            <span class="font-mono">₹ ${Number(k.subtotal).toFixed(2)}</span>
+            ${kotItems.map(it => {
+              const resolvedId = it.id || (sess.raw_items || []).find(r => r.kot_id == k.id && r.item_name == it.item_name && r.id)?.id || 0;
+              return `
+                <div class="py-2 flex justify-between items-center gap-2">
+                  <div>
+                    <span class="font-bold text-slate-900 text-xs">${escapeHtml(it.item_name)}</span>
+                    ${it.instructions ? `<div class="text-[10px] text-amber-700 italic">Note: ${escapeHtml(it.instructions)}</div>` : ''}
+                  </div>
+                  <div class="flex items-center gap-2.5">
+                    <span class="px-2.5 py-0.5 bg-amber-100 text-amber-900 font-mono font-black text-xs rounded-md">Qty: ${it.quantity}</span>
+                    <button type="button" onclick="cancelKotItem(${k.id}, ${resolvedId}, '${escapeHtml(it.item_name)}')" class="px-2 py-0.5 text-[10.5px] font-bold text-rose-600 hover:text-rose-800 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-md transition-colors cursor-pointer flex items-center gap-1" title="Cancel this item from KOT">
+                      <i class="fa-solid fa-trash-can text-[9px]"></i> Cancel
+                    </button>
+                  </div>
+                </div>
+              `;
+            }).join('')}
           </div>
         </div>
       `;
     });
 
-    container.innerHTML = html;
+    container.innerHTML = html || '<div class="text-center text-slate-400 py-6 text-xs">No active KOT items found.</div>';
     document.getElementById('running-kots-modal').style.display = 'flex';
   }
 
   function closeRunningKotsModal() {
     document.getElementById('running-kots-modal').style.display = 'none';
+  }
+
+  // Cancel an individual food item inside a KOT
+  async function cancelKotItem(orderId, itemId, itemName) {
+    const result = (typeof Swal !== 'undefined')
+      ? await Swal.fire({
+          title: 'Cancel Item from KOT?',
+          text: `Are you sure you want to cancel "${itemName}" from this KOT? Kitchen store inventory will be restored.`,
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#e11d48',
+          cancelButtonColor: '#64748b',
+          confirmButtonText: 'Yes, Cancel Item',
+          cancelButtonText: 'No, Keep'
+        })
+      : { isConfirmed: confirm(`Cancel "${itemName}" from KOT?`) };
+
+    if (!result.isConfirmed) return;
+
+    try {
+      const targetUrl = (itemId && itemId !== 'undefined' && parseInt(itemId) > 0)
+        ? `/pos/orders/${orderId}/items/${itemId}/cancel`
+        : `/pos/orders/${orderId}/cancel-item`;
+
+      const resp = await fetch(targetUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': '{{ csrf_token() }}',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({
+          item_id: itemId,
+          item_name: itemName
+        })
+      });
+      const data = await resp.json();
+
+      if (data.success) {
+        if (typeof Swal !== 'undefined') {
+          Swal.fire({
+            icon: 'success',
+            title: 'Item Cancelled',
+            text: data.message,
+            timer: 2000,
+            showConfirmButton: false
+          });
+        }
+
+        tableSessions = data.tableSessions;
+        if (data.allTables) allTablesData = data.allTables;
+
+        if (data.table_released || !tableSessions[selectedTableId]) {
+          closeRunningKotsModal();
+          selectedTableId = null;
+        }
+
+        updateTablePillsDom();
+        renderActiveTableSessionBox();
+        renderCart();
+
+        if (selectedTableId && tableSessions[selectedTableId]) {
+          openRunningKotsModal();
+        }
+      } else {
+        alert(data.message || 'Failed to cancel item.');
+      }
+    } catch (e) {
+      console.error(e);
+      alert('Error cancelling item.');
+    }
+  }
+
+  // Edit KOT Items & Quantities Modal
+  let activeEditingKotId = null;
+  let activeEditingKotItems = [];
+
+  function openEditKotModal(orderId) {
+    if (!selectedTableId || !tableSessions[selectedTableId]) return;
+    const sess = tableSessions[selectedTableId];
+    const kot = (sess.kots || []).find(k => k.id == orderId);
+    if (!kot) return;
+
+    activeEditingKotId = orderId;
+    activeEditingKotItems = [];
+
+    const rawItems = (kot.items && kot.items.length > 0)
+      ? kot.items
+      : (sess.raw_items || []).filter(ri => ri.kot_id == orderId);
+
+    activeEditingKotItems = rawItems.map(it => ({
+      id: it.id || null,
+      pos_item_id: it.pos_item_id || null,
+      name: it.item_name,
+      price: parseFloat(it.unit_price) || 0,
+      quantity: parseInt(it.quantity) || 1,
+      instructions: it.instructions || '',
+    }));
+
+    document.getElementById('edit-kot-modal-subtitle').textContent = 
+      `KOT #${kot.order_number} (${kot.time}) on Table ${sess.table_number}`;
+
+    renderEditKotItemsList();
+    document.getElementById('edit-kot-modal').style.display = 'flex';
+  }
+
+  function closeEditKotModal() {
+    document.getElementById('edit-kot-modal').style.display = 'none';
+    activeEditingKotId = null;
+    activeEditingKotItems = [];
+  }
+
+  function renderEditKotItemsList() {
+    const list = document.getElementById('edit-kot-items-list');
+    if (!list) return;
+
+    if (activeEditingKotItems.length === 0) {
+      list.innerHTML = `<div class="text-center py-4 text-xs text-rose-500 font-bold">No items left in this KOT. Please add an item or cancel using the cancel item button.</div>`;
+      return;
+    }
+
+    list.innerHTML = activeEditingKotItems.map((it, idx) => `
+      <div class="flex items-center justify-between p-2 bg-white rounded-lg border border-slate-200 text-xs">
+        <div class="flex-1 pr-2">
+          <div class="font-bold text-slate-800">${escapeHtml(it.name)}</div>
+          ${it.instructions ? `<div class="text-[10px] text-slate-400 italic">${escapeHtml(it.instructions)}</div>` : ''}
+        </div>
+        <div class="flex items-center gap-2">
+          <div class="flex items-center border border-slate-200 rounded-lg overflow-hidden bg-slate-50">
+            <button type="button" onclick="changeEditKotQty(${idx}, -1)" class="w-6 h-6 flex items-center justify-center font-bold text-slate-600 hover:bg-slate-200 cursor-pointer">-</button>
+            <span class="w-8 text-center font-mono font-bold text-xs">${it.quantity}</span>
+            <button type="button" onclick="changeEditKotQty(${idx}, 1)" class="w-6 h-6 flex items-center justify-center font-bold text-slate-600 hover:bg-slate-200 cursor-pointer">+</button>
+          </div>
+          <button type="button" onclick="removeEditKotItem(${idx})" class="w-6 h-6 rounded-lg text-rose-500 hover:bg-rose-50 flex items-center justify-center cursor-pointer" title="Remove item">
+            <i class="fa-solid fa-trash-can text-xs"></i>
+          </button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function changeEditKotQty(idx, delta) {
+    if (!activeEditingKotItems[idx]) return;
+    activeEditingKotItems[idx].quantity = Math.max(1, activeEditingKotItems[idx].quantity + delta);
+    renderEditKotItemsList();
+  }
+
+  function removeEditKotItem(idx) {
+    if (!activeEditingKotItems[idx]) return;
+    activeEditingKotItems.splice(idx, 1);
+    renderEditKotItemsList();
+  }
+
+  function addDishToEditKot() {
+    const select = document.getElementById('edit-kot-add-item-select');
+    if (!select || !select.value) return;
+
+    const opt = select.options[select.selectedIndex];
+    const dishId = select.value;
+    const name = opt.getAttribute('data-name');
+    const price = parseFloat(opt.getAttribute('data-price')) || 0;
+
+    const existing = activeEditingKotItems.find(it => it.pos_item_id == dishId);
+    if (existing) {
+      existing.quantity += 1;
+    } else {
+      activeEditingKotItems.push({
+        id: null,
+        pos_item_id: dishId,
+        name: name,
+        price: price,
+        quantity: 1,
+        instructions: ''
+      });
+    }
+
+    select.value = '';
+    renderEditKotItemsList();
+  }
+
+  async function saveEditKot() {
+    if (!activeEditingKotId) return;
+
+    if (activeEditingKotItems.length === 0) {
+      alert('KOT must have at least 1 item! To cancel the entire KOT, use the Cancel Item button in the running KOTs modal.');
+      return;
+    }
+
+    const btn = document.getElementById('btn-save-edit-kot');
+    if (btn) btn.disabled = true;
+
+    try {
+      const resp = await fetch(`/pos/orders/${activeEditingKotId}/update-items`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': '{{ csrf_token() }}',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({
+          items: activeEditingKotItems
+        })
+      });
+
+      const data = await resp.json();
+      if (data.success) {
+        if (typeof Swal !== 'undefined') {
+          Swal.fire({
+            icon: 'success',
+            title: 'KOT Updated',
+            text: data.message,
+            timer: 2000,
+            showConfirmButton: false
+          });
+        }
+
+        tableSessions = data.tableSessions;
+        if (data.allTables) allTablesData = data.allTables;
+
+        closeEditKotModal();
+        updateTablePillsDom();
+        renderActiveTableSessionBox();
+        renderCart();
+        openRunningKotsModal();
+      } else {
+        alert(data.message || 'Failed to update KOT.');
+      }
+    } catch(e) {
+      console.error(e);
+      alert('Error saving KOT changes.');
+    } finally {
+      if (btn) btn.disabled = false;
+    }
+  }
+
+  // Shift Dining Table (Table A -> Table B)
+  function openShiftTableModal(tableId = null) {
+    const tid = tableId || selectedTableId;
+    if (!tid || !tableSessions[tid]) {
+      alert('Please select an active table session to shift!');
+      return;
+    }
+    const sess = tableSessions[tid];
+
+    document.getElementById('shift-source-table-name').textContent = `Table ${sess.table_number} (${sess.table_name})`;
+    document.getElementById('shift-source-table-details').textContent = 
+      `${sess.kots_count} active KOT(s) • Guest: ${sess.customer_name || 'Walk-in'}`;
+
+    const select = document.getElementById('shift-target-table-select');
+    select.innerHTML = '<option value="">-- Choose Target Table --</option>';
+
+    allTablesData.forEach(tbl => {
+      if (tbl.id == tid) return; // Skip current table
+      const isAvailable = tbl.status === 'available';
+      const isOccupied = tbl.status === 'booked';
+      const label = `Table ${tbl.table_number} (${tbl.table_name}) - ${isAvailable ? 'Available' : (isOccupied ? 'Occupied (Merge KOTs)' : 'Inactive')}`;
+      if (tbl.status !== 'inactive') {
+        select.innerHTML += `<option value="${tbl.id}">${label}</option>`;
+      }
+    });
+
+    document.getElementById('shift-table-modal').setAttribute('data-source-table-id', tid);
+    document.getElementById('shift-table-modal').style.display = 'flex';
+  }
+
+  function closeShiftTableModal() {
+    document.getElementById('shift-table-modal').style.display = 'none';
+  }
+
+  async function confirmShiftTable() {
+    const modal = document.getElementById('shift-table-modal');
+    const sourceTableId = modal.getAttribute('data-source-table-id') || selectedTableId;
+    const targetTableId = document.getElementById('shift-target-table-select').value;
+
+    if (!targetTableId) {
+      alert('Please select a target table to shift to!');
+      return;
+    }
+
+    const btn = document.getElementById('btn-confirm-shift-table');
+    if (btn) btn.disabled = true;
+
+    try {
+      const resp = await fetch(`/pos/tables/${sourceTableId}/shift`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': '{{ csrf_token() }}',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({
+          target_table_id: targetTableId
+        })
+      });
+
+      const data = await resp.json();
+      if (data.success) {
+        if (typeof Swal !== 'undefined') {
+          Swal.fire({
+            icon: 'success',
+            title: 'Table Shifted!',
+            text: data.message,
+            timer: 2500,
+            showConfirmButton: false
+          });
+        }
+
+        tableSessions = data.tableSessions;
+        allTablesData = data.allTables;
+
+        closeShiftTableModal();
+
+        // Switch selection to new table
+        selectedTableId = parseInt(data.new_table_id);
+        const tblSelect = document.getElementById('pos-table-select');
+        if (tblSelect) {
+          tblSelect.value = selectedTableId.toString();
+          if (typeof $ !== 'undefined' && $(tblSelect).data('select2')) {
+            $(tblSelect).trigger('change.select2Sync');
+          }
+        }
+
+        updateTablePillsDom();
+        renderActiveTableSessionBox();
+        renderCart();
+        updateRoomPickerNote();
+      } else {
+        alert(data.message || 'Failed to shift table.');
+      }
+    } catch(e) {
+      console.error(e);
+      alert('Error shifting table.');
+    } finally {
+      if (btn) btn.disabled = false;
+    }
   }
 
   // 9. KOT Thermal Slip Modal Handling (Supports KOT tickets and Final Bills)
@@ -1837,16 +2343,28 @@
       totQty += q;
       const lineTotal = Number(it.line_total || (it.unit_price * q)).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
       
-      guestItemsHtml += `
-        <tr>
-          <td class="py-1">
-            <div class="font-bold text-slate-900">${escapeHtml(it.item_name)}</div>
-            ${it.instructions ? `<div class="text-[9.5px] italic text-slate-500">${escapeHtml(it.instructions)}</div>` : ''}
-          </td>
-          <td class="text-center font-bold font-mono py-1">${q}</td>
-          <td class="text-right font-mono py-1">₹ ${lineTotal}</td>
-        </tr>
-      `;
+      if (isKot) {
+        guestItemsHtml += `
+          <tr>
+            <td class="py-1">
+              <div class="font-bold text-slate-900">${escapeHtml(it.item_name)}</div>
+              ${it.instructions ? `<div class="text-[9.5px] italic text-slate-500">${escapeHtml(it.instructions)}</div>` : ''}
+            </td>
+            <td class="text-center font-bold font-mono py-1">${q}</td>
+          </tr>
+        `;
+      } else {
+        guestItemsHtml += `
+          <tr>
+            <td class="py-1">
+              <div class="font-bold text-slate-900">${escapeHtml(it.item_name)}</div>
+              ${it.instructions ? `<div class="text-[9.5px] italic text-slate-500">${escapeHtml(it.instructions)}</div>` : ''}
+            </td>
+            <td class="text-center font-bold font-mono py-1">${q}</td>
+            <td class="text-right font-mono py-1">₹ ${lineTotal}</td>
+          </tr>
+        `;
+      }
 
       kitchenItemsHtml += `
         <tr>
@@ -1855,7 +2373,6 @@
             ${it.instructions ? `<div class="text-[10px] font-bold text-rose-700 bg-rose-50 px-1 rounded inline-block mt-0.5">Note: ${escapeHtml(it.instructions)}</div>` : ''}
           </td>
           <td class="text-center font-black text-xs font-mono py-1 text-slate-900">${q}</td>
-          <td class="text-right font-mono text-[10px] text-slate-600 py-1">₹ ${lineTotal}</td>
         </tr>
       `;
     });
@@ -1866,32 +2383,66 @@
     document.getElementById('kot-guest-dest').textContent = dest;
     document.getElementById('kot-guest-name').textContent = guestName;
     document.getElementById('kot-guest-billing').textContent = billingType;
+
+    // Show / hide GSTIN on guest bill
+    const gstinRow = document.getElementById('row-kot-guest-gstin');
+    const gstinSpan = document.getElementById('kot-guest-gstin');
+    if (gstinRow && gstinSpan) {
+      if (order.customer_gstin) {
+        gstinRow.style.display = 'block';
+        gstinSpan.textContent = order.customer_gstin;
+      } else {
+        gstinRow.style.display = 'none';
+      }
+    }
+
     document.getElementById('kot-guest-items-table').innerHTML = guestItemsHtml;
     document.getElementById('kot-guest-total-qty').textContent = totQty;
     document.getElementById('kot-guest-grand-total').textContent = grandTotalFmt;
     document.getElementById('kot-guest-notes-line').textContent = notesStr;
 
-    // Tax breakdown for food bill (CGST 2.5% + SGST 2.5%)
-    const taxAmt = Number(order.tax_amount || 0);
-    const taxRate = parseFloat(order.tax_percentage || 5);
-    const halfRate = taxRate / 2;
-    const cgstAmt = Math.round((taxAmt / 2) * 100) / 100;
-    const sgstAmt = Math.round((taxAmt - cgstAmt) * 100) / 100;
-    const subtotalFmt = Number(order.subtotal || (Number(order.total_amount) - taxAmt)).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    const cgstFmt = cgstAmt.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    const sgstFmt = sgstAmt.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-
-    if (document.getElementById('kot-guest-subtotal')) document.getElementById('kot-guest-subtotal').textContent = subtotalFmt;
-    if (document.getElementById('kot-guest-cgst-rate')) document.getElementById('kot-guest-cgst-rate').textContent = (halfRate % 1 === 0 ? halfRate.toString() : halfRate.toFixed(1));
-    if (document.getElementById('kot-guest-sgst-rate')) document.getElementById('kot-guest-sgst-rate').textContent = (halfRate % 1 === 0 ? halfRate.toString() : halfRate.toFixed(1));
-    if (document.getElementById('kot-guest-cgst-amount')) document.getElementById('kot-guest-cgst-amount').textContent = cgstFmt;
-    if (document.getElementById('kot-guest-sgst-amount')) document.getElementById('kot-guest-sgst-amount').textContent = sgstFmt;
+    // KOT ticket: Hide rates, taxes, grand totals (only quantities shown)
+    // Bill invoice: Show rates, taxes, grand totals
+    const amountHeader = document.getElementById('kot-guest-amount-header');
+    const dividerTax = document.getElementById('divider-kot-guest-tax');
     const taxBreakdownRow = document.getElementById('kot-guest-tax-breakdown');
-    if (taxBreakdownRow) {
-      taxBreakdownRow.style.display = (taxAmt > 0 || !isKot) ? 'block' : 'none';
+    const dividerTotal = document.getElementById('divider-kot-guest-total');
+    const wrapGrandTotal = document.getElementById('wrap-kot-guest-grand-total');
+    const kotUnsettledNote = document.getElementById('kot-guest-unsettled-note');
+
+    if (isKot) {
+      if (amountHeader) amountHeader.style.display = 'none';
+      if (dividerTax) dividerTax.style.display = 'none';
+      if (taxBreakdownRow) taxBreakdownRow.style.display = 'none';
+      if (dividerTotal) dividerTotal.style.display = 'none';
+      if (wrapGrandTotal) wrapGrandTotal.style.display = 'none';
+      if (kotUnsettledNote) kotUnsettledNote.style.display = 'block';
+    } else {
+      if (amountHeader) amountHeader.style.display = 'table-cell';
+      if (dividerTax) dividerTax.style.display = 'block';
+      if (taxBreakdownRow) taxBreakdownRow.style.display = 'block';
+      if (dividerTotal) dividerTotal.style.display = 'block';
+      if (wrapGrandTotal) wrapGrandTotal.style.display = 'inline';
+      if (kotUnsettledNote) kotUnsettledNote.style.display = 'none';
+
+      // Tax breakdown for food bill (CGST 2.5% + SGST 2.5%)
+      const taxAmt = Number(order.tax_amount || 0);
+      const taxRate = parseFloat(order.tax_percentage || 5);
+      const halfRate = taxRate / 2;
+      const cgstAmt = Math.round((taxAmt / 2) * 100) / 100;
+      const sgstAmt = Math.round((taxAmt - cgstAmt) * 100) / 100;
+      const subtotalFmt = Number(order.subtotal || (Number(order.total_amount) - taxAmt)).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      const cgstFmt = cgstAmt.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      const sgstFmt = sgstAmt.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+      if (document.getElementById('kot-guest-subtotal')) document.getElementById('kot-guest-subtotal').textContent = subtotalFmt;
+      if (document.getElementById('kot-guest-cgst-rate')) document.getElementById('kot-guest-cgst-rate').textContent = (halfRate % 1 === 0 ? halfRate.toString() : halfRate.toFixed(1));
+      if (document.getElementById('kot-guest-sgst-rate')) document.getElementById('kot-guest-sgst-rate').textContent = (halfRate % 1 === 0 ? halfRate.toString() : halfRate.toFixed(1));
+      if (document.getElementById('kot-guest-cgst-amount')) document.getElementById('kot-guest-cgst-amount').textContent = cgstFmt;
+      if (document.getElementById('kot-guest-sgst-amount')) document.getElementById('kot-guest-sgst-amount').textContent = sgstFmt;
     }
 
-    // Populate Kitchen Ticket
+    // Populate Kitchen Ticket (Only quantities, no amount)
     document.getElementById('kot-kitchen-order-num').innerHTML = `<strong>${isKot ? 'KOT' : 'BILL'}: ${order.order_number}</strong>`;
     document.getElementById('kot-kitchen-time').textContent = `Time: ${timeStr}`;
     document.getElementById('kot-kitchen-dest').textContent = dest;
@@ -1899,7 +2450,6 @@
     document.getElementById('kot-kitchen-billing').textContent = billingType;
     document.getElementById('kot-kitchen-items-table').innerHTML = kitchenItemsHtml;
     document.getElementById('kot-kitchen-total-qty').textContent = totQty;
-    document.getElementById('kot-kitchen-grand-total').textContent = grandTotalFmt;
     document.getElementById('kot-kitchen-notes-line').textContent = notesStr;
 
     // If KOT: default preview to Kitchen Copy. If Bill: default to Guest Copy

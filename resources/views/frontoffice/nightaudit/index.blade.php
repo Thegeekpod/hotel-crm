@@ -532,8 +532,19 @@
                     <!-- Guest & Settle # -->
                     <td class="py-3 px-3.5">
                       @if($isOccupied && $activeBooking)
-                        <div class="font-bold text-slate-900 leading-tight">
-                          {{ ($activeBooking->guest?->title?->name ? $activeBooking->guest->title->name . ' ' : '') . ($activeBooking->guest?->guest_name ?? 'Guest') }}
+                        @php
+                          $roomGroup = isset($activeBookingsGroupedByRoom) ? $activeBookingsGroupedByRoom->get($rm->id, collect([$activeBooking])) : collect([$activeBooking]);
+                          $allOccNames = $roomGroup->map(fn($b) => ($b->guest?->title?->name ? $b->guest->title->name . ' ' : '') . ($b->guest?->guest_name ?? 'Guest'))->filter()->unique()->values();
+                          $primaryOccName = $allOccNames->first() ?? 'Guest';
+                          $extraOccCount = $allOccNames->count() - 1;
+                        @endphp
+                        <div class="font-bold text-slate-900 leading-tight flex items-center gap-1.5 flex-wrap" title="{{ $allOccNames->implode(', ') }}">
+                          <span>{{ $primaryOccName }}</span>
+                          @if($extraOccCount > 0)
+                            <span class="px-1.5 py-0.5 rounded-full text-[9px] font-black bg-indigo-100 text-indigo-700 border border-indigo-200 inline-flex items-center gap-0.5" title="{{ $allOccNames->implode(', ') }}">
+                              <i class="fa-solid fa-user-plus text-[8px]"></i> +{{ $extraOccCount }} Guest{{ $extraOccCount > 1 ? 's' : '' }}
+                            </span>
+                          @endif
                         </div>
                         <div class="text-[10px] text-indigo-600 font-mono font-bold mt-0.5">
                           {{ $activeSettleNo }}
@@ -1170,7 +1181,8 @@
               $dayRate = $activeBooking ? (float)($activeBooking->room_rate ?: ($activeBooking->total_amount / $n)) : 0.00;
               $rmPart = preg_replace('/^r[-_\s]?/i', '', trim($rm->room_number)) ?: '100';
               $activeSettleDisplay = $activeBooking ? ($activeBooking->settle_number ?: ($activeBooking->folio_number ?: ($activeBooking->primary_booking_id ?: ('SET-' . $rmPart . '-' . $activeBooking->id)))) : '-';
-              $occGuest = $activeBooking ? (($activeBooking->guest?->title?->name ? $activeBooking->guest->title->name . ' ' : '') . ($activeBooking->guest?->guest_name ?? 'Guest')) : '-';
+              $pRoomGroup = isset($activeBookingsGroupedByRoom) ? $activeBookingsGroupedByRoom->get($rm->id, collect([$activeBooking])) : collect([$activeBooking]);
+              $occGuest = $pRoomGroup->filter()->map(fn($b) => ($b->guest?->title?->name ? $b->guest->title->name . ' ' : '') . ($b->guest?->guest_name ?? 'Guest'))->unique()->implode(', ') ?: ($activeBooking ? 'Guest' : '-');
             @endphp
             <tr>
               <td class="text-center font-mono">{{ $pIdx + 1 }}</td>

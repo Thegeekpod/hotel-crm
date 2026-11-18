@@ -296,6 +296,7 @@ class NightAuditController extends Controller
 
         // Key active bookings by room_id for fast lookup in Today Rooms table
         $activeBookingsByRoom = $activeBookingsOnDate->keyBy('room_id');
+        $activeBookingsGroupedByRoom = $activeBookingsOnDate->groupBy('room_id');
 
         // 5.1. TODAY BOOKING LEDGERS (Grouped by Booking Number with Rooms & Extra Services)
         $ledgerData = $this->getBookingLedgers($selectedDate);
@@ -457,6 +458,7 @@ class NightAuditController extends Controller
             'occupiedRooms',
             'occupiedRoomIds',
             'activeBookingsByRoom',
+            'activeBookingsGroupedByRoom',
             'activeMaintenanceRooms',
             'todayHousekeepingHistories',
             'todayOperationalHistories',

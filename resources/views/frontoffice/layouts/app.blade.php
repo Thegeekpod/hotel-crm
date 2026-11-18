@@ -468,8 +468,8 @@
                     <!-- Row 4: Mobile + Email -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
-                        <label class="block text-[10px] font-black mb-1 text-slate-500 uppercase tracking-wider">Telephone / Mobile <span class="text-rose-600">*</span></label>
-                        <input type="text" name="mobile" class="guest-mobile-input pms-input-field w-full font-mono" placeholder="+91 9876543210" required>
+                        <label class="block text-[10px] font-black mb-1 text-slate-500 uppercase tracking-wider">Telephone / Mobile</label>
+                        <input type="text" name="mobile" class="guest-mobile-input pms-input-field w-full font-mono" placeholder="+91 9876543210">
                       </div>
                       <div>
                         <label class="block text-[10px] font-black mb-1 text-slate-500 uppercase tracking-wider">Email ID</label>

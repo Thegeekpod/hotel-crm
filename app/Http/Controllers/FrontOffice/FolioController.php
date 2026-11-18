@@ -1125,6 +1125,8 @@ class FolioController extends Controller
             ->get();
 
         $serviceOrdersList = $roomServiceOrders->map(function ($ro) {
+            $isExtra = $ro->items->contains(fn($it) => !empty($it->hotel_service_id)) 
+                || ($ro->served_by !== 'POS Cashier' && empty($ro->table_number));
             $itemsSummary = $ro->items->map(fn($it) => "{$it->quantity}x {$it->item_name}")->implode(', ');
             return [
                 'id' => $ro->id,
@@ -1141,6 +1143,8 @@ class FolioController extends Controller
                 'order_status' => $ro->order_status,
                 'served_by' => $ro->served_by,
                 'special_instructions' => $ro->special_instructions,
+                'is_extra_service' => $isExtra,
+                'order_type' => $isExtra ? 'extra_service' : 'food',
                 'items_summary' => $itemsSummary,
                 'items' => $ro->items->map(function ($it) {
                     return [
@@ -1148,10 +1152,30 @@ class FolioController extends Controller
                         'unit_price' => (float)$it->unit_price,
                         'quantity' => (int)$it->quantity,
                         'line_total' => (float)$it->line_total,
+                        'hotel_service_id' => $it->hotel_service_id,
                     ];
                 })->all(),
             ];
-        })->values()->all();
+        })->values();
+
+        $extraServiceOrders = $roomServiceOrders->filter(function ($ro) {
+            return $ro->items->contains(fn($it) => !empty($it->hotel_service_id)) 
+                || ($ro->served_by !== 'POS Cashier' && empty($ro->table_number));
+        });
+        $foodOrders = $roomServiceOrders->reject(function ($ro) {
+            return $ro->items->contains(fn($it) => !empty($it->hotel_service_id)) 
+                || ($ro->served_by !== 'POS Cashier' && empty($ro->table_number));
+        });
+
+        $totalExtraServicesAmount = (float)$extraServiceOrders
+            ->where('payment_status', 'Charged to Room Folio')
+            ->where('order_status', '!=', 'Cancelled')
+            ->sum('total_amount');
+
+        $totalFoodChargesOnly = (float)$foodOrders
+            ->where('payment_status', 'Charged to Room Folio')
+            ->where('order_status', '!=', 'Cancelled')
+            ->sum('total_amount');
 
         $totalRoomServiceCharges = (float)$roomServiceOrders
             ->where('payment_status', 'Charged to Room Folio')
@@ -1339,9 +1363,12 @@ class FolioController extends Controller
             'total_paid' => $totalPaid,
             'balance' => $effectiveBalance,
             'room_balance' => max(0, round((float)$booking->balance, 2)),
-            'food_balance' => round((float)$effectiveExtra, 2),
-            'total_food_amount' => (float)$roomServiceOrders->where('order_status', '!=', 'Cancelled')->sum('total_amount'),
-            'food_paid_direct' => (float)$roomServiceOrders->where('payment_status', '!=', 'Charged to Room Folio')->where('order_status', '!=', 'Cancelled')->sum('total_amount'),
+            'food_balance' => $faSummary['has_food_advance'] ? (float)$faSummary['excess_total'] : (float)$totalFoodChargesOnly,
+            'extra_services_balance' => (float)$totalExtraServicesAmount,
+            'total_extra_services_amount' => (float)$extraServiceOrders->where('order_status', '!=', 'Cancelled')->sum('total_amount'),
+            'total_food_amount' => (float)$foodOrders->where('order_status', '!=', 'Cancelled')->sum('total_amount'),
+            'food_paid_direct' => (float)$foodOrders->where('payment_status', '!=', 'Charged to Room Folio')->where('order_status', '!=', 'Cancelled')->sum('total_amount'),
+            'extra_paid_direct' => (float)$extraServiceOrders->where('payment_status', '!=', 'Charged to Room Folio')->where('order_status', '!=', 'Cancelled')->sum('total_amount'),
             'payment_mode' => $booking->payments?->first()?->paymentMode?->name ?? 'Cash / Direct',
             'payment_remarks' => $booking->remarks ?: ($booking->payments?->first()?->payment_remarks ?? 'None'),
             'checkin_date_fmt' => $checkinDateFmt,
@@ -1349,7 +1376,7 @@ class FolioController extends Controller
             'checkout_date_fmt' => $checkoutDateFmt,
             'checkout_time_fmt' => $checkoutTimeFmt,
             'settlements_history' => $settlementsHistory,
-            'room_service_orders' => $serviceOrdersList,
+            'room_service_orders' => $serviceOrdersList->values()->all(),
             'total_room_service_charges' => $effectiveExtra,
             'raw_room_service_charges' => $totalRoomServiceCharges,
             'food_advance' => $faSummary,

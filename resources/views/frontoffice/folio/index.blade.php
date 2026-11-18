@@ -2664,8 +2664,15 @@
     const f = activeFolioData;
     const pg = f.primary_guest || {};
     const balance = Number(f.balance || 0);
+
+    const isExtraOrder = o => Boolean(o.is_extra_service || o.order_type === 'extra_service' || (o.items && o.items.some(it => it.hotel_service_id)) || (o.served_by && o.served_by !== 'POS Cashier' && !o.table_number));
+    const allOrders = f.room_service_orders || [];
+    const foodOrders = allOrders.filter(o => !isExtraOrder(o));
+    const extraOrders = allOrders.filter(isExtraOrder);
+
     const roomBalance = Number(f.room_balance !== undefined ? f.room_balance : Math.max(0, (f.room_payable_amount || 0) - (f.advance_amount || 0)));
-    const foodBalance = Number(f.food_balance !== undefined ? f.food_balance : (f.effective_extra_charges !== undefined ? f.effective_extra_charges : (f.total_room_service_charges || 0)));
+    const foodBalance = Number(f.food_balance !== undefined ? f.food_balance : (f.effective_extra_charges !== undefined ? f.effective_extra_charges : foodOrders.reduce((sum, o) => sum + Number(o.total_amount || 0), 0)));
+    const extraBalance = Number(f.extra_services_balance !== undefined ? f.extra_services_balance : extraOrders.reduce((sum, o) => sum + Number(o.total_amount || 0), 0));
     const isPreSettlement = balance > 0.01 && !['settlement done', 'settled', 'checked out'].includes((f.status || '').toLowerCase());
 
     // Format INR helper
@@ -2673,7 +2680,7 @@
 
     // Mode title & subtitle
     let billTypeTitle = 'CONSOLIDATED TAX INVOICE & SETTLEMENT RECEIPT';
-    let billTypeBadge = 'COMBINED (ROOM + FOOD)';
+    let billTypeBadge = 'COMBINED (ROOM + FOOD + SERVICES)';
     let displayBalance = balance;
 
     if (mode === 'room') {
@@ -2684,6 +2691,10 @@
       billTypeTitle = isPreSettlement ? 'PROFORMA FOOD & RESTAURANT DINING BILL' : 'TAX INVOICE - RESTAURANT & DINING';
       billTypeBadge = 'FOOD & DINING BILL ONLY';
       displayBalance = foodBalance;
+    } else if (mode === 'extra') {
+      billTypeTitle = isPreSettlement ? 'PROFORMA TAX INVOICE - HOTEL EXTRA SERVICES' : 'TAX INVOICE - HOTEL EXTRA SERVICES';
+      billTypeBadge = 'EXTRA SERVICES BILL ONLY';
+      displayBalance = extraBalance;
     } else {
       billTypeTitle = isPreSettlement ? 'PROFORMA TAX INVOICE & PRE-SETTLEMENT BILL' : 'TAX INVOICE & SETTLEMENT RECEIPT';
       billTypeBadge = 'COMBINED BILL';
@@ -2724,44 +2735,54 @@
       </table>
     `;
 
-    // 2. Build Extra Services & Food Orders rows (Restaurant POS & In-Room Dining)
+    // 2. Build Extra Services & Food Orders rows
     let serviceRowsHtml = '';
     let serviceTableHtml = '';
-    const serviceOrders = f.room_service_orders || [];
+    const targetOrders = mode === 'extra' ? extraOrders : (mode === 'food' ? foodOrders : allOrders);
     let calculatedFoodSubtotal = 0;
 
-    if (serviceOrders.length > 0) {
-      serviceOrders.forEach(ro => {
+    if (targetOrders.length > 0) {
+      targetOrders.forEach(ro => {
         const roTotal = Number(ro.total_amount || 0);
         calculatedFoodSubtotal += roTotal;
         const itemsList = (ro.items || []).map(i => `${i.quantity}x ${escapeHtml(i.item_name)} (${formatINR(i.unit_price)})`).join(', ');
-        const dest = ro.table_number ? `Table: ${escapeHtml(ro.table_number)}` : (ro.room_number ? `Room ${escapeHtml(ro.room_number)}` : 'POS Dining');
+        const dest = ro.table_number ? `Table: ${escapeHtml(ro.table_number)}` : (ro.room_number ? `Room ${escapeHtml(ro.room_number)}` : (ro.served_by || 'Extra Services Desk'));
         serviceRowsHtml += `
           <tr>
             <td class="p-1.5 px-2 border border-slate-200 font-mono font-bold text-slate-800">${escapeHtml(ro.order_number)}</td>
             <td class="p-1.5 px-2 border border-slate-200 text-slate-600">${escapeHtml(ro.date || '-')}</td>
             <td class="p-1.5 px-2 border border-slate-200 font-semibold text-slate-700">${dest}</td>
-            <td class="p-1.5 px-2 border border-slate-200 text-slate-800">${itemsList || 'Kitchen Provision'}</td>
+            <td class="p-1.5 px-2 border border-slate-200 text-slate-800">${itemsList || 'Service Provision'}</td>
             <td class="p-1.5 px-2 border border-slate-200 text-right font-mono font-bold">${formatINR(roTotal)}</td>
           </tr>
         `;
       });
 
-      const secTitle = mode === 'food' ? '1. Restaurant POS &amp; In-Room Dining Orders' : '2. In-Room Dining, Restaurant POS &amp; Extra Services';
+      const secTitle = mode === 'extra'
+        ? '1. Hotel Extra Services &amp; Amenities'
+        : (mode === 'food' ? '1. Restaurant POS &amp; In-Room Dining Orders' : '2. In-Room Dining, Restaurant POS &amp; Extra Services');
+
       serviceTableHtml = `
-        <div class="section-title">${secTitle} (${serviceOrders.length} Order(s))</div>
+        <div class="section-title">${secTitle} (${targetOrders.length} Order(s))</div>
         <table class="data-table mb-3">
           <thead>
             <tr>
               <th style="width: 110px;">Order #</th>
               <th style="width: 130px;">Date &amp; Time</th>
-              <th style="width: 110px;">Destination</th>
+              <th style="width: 120px;">${mode === 'extra' ? 'Service Desk / Room' : 'Destination'}</th>
               <th>Ordered Items &amp; Rate</th>
               <th style="width: 110px;" class="text-right">Amount</th>
             </tr>
           </thead>
           <tbody>${serviceRowsHtml}</tbody>
         </table>
+      `;
+    } else if (mode === 'extra') {
+      serviceTableHtml = `
+        <div class="section-title">1. Hotel Extra Services &amp; Amenities</div>
+        <div style="padding: 15px; border: 1px dashed #cbd5e1; border-radius: 6px; text-align: center; color: #64748b; margin-bottom: 12px;">
+          No extra hotel services (laundry, spa, amenities) recorded for this reservation.
+        </div>
       `;
     } else if (mode === 'food') {
       serviceTableHtml = `
@@ -2777,11 +2798,11 @@
     const fa = f.food_advance;
     const faCgst = (fa && fa.has_food_advance) ? Number(fa.excess_cgst !== undefined ? fa.excess_cgst : (fa.excess_gst ? Math.round((fa.excess_gst / 2) * 100) / 100 : 0)) : 0;
     const faSgst = (fa && fa.has_food_advance) ? Number(fa.excess_sgst !== undefined ? fa.excess_sgst : (fa.excess_gst ? Math.round((fa.excess_gst - faCgst) * 100) / 100 : 0)) : 0;
-    const foodOrdersTax = serviceOrders.reduce((sum, ro) => sum + Number(ro.tax_amount || 0), 0);
+    const foodOrdersTax = foodOrders.reduce((sum, ro) => sum + Number(ro.tax_amount || 0), 0);
     const foodOrdersCgst = Math.round((foodOrdersTax / 2) * 100) / 100;
     const foodOrdersSgst = Math.round((foodOrdersTax - foodOrdersCgst) * 100) / 100;
 
-    if (fa && fa.has_food_advance && mode !== 'room') {
+    if (fa && fa.has_food_advance && mode !== 'room' && mode !== 'extra') {
       foodAdvBoxHtml = `
         <div class="food-adv-card">
           <div class="food-adv-header">
@@ -2814,7 +2835,7 @@
 
     // 5. Settlements History (if any)
     let settlementsHtml = '';
-    if (f.settlements_history && f.settlements_history.length > 0 && mode !== 'food') {
+    if (f.settlements_history && f.settlements_history.length > 0 && mode !== 'food' && mode !== 'extra') {
       let sRows = '';
       f.settlements_history.forEach(s => {
         sRows += `
@@ -2889,18 +2910,55 @@
           </div>
         </div>
       `;
+    } else if (mode === 'extra') {
+      // EXTRA SERVICES ONLY SUMMARY
+      const extraSubtotal = extraOrders.reduce((sum, ro) => sum + Number(ro.subtotal || ro.total_amount || 0), 0);
+      const extraTax = extraOrders.reduce((sum, ro) => sum + Number(ro.tax_amount || 0), 0);
+      const extraCgst = Math.round((extraTax / 2) * 100) / 100;
+      const extraSgst = Math.round((extraTax - extraCgst) * 100) / 100;
+      summaryBoxHtml = `
+        <div class="summary-wrap">
+          <div class="summary-box">
+            <table>
+              <tr class="s-head"><td colspan="2">Hotel Extra Services Financial Summary</td></tr>
+              <tr>
+                <td>Total Extra Services Subtotal (${extraOrders.length} Service(s))</td>
+                <td class="text-right font-mono">${formatINR(extraSubtotal)}</td>
+              </tr>
+              ${extraTax > 0 ? `
+              <tr style="color: #4338ca;">
+                <td>CGST (2.5%)</td>
+                <td class="text-right font-mono">+ ${formatINR(extraCgst)}</td>
+              </tr>
+              <tr style="color: #4338ca;">
+                <td>SGST (2.5%)</td>
+                <td class="text-right font-mono">+ ${formatINR(extraSgst)}</td>
+              </tr>` : ''}
+              <tr class="s-total">
+                <td>Net Extra Services Payable</td>
+                <td class="text-right font-mono font-bold">${formatINR(extraBalance)}</td>
+              </tr>
+              <tr class="s-bal">
+                <td>Net Extra Services Balance Due</td>
+                <td class="text-right font-mono font-black">${formatINR(extraBalance)}</td>
+              </tr>
+            </table>
+          </div>
+        </div>
+      `;
     } else if (mode === 'food') {
       // FOOD ONLY SUMMARY
       const faUsed = (f.food_advance && f.food_advance.has_food_advance) ? Number(f.food_advance.used_amount || 0) : 0;
       const netFoodDue = foodBalance;
+      const foodSubtotal = foodOrders.reduce((sum, ro) => sum + Number(ro.subtotal || ro.total_amount || 0), 0);
       summaryBoxHtml = `
         <div class="summary-wrap">
           <div class="summary-box">
             <table>
               <tr class="s-head"><td colspan="2">Food &amp; Dining Financial Summary</td></tr>
               <tr>
-                <td>Total Food / Dining Subtotal (${serviceOrders.length} Order(s))</td>
-                <td class="text-right font-mono">${formatINR(rawServiceChrg)}</td>
+                <td>Total Food / Dining Subtotal (${foodOrders.length} Order(s))</td>
+                <td class="text-right font-mono">${formatINR(foodSubtotal || rawServiceChrg)}</td>
               </tr>
               ${faUsed > 0 ? `
               <tr style="color: #047857; font-weight: bold;">
@@ -3005,6 +3063,8 @@
       mainTablesHtml = roomTableHtml + settlementsHtml + summaryBoxHtml;
     } else if (mode === 'food') {
       mainTablesHtml = serviceTableHtml + foodAdvBoxHtml + summaryBoxHtml;
+    } else if (mode === 'extra') {
+      mainTablesHtml = serviceTableHtml + summaryBoxHtml;
     } else {
       mainTablesHtml = roomTableHtml + serviceTableHtml + foodAdvBoxHtml + settlementsHtml + summaryBoxHtml;
     }
@@ -3182,11 +3242,21 @@
 
       activeFolioData = data.folio;
       const f = data.folio;
-      const foodCount = (f.room_service_orders || []).length;
+      const isExtraOrder = o => Boolean(o.is_extra_service || o.order_type === 'extra_service' || (o.items && o.items.some(it => it.hotel_service_id)) || (o.served_by && o.served_by !== 'POS Cashier' && !o.table_number));
+      const allOrders = f.room_service_orders || [];
+      const foodOrders = allOrders.filter(o => !isExtraOrder(o));
+      const extraOrders = allOrders.filter(isExtraOrder);
+
+      const foodCount = foodOrders.length;
+      const extraCount = extraOrders.length;
+
       const roomTotal = Number(f.room_payable_amount || f.total_amount || 0);
-      const foodTotal = Number(f.total_food_amount || f.total_room_service_charges || 0);
+      const foodTotal = Number(f.total_food_amount !== undefined ? f.total_food_amount : foodOrders.reduce((sum, o) => sum + Number(o.total_amount || 0), 0));
+      const extraTotal = Number(f.total_extra_services_amount !== undefined ? f.total_extra_services_amount : extraOrders.reduce((sum, o) => sum + Number(o.total_amount || 0), 0));
+
       const roomBal = Number(f.room_balance !== undefined ? f.room_balance : Math.max(0, (f.room_payable_amount || 0) - (f.advance_amount || 0)));
-      const foodBal = Number(f.food_balance !== undefined ? f.food_balance : (f.effective_extra_charges !== undefined ? f.effective_extra_charges : foodTotal));
+      const foodBal = Number(f.food_balance !== undefined ? f.food_balance : foodTotal);
+      const extraBal = Number(f.extra_services_balance !== undefined ? f.extra_services_balance : extraTotal);
 
       Swal.fire({
         title: 'Choose Bill Format to Print',
@@ -3201,7 +3271,7 @@
                 <div class="w-8 h-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center font-bold text-xs"><i class="fa-solid fa-receipt"></i></div>
                 <div>
                   <div class="font-extrabold text-xs">Combined Bill (All-in-One)</div>
-                  <div class="text-[10.5px] text-indigo-700">Consolidated Room + Food &amp; Dining orders in single bill</div>
+                  <div class="text-[10.5px] text-indigo-700">Consolidated Room + Food &amp; Dining + Extra Services in single bill</div>
                 </div>
               </div>
               <span class="font-mono font-extrabold text-xs text-indigo-800">${formatINR(f.balance)}</span>
@@ -3228,6 +3298,17 @@
               </div>
               <span class="font-mono font-extrabold text-xs text-amber-800">${formatINR(foodBal)}</span>
             </button>
+
+            <button type="button" id="swal-btn-print-extra" class="p-3 rounded-xl border border-emerald-200 bg-emerald-50/70 hover:bg-emerald-100 flex items-center justify-between cursor-pointer transition text-emerald-950">
+              <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-lg bg-emerald-600 text-white flex items-center justify-center font-bold text-xs"><i class="fa-solid fa-bell-concierge"></i></div>
+                <div>
+                  <div class="font-extrabold text-xs">Extra Services Bill Only (${extraCount} Services)</div>
+                  <div class="text-[10.5px] text-emerald-700">Laundry, Spa, Paid Amenities &amp; Services separate bill</div>
+                </div>
+              </div>
+              <span class="font-mono font-extrabold text-xs text-emerald-800">${formatINR(extraBal)}</span>
+            </button>
           </div>
         `,
         showConfirmButton: false,
@@ -3248,6 +3329,11 @@
           document.getElementById('swal-btn-print-food')?.addEventListener('click', () => {
             Swal.close();
             printFolioInvoice('food');
+            if (typeof onDone === 'function') onDone();
+          });
+          document.getElementById('swal-btn-print-extra')?.addEventListener('click', () => {
+            Swal.close();
+            printFolioInvoice('extra');
             if (typeof onDone === 'function') onDone();
           });
         }

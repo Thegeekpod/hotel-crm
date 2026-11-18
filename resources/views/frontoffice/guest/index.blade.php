@@ -264,6 +264,7 @@
               <th class="min-w-[160px] whitespace-nowrap">Name</th>
               <th class="min-w-[130px] whitespace-nowrap">Phone</th>
               <th class="min-w-[130px] whitespace-nowrap">Room &amp; Floor</th>
+              <th class="min-w-[120px] text-center whitespace-nowrap">PAX Details</th>
               <th class="min-w-[140px] whitespace-nowrap">Check-in</th>
               <th class="min-w-[140px] whitespace-nowrap">Check-out</th>
               <th class="min-w-[110px] text-center whitespace-nowrap">Status</th>
@@ -353,6 +354,32 @@
                   @else
                     <span class="text-xs text-slate-400 italic">
                       <i class="fa-solid fa-hourglass-half text-[10px]"></i> Unassigned
+                    </span>
+                  @endif
+                </td>
+
+                <!-- PAX Details (Occupants in Room) -->
+                <td class="text-center whitespace-nowrap">
+                  @php
+                    $pax = $item->pax_count ?? 1;
+                    $occNames = $item->occupants_names ?? (($item->title?->name ? $item->title->name . ' ' : '') . $item->guest_name);
+                  @endphp
+                  @if($rRoomDisplay)
+                    @if($pax > 1)
+                      <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full font-black text-xs bg-indigo-50 text-indigo-700 border border-indigo-200 shadow-2xs cursor-default" title="{{ $occNames }}">
+                        <i class="fa-solid fa-users text-indigo-600"></i> {{ $pax }} Pax
+                      </span>
+                      <div class="text-[10px] font-semibold text-slate-500 mt-1 max-w-[130px] truncate mx-auto" title="{{ $occNames }}">
+                        {{ $occNames }}
+                      </div>
+                    @else
+                      <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-bold text-xs bg-slate-100 text-slate-700 border border-slate-200 cursor-default" title="1 Occupant in this room">
+                        <i class="fa-solid fa-user text-slate-400 text-[10px]"></i> 1 Pax
+                      </span>
+                    @endif
+                  @else
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold text-slate-400 bg-slate-50 border border-slate-200">
+                      1 Pax (Unassigned)
                     </span>
                   @endif
                 </td>
@@ -648,6 +675,11 @@
           <div class="dossier-field-row">
             <span class="dossier-label">Meal Plan</span>
             <span class="dossier-val text-orange-700 font-extrabold" id="crm-mdl-card-mealplan">-</span>
+          </div>
+
+          <div class="dossier-field-row">
+            <span class="dossier-label">Room Occupancy (PAX)</span>
+            <span class="dossier-val text-indigo-700 font-extrabold" id="crm-mdl-card-pax">-</span>
           </div>
 
           <!-- Corporate Account Block -->
@@ -1090,6 +1122,13 @@
       corpSection.style.display = 'none';
     }
 
+    const paxEl = document.getElementById('crm-mdl-card-pax');
+    if (paxEl) {
+      const pCount = guest.pax_count || 1;
+      const pNames = guest.occupants_names || guest.guest_name || 'Guest';
+      paxEl.textContent = `${pCount} Pax (${pNames})`;
+    }
+
     // Card 3: Allotted Rooms & Accommodation Details (No payment details)
     const roomsContainer = document.getElementById('crm-mdl-rooms-container');
     if (roomsContainer) {
@@ -1099,7 +1138,9 @@
         category: guest.room_category || (guest.room?.category_relation?.name ?? 'Standard'),
         floor: guest.room_floor || (guest.room?.floor_relation?.floor ?? '1'),
         bedding: guest.room_bedding || (guest.room?.bedding_config_relation?.name ?? 'Standard'),
-        occupant_name: guest.guest_name || guest.name,
+        pax_count: guest.pax_count || 1,
+        occupants_names: guest.occupants_names || guest.guest_name || guest.name,
+        occupant_name: guest.occupants_names || guest.guest_name || guest.name,
         occupant_phone: guest.mobile || 'N/A',
         status: guest.status || 'Confirmed'
       }];
@@ -1118,9 +1159,12 @@
                 <span class="text-[11px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded">
                   <i class="fa-solid fa-bed text-indigo-500"></i> ${escapeHtml(rm.bedding)}
                 </span>
+                <span class="text-[10px] font-extrabold text-indigo-800 bg-indigo-100 border border-indigo-200 px-2 py-0.5 rounded-full">
+                  <i class="fa-solid fa-users text-indigo-600"></i> ${escapeHtml(rm.pax_count || 1)} Pax
+                </span>
               </div>
-              <div class="text-[11px] text-slate-500 mt-0.5">
-                <i class="fa-solid fa-user text-slate-400"></i> Occupant: <strong class="text-slate-700">${escapeHtml(rm.occupant_name)}</strong>
+              <div class="text-[11px] text-slate-500 mt-0.5 flex items-center gap-1.5 flex-wrap">
+                <span><i class="fa-solid fa-user text-slate-400"></i> Occupant(s): <strong class="text-slate-700">${escapeHtml(rm.occupants_names || rm.occupant_name)}</strong></span>
                 ${rm.occupant_phone && rm.occupant_phone !== 'N/A' ? ` • <span class="font-mono"><i class="fa-solid fa-phone text-[9px] text-slate-400"></i> ${escapeHtml(rm.occupant_phone)}</span>` : ''}
               </div>
             </div>
@@ -1916,7 +1960,8 @@
                 <th class="py-1.5 px-1">Room</th>
                 <th class="py-1.5 px-1">Floor &amp; Category</th>
                 <th class="py-1.5 px-1">Bedding</th>
-                <th class="py-1.5 px-1">Assigned Occupant</th>
+                <th class="py-1.5 px-1 text-center">PAX</th>
+                <th class="py-1.5 px-1">Assigned Occupants</th>
                 <th class="py-1.5 px-1">Status</th>
               </tr>
             </thead>
@@ -1926,7 +1971,9 @@
                 floor: g.room_floor || '1',
                 category: g.room_category || 'Standard',
                 bedding: g.room_bedding || 'Standard',
-                occupant_name: g.guest_name || 'Primary Guest',
+                pax_count: g.pax_count || 1,
+                occupants_names: g.occupants_names || g.guest_name || 'Primary Guest',
+                occupant_name: g.occupants_names || g.guest_name || 'Primary Guest',
                 occupant_phone: g.mobile || 'N/A',
                 status: g.status || 'Confirmed'
               }]).map(rm => `
@@ -1934,7 +1981,8 @@
                   <td class="py-1.5 px-1 font-bold text-indigo-700 font-mono">${escapeHtml(rm.room_number)}</td>
                   <td class="py-1.5 px-1 font-bold text-slate-900">Floor ${escapeHtml(rm.floor)} • ${escapeHtml(rm.category)}</td>
                   <td class="py-1.5 px-1 text-slate-700">${escapeHtml(rm.bedding)}</td>
-                  <td class="py-1.5 px-1 text-slate-700">${escapeHtml(rm.occupant_name)} ${rm.occupant_phone && rm.occupant_phone !== 'N/A' ? `(${escapeHtml(rm.occupant_phone)})` : ''}</td>
+                  <td class="py-1.5 px-1 text-center font-bold text-indigo-800">${escapeHtml(rm.pax_count || 1)} Pax</td>
+                  <td class="py-1.5 px-1 text-slate-700">${escapeHtml(rm.occupants_names || rm.occupant_name)} ${rm.occupant_phone && rm.occupant_phone !== 'N/A' ? `(${escapeHtml(rm.occupant_phone)})` : ''}</td>
                   <td class="py-1.5 px-1 font-bold text-emerald-600">${escapeHtml(rm.status || g.status || 'Confirmed')}</td>
                 </tr>
               `).join('')}

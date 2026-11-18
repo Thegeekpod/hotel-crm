@@ -144,8 +144,57 @@ class GuestController extends Controller
             })->count(),
         ];
 
+        // Batch fetch all associated bookings for all guests on current page for fast PAX calculation
+        $guestCollection = $guests->getCollection();
+        $allGuestIds = $guestCollection->pluck('id')->filter()->all();
+        $latestBookings = $guestCollection->map(fn($g) => $g->latestBooking)->filter();
+        $primaryBookingIds = $latestBookings->pluck('primary_booking_id')->filter()->all();
+        $bookingIds = $latestBookings->pluck('id')->filter()->all();
+        $reserveIds = $latestBookings->pluck('reserve_id')->filter()->all();
+
+        $allGroupBookings = \App\Models\Booking::where(function($q) use ($allGuestIds, $primaryBookingIds, $bookingIds, $reserveIds) {
+            $q->whereIn('guest_id', $allGuestIds);
+            if (!empty($primaryBookingIds)) {
+                $q->orWhereIn('primary_booking_id', $primaryBookingIds)->orWhereIn('id', $primaryBookingIds);
+            }
+            if (!empty($bookingIds)) {
+                $q->orWhereIn('primary_booking_id', $bookingIds)->orWhereIn('id', $bookingIds);
+            }
+            if (!empty($reserveIds)) {
+                $q->orWhereIn('reserve_id', $reserveIds);
+            }
+        })->with(['room.categoryRelation', 'room.floorRelation', 'room.beddingConfigRelation', 'guest.title'])->get();
+
+        // Annotate each guest with pax details
+        $guests->getCollection()->transform(function($item) use ($allGroupBookings) {
+            $lb = $item->latestBooking;
+            $group = $allGroupBookings->filter(function($b) use ($item, $lb) {
+                if ($lb?->primary_booking_id) {
+                    return $b->primary_booking_id === $lb->primary_booking_id || $b->id === $lb->primary_booking_id;
+                } elseif ($lb?->reserve_id) {
+                    return $b->reserve_id === $lb->reserve_id || $b->primary_booking_id === $lb->id || $b->id === $lb->id;
+                }
+                return $b->guest_id === $item->id;
+            });
+
+            $roomOccupants = ($lb && $lb->room_id) ? $group->where('room_id', $lb->room_id) : collect();
+            if ($roomOccupants->isEmpty() && $lb) {
+                $roomOccupants = collect([$lb]);
+            }
+            $paxCount = max(1, $roomOccupants->count());
+            $occupantNamesList = $roomOccupants->map(function($b) {
+                return ($b->guest?->title?->name ? $b->guest->title->name . ' ' : '') . ($b->guest?->guest_name ?? 'Guest');
+            })->filter()->unique()->values();
+
+            $item->pax_count = $paxCount;
+            $item->occupants_names = $occupantNamesList->implode(', ');
+            $item->occupants_list = $occupantNamesList->all();
+
+            return $item;
+        });
+
         // Serialized guests for instant client-side dossier rendering
-        $serializedGuests = $guests->getCollection()->map(function($item) {
+        $serializedGuests = $guests->getCollection()->map(function($item) use ($allGroupBookings) {
             $lb = $item->latestBooking;
             $room = $lb?->room;
             $advanceAmount = (float)$item->advance_amount;
@@ -167,27 +216,31 @@ class GuestController extends Controller
 
             $isLocked = $hasSettled || in_array($item->status, ['Settlement Done', 'Checked Out']);
 
-            // Fetch all associated bookings for this guest / group to gather all rooms
-            $allBookings = \App\Models\Booking::where(function($q) use ($item, $lb) {
+            $group = $allGroupBookings->filter(function($b) use ($item, $lb) {
                 if ($lb?->primary_booking_id) {
-                    $q->where('primary_booking_id', $lb->primary_booking_id)->orWhere('id', $lb->primary_booking_id);
-                } elseif ($lb && $lb->additionalBookings()->exists()) {
-                    $q->where('primary_booking_id', $lb->id)->orWhere('id', $lb->id);
-                } else {
-                    $q->where('guest_id', $item->id);
+                    return $b->primary_booking_id === $lb->primary_booking_id || $b->id === $lb->primary_booking_id;
+                } elseif ($lb?->reserve_id) {
+                    return $b->reserve_id === $lb->reserve_id || $b->primary_booking_id === $lb->id || $b->id === $lb->id;
                 }
-            })->with(['room.categoryRelation', 'room.floorRelation', 'room.beddingConfigRelation', 'guest'])->get();
+                return $b->guest_id === $item->id;
+            });
 
-            $allRooms = $allBookings->map(function($b) {
-                $rm = $b->room;
+            $allRooms = $group->groupBy(fn($b) => $b->room_id ?: ('unassigned_' . $b->id))->map(function($rmBookings) {
+                $firstB = $rmBookings->first();
+                $rm = $firstB?->room;
+                $names = $rmBookings->map(function($b) {
+                    return ($b->guest?->title?->name ? $b->guest->title->name . ' ' : '') . ($b->guest?->guest_name ?? 'Guest');
+                })->filter()->unique()->implode(', ');
                 return [
                     'room_number' => $rm?->room_number ? ('R' . preg_replace('/^r[-_\s]?/i', '', trim($rm->room_number))) : 'Unassigned',
                     'category' => $rm?->categoryRelation?->name ?? ($rm?->category ?? 'Standard'),
                     'floor' => $rm?->floorRelation?->floor ?? ($rm?->floor ?? '1'),
                     'bedding' => $rm?->beddingConfigRelation?->name ?? 'Standard',
-                    'occupant_name' => ($b->guest?->title?->name ? $b->guest->title->name . ' ' : '') . ($b->guest?->guest_name ?? 'Primary Guest'),
-                    'occupant_phone' => $b->guest?->mobile ?? 'N/A',
-                    'status' => $b->status ?? 'Confirmed',
+                    'pax_count' => $rmBookings->count(),
+                    'occupants_names' => $names ?: 'Primary Guest',
+                    'occupant_name' => $names ?: 'Primary Guest',
+                    'occupant_phone' => $firstB?->guest?->mobile ?? 'N/A',
+                    'status' => $firstB?->status ?? 'Confirmed',
                 ];
             })->values()->all();
 
@@ -197,11 +250,17 @@ class GuestController extends Controller
                     'category' => $room->categoryRelation?->name ?? ($room->category ?? 'Standard'),
                     'floor' => $room->floorRelation?->floor ?? ($room->floor ?? '1'),
                     'bedding' => $room->beddingConfigRelation?->name ?? 'Standard',
+                    'pax_count' => 1,
+                    'occupants_names' => ($item->title?->name ? $item->title->name . ' ' : '') . $item->guest_name,
                     'occupant_name' => ($item->title?->name ? $item->title->name . ' ' : '') . $item->guest_name,
                     'occupant_phone' => $item->mobile ?? 'N/A',
                     'status' => $item->status ?: 'Confirmed',
                 ];
             }
+
+            $paxCount = $item->pax_count ?? 1;
+            $occupantsNames = $item->occupants_names ?? (($item->title?->name ? $item->title->name . ' ' : '') . $item->guest_name);
+            $occupantsList = $item->occupants_list ?? [$occupantsNames];
 
             return [
                 'id' => $item->id,
@@ -274,6 +333,9 @@ class GuestController extends Controller
                 'payment_mode' => $lb?->payments?->last()?->paymentMode?->name ?? ($item->paymentMode?->name ?? 'Cash / Direct'),
                 'payment_remarks' => $lb?->remarks ?: ($item->payments?->last()?->payment_remarks ?? 'None'),
                 'remarks' => $lb?->remarks ?: '',
+                'pax_count' => $paxCount,
+                'occupants_names' => $occupantsNames,
+                'occupants' => $occupantsList,
                 'all_rooms' => $allRooms,
             ];
         });

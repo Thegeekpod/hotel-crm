@@ -226,6 +226,7 @@ class FoodAdvanceService
                 'discount_type' => 'percentage',
                 'discount_value' => 0.00,
                 'discount_amount' => 0.00,
+                'amount' => 0.00,
                 'net_food_charges' => $foodCharges,
                 'label' => null,
             ];
@@ -277,6 +278,7 @@ class FoodAdvanceService
             'discount_type' => $discountType,
             'discount_value' => $discountValue,
             'discount_amount' => $discountAmount,
+            'amount' => $discountAmount,
             'net_food_charges' => $netFoodCharges,
             'label' => $label,
         ];

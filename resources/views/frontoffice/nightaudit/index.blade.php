@@ -359,8 +359,11 @@
                         </div>
                       @endif
                       @if(!empty($b['corporate_food_discount']['has_discount']))
+                        @php
+                          $cfdAmount = $b['corporate_food_discount']['discount_amount'] ?? $b['corporate_food_discount']['amount'] ?? ($b['total_food_discount'] ?? 0);
+                        @endphp
                         <div class="text-[8.5px] text-emerald-800 bg-emerald-50 border border-emerald-200 rounded px-1.5 py-0.5 mt-1 text-right font-bold">
-                          <i class="fa-solid fa-tag"></i> Corporate Food Disc ({{ $b['corporate_food_discount']['label'] }}): -₹{{ number_format($b['corporate_food_discount']['amount'], 2) }}
+                          <i class="fa-solid fa-tag"></i> Corporate Food Disc ({{ $b['corporate_food_discount']['label'] ?? '' }}): -₹{{ number_format($cfdAmount, 2) }}
                         </div>
                       @endif
                     @else

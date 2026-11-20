@@ -5,6 +5,7 @@ use App\Http\Controllers\PosController;
 
 Route::prefix('pos')->name('pos.')->middleware('section:pos')->group(function () {
     Route::get('/', [PosController::class, 'index'])->name('index');
+    Route::get('/reports', [PosController::class, 'reportsIndex'])->name('reports');
     Route::get('/orders', [PosController::class, 'ordersIndex'])->name('orders.index');
     Route::get('/orders/history', [PosController::class, 'ordersIndex'])->name('orders.history');
     Route::post('/orders', [PosController::class, 'storeOrder'])->name('orders.store');

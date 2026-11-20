@@ -33,6 +33,9 @@
           <a href="{{ route('stores.index') }}" class="inline-flex items-center gap-1.5 h-9 px-3.5 text-xs font-bold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200/80 rounded-xl transition-all shadow-xs cursor-pointer">
             <i class="fa-solid fa-boxes-stacked text-amber-600"></i> Manage Store
           </a>
+          <a href="{{ route('pos.reports') }}" class="inline-flex items-center gap-1.5 h-9 px-3.5 text-xs font-bold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200/80 rounded-xl transition-all shadow-xs cursor-pointer">
+            <i class="fa-solid fa-chart-pie text-emerald-600"></i> POS Reports
+          </a>
           <button type="button" class="inline-flex items-center gap-1.5 h-9 px-3.5 text-xs font-bold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200/80 rounded-xl transition-all shadow-xs cursor-pointer" onclick="exportOrdersTableCSV()">
             <i class="fa-solid fa-file-csv text-slate-500"></i> Export CSV
           </button>

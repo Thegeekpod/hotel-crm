@@ -236,6 +236,272 @@ class PosController extends Controller
     }
 
     /**
+     * Display comprehensive POS Sales & Dining Analytics Reports.
+     */
+    public function reportsIndex(Request $request)
+    {
+        // 1. Filter parameters
+        $dateFilter = $request->query('date_filter', 'all');
+        $startDate = $request->query('start_date');
+        $endDate = $request->query('end_date');
+        $tableId = $request->query('table_id', 'all');
+        $roomId = $request->query('room_id', 'all');
+        $orderType = $request->query('order_type', 'all');
+        $billingType = $request->query('billing_type', 'all');
+        $nature = $request->query('nature', 'all'); // 'all', 'bill', 'kot'
+        $search = trim($request->query('search', ''));
+        $perPage = $request->query('per_page', 25);
+
+        // Base query
+        $baseQuery = PosOrder::query();
+
+        // Apply Date Filter
+        if ($dateFilter === 'today') {
+            $baseQuery->whereDate('created_at', today());
+        } elseif ($dateFilter === 'yesterday') {
+            $baseQuery->whereDate('created_at', today()->subDay());
+        } elseif ($dateFilter === 'this_week') {
+            $baseQuery->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()]);
+        } elseif ($dateFilter === 'this_month') {
+            $baseQuery->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()]);
+        } elseif ($dateFilter === 'last_month') {
+            $baseQuery->whereBetween('created_at', [now()->subMonth()->startOfMonth(), now()->subMonth()->endOfMonth()]);
+        } elseif ($dateFilter === 'custom' || (!empty($startDate) && !empty($endDate))) {
+            if (!empty($startDate)) {
+                $baseQuery->whereDate('created_at', '>=', $startDate);
+            }
+            if (!empty($endDate)) {
+                $baseQuery->whereDate('created_at', '<=', $endDate);
+            }
+        }
+
+        // Table filter (By Table)
+        if ($tableId && $tableId !== 'all') {
+            $tbl = TableManage::find($tableId);
+            $tblNum = $tbl ? $tbl->table_number : $tableId;
+            $baseQuery->where(function($q) use ($tableId, $tblNum) {
+                $q->where('table_id', $tableId)
+                  ->orWhere('table_number', $tblNum)
+                  ->orWhere('table_number', 'like', "%{$tblNum}%");
+            });
+        }
+
+        // Room filter (By Room)
+        if ($roomId && $roomId !== 'all') {
+            $rm = Room::find($roomId);
+            $rmNum = $rm ? $rm->room_number : $roomId;
+            $baseQuery->where(function($q) use ($roomId, $rmNum) {
+                $q->where('room_id', $roomId)
+                  ->orWhere('room_number', $rmNum);
+            });
+        }
+
+        // Order Type filter
+        if ($orderType && $orderType !== 'all') {
+            $baseQuery->where('order_type', $orderType);
+        }
+
+        // Billing Type filter
+        if ($billingType && $billingType !== 'all') {
+            $baseQuery->where('billing_type', $billingType);
+        }
+
+        // Nature filter (Master Bills vs KOT tickets)
+        if ($nature && $nature !== 'all') {
+            if ($nature === 'bill') {
+                $baseQuery->where('is_kot', false);
+            } elseif ($nature === 'kot') {
+                $baseQuery->where('is_kot', true);
+            }
+        }
+
+        // Search
+        if (!empty($search)) {
+            $baseQuery->where(function ($q) use ($search) {
+                $q->where('order_number', 'like', "%{$search}%")
+                  ->orWhere('kot_number', 'like', "%{$search}%")
+                  ->orWhere('customer_name', 'like', "%{$search}%")
+                  ->orWhere('customer_phone', 'like', "%{$search}%")
+                  ->orWhere('table_number', 'like', "%{$search}%")
+                  ->orWhere('room_number', 'like', "%{$search}%")
+                  ->orWhereHas('items', function ($iq) use ($search) {
+                      $iq->where('item_name', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        // CSV Export if requested
+        if ($request->query('export') === 'csv') {
+            $filename = 'pos_report_' . date('Y-m-d_His') . '.csv';
+            $exportOrders = (clone $baseQuery)->with(['items', 'room', 'booking.guest', 'tableManage'])->latest()->get();
+
+            return response()->stream(function() use ($exportOrders) {
+                $handle = fopen('php://output', 'w');
+                fputcsv($handle, [
+                    'Order / KOT #',
+                    'Date & Time',
+                    'Type',
+                    'Nature',
+                    'Table',
+                    'Room',
+                    'Customer / Guest',
+                    'Items Summary',
+                    'Total Qty',
+                    'Subtotal (INR)',
+                    'Discount (INR)',
+                    'Tax (INR)',
+                    'Total Amount (INR)',
+                    'Billing Mode',
+                    'Payment Status',
+                    'Order Status'
+                ]);
+
+                foreach ($exportOrders as $ord) {
+                    $itemsSummary = $ord->items->map(fn($it) => $it->item_name . ' (x' . $it->quantity . ')')->implode(', ');
+                    $totalQty = $ord->items->sum('quantity');
+                    $guestName = $ord->customer_name ?: ($ord->booking?->guest?->name ?? 'Walk-in');
+
+                    fputcsv($handle, [
+                        $ord->order_number ?: $ord->kot_number,
+                        $ord->created_at ? $ord->created_at->format('Y-m-d H:i') : '',
+                        $ord->order_type,
+                        $ord->is_kot ? 'KOT' : 'Master Bill',
+                        $ord->table_number ? 'Table ' . $ord->table_number : ($ord->tableManage ? 'Table ' . $ord->tableManage->table_number : '-'),
+                        $ord->room_number ? 'Room ' . $ord->room_number : ($ord->room ? 'Room ' . $ord->room->room_number : '-'),
+                        $guestName,
+                        $itemsSummary,
+                        $totalQty,
+                        number_format((float)$ord->subtotal, 2, '.', ''),
+                        number_format((float)$ord->discount_amount, 2, '.', ''),
+                        number_format((float)$ord->tax_amount, 2, '.', ''),
+                        number_format((float)$ord->total_amount, 2, '.', ''),
+                        $ord->billing_type,
+                        $ord->payment_status,
+                        $ord->status
+                    ]);
+                }
+                fclose($handle);
+            }, 200, [
+                'Content-Type' => 'text/csv',
+                'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+            ]);
+        }
+
+        // 2. High-Level KPI Summary Metrics
+        $totalOrdersCount = (clone $baseQuery)->count();
+        $masterBillsCount = (clone $baseQuery)->where('is_kot', false)->count();
+        $kotCount = (clone $baseQuery)->where('is_kot', true)->count();
+
+        // Financial totals (for master bills or non-cancelled sales)
+        $salesSourceQuery = ($nature === 'kot') 
+            ? (clone $baseQuery)->where('status', '!=', 'Cancelled')
+            : (clone $baseQuery)->where('is_kot', false)->where('status', '!=', 'Cancelled');
+
+        $totalRevenue = (clone $salesSourceQuery)->sum('total_amount');
+        $totalSubtotal = (clone $salesSourceQuery)->sum('subtotal');
+        $totalDiscounts = (clone $salesSourceQuery)->sum('discount_amount');
+        $totalTax = (clone $salesSourceQuery)->sum('tax_amount');
+
+        // Revenue by Order Type
+        $roomDiningRevenue = (clone $salesSourceQuery)->where('order_type', 'Room Dining')->sum('total_amount');
+        $roomDiningCount = (clone $salesSourceQuery)->where('order_type', 'Room Dining')->count();
+
+        $tableDineInRevenue = (clone $salesSourceQuery)->where('order_type', 'Table Dine-in')->sum('total_amount');
+        $tableDineInCount = (clone $salesSourceQuery)->where('order_type', 'Table Dine-in')->count();
+
+        $takeawayRevenue = (clone $salesSourceQuery)->where('order_type', 'Takeaway')->sum('total_amount');
+        $takeawayCount = (clone $salesSourceQuery)->where('order_type', 'Takeaway')->count();
+
+        // Revenue by Payment / Billing Mode
+        $roomFolioRevenue = (clone $salesSourceQuery)->where('billing_type', 'Charged to Room Folio')->sum('total_amount');
+        $cashRevenue = (clone $salesSourceQuery)->where('billing_type', 'Cash Paid')->sum('total_amount');
+        $upiCardRevenue = (clone $salesSourceQuery)->whereIn('billing_type', ['Digital UPI / Card Paid', 'UPI / Online', 'Card Paid'])->sum('total_amount');
+
+        // 3. Item-wise sales breakdown (Top selling dishes)
+        $matchingOrderIds = (clone $baseQuery)->where('status', '!=', 'Cancelled')->pluck('id');
+        $itemSales = PosOrderItem::whereIn('pos_order_id', $matchingOrderIds)
+            ->selectRaw('item_name, SUM(quantity) as total_qty, AVG(unit_price) as avg_price, SUM(line_total) as total_revenue, COUNT(DISTINCT pos_order_id) as order_count')
+            ->groupBy('item_name')
+            ->orderByDesc('total_revenue')
+            ->get();
+
+        // 4. Table-wise Revenue Breakdown
+        $tableBreakdown = (clone $baseQuery)->where('status', '!=', 'Cancelled')
+            ->where(function($q) {
+                $q->whereNotNull('table_id')->orWhereNotNull('table_number');
+            })
+            ->selectRaw('COALESCE(table_number, "N/A") as tbl_num, table_id, COUNT(id) as orders_count, SUM(CASE WHEN is_kot = 0 THEN total_amount ELSE 0 END) as total_revenue, SUM(CASE WHEN is_kot = 0 THEN subtotal ELSE 0 END) as total_subtotal')
+            ->groupBy('table_id', 'tbl_num')
+            ->orderByDesc('total_revenue')
+            ->get();
+
+        // 5. Room-wise Revenue Breakdown
+        $roomBreakdown = (clone $baseQuery)->where('status', '!=', 'Cancelled')
+            ->where(function($q) {
+                $q->whereNotNull('room_id')->orWhereNotNull('room_number');
+            })
+            ->selectRaw('COALESCE(room_number, "N/A") as rm_num, room_id, COUNT(id) as orders_count, SUM(CASE WHEN is_kot = 0 THEN total_amount ELSE 0 END) as total_revenue, SUM(CASE WHEN is_kot = 0 THEN discount_amount ELSE 0 END) as total_discount')
+            ->groupBy('room_id', 'rm_num')
+            ->orderByDesc('total_revenue')
+            ->get();
+
+        // 6. Payment Modes Breakdown
+        $paymentBreakdown = (clone $salesSourceQuery)
+            ->selectRaw('COALESCE(billing_type, "Unspecified") as mode, COUNT(id) as count, SUM(total_amount) as total_amount')
+            ->groupBy('mode')
+            ->orderByDesc('total_amount')
+            ->get();
+
+        // 7. Paginated Orders List
+        if ($perPage === 'all') {
+            $orders = (clone $baseQuery)->with(['items', 'room', 'booking.guest', 'tableManage', 'parentOrder'])->latest()->paginate(1000)->withQueryString();
+        } else {
+            $perPage = (int)$perPage > 0 ? (int)$perPage : 25;
+            $orders = (clone $baseQuery)->with(['items', 'room', 'booking.guest', 'tableManage', 'parentOrder'])->latest()->paginate($perPage)->withQueryString();
+        }
+
+        // Dropdowns data
+        $tablesList = TableManage::orderBy('table_number')->get();
+        $roomsList = Room::orderBy('room_number')->get();
+
+        return view('pos.reports', compact(
+            'orders',
+            'totalOrdersCount',
+            'masterBillsCount',
+            'kotCount',
+            'totalRevenue',
+            'totalSubtotal',
+            'totalDiscounts',
+            'totalTax',
+            'roomDiningRevenue',
+            'roomDiningCount',
+            'tableDineInRevenue',
+            'tableDineInCount',
+            'takeawayRevenue',
+            'takeawayCount',
+            'roomFolioRevenue',
+            'cashRevenue',
+            'upiCardRevenue',
+            'itemSales',
+            'tableBreakdown',
+            'roomBreakdown',
+            'paymentBreakdown',
+            'tablesList',
+            'roomsList',
+            'dateFilter',
+            'startDate',
+            'endDate',
+            'tableId',
+            'roomId',
+            'orderType',
+            'billingType',
+            'nature',
+            'search',
+            'perPage'
+        ));
+    }
+
+    /**
      * Store and process a POS Order or KOT Ticket.
      * 
      * Scenarios supported:

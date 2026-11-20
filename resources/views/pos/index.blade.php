@@ -146,6 +146,9 @@
         <a href="{{ route('pos.orders.index') }}" class="inline-flex items-center gap-1.5 h-9.5 px-3.5 text-xs font-bold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200/80 rounded-xl transition-all shadow-xs" title="View All KOT Tickets & Orders">
           <i class="fa-solid fa-clock-rotate-left text-cyan-600"></i> KOT History
         </a>
+        <a href="{{ route('pos.reports') }}" class="inline-flex items-center gap-1.5 h-9.5 px-3.5 text-xs font-bold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200/80 rounded-xl transition-all shadow-xs" title="POS Analytics & Sales Reports">
+          <i class="fa-solid fa-chart-pie text-emerald-600"></i> POS Reports
+        </a>
       </div>
     </div>
 

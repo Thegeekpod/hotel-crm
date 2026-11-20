@@ -732,79 +732,32 @@
           <i class="fa-solid fa-file-invoice-dollar"></i> Pricing &amp; Billing Breakdown
         </div>
 
-        <!-- 4-Stat Metric Boxes matching guest CRM -->
-        <div class="billing-summary-grid">
-          <div class="bill-stat-item">
-            <div class="bill-stat-label">Daily Room Rate</div>
-            <div class="bill-stat-value text-slate-700" id="fmdl-bill-rate">₹ 0.00</div>
+        <!-- 4-Stat Metric Summary Cards with Distinct Colors -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-3.5">
+          <div class="bg-sky-50 border border-sky-200 rounded-xl p-2.5 text-center shadow-xs">
+            <div class="text-[10px] font-black uppercase text-sky-800 tracking-wider mb-0.5">Daily Room Rate</div>
+            <div class="font-mono text-sm font-black text-sky-950" id="fmdl-bill-rate">₹ 0.00</div>
           </div>
 
-          <div class="bill-stat-item">
-            <div class="bill-stat-label">Gross Amount</div>
-            <div class="bill-stat-value text-slate-800" id="fmdl-gross-amount">₹ 0.00</div>
+          <div class="bg-indigo-50 border border-indigo-200 rounded-xl p-2.5 text-center shadow-xs">
+            <div class="text-[10px] font-black uppercase text-indigo-800 tracking-wider mb-0.5">Gross Amount</div>
+            <div class="font-mono text-sm font-black text-indigo-950" id="fmdl-gross-amount">₹ 0.00</div>
           </div>
 
-          <div class="bill-stat-item">
-            <div class="bill-stat-label">Total Amount Paid</div>
-            <div class="bill-stat-value text-emerald-600" id="fmdl-totalpaid-amount">₹ 0.00</div>
+          <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-2.5 text-center shadow-xs">
+            <div class="text-[10px] font-black uppercase text-emerald-800 tracking-wider mb-0.5">Total Amount Paid</div>
+            <div class="font-mono text-sm font-black text-emerald-700" id="fmdl-totalpaid-amount">₹ 0.00</div>
           </div>
 
-          <div class="bill-stat-item" id="fmdl-balance-box">
-            <div class="bill-stat-label" id="fmdl-balance-label">Balance Due</div>
-            <div class="bill-stat-value text-rose-600" id="fmdl-balance-amount">₹ 0.00</div>
+          <div class="bg-rose-50 border border-rose-200 rounded-xl p-2.5 text-center shadow-xs" id="fmdl-balance-box">
+            <div class="text-[10px] font-black uppercase text-rose-800 tracking-wider mb-0.5" id="fmdl-balance-label">Balance Due</div>
+            <div class="font-mono text-sm font-black text-rose-600" id="fmdl-balance-amount">₹ 0.00</div>
           </div>
         </div>
 
-        <!-- Itemized Line Rows -->
-        <div class="mt-3.5 bg-white border border-slate-100 rounded-lg p-2.5 px-3.5">
-          <div class="dossier-field-row">
-            <span class="dossier-label">Room Rate × Nights</span>
-            <span class="dossier-val mono" id="fmdl-calc-row">-</span>
-          </div>
-          <div class="dossier-field-row">
-            <span class="dossier-label">Advance Deposit Paid</span>
-            <span class="dossier-val mono text-emerald-600" id="fmdl-advance-row">₹ 0.00</span>
-          </div>
-          <div class="dossier-field-row" id="fmdl-settle-field-row">
-            <span class="dossier-label">Settlement Amount Paid</span>
-            <span class="dossier-val mono text-indigo-600 font-extrabold" id="fmdl-settlement-row">₹ 0.00</span>
-          </div>
-          <div class="dossier-field-row">
-            <span class="dossier-label">Total Amount Paid</span>
-            <span class="dossier-val mono text-emerald-600 font-extrabold" id="fmdl-totalpaid-row">₹ 0.00</span>
-          </div>
-          <div class="dossier-field-row hidden" id="fmdl-services-field-row">
-            <span class="dossier-label flex items-center gap-1.5 text-amber-700 font-bold">
-              <i class="fa-solid fa-utensils"></i> In-Room Dining &amp; Services Total
-            </span>
-            <span class="dossier-val mono text-amber-700 font-extrabold" id="fmdl-services-row">₹ 0.00</span>
-          </div>
-          <div class="dossier-field-row hidden" id="fmdl-food-advance-field-row">
-            <span class="dossier-label flex items-center gap-1.5 text-emerald-800 font-bold">
-              <i class="fa-solid fa-receipt text-emerald-600"></i> Company Food Advance
-            </span>
-            <span class="dossier-val mono text-emerald-800 font-extrabold" id="fmdl-food-advance-row">₹ 0.00</span>
-          </div>
-          <div class="dossier-field-row">
-            <span class="dossier-label">Discount</span>
-            <span class="dossier-val mono text-emerald-600 font-bold" id="fmdl-discount-row">-</span>
-          </div>
-          <div class="dossier-field-row">
-            <span class="dossier-label">GST / Tax</span>
-            <span class="dossier-val mono text-indigo-600 font-bold" id="fmdl-tax-row">-</span>
-          </div>
-          <div class="dossier-field-row bg-slate-50 p-2 rounded-md my-1">
-            <span class="dossier-label font-extrabold text-slate-900">Grand Total Net Payable</span>
-            <span class="dossier-val mono text-sm font-black text-indigo-700" id="fmdl-payable-amount">-</span>
-          </div>
-          <div class="dossier-field-row">
-            <span class="dossier-label">Payment Mode</span>
-            <span class="dossier-val" id="fmdl-paymode-row">-</span>
-          </div>
-          <div class="dossier-field-row">
-            <span class="dossier-label">Payment Remarks / Reference</span>
-            <span class="dossier-val text-slate-500" id="fmdl-remarks-row">-</span>
-          </div>
+        <!-- 3 Distinct Colored Section Boxes (Room, Food, Extra Services) followed by Grand Total -->
+        <div id="fmdl-billing-sections-container" class="mt-3.5 space-y-3">
+          <!-- Dynamically populated via renderBillingsLedger(folio) with high visibility and distinct colors -->
         </div>
 
         <!-- Room Service & Extra Services Invoices Box -->
@@ -1819,83 +1772,245 @@
     const totalServiceCost = Number(folio.total_room_service_charges || 0);
     const roomGross = Number(folio.room_total_amount !== undefined ? folio.room_total_amount : (folio.total_amount || 0));
     const roomPayable = Number(folio.room_payable_amount !== undefined ? folio.room_payable_amount : (folio.payable_amount || 0));
-    const grossTotal = roomGross + totalServiceCost;
-    const netPayableTotal = roomPayable + totalServiceCost;
+    const roomDiscountAmt = Number(folio.discount_amount || 0);
+    const roomGstAmt = Number(folio.gst_amount || 0);
+    const advancePaid = Number(folio.advance_amount || 0);
+    const settlePaid = Number(folio.settlement_paid || 0);
+    const totalPaid = Number(folio.total_paid || 0);
+    const roomBalance = Number(folio.room_balance !== undefined ? folio.room_balance : Math.max(0, roomPayable - advancePaid));
+    const balanceDue = Number(folio.balance || 0);
 
+    const grossTotal = roomGross + (folio.raw_room_service_charges || totalServiceCost);
+    const netPayableTotal = Number(folio.effective_payable !== undefined ? folio.effective_payable : (roomPayable + totalServiceCost));
+
+    // Update 4 top metric cards
     const billRateEl = document.getElementById('fmdl-bill-rate');
     if (billRateEl) billRateEl.textContent = formatINR(folio.room_rate);
+    const grossEl = document.getElementById('fmdl-gross-amount');
+    if (grossEl) grossEl.textContent = formatINR(grossTotal);
+    const paidEl = document.getElementById('fmdl-totalpaid-amount');
+    if (paidEl) paidEl.textContent = formatINR(totalPaid);
 
-    document.getElementById('fmdl-gross-amount').textContent = formatINR(grossTotal);
-    document.getElementById('fmdl-totalpaid-amount').textContent = formatINR(folio.total_paid);
-
-    const balanceBox = document.getElementById('fmdl-balance-box');
     const balanceAmountEl = document.getElementById('fmdl-balance-amount');
     const balanceLabelEl = document.getElementById('fmdl-balance-label');
-
-    balanceAmountEl.textContent = formatINR(folio.balance);
-    if (folio.balance > 0.01) {
-      balanceAmountEl.style.color = '#e11d48';
-      balanceLabelEl.textContent = 'Balance Due';
-    } else {
-      balanceAmountEl.style.color = '#059669';
-      balanceLabelEl.textContent = 'Fully Settled';
+    if (balanceAmountEl) balanceAmountEl.textContent = formatINR(balanceDue);
+    if (balanceLabelEl) {
+      if (balanceDue > 0.01) {
+        balanceAmountEl.style.color = '#e11d48';
+        balanceLabelEl.textContent = 'Balance Due';
+      } else {
+        balanceAmountEl.style.color = '#059669';
+        balanceLabelEl.textContent = 'Fully Settled';
+      }
     }
 
-    // Breakdown details
-    document.getElementById('fmdl-calc-row').textContent = `${formatINR(folio.room_rate)} × ${folio.total_nights} Nights = ${formatINR(roomGross)}`;
-    document.getElementById('fmdl-advance-row').textContent = formatINR(folio.advance_amount);
-    document.getElementById('fmdl-settlement-row').textContent = formatINR(folio.settlement_paid);
-    
-    const totalPaidRow = document.getElementById('fmdl-totalpaid-row');
-    if (totalPaidRow) totalPaidRow.textContent = formatINR(folio.total_paid);
+    // Split orders into Food and Extra Services
+    const allOrders = folio.room_service_orders || [];
+    const isExtraOrder = o => Boolean(o.is_extra_service || o.order_type === 'extra_service' || (o.items && o.items.some(it => it.hotel_service_id)) || (o.served_by && o.served_by !== 'POS Cashier' && !o.table_number));
+    const foodOrders = allOrders.filter(o => !isExtraOrder(o));
+    const extraOrders = allOrders.filter(isExtraOrder);
 
-    document.getElementById('fmdl-discount-row').textContent = folio.discount_amount > 0 ? `${formatINR(folio.discount_amount)} (${folio.discount_percentage}%)` : 'None';
-    document.getElementById('fmdl-tax-row').textContent = folio.gst_amount > 0 ? `${formatINR(folio.gst_amount)} (${folio.gst_percentage}% ${folio.gst_type})` : 'Zero Tax / Exempt';
-    
+    const totalFoodGross = foodOrders.reduce((sum, o) => sum + Number(o.total_amount || 0), 0);
+    const extraSubtotal = extraOrders.reduce((sum, o) => sum + Number(o.subtotal || o.total_amount || 0), 0);
+    const extraTax = extraOrders.reduce((sum, o) => sum + Number(o.tax_amount || 0), 0);
+    const extraBalance = Number(folio.extra_services_balance !== undefined ? folio.extra_services_balance : extraOrders.reduce((sum, o) => sum + Number(o.total_amount || 0), 0));
+    const foodBalance = Number(folio.food_balance !== undefined ? folio.food_balance : (folio.total_food_amount !== undefined ? folio.total_food_amount : totalFoodGross));
+    const cfd = folio.corporate_food_discount || {};
+    const fa = folio.food_advance;
+    const faCgst = (fa && fa.has_food_advance) ? Number(fa.excess_cgst !== undefined ? fa.excess_cgst : (fa.excess_gst ? Math.round((fa.excess_gst / 2) * 100) / 100 : 0)) : 0;
+    const faSgst = (fa && fa.has_food_advance) ? Number(fa.excess_sgst !== undefined ? fa.excess_sgst : (fa.excess_gst ? Math.round((fa.excess_gst - faCgst) * 100) / 100 : 0)) : 0;
+
+    // Render 4 Distinct Colored Section Boxes
+    const container = document.getElementById('fmdl-billing-sections-container');
+    if (container) {
+      container.innerHTML = `
+        <!-- BOX 1: Room Stay Charges (Sky/Blue) -->
+        <div class="bg-sky-50/80 border border-sky-300 rounded-xl p-3.5 shadow-xs">
+          <div class="flex items-center justify-between pb-2 mb-2 border-b border-sky-200">
+            <span class="text-xs font-black text-sky-950 uppercase tracking-wide flex items-center gap-1.5">
+              <i class="fa-solid fa-bed text-sky-600"></i> 1. Room Stay Charges
+            </span>
+            <span class="text-[10px] font-black bg-sky-200 text-sky-900 px-2.5 py-0.5 rounded-full border border-sky-300">
+              ${folio.total_nights || 1} Night${(folio.total_nights || 1) > 1 ? 's' : ''} Stay
+            </span>
+          </div>
+          <div class="space-y-1.5 text-xs">
+            <div class="flex justify-between items-center text-slate-700">
+              <span class="font-medium">Room Rate &times; Nights:</span>
+              <span class="font-mono font-bold text-slate-900">${formatINR(folio.room_rate)} &times; ${folio.total_nights || 1}N = ${formatINR(roomGross)}</span>
+            </div>
+            ${roomDiscountAmt > 0 ? `
+            <div class="flex justify-between items-center text-emerald-700 font-semibold">
+              <span>Less: Room Special Discount (${folio.discount_percentage}%):</span>
+              <span class="font-mono font-bold">- ${formatINR(roomDiscountAmt)}</span>
+            </div>` : ''}
+            ${roomGstAmt > 0 ? `
+            <div class="flex justify-between items-center text-indigo-700 font-semibold">
+              <span>Room GST / Tax (${folio.gst_percentage}% ${escapeHtml(folio.gst_type || 'exclusive')}):</span>
+              <span class="font-mono font-bold">+ ${formatINR(roomGstAmt)}</span>
+            </div>` : ''}
+            <div class="flex justify-between items-center pt-1.5 mt-1 border-t border-sky-200/80 font-bold text-sky-950">
+              <span>Net Room Tariff Payable:</span>
+              <span class="font-mono font-black text-sky-900 text-[13px]">${formatINR(roomPayable)}</span>
+            </div>
+            ${advancePaid > 0 ? `
+            <div class="flex justify-between items-center text-emerald-700 font-semibold">
+              <span>Less: Check-in Advance Deposit Paid:</span>
+              <span class="font-mono font-bold">- ${formatINR(advancePaid)}</span>
+            </div>` : ''}
+            <div class="flex justify-between items-center pt-1 mt-1 border-t border-dashed border-sky-300 font-black text-sky-900">
+              <span>Room Balance Outstanding:</span>
+              <span class="font-mono font-black text-sky-950">${formatINR(roomBalance)}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- BOX 2: Restaurant POS & Dining (Amber/Orange) -->
+        <div class="bg-amber-50/80 border border-amber-300 rounded-xl p-3.5 shadow-xs">
+          <div class="flex items-center justify-between pb-2 mb-2 border-b border-amber-200">
+            <span class="text-xs font-black text-amber-950 uppercase tracking-wide flex items-center gap-1.5">
+              <i class="fa-solid fa-utensils text-amber-600"></i> 2. Restaurant POS &amp; Dining Charges
+            </span>
+            <span class="text-[10px] font-black bg-amber-200 text-amber-900 px-2.5 py-0.5 rounded-full border border-amber-300">
+              ${foodOrders.length} Food Order${foodOrders.length === 1 ? '' : 's'}
+            </span>
+          </div>
+          <div class="space-y-1.5 text-xs">
+            ${foodOrders.length > 0 ? `
+            <div class="flex justify-between items-center text-slate-700">
+              <span class="font-medium">Total Restaurant Food Consumed:</span>
+              <span class="font-mono font-bold text-slate-900">${formatINR(totalFoodGross)}</span>
+            </div>
+            ` : `
+            <div class="text-[11px] text-amber-800/70 italic py-0.5">No restaurant food orders charged to this room folio.</div>
+            `}
+
+            ${(fa && fa.has_food_advance) ? `
+            <div class="bg-amber-100/70 border border-amber-200/90 rounded-lg p-2.5 my-1 text-[11px] text-amber-950 space-y-1">
+              <div class="flex justify-between font-bold">
+                <span><i class="fa-solid fa-receipt text-amber-700"></i> Company Pre-Allocated Food Allowance:</span>
+                <span class="font-mono">${formatINR(fa.advance_amount)}</span>
+              </div>
+              <div class="flex justify-between text-emerald-800 font-semibold">
+                <span>Covered by Food Advance:</span>
+                <span class="font-mono font-bold">- ${formatINR(fa.used_amount)}</span>
+              </div>
+              ${fa.excess_food > 0 ? `
+              <div class="flex justify-between text-amber-900 font-black pt-1 border-t border-amber-200">
+                <span>Excess Food (+CGST 2.5% [${formatINR(faCgst)}], SGST 2.5% [${formatINR(faSgst)}]):</span>
+                <span class="font-mono font-black">+ ${formatINR(fa.excess_total)}</span>
+              </div>` : `
+              <div class="flex justify-between text-emerald-800 font-black pt-1 border-t border-amber-200">
+                <span>Unused Food Credit Adjustment:</span>
+                <span class="font-mono font-black">- ${formatINR(fa.unused_advance)}</span>
+              </div>`}
+            </div>
+            ` : ''}
+
+            ${(cfd && cfd.has_discount) ? `
+            <div class="flex justify-between items-center bg-emerald-100/80 border border-emerald-300 rounded-lg px-2.5 py-1.5 text-emerald-900 font-bold">
+              <span><i class="fa-solid fa-tag text-emerald-700 mr-1"></i> Less: Corporate Food Discount (${escapeHtml(cfd.label)} on overall dining):</span>
+              <span class="font-mono font-black text-emerald-800 text-[12.5px]">- ${formatINR(cfd.amount)}</span>
+            </div>` : ''}
+
+            <div class="flex justify-between items-center pt-1.5 mt-1 border-t border-amber-200/90 font-black text-amber-950">
+              <span>Net Food Charges Due:</span>
+              <span class="font-mono font-black text-amber-900 text-[13px]">${formatINR(foodBalance)}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- BOX 3: Hotel Extra Services & Amenities (Purple/Violet) -->
+        <div class="bg-purple-50/80 border border-purple-300 rounded-xl p-3.5 shadow-xs">
+          <div class="flex items-center justify-between pb-2 mb-2 border-b border-purple-200">
+            <span class="text-xs font-black text-purple-950 uppercase tracking-wide flex items-center gap-1.5">
+              <i class="fa-solid fa-bell-concierge text-purple-600"></i> 3. Hotel Extra Services &amp; Amenities
+            </span>
+            <span class="text-[10px] font-black bg-purple-200 text-purple-900 px-2.5 py-0.5 rounded-full border border-purple-300">
+              ${extraOrders.length} Service${extraOrders.length === 1 ? '' : 's'}
+            </span>
+          </div>
+          <div class="space-y-1.5 text-xs">
+            ${extraOrders.length > 0 ? `
+            <div class="flex justify-between items-center text-slate-700">
+              <span class="font-medium">Extra Services Subtotal (${extraOrders.length} services):</span>
+              <span class="font-mono font-bold text-slate-900">${formatINR(extraSubtotal)}</span>
+            </div>
+            ${extraTax > 0 ? `
+            <div class="flex justify-between items-center text-purple-800 font-semibold">
+              <span>CGST (2.5%) &amp; SGST (2.5%):</span>
+              <span class="font-mono font-bold">+ ${formatINR(extraTax)}</span>
+            </div>` : ''}
+            <div class="flex justify-between items-center pt-1.5 mt-1 border-t border-purple-200 font-black text-purple-950">
+              <span>Net Extra Services Due:</span>
+              <span class="font-mono font-black text-purple-900 text-[13px]">${formatINR(extraBalance)}</span>
+            </div>
+            ` : `
+            <div class="text-[11px] text-purple-800/70 italic py-0.5">No extra hotel services recorded (Laundry, Spa, Tour, etc.)</div>
+            `}
+          </div>
+        </div>
+
+        <!-- BOX 4: Final Grand Total & Net Balance Due (Emerald/Teal) -->
+        <div class="bg-gradient-to-br from-emerald-50 via-teal-50 to-white border-2 border-emerald-400 rounded-xl p-3.5 shadow-sm">
+          <div class="flex items-center justify-between pb-2 mb-2.5 border-b border-emerald-300">
+            <span class="text-xs font-black text-emerald-950 uppercase tracking-wide flex items-center gap-1.5">
+              <i class="fa-solid fa-receipt text-emerald-700"></i> 4. Final Grand Total &amp; Balance Breakdown
+            </span>
+            <span class="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full ${balanceDue > 0.01 ? 'bg-rose-100 text-rose-800 border border-rose-200' : 'bg-emerald-100 text-emerald-800 border border-emerald-200'}">
+              ${balanceDue > 0.01 ? 'Payment Due' : 'Fully Settled'}
+            </span>
+          </div>
+
+          <div class="space-y-1.5 text-xs">
+            <div class="flex justify-between items-center text-slate-800 font-extrabold text-[12.5px]">
+              <span>Grand Total Net Payable:</span>
+              <span class="font-mono font-black text-slate-950">${formatINR(netPayableTotal)}</span>
+            </div>
+            <div class="text-[10.5px] text-slate-500 pl-2 bg-slate-50/80 p-1.5 rounded border border-slate-200/80 font-mono">
+              Room: <strong>${formatINR(roomPayable)}</strong>
+              + Food: <strong class="text-amber-800">${formatINR(foodBalance)}</strong>
+              ${extraBalance > 0 ? `+ Services: <strong class="text-purple-800">${formatINR(extraBalance)}</strong>` : ''}
+            </div>
+
+            ${advancePaid > 0 ? `
+            <div class="flex justify-between items-center text-emerald-800 font-semibold pt-1">
+              <span>Less: Check-in Advance Deposit Paid:</span>
+              <span class="font-mono font-bold">- ${formatINR(advancePaid)}</span>
+            </div>` : ''}
+
+            ${settlePaid > 0 ? `
+            <div class="flex justify-between items-center text-indigo-700 font-semibold">
+              <span>Less: Previous Settlements Paid:</span>
+              <span class="font-mono font-bold">- ${formatINR(settlePaid)}</span>
+            </div>` : ''}
+
+            <div class="flex justify-between items-center pt-1 font-bold text-emerald-900 border-t border-emerald-200/70">
+              <span>Total Amount Paid So Far:</span>
+              <span class="font-mono font-black text-emerald-700">${formatINR(totalPaid)}</span>
+            </div>
+
+            <div class="flex justify-between items-center bg-white p-3 rounded-xl border-2 border-emerald-400 mt-2 shadow-xs">
+              <span class="text-xs font-black text-slate-900 uppercase tracking-wide">
+                <i class="fa-solid fa-cash-register text-emerald-600 mr-1"></i> Net Outstanding Balance Due:
+              </span>
+              <span class="font-mono text-lg font-black ${balanceDue > 0.01 ? 'text-rose-600' : 'text-emerald-600'}">
+                ${formatINR(balanceDue)}
+              </span>
+            </div>
+
+            <div class="pt-2 mt-2 border-t border-emerald-200/70 flex justify-between items-center text-[11px] text-slate-600 flex-wrap gap-2">
+              <span><i class="fa-solid fa-wallet text-slate-400"></i> Mode: <strong class="text-slate-800">${escapeHtml(folio.payment_mode || 'Cash / Direct')}</strong></span>
+              <span>Remarks: <strong class="text-slate-800">${escapeHtml(folio.payment_remarks || 'None')}</strong></span>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // Also populate legacy hidden IDs if any other code looks for them
     const payableEl = document.getElementById('fmdl-payable-amount');
-    if (payableEl) {
-      if (totalServiceCost > 0) {
-        payableEl.textContent = `${formatINR(netPayableTotal)} (Room: ${formatINR(roomPayable)} + Services: ${formatINR(totalServiceCost)})`;
-      } else {
-        payableEl.textContent = formatINR(netPayableTotal);
-      }
-    }
-
-    document.getElementById('fmdl-paymode-row').textContent = folio.payment_mode || 'Cash / Direct';
-    document.getElementById('fmdl-remarks-row').textContent = folio.payment_remarks || 'None';
-
-    // In-Room Dining & Additional Services row
-    const servicesRow = document.getElementById('fmdl-services-field-row');
-    const servicesVal = document.getElementById('fmdl-services-row');
-    const servicesBox = document.getElementById('fmdl-room-services-box');
-    const servicesList = document.getElementById('fmdl-room-services-list');
-    const servicesCount = document.getElementById('fmdl-services-count');
-
-    if (totalServiceCost > 0) {
-      if (servicesRow) servicesRow.style.display = 'flex';
-      if (servicesVal) servicesVal.textContent = `+ ${formatINR(totalServiceCost)}`;
-    } else {
-      if (servicesRow) servicesRow.style.display = 'none';
-    }
-
-    // Company Food Advance breakdown row
-    const foodAdvRow = document.getElementById('fmdl-food-advance-field-row');
-    const foodAdvVal = document.getElementById('fmdl-food-advance-row');
-    if (foodAdvRow && foodAdvVal) {
-      if (folio.food_advance && folio.food_advance.has_food_advance) {
-        foodAdvRow.style.display = 'flex';
-        const fa = folio.food_advance;
-        if (fa.excess_food > 0) {
-          const faCgst = Number(fa.excess_cgst !== undefined ? fa.excess_cgst : (fa.excess_gst ? Math.round((fa.excess_gst / 2) * 100) / 100 : 0));
-          const faSgst = Number(fa.excess_sgst !== undefined ? fa.excess_sgst : (fa.excess_gst ? Math.round((fa.excess_gst - faCgst) * 100) / 100 : 0));
-          foodAdvVal.innerHTML = `<span class="text-amber-700 font-bold">${formatINR(fa.advance_amount)} (+${formatINR(fa.excess_total)} excess + CGST 2.5% [${formatINR(faCgst)}] &amp; SGST 2.5% [${formatINR(faSgst)}])</span>`;
-        } else {
-          foodAdvVal.innerHTML = `<span class="text-emerald-700 font-bold">${formatINR(fa.advance_amount)} (${formatINR(fa.used_amount)} used, -${formatINR(fa.unused_advance)} credited)</span>`;
-        }
-      } else {
-        foodAdvRow.style.display = 'none';
-      }
-    }
+    if (payableEl) payableEl.textContent = formatINR(netPayableTotal);
 
     // Render itemized In-Room Dining orders list
     if (folio.room_service_orders && folio.room_service_orders.length > 0) {

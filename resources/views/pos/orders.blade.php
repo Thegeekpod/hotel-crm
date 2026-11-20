@@ -517,6 +517,10 @@
               <span>Subtotal:</span>
               <span class="font-mono">₹ <span id="kot-guest-subtotal">0.00</span></span>
             </div>
+            <div class="flex justify-between font-bold text-rose-700 hidden" id="row-kot-guest-discount">
+              <span>Food Discount (<span id="kot-guest-discount-rate">0%</span>):</span>
+              <span class="font-mono">- ₹ <span id="kot-guest-discount-amount">0.00</span></span>
+            </div>
             <div class="flex justify-between font-medium text-slate-600" id="row-kot-guest-cgst">
               <span>CGST (<span id="kot-guest-cgst-rate">2.5</span>%):</span>
               <span class="font-mono">₹ <span id="kot-guest-cgst-amount">0.00</span></span>
@@ -810,6 +814,19 @@
       const sgstFmt = sgstAmt.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
       if (document.getElementById('kot-guest-subtotal')) document.getElementById('kot-guest-subtotal').textContent = subtotalFmt;
+
+      const discAmt = Number(order.discount_amount || 0);
+      const rowKotDisc = document.getElementById('row-kot-guest-discount');
+      if (rowKotDisc) {
+        if (discAmt > 0) {
+          rowKotDisc.classList.remove('hidden');
+          const dLabel = order.discount_type === 'amount' ? `₹ ${Number(order.discount_percentage || 0).toFixed(2)}` : `${Number(order.discount_percentage || 0)}%`;
+          if (document.getElementById('kot-guest-discount-rate')) document.getElementById('kot-guest-discount-rate').textContent = dLabel;
+          if (document.getElementById('kot-guest-discount-amount')) document.getElementById('kot-guest-discount-amount').textContent = discAmt.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        } else {
+          rowKotDisc.classList.add('hidden');
+        }
+      }
       if (document.getElementById('kot-guest-cgst-rate')) document.getElementById('kot-guest-cgst-rate').textContent = (halfRate % 1 === 0 ? halfRate.toString() : halfRate.toFixed(1));
       if (document.getElementById('kot-guest-sgst-rate')) document.getElementById('kot-guest-sgst-rate').textContent = (halfRate % 1 === 0 ? halfRate.toString() : halfRate.toFixed(1));
       if (document.getElementById('kot-guest-cgst-amount')) document.getElementById('kot-guest-cgst-amount').textContent = cgstFmt;

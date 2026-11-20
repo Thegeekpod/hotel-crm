@@ -338,7 +338,7 @@
                     <select name="company_id" id="company-select" class="pms-input-field w-full border-emerald-400 font-bold" onchange="toggleNewCompany(this)">
                       <option value="">-- Select Corporate Account --</option>
                       @foreach($companies ?? \App\Models\Company::where('status', 'Active')->get() as $cmp)
-                        <option value="{{ $cmp->id }}" data-discount-type="{{ $cmp->discount_type ?? 'percentage' }}" data-discount-value="{{ (float)($cmp->discount_value ?? 0) }}" data-meal-discounts="{{ json_encode($cmp->meal_discounts ?? []) }}">{{ $cmp->name }}</option>
+                        <option value="{{ $cmp->id }}" data-discount-type="{{ $cmp->discount_type ?? 'percentage' }}" data-discount-value="{{ (float)($cmp->discount_value ?? 0) }}" data-food-discount="{{ $cmp->food_discount ?? 'percentage' }}" data-food-value="{{ (float)($cmp->food_value ?? 0) }}" data-meal-discounts="{{ json_encode($cmp->meal_discounts ?? []) }}">{{ $cmp->name }}</option>
                       @endforeach
                       <option value="new" class="text-indigo-600 font-black">+ Register New Company</option>
                     </select>
@@ -382,6 +382,22 @@
                         <input type="number" name="new_company_discount_amt" id="new-comp-disc-amt" oninput="calculateReservationBilling()" min="0" step="any" class="pms-input-field w-full" placeholder="Amount in ₹ (e.g. 500)">
                       </div>
                     </div>
+
+                    <!-- New Company Restaurant Food Discount Configuration -->
+                    <div class="mt-3 p-3 bg-white border border-emerald-300 rounded-lg">
+                      <label class="block text-[10px] font-black mb-1.5 text-emerald-700 uppercase tracking-wider">Restaurant Food Discount Rate</label>
+                      <div class="grid grid-cols-2 gap-2">
+                        <div>
+                          <select name="new_company_food_discount" id="new-comp-food-disc-type" onchange="toggleNewCompanyFoodDiscountType(this.value)" class="pms-input-field w-full text-xs font-bold">
+                            <option value="percentage">Percentage (%)</option>
+                            <option value="amount">Solid Amount (₹)</option>
+                          </select>
+                        </div>
+                        <div>
+                          <input type="number" name="new_company_food_value" id="new-comp-food-disc-val" oninput="onNewCompanyFoodDiscountChange()" min="0" step="any" class="pms-input-field w-full text-xs font-bold" placeholder="Value (e.g. 10)">
+                        </div>
+                      </div>
+                    </div>
                   </div>
 
                   <!-- Company Food Advance / Food Allowance -->
@@ -401,6 +417,38 @@
                     <p class="text-[10px] text-slate-500 mt-1.5 leading-tight">
                       <i class="fa-solid fa-circle-info text-emerald-600 mr-0.5"></i>
                       Pre-allocated company food budget. When food is ordered in POS, it deducts from this amount. Unspent amount is deducted (-₹) at settlement; food orders exceeding this limit attract GST 5% (CGST 2.5% + SGST 2.5%) on the excess amount.
+                    </p>
+                  </div>
+
+                  <!-- Company Restaurant Food Discount Section -->
+                  <div class="mt-3 p-3 bg-white border border-rose-300 rounded-lg">
+                    <div class="flex items-center justify-between mb-1.5">
+                      <label class="block text-[10px] font-black text-rose-800 uppercase tracking-wider">
+                        <i class="fa-solid fa-utensils text-rose-600 mr-1"></i> Restaurant Food Discount
+                      </label>
+                      <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-rose-100 text-rose-800 uppercase tracking-wider">POS Food Discount</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                      <div>
+                        <label class="block text-[9px] font-bold text-slate-500 uppercase mb-1">Discount Type (food_discount)</label>
+                        <select name="food_discount" id="company-food-discount-select" class="pms-input-field w-full text-xs font-bold" onchange="onCompanyFoodDiscountChange()">
+                          <option value="percentage">Percentage (%)</option>
+                          <option value="amount">Solid Amount (₹)</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label class="block text-[9px] font-bold text-slate-500 uppercase mb-1">Discount Value (food_value)</label>
+                        <div class="relative">
+                          <input type="number" name="food_value" id="company-food-value-input" min="0" step="any"
+                            oninput="onCompanyFoodDiscountChange()"
+                            class="pms-input-field w-full font-bold text-rose-700 pr-6" placeholder="0.00">
+                          <span id="checkin-food-val-suffix" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs pointer-events-none">%</span>
+                        </div>
+                      </div>
+                    </div>
+                    <p class="text-[10px] text-slate-500 mt-1.5 leading-tight">
+                      <i class="fa-solid fa-circle-info text-rose-600 mr-0.5"></i>
+                      Special food discount granted to this company. Automatically applied to restaurant dining and POS orders.
                     </p>
                   </div>
                 </div>
@@ -830,6 +878,20 @@
                     <!-- Corporate Pre-fill Notice Note -->
                     <div id="company-discount-applied-text" class="hidden text-[10px] font-bold text-emerald-700 mt-1.5 items-center gap-1">
                       <i class="fa-solid fa-building-circle-check"></i> <span id="company-discount-note">Corporate discount auto-applied</span>
+                    </div>
+                  </div>
+
+                  <!-- Company Restaurant Food Discount Section (Active when Company selected) -->
+                  <div id="company-food-discount-card" class="hidden bg-rose-50/70 border border-rose-300 rounded-lg p-2.5">
+                    <div class="flex justify-between items-center mb-1">
+                      <label class="block text-[10px] font-black text-rose-800 uppercase tracking-wider m-0">
+                        <i class="fa-solid fa-utensils text-rose-600 mr-1"></i> Restaurant Food Discount
+                      </label>
+                      <span id="company-food-discount-badge" class="text-xs font-black text-rose-700 font-mono">0%</span>
+                    </div>
+                    <div class="flex justify-between items-center text-[11px]">
+                      <span class="text-slate-600 font-medium">POS Food Orders Discount:</span>
+                      <strong id="company-food-discount-summary-text" class="text-rose-700 font-bold">Auto-applied in POS</strong>
                     </div>
                   </div>
 

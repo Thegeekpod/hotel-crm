@@ -49,7 +49,7 @@ class PosController extends Controller
         $validStatuses = ['Checked In', 'Stay Over'];
         $rooms = Room::with(['bookings' => function ($q) use ($validStatuses) {
             $q->whereIn('status', $validStatuses)
-              ->with(['guest', 'primaryBooking.guest'])
+              ->with(['guest', 'primaryBooking.guest', 'company', 'primaryBooking.company'])
               ->orderByRaw('CASE WHEN primary_booking_id IS NULL THEN 0 ELSE 1 END')
               ->latest('id');
         }])
@@ -72,6 +72,15 @@ class PosController extends Controller
 
             $faSummary = FoodAdvanceService::calculateSummary($primaryBooking);
 
+            $effectiveBooking = $primaryBooking->primaryBooking ?? $primaryBooking;
+            $foodDiscType = $primaryBooking->food_discount ?? $effectiveBooking->food_discount;
+            $foodDiscVal = (float)($primaryBooking->food_value ?? ($effectiveBooking->food_value ?? 0));
+            $companyObj = $primaryBooking->company ?? $effectiveBooking->company;
+            if ($foodDiscVal <= 0 && $companyObj) {
+                $foodDiscType = $companyObj->food_discount ?? 'percentage';
+                $foodDiscVal = (float)($companyObj->food_value ?? 0);
+            }
+
             $selectableRooms->push((object)[
                 'id' => $room->id,
                 'room_number' => $room->room_number,
@@ -83,6 +92,10 @@ class PosController extends Controller
                 'remaining_advance' => $faSummary['remaining_advance'],
                 'used_food_advance' => $faSummary['used_amount'],
                 'fa_summary' => $faSummary,
+                'has_food_discount' => $foodDiscVal > 0,
+                'food_discount' => $foodDiscType ?: 'percentage',
+                'food_value' => $foodDiscVal,
+                'formatted_food_discount' => $foodDiscVal > 0 ? ($foodDiscType === 'amount' ? '₹' . number_format($foodDiscVal, 2) : $foodDiscVal . '%') : '0%',
             ]);
         }
 
@@ -271,6 +284,8 @@ class PosController extends Controller
                 }
             }
 
+            $billingType = $isKot ? 'Pending Settlement' : ($validated['billing_type'] ?? ($isRoomDining ? 'Charged to Room Folio' : 'Cash Paid'));
+
             $room = null;
             $booking = null;
             $roomNumber = null;
@@ -352,9 +367,39 @@ class PosController extends Controller
                 $subtotal += ($item['price'] * $item['quantity']);
             }
 
+            // Company Restaurant Food Discount calculation
+            $foodDiscType = null;
+            $foodDiscVal = 0.0;
+            $discountAmount = 0.0;
+            if ($booking) {
+                $primaryB = $booking->primaryBooking ?? $booking;
+                $foodDiscType = $booking->food_discount ?? $primaryB->food_discount;
+                $foodDiscVal = (float)($booking->food_value ?? ($primaryB->food_value ?? 0));
+                $comp = $booking->company ?? $primaryB->company;
+                if ($foodDiscVal <= 0 && $comp) {
+                    $foodDiscType = $comp->food_discount ?? 'percentage';
+                    $foodDiscVal = (float)($comp->food_value ?? 0);
+                }
+
+                if ($foodDiscVal > 0) {
+                    // For Room Folio charges or room-attached KOTs, corporate food discount is evaluated on the OVERALL food total
+                    // at Room Folio / Settlement so that solid fixed amounts are applied only once across the stay.
+                    if (!empty($room) || !empty($validated['room_id']) || $billingType === 'Charged to Room Folio') {
+                        $discountAmount = 0.0;
+                    } else {
+                        if ($foodDiscType === 'amount') {
+                            $discountAmount = min($subtotal, $foodDiscVal);
+                        } else {
+                            $discountAmount = round($subtotal * ($foodDiscVal / 100), 2);
+                        }
+                    }
+                }
+            }
+
+            $taxableSubtotal = max(0, $subtotal - $discountAmount);
             $taxRate = (float) AppSetting::get('default_gst_pos', 5.00);
-            $taxAmount = round($subtotal * ($taxRate / 100), 2);
-            $totalAmount = round($subtotal + $taxAmount, 2);
+            $taxAmount = round($taxableSubtotal * ($taxRate / 100), 2);
+            $totalAmount = round($taxableSubtotal + $taxAmount, 2);
 
             // Determine KOT sequence for this table
             $kotSequence = 1;
@@ -404,14 +449,19 @@ class PosController extends Controller
                     : 'POS Dining (' . $billingType . ' - Settled on Spot): ';
                 $instructionsNote .= (!empty($finalTableString) ? '[' . $finalTableString . '] ' : '') . ($validated['special_instructions'] ?? 'None');
 
+                if ($discountAmount > 0) {
+                    $discLabel = ($foodDiscType === 'amount') ? '₹' . number_format($foodDiscVal, 2) : $foodDiscVal . '%';
+                    $instructionsNote .= " [Food Discount: {$discLabel} (-₹" . number_format($discountAmount, 2) . ")]";
+                }
+
                 // Check Company Food Advance for folio charges
                 $foodAdvImpact = null;
                 if ($billingType === 'Charged to Room Folio') {
-                    $foodAdvImpact = FoodAdvanceService::calculateOrderImpact($booking, $subtotal);
+                    $foodAdvImpact = FoodAdvanceService::calculateOrderImpact($booking, $taxableSubtotal);
                     if ($foodAdvImpact && $foodAdvImpact['has_food_advance']) {
                         $taxRate = $foodAdvImpact['gst_rate'];
                         $taxAmount = $foodAdvImpact['gst_amount'];
-                        $totalAmount = round($subtotal + $taxAmount, 2);
+                        $totalAmount = round($taxableSubtotal + $taxAmount, 2);
                         if ($foodAdvImpact['excess_amount'] > 0) {
                             $instructionsNote .= " [Food Advance: ₹" . number_format($foodAdvImpact['covered_amount'], 2) . " covered | Excess: ₹" . number_format($foodAdvImpact['charged_total'], 2) . " Folio Due]";
                         } else {
@@ -429,6 +479,9 @@ class PosController extends Controller
                     'table_number' => $finalTableString,
                     'customer_gstin' => $validated['customer_gstin'] ?? $request->input('customer_gstin') ?? null,
                     'subtotal' => $subtotal,
+                    'discount_type' => $discountAmount > 0 ? $foodDiscType : null,
+                    'discount_percentage' => ($foodDiscType === 'percentage' && $discountAmount > 0) ? $foodDiscVal : 0.00,
+                    'discount_amount' => $discountAmount,
                     'tax_amount' => $taxAmount,
                     'total_amount' => $totalAmount,
                     'payment_status' => $rsPaymentStatus,
@@ -468,6 +521,9 @@ class PosController extends Controller
                 'customer_gstin' => $validated['customer_gstin'] ?? $request->input('customer_gstin') ?? null,
                 'room_number' => $roomNumber,
                 'subtotal' => $subtotal,
+                'discount_type' => $discountAmount > 0 ? $foodDiscType : null,
+                'discount_percentage' => ($foodDiscType === 'percentage' && $discountAmount > 0) ? $foodDiscVal : 0.00,
+                'discount_amount' => $discountAmount,
                 'tax_percentage' => $taxRate,
                 'tax_amount' => $taxAmount,
                 'total_amount' => $totalAmount,
@@ -694,21 +750,52 @@ class PosController extends Controller
             // Taxes and Food Advance impact
             $room = $roomId ? Room::find($roomId) : null;
             $booking = $bookingId ? Booking::find($bookingId) : null;
+            $billingType = $validated['billing_type'];
 
+            // Company Restaurant Food Discount calculation
+            $foodDiscType = null;
+            $foodDiscVal = 0.0;
+            $discountAmount = 0.0;
+            if ($booking) {
+                $primaryB = $booking->primaryBooking ?? $booking;
+                $foodDiscType = $booking->food_discount ?? $primaryB->food_discount;
+                $foodDiscVal = (float)($booking->food_value ?? ($primaryB->food_value ?? 0));
+                $comp = $booking->company ?? $primaryB->company;
+                if ($foodDiscVal <= 0 && $comp) {
+                    $foodDiscType = $comp->food_discount ?? 'percentage';
+                    $foodDiscVal = (float)($comp->food_value ?? 0);
+                }
+
+                if ($foodDiscVal > 0) {
+                    // For Room Folio charges or room-attached KOTs, corporate food discount is evaluated on the OVERALL food total
+                    // at Room Folio / Settlement so that solid fixed amounts are applied only once across the stay.
+                    if (!empty($room) || !empty($validated['room_id']) || $billingType === 'Charged to Room Folio') {
+                        $discountAmount = 0.0;
+                    } else {
+                        if ($foodDiscType === 'amount') {
+                            $discountAmount = min($subtotal, $foodDiscVal);
+                        } else {
+                            $discountAmount = round($subtotal * ($foodDiscVal / 100), 2);
+                        }
+                    }
+                }
+            }
+
+            $taxableSubtotal = max(0, $subtotal - $discountAmount);
             $taxRate = (float) AppSetting::get('default_gst_pos', 5.00);
-            $taxAmount = round($subtotal * ($taxRate / 100), 2);
-            $totalAmount = round($subtotal + $taxAmount, 2);
+            $taxAmount = round($taxableSubtotal * ($taxRate / 100), 2);
+            $totalAmount = round($taxableSubtotal + $taxAmount, 2);
 
             $foodAdvImpact = null;
             $advanceCoveredAmount = 0.00;
             $folioChargedAmount = $totalAmount;
 
             if ($validated['billing_type'] === 'Charged to Room Folio' && $booking) {
-                $foodAdvImpact = FoodAdvanceService::calculateOrderImpact($booking, $subtotal);
+                $foodAdvImpact = FoodAdvanceService::calculateOrderImpact($booking, $taxableSubtotal);
                 if ($foodAdvImpact && $foodAdvImpact['has_food_advance']) {
                     $taxRate = $foodAdvImpact['gst_rate'];
                     $taxAmount = $foodAdvImpact['gst_amount'];
-                    $totalAmount = round($subtotal + $taxAmount, 2);
+                    $totalAmount = round($taxableSubtotal + $taxAmount, 2);
                     $advanceCoveredAmount = $foodAdvImpact['covered_amount'];
                     $folioChargedAmount = $foodAdvImpact['charged_total'];
                 }
@@ -743,6 +830,11 @@ class PosController extends Controller
                     : 'POS Dine-in Final Bill (' . $validated['billing_type'] . ' - Settled on Spot): ';
                 $instructionsNote .= '[' . $finalTableString . '] ' . ($validated['special_instructions'] ?? 'None');
 
+                if ($discountAmount > 0) {
+                    $discLabel = ($foodDiscType === 'amount') ? '₹' . number_format($foodDiscVal, 2) : $foodDiscVal . '%';
+                    $instructionsNote .= " [Food Discount: {$discLabel} (-₹" . number_format($discountAmount, 2) . ")]";
+                }
+
                 if ($foodAdvImpact && $foodAdvImpact['has_food_advance']) {
                     if ($foodAdvImpact['excess_amount'] > 0) {
                         $instructionsNote .= " [Food Advance: ₹" . number_format($advanceCoveredAmount, 2) . " cut | Excess: ₹" . number_format($foodAdvImpact['excess_amount'], 2) . " + CGST 2.5% + SGST 2.5% = ₹" . number_format($folioChargedAmount, 2) . " Folio Due]";
@@ -760,6 +852,9 @@ class PosController extends Controller
                     'table_number' => $finalTableString,
                     'customer_gstin' => $validated['customer_gstin'] ?? $request->input('customer_gstin') ?? null,
                     'subtotal' => $subtotal,
+                    'discount_type' => $discountAmount > 0 ? $foodDiscType : null,
+                    'discount_percentage' => ($foodDiscType === 'percentage' && $discountAmount > 0) ? $foodDiscVal : 0.00,
+                    'discount_amount' => $discountAmount,
                     'tax_amount' => $taxAmount,
                     'total_amount' => $totalAmount,
                     'payment_status' => $rsPaymentStatus,
@@ -799,6 +894,9 @@ class PosController extends Controller
                 'customer_gstin' => $customerGstin,
                 'room_number' => $roomNumber,
                 'subtotal' => $subtotal,
+                'discount_type' => $discountAmount > 0 ? $foodDiscType : null,
+                'discount_percentage' => ($foodDiscType === 'percentage' && $discountAmount > 0) ? $foodDiscVal : 0.00,
+                'discount_amount' => $discountAmount,
                 'tax_percentage' => $taxRate,
                 'tax_amount' => $taxAmount,
                 'total_amount' => $totalAmount,
@@ -1073,8 +1171,35 @@ class PosController extends Controller
                     }
                 }
 
-                $taxAmount = round($subtotal * ($defaultGstPos / 100), 2);
-                $totalAmount = round($subtotal + $taxAmount, 2);
+                $foodDiscType = null;
+                $foodDiscVal = 0.0;
+                $discountAmount = 0.0;
+                $booking = $firstKot->booking;
+                if ($booking) {
+                    $primaryB = $booking->primaryBooking ?? $booking;
+                    $foodDiscType = $booking->food_discount ?? $primaryB->food_discount;
+                    $foodDiscVal = (float)($booking->food_value ?? ($primaryB->food_value ?? 0));
+                    $comp = $booking->company ?? $primaryB->company;
+                    if ($foodDiscVal <= 0 && $comp) {
+                        $foodDiscType = $comp->food_discount ?? 'percentage';
+                        $foodDiscVal = (float)($comp->food_value ?? 0);
+                    }
+                    if ($foodDiscVal > 0) {
+                        if (!empty($firstKot->room_id)) {
+                            $discountAmount = 0.0; // Applied comprehensively at Room Folio / Settlement
+                        } else {
+                            if ($foodDiscType === 'amount') {
+                                $discountAmount = min($subtotal, $foodDiscVal);
+                            } else {
+                                $discountAmount = round($subtotal * ($foodDiscVal / 100), 2);
+                            }
+                        }
+                    }
+                }
+
+                $taxableSubtotal = max(0, $subtotal - $discountAmount);
+                $taxAmount = round($taxableSubtotal * ($defaultGstPos / 100), 2);
+                $totalAmount = round($taxableSubtotal + $taxAmount, 2);
 
                 $tableSessions[$tbl->id] = [
                     'table_id' => $tbl->id,
@@ -1112,6 +1237,9 @@ class PosController extends Controller
                     'raw_items' => $allItems,
                     'consolidated_items' => array_values($consolidatedMap),
                     'subtotal' => $subtotal,
+                    'discount_amount' => $discountAmount,
+                    'discount_type' => $foodDiscType,
+                    'discount_percentage' => $foodDiscVal,
                     'gst_rate' => $defaultGstPos,
                     'tax_amount' => $taxAmount,
                     'total_amount' => $totalAmount,

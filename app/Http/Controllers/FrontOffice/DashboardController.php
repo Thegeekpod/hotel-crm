@@ -1180,6 +1180,8 @@ class DashboardController extends Controller
                     'phone' => $request->input('new_company_phone'),
                     'discount_type' => $request->input('new_company_discount_type', 'percentage'),
                     'discount_value' => (float)$request->input('new_company_discount_value', 0),
+                    'food_discount' => $request->input('new_company_food_discount', $request->input('food_discount', 'percentage')),
+                    'food_value' => (float)$request->input('new_company_food_value', $request->input('food_value', 0)),
                     'status' => 'Active',
                 ]);
                 $companyId = $newComp->id;
@@ -1332,6 +1334,13 @@ class DashboardController extends Controller
                 } else {
                     $reqDiscountPct = (float)$companyModel->discount_value;
                 }
+            }
+
+            $bookingFoodDiscount = $request->input('food_discount', 'percentage');
+            $bookingFoodValue = $request->filled('food_value') ? (float)$request->input('food_value') : 0.0;
+            if ($companyModel && $bookingFoodValue <= 0 && (float)($companyModel->food_value ?? 0) > 0) {
+                $bookingFoodDiscount = $companyModel->food_discount ?? 'percentage';
+                $bookingFoodValue = (float)($companyModel->food_value ?? 0);
             }
 
             $primaryBooking = null;
@@ -1589,6 +1598,8 @@ class DashboardController extends Controller
                     'total_amount' => $totalAmount,
                     'discount_percentage' => ($idx === 0) ? $discountPercentage : 0.0,
                     'discount_amount' => ($idx === 0) ? $discountAmount : 0.00,
+                    'food_discount' => $bookingFoodDiscount,
+                    'food_value' => $bookingFoodValue,
                     'gst_type' => ($idx === 0) ? $gstType : 'exclusive',
                     'gst_percentage_id' => ($idx === 0 && $gstPercentageModel) ? $gstPercentageModel->id : null,
                     'gst_percentage' => ($idx === 0) ? $gstPercentage : 0.0,

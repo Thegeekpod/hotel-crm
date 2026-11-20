@@ -18,12 +18,15 @@ class Company extends Model
         'phone',
         'discount_type',
         'discount_value',
+        'food_discount',
+        'food_value',
         'meal_discounts',
         'status',
     ];
 
     protected $casts = [
         'discount_value' => 'float',
+        'food_value' => 'float',
         'meal_discounts' => 'array',
     ];
 
@@ -34,6 +37,18 @@ class Company extends Model
             return 'No Discount';
         }
         if ($this->discount_type === 'amount') {
+            return '₹ ' . number_format($val, 2);
+        }
+        return $val . '%';
+    }
+
+    public function getFormattedFoodDiscountAttribute(): string
+    {
+        $val = (float)($this->food_value ?? 0);
+        if ($val <= 0) {
+            return 'None';
+        }
+        if ($this->food_discount === 'amount') {
             return '₹ ' . number_format($val, 2);
         }
         return $val . '%';

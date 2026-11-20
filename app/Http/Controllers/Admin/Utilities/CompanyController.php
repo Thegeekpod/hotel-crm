@@ -53,6 +53,8 @@ class CompanyController extends Controller
             'phone' => 'nullable|string|max:30',
             'discount_type' => 'required|string|in:percentage,amount',
             'discount_value' => 'nullable|numeric|min:0',
+            'food_discount' => 'nullable|string|in:percentage,amount',
+            'food_value' => 'nullable|numeric|min:0',
             'meal_discounts' => 'nullable|array',
             'meal_discounts.*.meal_plan_id' => 'required|integer',
             'meal_discounts.*.discount_type' => 'required|string|in:percentage,amount',
@@ -66,6 +68,17 @@ class CompanyController extends Controller
                 'message' => 'Discount percentage cannot exceed 100%.',
             ], 422);
         }
+
+        $foodDiscountType = $validated['food_discount'] ?? 'percentage';
+        $foodValue = isset($validated['food_value']) ? (float)$validated['food_value'] : 0.00;
+        if ($foodDiscountType === 'percentage' && $foodValue > 100) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Restaurant food discount percentage cannot exceed 100%.',
+            ], 422);
+        }
+        $validated['food_discount'] = $foodDiscountType;
+        $validated['food_value'] = $foodValue;
 
         $validated['discount_value'] = isset($validated['discount_value']) ? (float)$validated['discount_value'] : 0.00;
 
@@ -117,6 +130,8 @@ class CompanyController extends Controller
             'phone' => 'nullable|string|max:30',
             'discount_type' => 'required|string|in:percentage,amount',
             'discount_value' => 'nullable|numeric|min:0',
+            'food_discount' => 'nullable|string|in:percentage,amount',
+            'food_value' => 'nullable|numeric|min:0',
             'meal_discounts' => 'nullable|array',
             'meal_discounts.*.meal_plan_id' => 'required|integer',
             'meal_discounts.*.discount_type' => 'required|string|in:percentage,amount',
@@ -130,6 +145,17 @@ class CompanyController extends Controller
                 'message' => 'Discount percentage cannot exceed 100%.',
             ], 422);
         }
+
+        $foodDiscountType = $validated['food_discount'] ?? 'percentage';
+        $foodValue = isset($validated['food_value']) ? (float)$validated['food_value'] : 0.00;
+        if ($foodDiscountType === 'percentage' && $foodValue > 100) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Restaurant food discount percentage cannot exceed 100%.',
+            ], 422);
+        }
+        $validated['food_discount'] = $foodDiscountType;
+        $validated['food_value'] = $foodValue;
 
         $validated['discount_value'] = isset($validated['discount_value']) ? (float)$validated['discount_value'] : 0.00;
 

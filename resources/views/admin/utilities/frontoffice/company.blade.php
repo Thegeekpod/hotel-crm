@@ -81,6 +81,7 @@
                 <th class="px-4 py-3.5">Address</th>
                 <th class="px-4 py-3.5">Discount</th>
                 <th class="px-4 py-3.5">Meal Discounts</th>
+                <th class="px-4 py-3.5">Food Discount</th>
                 <th class="px-4 py-3.5">Status</th>
                 <th class="px-4 py-3.5 text-right w-28">Actions</th>
               </tr>
@@ -156,6 +157,20 @@
                     </div>
                   @else
                     <span class="text-slate-400 text-[11px]">-</span>
+                  @endif
+                </td>
+                <td class="px-4 py-3">
+                  @if((float)($item->food_value ?? 0) > 0)
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-rose-50 text-rose-700 border border-rose-200/60 font-mono text-[11px] font-bold">
+                      <i class="fa-solid fa-utensils text-[9px]"></i>
+                      @if(($item->food_discount ?? 'percentage') === 'amount')
+                        ₹ {{ number_format((float)$item->food_value, 2) }}
+                      @else
+                        {{ (float)$item->food_value }}%
+                      @endif
+                    </span>
+                  @else
+                    <span class="text-slate-400 text-[11px]">0% (None)</span>
                   @endif
                 </td>
                 <td class="px-4 py-3">
@@ -301,6 +316,34 @@
 
           <div id="meal-discounts-container" class="space-y-2">
             <!-- Dynamic rows will be rendered here -->
+          </div>
+        </div>
+
+        <!-- Restaurant Food Discount Configuration -->
+        <div class="bg-white border border-slate-200 rounded-xl p-4 space-y-3 shadow-xs">
+          <div>
+            <label class="flex items-center gap-1.5 text-xs font-bold text-slate-700">
+              <i class="fa-solid fa-utensils text-rose-500 text-xs"></i>
+              <span>Restaurant Food Discount</span>
+            </label>
+            <p class="text-[11px] text-slate-400">Default food discount applied on POS dining & room service orders for this corporate account.</p>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-500 mb-1">Discount Type (food_discount)</label>
+              <select id="form-food-discount" class="admin-form-input h-9.5 px-3 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-700 w-full focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 cursor-pointer" onchange="updateFoodDiscountSuffix()">
+                <option value="percentage">Percentage (%)</option>
+                <option value="amount">Solid Amount (₹)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-500 mb-1">Discount Value (food_value)</label>
+              <div class="relative">
+                <input type="number" id="form-food-value" class="admin-form-input h-9.5 pr-8 pl-3.5 rounded-xl border border-slate-200 bg-white text-xs font-bold font-mono text-slate-800 w-full focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500" placeholder="e.g. 10.00" min="0" step="any">
+                <span id="food-val-suffix" class="absolute right-3.5 top-1/2 -translate-y-1/2 font-bold text-slate-400 text-xs">%</span>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -471,6 +514,21 @@
     container.innerHTML = '';
   }
 
+  function updateFoodDiscountSuffix() {
+    const dType = document.getElementById('form-food-discount')?.value || 'percentage';
+    const suffix = document.getElementById('food-val-suffix');
+    const valInput = document.getElementById('form-food-value');
+    if (suffix) suffix.textContent = dType === 'amount' ? '₹' : '%';
+    if (valInput) {
+      valInput.placeholder = dType === 'amount' ? 'e.g. 100.00' : 'e.g. 10.00';
+      if (dType === 'amount') {
+        valInput.removeAttribute('max');
+      } else {
+        valInput.setAttribute('max', '100');
+      }
+    }
+  }
+
   function openAddModal() {
     document.getElementById('modal-title').textContent = 'Add Company';
     document.getElementById('item-id').value = '';
@@ -483,6 +541,9 @@
     document.getElementById('form-discount-percentage').value = '';
     document.getElementById('form-discount-amount').value = '';
     handleDiscountTypeChange('percentage');
+    document.getElementById('form-food-discount').value = 'percentage';
+    document.getElementById('form-food-value').value = '';
+    updateFoodDiscountSuffix();
     resetMealDiscounts();
     addMealDiscountRow();
     openModal('crud-modal');
@@ -512,6 +573,10 @@
       document.getElementById('form-discount-amount').value = '';
     }
     handleDiscountTypeChange(discType);
+
+    document.getElementById('form-food-discount').value = item.food_discount || 'percentage';
+    document.getElementById('form-food-value').value = (item.food_value !== null && item.food_value !== undefined && parseFloat(item.food_value) > 0) ? parseFloat(item.food_value) : '';
+    updateFoodDiscountSuffix();
 
     // Populate Meal Discounts
     resetMealDiscounts();
@@ -610,6 +675,14 @@
       });
     }
 
+    const foodDiscount = document.getElementById('form-food-discount')?.value || 'percentage';
+    const rawFoodVal = document.getElementById('form-food-value')?.value.trim() || '';
+    const foodValue = rawFoodVal !== '' ? parseFloat(rawFoodVal) : 0;
+    if (foodDiscount === 'percentage' && foodValue > 100) {
+      PmsAlert.error('Validation Error', 'Restaurant food discount percentage cannot exceed 100%.');
+      return;
+    }
+
     const payload = { 
       name, 
       gstin, 
@@ -618,6 +691,8 @@
       status, 
       discount_type: discountType, 
       discount_value: discountValue,
+      food_discount: foodDiscount,
+      food_value: foodValue,
       meal_discounts: mealDiscounts
     };
     const url = id ? `${baseUrl}/${id}` : baseUrl;
@@ -862,6 +937,17 @@
           '</div>';
         }
 
+        // Food Discount HTML
+        const fVal = parseFloat(item.food_value) || 0;
+        let foodDiscountHtml = '<span class="text-slate-400 text-[11px]">0% (None)</span>';
+        if (fVal > 0) {
+          if (item.food_discount === 'amount') {
+            foodDiscountHtml = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-rose-50 text-rose-700 border border-rose-200/60 font-mono text-[11px] font-bold"><i class="fa-solid fa-utensils text-[9px]"></i> ₹ ${fVal.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>`;
+          } else {
+            foodDiscountHtml = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-rose-50 text-rose-700 border border-rose-200/60 font-mono text-[11px] font-bold"><i class="fa-solid fa-utensils text-[9px]"></i> ${fVal}%</span>`;
+          }
+        }
+
         const statusBadge = item.status === 'Active'
           ? '<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/60"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Active</span>'
           : '<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200/60"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Inactive</span>';
@@ -894,6 +980,9 @@
             </td>
             <td class="px-4 py-3">
               ${mealDiscountsHtml}
+            </td>
+            <td class="px-4 py-3">
+              ${foodDiscountHtml}
             </td>
             <td class="px-4 py-3">
               ${statusBadge}
@@ -984,7 +1073,7 @@
       PmsAlert.toast('No records to export', 'info');
       return;
     }
-    let csv = '"ID","Company Name","GSTIN","Phone","Address","Discount Type","Discount Value","Meal Discounts","Status"\n';
+    let csv = '"ID","Company Name","GSTIN","Phone","Address","Discount Type","Discount Value","Meal Discounts","Food Discount","Status"\n';
     filtered.forEach(r => {
       const cleanAddr = (r.address || '').replace(/"/g, '""');
       const dType = r.discount_type === 'amount' ? 'Solid Amount' : 'Percentage';
@@ -997,7 +1086,10 @@
           return `${pName}: ${md.discount_type === 'amount' ? '₹' + md.discount_value : md.discount_value + '%'}`;
         }).join('; ');
       }
-      csv += `"${r.id}","${r.name}","${r.gstin || ''}","${r.phone || ''}","${cleanAddr}","${dType}","${dVal}","${mealDiscText.replace(/"/g, '""')}","${r.status}"\n`;
+      const foodDiscText = (r.food_value && parseFloat(r.food_value) > 0)
+        ? (r.food_discount === 'amount' ? `₹${r.food_value}` : `${r.food_value}%`)
+        : '0%';
+      csv += `"${r.id}","${r.name}","${r.gstin || ''}","${r.phone || ''}","${cleanAddr}","${dType}","${dVal}","${mealDiscText.replace(/"/g, '""')}","${foodDiscText}","${r.status}"\n`;
     });
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);

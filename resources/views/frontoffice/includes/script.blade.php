@@ -2420,6 +2420,8 @@
       if (foodAdvInp) foodAdvInp.value = '';
       const faCard = document.getElementById('calc-food-advance-card');
       if (faCard) faCard.style.display = 'none';
+      const foodDiscCard = document.getElementById('company-food-discount-card');
+      if (foodDiscCard) foodDiscCard.classList.add('hidden');
       if (typeof refreshPlanSelectDisplay === 'function') refreshPlanSelectDisplay();
       calculateReservationBilling();
     }
@@ -2617,6 +2619,49 @@
     calculateReservationBilling();
   }
 
+  function updateCheckinFoodDiscountCard(type, value) {
+    const card = document.getElementById('company-food-discount-card');
+    const badge = document.getElementById('company-food-discount-badge');
+    const text = document.getElementById('company-food-discount-summary-text');
+    const suffix = document.getElementById('checkin-food-val-suffix');
+    if (suffix) suffix.textContent = type === 'amount' ? '₹' : '%';
+
+    const numVal = parseFloat(value) || 0;
+    if (card) {
+      const checkedRadio = document.querySelector('input[name="res_type"]:checked');
+      const isCompany = (checkedRadio?.dataset?.slug || checkedRadio?.value || '').toLowerCase() === 'company';
+      if (isCompany && numVal > 0) {
+        card.classList.remove('hidden');
+        if (badge) badge.textContent = type === 'amount' ? `₹ ${numVal.toFixed(2)}` : `${numVal}% OFF`;
+        if (text) text.textContent = type === 'amount' ? `₹ ${numVal.toFixed(2)} deduction on POS bills` : `${numVal}% off on all POS food orders`;
+      } else {
+        card.classList.add('hidden');
+      }
+    }
+  }
+
+  function onCompanyFoodDiscountChange() {
+    const dType = document.getElementById('company-food-discount-select')?.value || 'percentage';
+    const val = parseFloat(document.getElementById('company-food-value-input')?.value) || 0;
+    updateCheckinFoodDiscountCard(dType, val);
+  }
+
+  function toggleNewCompanyFoodDiscountType(type) {
+    const sel = document.getElementById('company-food-discount-select');
+    if (sel) sel.value = type;
+    onCompanyFoodDiscountChange();
+  }
+
+  function onNewCompanyFoodDiscountChange() {
+    const dType = document.getElementById('new-comp-food-disc-type')?.value || 'percentage';
+    const val = parseFloat(document.getElementById('new-comp-food-disc-val')?.value) || 0;
+    const foodInp = document.getElementById('company-food-value-input');
+    const foodSel = document.getElementById('company-food-discount-select');
+    if (foodSel) foodSel.value = dType;
+    if (foodInp) foodInp.value = val > 0 ? val : '';
+    updateCheckinFoodDiscountCard(dType, val);
+  }
+
   function applyCompanyDiscountFromSelect() {
     const compSelect = document.getElementById('company-select');
     if (!compSelect) return;
@@ -2636,6 +2681,14 @@
         noticeWrap.style.display = 'inline-flex';
         noticeSpan.textContent = `New Corporate Rate: ${newDiscType === 'amount' ? '₹ ' + newDiscVal : newDiscVal + '%'}`;
       }
+
+      const newFoodDiscType = document.getElementById('new-comp-food-disc-type')?.value || 'percentage';
+      const newFoodDiscVal = parseFloat(document.getElementById('new-comp-food-disc-val')?.value) || 0;
+      const foodSel = document.getElementById('company-food-discount-select');
+      const foodInp = document.getElementById('company-food-value-input');
+      if (foodSel) foodSel.value = newFoodDiscType;
+      if (foodInp) foodInp.value = newFoodDiscVal > 0 ? newFoodDiscVal : '';
+      updateCheckinFoodDiscountCard(newFoodDiscType, newFoodDiscVal);
     } else if (compSelect.selectedIndex >= 0) {
       const opt = compSelect.options[compSelect.selectedIndex];
       if (opt && opt.value) {
@@ -2649,11 +2702,21 @@
           noticeWrap.style.display = 'inline-flex';
           noticeSpan.textContent = `Corporate discount auto-applied: ${compName} (${dType === 'amount' ? '₹ ' + dVal : dVal + '%'})`;
         }
+
+        const fDisc = opt.dataset.foodDiscount || 'percentage';
+        const fVal = parseFloat(opt.dataset.foodValue) || 0;
+        const foodSel = document.getElementById('company-food-discount-select');
+        const foodInp = document.getElementById('company-food-value-input');
+        if (foodSel) foodSel.value = fDisc;
+        if (foodInp) foodInp.value = fVal > 0 ? fVal : '';
+        updateCheckinFoodDiscountCard(fDisc, fVal);
       } else {
         if (noticeWrap) noticeWrap.style.display = 'none';
+        updateCheckinFoodDiscountCard('percentage', 0);
       }
     } else {
       if (noticeWrap) noticeWrap.style.display = 'none';
+      updateCheckinFoodDiscountCard('percentage', 0);
     }
 
     if (typeof refreshPlanSelectDisplay === 'function') {
@@ -3544,6 +3607,14 @@
       new_company_phone: newCompanyPhone,
       new_company_discount_type: newCompDiscType,
       new_company_discount_value: newCompDiscValue,
+      new_company_food_discount: form.querySelector('select[name="new_company_food_discount"]')?.value || 'percentage',
+      new_company_food_value: parseFloat(form.querySelector('input[name="new_company_food_value"]')?.value) || 0,
+      food_discount: (resTypeSlug === 'company' || (registrationTypeId && document.querySelector('input[name="res_type"]:checked')?.dataset?.slug === 'company'))
+        ? (form.querySelector('select[name="food_discount"]')?.value || 'percentage')
+        : null,
+      food_value: (resTypeSlug === 'company' || (registrationTypeId && document.querySelector('input[name="res_type"]:checked')?.dataset?.slug === 'company'))
+        ? (parseFloat(form.querySelector('input[name="food_value"]')?.value) || 0)
+        : 0,
       food_advance_amount: (resTypeSlug === 'company' || (registrationTypeId && document.querySelector('input[name="res_type"]:checked')?.dataset?.slug === 'company'))
         ? (parseFloat(form.querySelector('input[name="food_advance_amount"]')?.value) || 0)
         : 0,

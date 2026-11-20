@@ -1949,6 +1949,7 @@
             <td class="py-1.5 px-2.5 font-mono font-bold text-orange-700">
               ${escapeHtml(ro.order_number)}
               ${ro.table_number ? `<span class="text-[9px] bg-indigo-100 text-indigo-700 border border-indigo-200 py-px px-1.5 rounded font-bold ml-1 font-sans inline-flex items-center gap-0.5"><i class="fa-solid fa-chair text-[8px]"></i> ${escapeHtml(ro.table_number)}</span>` : ''}
+              ${Number(ro.discount_amount || 0) > 0 ? `<div class="text-[9px] text-emerald-700 font-bold mt-0.5"><i class="fa-solid fa-tag"></i> Food Disc: -${formatINR(ro.discount_amount)} (${ro.discount_type === 'percentage' ? ro.discount_percentage + '%' : 'Flat'})</div>` : ''}
             </td>
             <td class="py-1.5 px-2.5 text-slate-600 whitespace-nowrap">
               <i class="fa-regular fa-calendar-days text-[9px] text-amber-600"></i> ${escapeHtml(ro.date)}
@@ -2189,6 +2190,16 @@
             </div>
             `}
           </div>
+        </div>
+      `;
+    }
+
+    if (folio.corporate_food_discount && folio.corporate_food_discount.has_discount) {
+      const cfd = folio.corporate_food_discount;
+      html += `
+        <div class="mt-1.5 p-2 rounded-lg border border-emerald-300 bg-emerald-100/70 flex justify-between items-center text-[11px] font-bold text-emerald-900">
+          <span><i class="fa-solid fa-tag text-emerald-700 mr-1"></i> Corporate Food Discount (${escapeHtml(cfd.label)} on overall dining):</span>
+          <span class="font-mono text-emerald-800 font-extrabold">- ${formatINR(cfd.amount)}</span>
         </div>
       `;
     }
@@ -2744,15 +2755,17 @@
     if (targetOrders.length > 0) {
       targetOrders.forEach(ro => {
         const roTotal = Number(ro.total_amount || 0);
+        const roDisc = Number(ro.discount_amount || 0);
         calculatedFoodSubtotal += roTotal;
         const itemsList = (ro.items || []).map(i => `${i.quantity}x ${escapeHtml(i.item_name)} (${formatINR(i.unit_price)})`).join(', ');
         const dest = ro.table_number ? `Table: ${escapeHtml(ro.table_number)}` : (ro.room_number ? `Room ${escapeHtml(ro.room_number)}` : (ro.served_by || 'Extra Services Desk'));
+        const discBadge = roDisc > 0 ? `<div style="font-size: 9.5px; color: #047857; font-weight: bold; margin-top: 2px;"><i class="fa-solid fa-tag"></i> Corporate Food Discount: -${formatINR(roDisc)} (${ro.discount_type === 'percentage' ? ro.discount_percentage + '%' : 'Flat'})</div>` : '';
         serviceRowsHtml += `
           <tr>
             <td class="p-1.5 px-2 border border-slate-200 font-mono font-bold text-slate-800">${escapeHtml(ro.order_number)}</td>
             <td class="p-1.5 px-2 border border-slate-200 text-slate-600">${escapeHtml(ro.date || '-')}</td>
             <td class="p-1.5 px-2 border border-slate-200 font-semibold text-slate-700">${dest}</td>
-            <td class="p-1.5 px-2 border border-slate-200 text-slate-800">${itemsList || 'Service Provision'}</td>
+            <td class="p-1.5 px-2 border border-slate-200 text-slate-800">${itemsList || 'Service Provision'}${discBadge}</td>
             <td class="p-1.5 px-2 border border-slate-200 text-right font-mono font-bold">${formatINR(roTotal)}</td>
           </tr>
         `;
@@ -2951,6 +2964,8 @@
       const faUsed = (f.food_advance && f.food_advance.has_food_advance) ? Number(f.food_advance.used_amount || 0) : 0;
       const netFoodDue = foodBalance;
       const foodSubtotal = foodOrders.reduce((sum, ro) => sum + Number(ro.subtotal || ro.total_amount || 0), 0);
+      const cfd = f.corporate_food_discount || {};
+      const foodDiscount = Number(cfd.amount !== undefined ? cfd.amount : (f.total_food_discount || 0));
       summaryBoxHtml = `
         <div class="summary-wrap">
           <div class="summary-box">
@@ -2960,6 +2975,11 @@
                 <td>Total Food / Dining Subtotal (${foodOrders.length} Order(s))</td>
                 <td class="text-right font-mono">${formatINR(foodSubtotal || rawServiceChrg)}</td>
               </tr>
+              ${foodDiscount > 0 ? `
+              <tr style="color: #047857; font-weight: bold;">
+                <td>Less: Corporate Food Discount (${escapeHtml(cfd.label || '')})</td>
+                <td class="text-right font-mono">- ${formatINR(foodDiscount)}</td>
+              </tr>` : ''}
               ${faUsed > 0 ? `
               <tr style="color: #047857; font-weight: bold;">
                 <td>Less: Company Food Advance Covered</td>
@@ -2996,6 +3016,8 @@
       `;
     } else {
       // COMBINED SUMMARY
+      const cfd = f.corporate_food_discount || {};
+      const allFoodDiscount = Number(cfd.amount !== undefined ? cfd.amount : (f.total_food_discount || 0));
       summaryBoxHtml = `
         <div class="summary-wrap">
           <div class="summary-box">
@@ -3009,6 +3031,11 @@
               <tr>
                 <td>In-Room Dining &amp; Restaurant Services</td>
                 <td class="text-right font-mono">+ ${formatINR(rawServiceChrg)}</td>
+              </tr>` : ''}
+              ${allFoodDiscount > 0 ? `
+              <tr style="color: #047857; font-weight: bold;">
+                <td>Less: Corporate Food Discount (${escapeHtml(cfd.label || '')})</td>
+                <td class="text-right font-mono">- ${formatINR(allFoodDiscount)}</td>
               </tr>` : ''}
               ${f.food_advance && f.food_advance.has_food_advance && f.food_advance.used_amount > 0 ? `
               <tr style="color: #047857; font-weight: bold;">

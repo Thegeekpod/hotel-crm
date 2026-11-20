@@ -212,5 +212,74 @@ class FoodAdvanceService
             'charged_total' => $chargedTotal,
         ];
     }
+
+    /**
+     * Calculate Corporate Food Discount for a booking based on its overall food charges.
+     * Evaluated on the total food bill at settlement rather than per individual POS order,
+     * so solid fixed amount discounts are applied only once across the reservation.
+     */
+    public static function calculateCorporateFoodDiscount($booking, float $foodCharges): array
+    {
+        if (!$booking || $foodCharges <= 0) {
+            return [
+                'has_discount' => false,
+                'discount_type' => 'percentage',
+                'discount_value' => 0.00,
+                'discount_amount' => 0.00,
+                'net_food_charges' => $foodCharges,
+                'label' => null,
+            ];
+        }
+
+        $primaryBooking = $booking->primary_booking_id ? $booking->primaryBooking : $booking;
+
+        $discountType = $booking->food_discount 
+            ?? $primaryBooking?->food_discount 
+            ?? $booking->company?->food_discount 
+            ?? $primaryBooking?->company?->food_discount 
+            ?? 'percentage';
+
+        $discountValue = (float)($booking->food_value 
+            ?? $primaryBooking?->food_value 
+            ?? 0);
+
+        if ($discountValue <= 0) {
+            $comp = $booking->company ?? $primaryBooking?->company;
+            if ($comp && (float)$comp->food_value > 0) {
+                $discountValue = (float)$comp->food_value;
+                $discountType = $comp->food_discount ?? $discountType;
+            }
+        }
+
+        if ($discountValue <= 0) {
+            return [
+                'has_discount' => false,
+                'discount_type' => $discountType,
+                'discount_value' => 0.00,
+                'discount_amount' => 0.00,
+                'net_food_charges' => $foodCharges,
+                'label' => null,
+            ];
+        }
+
+        if ($discountType === 'amount') {
+            $discountAmount = min($foodCharges, round($discountValue, 2));
+            $label = '₹' . number_format($discountValue, 2);
+        } else {
+            $discountAmount = round($foodCharges * ($discountValue / 100), 2);
+            $label = $discountValue . '%';
+        }
+
+        $netFoodCharges = max(0, round($foodCharges - $discountAmount, 2));
+
+        return [
+            'has_discount' => ($discountAmount > 0),
+            'discount_type' => $discountType,
+            'discount_value' => $discountValue,
+            'discount_amount' => $discountAmount,
+            'net_food_charges' => $netFoodCharges,
+            'label' => $label,
+        ];
+    }
 }
 

@@ -18,6 +18,9 @@ class RoomServiceOrder extends Model
         'table_number',
         'customer_gstin',
         'subtotal',
+        'discount_type',
+        'discount_percentage',
+        'discount_amount',
         'tax_amount',
         'total_amount',
         'payment_status',
@@ -29,6 +32,8 @@ class RoomServiceOrder extends Model
 
     protected $casts = [
         'subtotal' => 'decimal:2',
+        'discount_percentage' => 'decimal:2',
+        'discount_amount' => 'decimal:2',
         'tax_amount' => 'decimal:2',
         'total_amount' => 'decimal:2',
     ];

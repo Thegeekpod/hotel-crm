@@ -99,8 +99,8 @@
           <select class="h-9.5 text-xs font-medium rounded-xl border border-slate-200 bg-white min-w-[240px]" id="pos-room-select">
             <option value="">-- Choose Room / Deselect --</option>
             @forelse($selectableRooms as $rm)
-              <option value="{{ $rm->id }}" data-room="{{ $rm->room_number }}" data-guest="{{ $rm->guest_name }}" data-has-food-adv="{{ $rm->has_food_advance ? 1 : 0 }}" data-food-adv="{{ $rm->food_advance_amount ?? 0 }}" data-rem-adv="{{ $rm->remaining_advance ?? 0 }}" data-used-adv="{{ $rm->used_food_advance ?? 0 }}">
-                Room {{ $rm->room_number }} - {{ $rm->guest_name }}{{ $rm->has_food_advance ? ' [Food Allowance: ₹' . number_format($rm->food_advance_amount, 0) . ']' : '' }}
+              <option value="{{ $rm->id }}" data-room="{{ $rm->room_number }}" data-guest="{{ $rm->guest_name }}" data-has-food-adv="{{ $rm->has_food_advance ? 1 : 0 }}" data-food-adv="{{ $rm->food_advance_amount ?? 0 }}" data-rem-adv="{{ $rm->remaining_advance ?? 0 }}" data-used-adv="{{ $rm->used_food_advance ?? 0 }}" data-has-food-discount="{{ $rm->has_food_discount ? 1 : 0 }}" data-food-discount="{{ $rm->food_discount }}" data-food-value="{{ $rm->food_value }}">
+                Room {{ $rm->room_number }} - {{ $rm->guest_name }}{{ $rm->has_food_discount ? ' [Disc: ' . $rm->formatted_food_discount . ']' : '' }}{{ $rm->has_food_advance ? ' [Food Allowance: ₹' . number_format($rm->food_advance_amount, 0) . ']' : '' }}
               </option>
             @empty
               <option value="">No Checked In Guests</option>
@@ -371,8 +371,8 @@
               <select class="w-full h-9 text-xs font-medium rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-indigo-500" id="cart-room-folio-select" onchange="onCartRoomChange(this.value)">
                 <option value="">-- Choose Room / Deselect --</option>
                 @forelse($selectableRooms as $rm)
-                  <option value="{{ $rm->id }}" data-room="{{ $rm->room_number }}" data-guest="{{ $rm->guest_name }}" data-has-food-adv="{{ $rm->has_food_advance ? 1 : 0 }}" data-food-adv="{{ $rm->food_advance_amount ?? 0 }}" data-rem-adv="{{ $rm->remaining_advance ?? 0 }}" data-used-adv="{{ $rm->used_food_advance ?? 0 }}">
-                    Room {{ $rm->room_number }} - {{ $rm->guest_name }}{{ $rm->has_food_advance ? ' [Food Allowance: ₹' . number_format($rm->food_advance_amount, 0) . ']' : '' }}
+                  <option value="{{ $rm->id }}" data-room="{{ $rm->room_number }}" data-guest="{{ $rm->guest_name }}" data-has-food-adv="{{ $rm->has_food_advance ? 1 : 0 }}" data-food-adv="{{ $rm->food_advance_amount ?? 0 }}" data-rem-adv="{{ $rm->remaining_advance ?? 0 }}" data-used-adv="{{ $rm->used_food_advance ?? 0 }}" data-has-food-discount="{{ $rm->has_food_discount ? 1 : 0 }}" data-food-discount="{{ $rm->food_discount }}" data-food-value="{{ $rm->food_value }}">
+                    Room {{ $rm->room_number }} - {{ $rm->guest_name }}{{ $rm->has_food_discount ? ' [Disc: ' . $rm->formatted_food_discount . ']' : '' }}{{ $rm->has_food_advance ? ' [Food Allowance: ₹' . number_format($rm->food_advance_amount, 0) . ']' : '' }}
                   </option>
                 @empty
                   <option value="">No Checked In Guests Found</option>
@@ -411,6 +411,10 @@
             <div class="flex items-center justify-between text-slate-500 font-medium">
               <span>Subtotal:</span>
               <span id="sub-val" class="font-mono font-bold text-slate-800">₹ 0</span>
+            </div>
+            <div id="row-food-discount" class="flex items-center justify-between text-rose-700 font-bold hidden">
+              <span><i class="fa-solid fa-utensils text-rose-600 mr-1"></i> Food Discount (<span id="food-disc-rate-label">0%</span>):</span>
+              <span id="food-disc-val" class="font-mono">- ₹ 0.00</span>
             </div>
             <div id="row-food-adv-cut" class="flex items-center justify-between text-emerald-700 font-bold hidden">
               <span><i class="fa-solid fa-utensils text-emerald-600 mr-1"></i> Cut from Food Advance:</span>
@@ -523,6 +527,10 @@
             <div class="flex justify-between font-medium">
               <span>Subtotal:</span>
               <span class="font-mono">₹ <span id="kot-guest-subtotal">0.00</span></span>
+            </div>
+            <div class="flex justify-between font-bold text-rose-700 hidden" id="row-kot-guest-discount">
+              <span>Food Discount (<span id="kot-guest-discount-rate">0%</span>):</span>
+              <span class="font-mono">- ₹ <span id="kot-guest-discount-amount">0.00</span></span>
             </div>
             <div class="flex justify-between font-medium text-slate-600" id="row-kot-guest-cgst">
               <span>CGST (<span id="kot-guest-cgst-rate">2.5</span>%):</span>
@@ -680,6 +688,10 @@
         <div class="flex justify-between text-slate-500 font-medium">
           <span>Subtotal:</span>
           <span id="settle-subtotal-val" class="font-mono font-bold text-slate-800">₹ 0.00</span>
+        </div>
+        <div id="row-settle-discount" class="flex justify-between text-rose-700 font-bold hidden">
+          <span><i class="fa-solid fa-utensils text-rose-600 mr-1"></i> Food Discount (<span id="settle-disc-rate-val">0%</span>):</span>
+          <span id="settle-disc-val" class="font-mono">- ₹ 0.00</span>
         </div>
         <div class="flex justify-between text-slate-500 font-medium" id="row-settle-cgst">
           <span>CGST (<span id="settle-cgst-rate-val">2.5</span>%):</span>
@@ -1070,9 +1082,16 @@
     const foodAdvTotal = hasFoodAdv ? (parseFloat(selectedOpt.getAttribute('data-food-adv')) || 0) : 0;
     const remAdv = hasFoodAdv ? (parseFloat(selectedOpt.getAttribute('data-rem-adv')) || 0) : 0;
 
+    const hasFoodDisc = selectedOpt && selectedOpt.getAttribute('data-has-food-discount') === '1';
+    const foodDiscType = hasFoodDisc ? (selectedOpt.getAttribute('data-food-discount') || 'percentage') : null;
+    const foodDiscVal = hasFoodDisc ? (parseFloat(selectedOpt.getAttribute('data-food-value')) || 0) : 0;
+
     let subtotal = cart.reduce((acc, i) => acc + (i.price * i.qty), 0);
-    let tax = Math.round(((subtotal * posGstRate) / 100) * 100) / 100;
-    let actualTotal = Math.round((subtotal + tax) * 100) / 100;
+    // For Room Folio, the corporate food discount is calculated on overall food charges at Room Settlement
+    let discountAmount = 0;
+    const taxableSubtotal = subtotal;
+    let tax = Math.round(((taxableSubtotal * posGstRate) / 100) * 100) / 100;
+    let actualTotal = Math.round((taxableSubtotal + tax) * 100) / 100;
     const grandFmt = '₹ ' + actualTotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     const btnLabel = document.getElementById('btn-order-label');
     const btnIcon = document.getElementById('btn-order-icon');
@@ -1465,11 +1484,33 @@
 
     container.innerHTML = html;
 
-    const tax = Math.round(((subtotal * posGstRate) / 100) * 100) / 100;
+    // Check Room Food Discount
+    const cartRm = document.getElementById('cart-room-folio-select');
+    const selectedOpt = (cartRm && cartRm.selectedIndex >= 0) ? cartRm.options[cartRm.selectedIndex] : null;
+    const hasFoodDisc = selectedOpt && selectedOpt.getAttribute('data-has-food-discount') === '1';
+    const foodDiscType = hasFoodDisc ? (selectedOpt.getAttribute('data-food-discount') || 'percentage') : null;
+    const foodDiscVal = hasFoodDisc ? (parseFloat(selectedOpt.getAttribute('data-food-value')) || 0) : 0;
+
+    let discountAmount = 0;
+    const rowFoodDisc = document.getElementById('row-food-discount');
+    const foodDiscRateLabel = document.getElementById('food-disc-rate-label');
+    const foodDiscValEl = document.getElementById('food-disc-val');
+    if (rowFoodDisc) {
+      if (hasFoodDisc && foodDiscVal > 0) {
+        rowFoodDisc.classList.remove('hidden');
+        if (foodDiscRateLabel) foodDiscRateLabel.textContent = foodDiscType === 'amount' ? `₹ ${foodDiscVal.toFixed(2)}` : `${foodDiscVal}%`;
+        if (foodDiscValEl) foodDiscValEl.innerHTML = `<span class="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">Applied at Room Settlement</span>`;
+      } else {
+        rowFoodDisc.classList.add('hidden');
+      }
+    }
+
+    const taxableSubtotal = subtotal;
+    const tax = Math.round(((taxableSubtotal * posGstRate) / 100) * 100) / 100;
     const cgst = Math.round((tax / 2) * 100) / 100;
     const sgst = Math.round((tax - cgst) * 100) / 100;
     const halfRate = posGstRate / 2;
-    const grandTotal = Math.round((subtotal + tax) * 100) / 100;
+    const grandTotal = Math.round((taxableSubtotal + tax) * 100) / 100;
 
     const cgstVal = document.getElementById('cgst-val');
     const sgstVal = document.getElementById('sgst-val');
@@ -1820,6 +1861,19 @@
     const sgstAmt = Math.round((taxAmt - cgstAmt) * 100) / 100;
 
     document.getElementById('settle-subtotal-val').textContent = '₹ ' + Number(sess.subtotal).toLocaleString('en-IN', { minimumFractionDigits: 2 });
+    
+    const discAmt = Number(sess.discount_amount || 0);
+    const rowSettleDisc = document.getElementById('row-settle-discount');
+    if (rowSettleDisc) {
+      if (discAmt > 0) {
+        rowSettleDisc.classList.remove('hidden');
+        const discRate = sess.discount_type === 'amount' ? `₹ ${Number(sess.discount_percentage || 0).toFixed(2)}` : `${Number(sess.discount_percentage || 0)}%`;
+        if (document.getElementById('settle-disc-rate-val')) document.getElementById('settle-disc-rate-val').textContent = discRate;
+        if (document.getElementById('settle-disc-val')) document.getElementById('settle-disc-val').textContent = '- ₹ ' + discAmt.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      } else {
+        rowSettleDisc.classList.add('hidden');
+      }
+    }
     if (document.getElementById('settle-cgst-rate-val')) document.getElementById('settle-cgst-rate-val').textContent = (halfRate % 1 === 0 ? halfRate.toString() : halfRate.toFixed(1));
     if (document.getElementById('settle-sgst-rate-val')) document.getElementById('settle-sgst-rate-val').textContent = (halfRate % 1 === 0 ? halfRate.toString() : halfRate.toFixed(1));
     if (document.getElementById('settle-cgst-val')) document.getElementById('settle-cgst-val').textContent = '₹ ' + cgstAmt.toLocaleString('en-IN', { minimumFractionDigits: 2 });
@@ -2449,6 +2503,19 @@
       const sgstFmt = sgstAmt.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
       if (document.getElementById('kot-guest-subtotal')) document.getElementById('kot-guest-subtotal').textContent = subtotalFmt;
+
+      const discAmt = Number(order.discount_amount || 0);
+      const rowKotDisc = document.getElementById('row-kot-guest-discount');
+      if (rowKotDisc) {
+        if (discAmt > 0) {
+          rowKotDisc.classList.remove('hidden');
+          const dLabel = order.discount_type === 'amount' ? `₹ ${Number(order.discount_percentage || 0).toFixed(2)}` : `${Number(order.discount_percentage || 0)}%`;
+          if (document.getElementById('kot-guest-discount-rate')) document.getElementById('kot-guest-discount-rate').textContent = dLabel;
+          if (document.getElementById('kot-guest-discount-amount')) document.getElementById('kot-guest-discount-amount').textContent = discAmt.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        } else {
+          rowKotDisc.classList.add('hidden');
+        }
+      }
       if (document.getElementById('kot-guest-cgst-rate')) document.getElementById('kot-guest-cgst-rate').textContent = (halfRate % 1 === 0 ? halfRate.toString() : halfRate.toFixed(1));
       if (document.getElementById('kot-guest-sgst-rate')) document.getElementById('kot-guest-sgst-rate').textContent = (halfRate % 1 === 0 ? halfRate.toString() : halfRate.toFixed(1));
       if (document.getElementById('kot-guest-cgst-amount')) document.getElementById('kot-guest-cgst-amount').textContent = cgstFmt;

@@ -323,6 +323,9 @@
                                 </span>
                                 <span class="opacity-75 text-[8px]"><i class="fa-solid fa-check text-[7.5px]"></i> {{ $eOrd['date_short'] }}:</span>
                                 <span class="font-bold">₹{{ number_format($eOrd['total_amount'], 2) }} (PAID)</span>
+                                @if(!empty($eOrd['discount_amount']) && $eOrd['discount_amount'] > 0)
+                                  <span class="text-[7.5px] bg-emerald-100 text-emerald-800 border border-emerald-300 px-1 rounded font-bold" title="Food Discount: ₹{{ number_format($eOrd['discount_amount'], 2) }}"><i class="fa-solid fa-tag"></i> -₹{{ number_format($eOrd['discount_amount'], 2) }}</span>
+                                @endif
                                 @if(!empty($eOrd['table_number']))
                                   <span class="text-[8px] bg-emerald-100 text-emerald-900 px-1 rounded font-bold"><i class="fa-solid fa-chair text-[7px]"></i> {{ $eOrd['table_number'] }}</span>
                                 @endif
@@ -334,6 +337,9 @@
                                 </span>
                                 <span class="opacity-75 text-[8px]"><i class="fa-regular fa-clock text-[7.5px]"></i> {{ $eOrd['date_short'] }}:</span>
                                 <span class="font-bold">+ ₹{{ number_format($eOrd['total_amount'], 2) }}</span>
+                                @if(!empty($eOrd['discount_amount']) && $eOrd['discount_amount'] > 0)
+                                  <span class="text-[7.5px] bg-amber-200 text-amber-900 border border-amber-300 px-1 rounded font-bold" title="Food Discount: ₹{{ number_format($eOrd['discount_amount'], 2) }}"><i class="fa-solid fa-tag"></i> -₹{{ number_format($eOrd['discount_amount'], 2) }}</span>
+                                @endif
                                 @if(!empty($eOrd['table_number']))
                                   <span class="text-[8px] bg-amber-100 text-amber-900 px-1 rounded font-bold"><i class="fa-solid fa-chair text-[7px]"></i> {{ $eOrd['table_number'] }}</span>
                                 @endif
@@ -350,6 +356,11 @@
                         @endphp
                         <div class="text-[8.5px] text-amber-900 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5 mt-1 text-right font-medium">
                           Food Adv Excess: ₹{{ number_format($fa['excess_food'], 2) }} + CGST 2.5% (₹{{ number_format($faCgst, 2) }}) &amp; SGST 2.5% (₹{{ number_format($faSgst, 2) }})
+                        </div>
+                      @endif
+                      @if(!empty($b['corporate_food_discount']['has_discount']))
+                        <div class="text-[8.5px] text-emerald-800 bg-emerald-50 border border-emerald-200 rounded px-1.5 py-0.5 mt-1 text-right font-bold">
+                          <i class="fa-solid fa-tag"></i> Corporate Food Disc ({{ $b['corporate_food_discount']['label'] }}): -₹{{ number_format($b['corporate_food_discount']['amount'], 2) }}
                         </div>
                       @endif
                     @else

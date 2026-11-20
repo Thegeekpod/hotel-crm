@@ -1084,6 +1084,9 @@ class NightAuditController extends Controller
                     'is_extra_service' => $isExtra,
                     'order_type' => $isExtra ? 'extra' : 'food',
                     'subtotal' => (float)$eo->subtotal,
+                    'discount_type' => $eo->discount_type ?? null,
+                    'discount_percentage' => (float)($eo->discount_percentage ?? 0),
+                    'discount_amount' => (float)($eo->discount_amount ?? 0),
                     'tax_amount' => (float)$eo->tax_amount,
                     'cgst_amount' => round((float)$eo->tax_amount / 2, 2),
                     'sgst_amount' => round((float)$eo->tax_amount - round((float)$eo->tax_amount / 2, 2), 2),
@@ -1096,6 +1099,11 @@ class NightAuditController extends Controller
                     'is_paid' => $isPaid,
                 ];
             }
+
+            $baseFoodForDiscount = $faSummary['has_food_advance'] ? $faSummary['excess_total'] : $foodCharges;
+            $corpFoodDiscount = FoodAdvanceService::calculateCorporateFoodDiscount($master, $baseFoodForDiscount);
+            $effectiveFoodCharges = $corpFoodDiscount['net_food_charges'];
+            $effectiveExtra = round($extraServicesOnlyCharges + $effectiveFoodCharges, 2);
 
             $grandTotal = round($roomCharges + $effectiveExtra - $unusedAdvanceCredit, 2);
 
@@ -1164,7 +1172,10 @@ class NightAuditController extends Controller
                 'pax_count' => $totalOccupants,
                 'room_charges' => $roomCharges,
                 'extra_service_charges' => $effectiveExtra,
-                'food_charges' => $foodCharges,
+                'food_charges' => $effectiveFoodCharges,
+                'raw_food_charges' => $foodCharges,
+                'corporate_food_discount' => $corpFoodDiscount,
+                'total_food_discount' => $corpFoodDiscount['discount_amount'],
                 'food_orders_count' => $foodOrdersCount,
                 'extra_services_only_charges' => $extraServicesOnlyCharges,
                 'extra_services_only_count' => $extraServicesOnlyCount,
